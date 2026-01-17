@@ -1,0 +1,84 @@
+{
+  "common": {
+    "appName": "WDP Eyewear",
+    "welcome": "Chào mừng",
+    "loading": "Đang tải...",
+    "error": "Lỗi",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "edit": "Sửa",
+    "search": "Tìm kiếm",
+    "filter": "Lọc",
+    "sort": "Sắp xếp"
+  },
+  "nav": {
+    "home": "Trang chủ",
+    "products": "Sản phẩm",
+    "about": "Giới thiệu",
+    "contact": "Liên hệ",
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "logout": "Đăng xuất",
+    "cart": "Giỏ hàng",
+    "profile": "Hồ sơ",
+    "dashboard": "Bảng điều khiển"
+  },
+  "auth": {
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "email": "Email",
+    "password": "Mật khẩu",
+    "confirmPassword": "Xác nhận mật khẩu",
+    "forgotPassword": "Quên mật khẩu?",
+    "name": "Họ và tên",
+    "loginSuccess": "Đăng nhập thành công",
+    "registerSuccess": "Đăng ký thành công",
+    "loginError": "Email hoặc mật khẩu không đúng",
+    "registerError": "Đăng ký thất bại"
+  },
+  "products": {
+    "title": "Sản phẩm",
+    "search": "Tìm kiếm sản phẩm...",
+    "category": "Danh mục",
+    "brand": "Thương hiệu",
+    "price": "Giá",
+    "addToCart": "Thêm vào giỏ",
+    "outOfStock": "Hết hàng",
+    "viewDetails": "Xem chi tiết",
+    "sunglasses": "Kính mát",
+    "eyeglasses": "Gọng kính",
+    "contactLenses": "Kính áp tròng"
+  },
+  "cart": {
+    "title": "Giỏ hàng",
+    "empty": "Giỏ hàng của bạn đang trống",
+    "quantity": "Số lượng",
+    "subtotal": "Tạm tính",
+    "total": "Tổng cộng",
+    "checkout": "Thanh toán",
+    "continueShopping": "Tiếp tục mua hàng",
+    "removeItem": "Xóa",
+    "updateCart": "Cập nhật giỏ hàng"
+  },
+  "checkout": {
+    "title": "Thanh toán",
+    "shippingAddress": "Địa chỉ giao hàng",
+    "paymentMethod": "Phương thức thanh toán",
+    "orderSummary": "Tóm tắt đơn hàng",
+    "placeOrder": "Đặt hàng",
+    "fullName": "Họ và tên",
+    "phone": "Số điện thoại",
+    "address": "Địa chỉ",
+    "city": "Thành phố",
+    "postalCode": "Mã bưu điện",
+    "country": "Quốc gia"
+  },
+  "footer": {
+    "copyright": "© 2026 WDP Eyewear. Bản quyền đã được bảo hộ.",
+    "aboutUs": "Về chúng tôi",
+    "contactUs": "Liên hệ",
+    "privacyPolicy": "Chính sách bảo mật",
+    "termsOfService": "Điều khoản dịch vụ"
+  }
+}
