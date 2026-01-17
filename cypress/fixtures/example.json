@@ -1,0 +1,26 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "email": "test@example.com",
+      "name": "Test User",
+      "password": "password123"
+    }
+  ],
+  "products": [
+    {
+      "id": "1",
+      "name": "Classic Aviator Sunglasses",
+      "price": 1500000,
+      "category": "sunglasses",
+      "brand": "Ray-Ban"
+    },
+    {
+      "id": "2",
+      "name": "Modern Rectangle Eyeglasses",
+      "price": 2000000,
+      "category": "eyeglasses",
+      "brand": "Gucci"
+    }
+  ]
+}
