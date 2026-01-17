@@ -7,7 +7,7 @@ import { routing } from '@/i18n/routing';
 // Create the internationalization middleware
 const intlMiddleware = createMiddleware(routing);
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // Handle internationalization first
   const response = intlMiddleware(request);
 

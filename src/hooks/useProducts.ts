@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { productApi, type Product } from '@/api';
+import { useQuery } from '@tanstack/react-query';
+import { productApi } from '@/api';
 
 export const useProducts = (params?: {
   page?: number;
