@@ -1,0 +1,11 @@
+{
+  "title": "Giỏ hàng",
+  "empty": "Giỏ hàng của bạn đang trống",
+  "quantity": "Số lượng",
+  "subtotal": "Tạm tính",
+  "total": "Tổng cộng",
+  "checkout": "Thanh toán",
+  "continueShopping": "Tiếp tục mua hàng",
+  "removeItem": "Xóa",
+  "updateCart": "Cập nhật giỏ hàng"
+}

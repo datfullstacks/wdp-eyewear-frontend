@@ -4,28 +4,30 @@ import { auth } from '@/lib/auth';
 import createMiddleware from 'next-intl/middleware';
 import { routing } from '@/i18n/routing';
 
-// Create the internationalization middleware
-const intlMiddleware = createMiddleware(routing);
+// Create the internationalization middleware with cookie support
+const intlMiddleware = createMiddleware(routing, {
+  localeDetection: true,
+  localeCookie: {
+    name: 'NEXT_LOCALE',
+  },
+});
 
 export async function proxy(request: NextRequest) {
-  // Handle internationalization first
-  const response = intlMiddleware(request);
-
-  // Get the pathname without locale prefix
   const pathname = request.nextUrl.pathname;
-  const pathnameWithoutLocale = pathname.replace(/^\/(en|vi)/, '') || '/';
+
+  // Handle internationalization first (reads cookie for locale)
+  const intlResponse = intlMiddleware(request);
 
   // Protected routes
   const protectedRoutes = ['/dashboard', '/profile', '/orders', '/checkout'];
   const isProtectedRoute = protectedRoutes.some((route) =>
-    pathnameWithoutLocale.startsWith(route)
+    pathname.startsWith(route)
   );
 
   if (isProtectedRoute) {
     const session = await auth();
     if (!session) {
-      const locale = pathname.match(/^\/(en|vi)/)?.[1] || 'vi';
-      const loginUrl = new URL(`/${locale}/login`, request.url);
+      const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('callbackUrl', pathname);
       return NextResponse.redirect(loginUrl);
     }
@@ -34,18 +36,17 @@ export async function proxy(request: NextRequest) {
   // Redirect authenticated users away from auth pages
   const authRoutes = ['/login', '/register'];
   const isAuthRoute = authRoutes.some((route) =>
-    pathnameWithoutLocale.startsWith(route)
+    pathname.startsWith(route)
   );
 
   if (isAuthRoute) {
     const session = await auth();
     if (session) {
-      const locale = pathname.match(/^\/(en|vi)/)?.[1] || 'vi';
-      return NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url));
+      return NextResponse.redirect(new URL('/dashboard', request.url));
     }
   }
 
-  return response;
+  return intlResponse;
 }
 
 export const config = {

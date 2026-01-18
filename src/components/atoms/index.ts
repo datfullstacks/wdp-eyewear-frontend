@@ -8,3 +8,4 @@ export {
   CardContent,
   CardFooter,
 } from './Card';
+export { CanAccess, useCanAccess } from './CanAccess';

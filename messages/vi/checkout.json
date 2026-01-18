@@ -1,0 +1,13 @@
+{
+  "title": "Thanh toán",
+  "shippingAddress": "Địa chỉ giao hàng",
+  "paymentMethod": "Phương thức thanh toán",
+  "orderSummary": "Tóm tắt đơn hàng",
+  "placeOrder": "Đặt hàng",
+  "fullName": "Họ và tên",
+  "phone": "Số điện thoại",
+  "address": "Địa chỉ",
+  "city": "Thành phố",
+  "postalCode": "Mã bưu điện",
+  "country": "Quốc gia"
+}
