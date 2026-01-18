@@ -1,0 +1,22 @@
+{
+  "title": "Bảng Điều Khiển",
+  "home": "Trang Chủ",
+  "welcome": "Chào mừng trở lại! Đây là những gì đang xảy ra hôm nay.",
+  "orders": "Đơn Hàng",
+  "prescriptions": "Đơn Theo Toa",
+  "customers": "Khách Hàng",
+  "returns": "Đổi Trả & Hoàn Tiền",
+  "inventory": "Kho Hàng",
+  "products": "Sản Phẩm",
+  "users": "Người Dùng & Nhân Viên",
+  "reports": "Báo Cáo",
+  "settings": "Cài Đặt",
+  "stats": {
+    "ordersToProcess": "Đơn Hàng Cần Xử Lý",
+    "pendingShipments": "Lô Hàng Đang Chờ",
+    "totalRevenue": "Tổng Doanh Thu",
+    "activeCustomers": "Khách Hàng Hoạt Động",
+    "lowInventory": "Hàng Hóa Tồn Kho Thấp",
+    "pendingReturns": "Yêu Cầu Đổi Trả Chưa Xử Lý"
+  }
+}

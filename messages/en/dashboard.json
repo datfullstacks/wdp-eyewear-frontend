@@ -1,0 +1,22 @@
+{
+  "title": "Dashboard",
+  "home": "Home",
+  "welcome": "Welcome back! Here's what's happening today.",
+  "orders": "Orders",
+  "prescriptions": "Prescriptions",
+  "customers": "Customers",
+  "returns": "Returns & Refunds",
+  "inventory": "Inventory",
+  "products": "Products",
+  "users": "Users & Staff",
+  "reports": "Reports",
+  "settings": "Settings",
+  "stats": {
+    "ordersToProcess": "Orders to Process",
+    "pendingShipments": "Pending Shipments",
+    "totalRevenue": "Total Revenue",
+    "activeCustomers": "Active Customers",
+    "lowInventory": "Low Inventory Items",
+    "pendingReturns": "Pending Returns"
+  }
+}

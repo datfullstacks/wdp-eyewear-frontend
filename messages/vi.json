@@ -1,4 +1,14 @@
 {
+  "welcome": "Chào mừng đến với WDP Eyewear",
+  "description": "Bộ sưu tập kính cao cấp dành cho mọi người",
+  "shop_now": "Mua ngay",
+  "learn_more": "Tìm hiểu thêm",
+  "quality": "Chất lượng cao cấp",
+  "quality_desc": "Kính mắt được chọn lọc từ các thương hiệu hàng đầu thế giới",
+  "affordable": "Giá cả phải chăng",
+  "affordable_desc": "Giá trị tốt nhất cho số tiền bạn bỏ ra",
+  "support": "Hỗ trợ chuyên nghiệp",
+  "support_desc": "Nhận trợ giúp từ các chuyên gia kính mắt của chúng tôi bất cứ lúc nào",
   "common": {
     "appName": "WDP Eyewear",
     "welcome": "Chào mừng",
@@ -32,6 +42,12 @@
     "confirmPassword": "Xác nhận mật khẩu",
     "forgotPassword": "Quên mật khẩu?",
     "name": "Họ và tên",
+    "signInTitle": "Đăng nhập tài khoản",
+    "signUpTitle": "Tạo tài khoản mới",
+    "noAccount": "Chưa có tài khoản?",
+    "haveAccount": "Đã có tài khoản?",
+    "signInButton": "Đăng nhập",
+    "signUpButton": "Đăng ký",
     "loginSuccess": "Đăng nhập thành công",
     "registerSuccess": "Đăng ký thành công",
     "loginError": "Email hoặc mật khẩu không đúng",
@@ -80,5 +96,107 @@
     "contactUs": "Liên hệ",
     "privacyPolicy": "Chính sách bảo mật",
     "termsOfService": "Điều khoản dịch vụ"
+  },
+  "home": {
+    "welcome": "Chào mừng đến WDP Eyewear",
+    "description": "Bộ sưu tập kính mắt cao cấp cho tất cả mọi người",
+    "shop_now": "Mua sắm ngay",
+    "learn_more": "Tìm hiểu thêm",
+    "quality": "Chất lượng cao cấp",
+    "quality_desc": "Kính mắt được lựa chọn cẩn thận từ các thương hiệu hàng đầu thế giới",
+    "affordable": "Giá cả phải chăng",
+    "affordable_desc": "Giá trị tốt nhất cho tiền của bạn được đảm bảo",
+    "support": "Hỗ trợ chuyên gia",
+    "support_desc": "Nhận sự giúp đỡ từ các chuyên gia kính mắt của chúng tôi bất kỳ lúc nào"
+  },
+  "landing": {
+    "nav": {
+      "collection": "Bộ Sưu Tập",
+      "about": "Giới Thiệu",
+      "contact": "Liên Hệ"
+    },
+    "hero": {
+      "badge": "Bộ Sưu Tập Kính Cao Cấp",
+      "title": "Nhìn Thế Giới Với Phong Cách",
+      "description": "Khám phá bộ sưu tập kính mắt cao cấp được chọn lọc từ những người đánh giá cao sự thanh lịch tinh tế và chất lượng đặc biệt.",
+      "cta1": "Khám Phá Bộ Sưu Tập",
+      "cta2": "Tìm Hiểu Thêm"
+    },
+    "features": {
+      "title": "Tại Sao Chọn WDP",
+      "quality": {
+        "title": "Chất Lượng Cao Cấp",
+        "desc": "Gọng kính được chọn lọc từ các nhà sản xuất tốt nhất thế giới"
+      },
+      "curation": {
+        "title": "Chọn Lọc Chuyên Gia",
+        "desc": "Các chuyên gia của chúng tôi cẩn thận lựa chọn từng sản phẩm trong bộ sưu tập"
+      },
+      "support": {
+        "title": "Hỗ Trợ Suốt Đời",
+        "desc": "Điều chỉnh và bảo trì miễn phí suốt đời"
+      },
+      "packaging": {
+        "title": "Bao Bì Cao Cấp",
+        "desc": "Mỗi lần mua đều có bao bì trình bày cao cấp"
+      }
+    },
+    "testimonials": {
+      "title": "Được Yêu Thích Bởi Những Nhà Sưu Tầm",
+      "items": [
+        {
+          "name": "Alexandra Chen",
+          "role": "Kiến Trúc Sư",
+          "text": "Kính mắt hay nhất tôi từng sở hữu. Chất lượng không có gì bằng."
+        },
+        {
+          "name": "Marcus Rivera",
+          "role": "Nhà Thiết Kế",
+          "text": "Mọi chi tiết đều hoàn hảo. Đây là sự sang trọng thực sự."
+        },
+        {
+          "name": "Sophie Laurent",
+          "role": "Giám Đốc",
+          "text": "WDP hiểu rõ ý nghĩa của sự thanh lịch."
+        }
+      ]
+    },
+    "cta": {
+      "title": "Bắt Đầu Hành Trình Sang Trọng Của Bạn",
+      "description": "Khám phá bộ sưu tập độc quyền của chúng tôi và tìm thấy cặp kính hoàn hảo định nghĩa phong cách của bạn.",
+      "button": "Xem Bộ Sưu Tập"
+    },
+    "footer": {
+      "copyright": "© 2026 WDP Eyewear. Tất cả các quyền được bảo lưu.",
+      "tagline": "Được tạo ra cho những người nhìn thấy vượt ra ngoài thời trang."
+    }
+  },
+  "dashboard": {
+    "title": "Bảng Điều Khiển",
+    "home": "Trang Chủ",
+    "welcome": "Chào mừng trở lại! Đây là những gì đang xảy ra hôm nay.",
+    "orders": "Đơn Hàng",
+    "prescriptions": "Đơn Theo Toa",
+    "customers": "Khách Hàng",
+    "returns": "Đổi Trả & Hoàn Tiền",
+    "inventory": "Kho Hàng",
+    "products": "Sản Phẩm",
+    "users": "Người Dùng & Nhân Viên",
+    "reports": "Báo Cáo",
+    "settings": "Cài Đặt",
+    "stats": {
+      "ordersToProcess": "Đơn Hàng Cần Xử Lý",
+      "pendingShipments": "Lô Hàng Đang Chờ",
+      "totalRevenue": "Tổng Doanh Thu",
+      "activeCustomers": "Khách Hàng Hoạt Động",
+      "lowInventory": "Hàng Hóa Tồn Kho Thấp",
+      "pendingReturns": "Yêu Cầu Đổi Trả Chưa Xử Lý"
+    }
+  },
+  "notFound": {
+    "title": "Không Tìm Thấy Trang",
+    "description": "Trang bạn đang tìm kiếm không tồn tại hoặc đã được di chuyển.",
+    "backHome": "Về Trang Chủ",
+    "shopNow": "Mua Kính Ngay"
   }
 }

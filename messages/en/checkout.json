@@ -1,0 +1,13 @@
+{
+  "title": "Checkout",
+  "shippingAddress": "Shipping Address",
+  "paymentMethod": "Payment Method",
+  "orderSummary": "Order Summary",
+  "placeOrder": "Place Order",
+  "fullName": "Full Name",
+  "phone": "Phone Number",
+  "address": "Address",
+  "city": "City",
+  "postalCode": "Postal Code",
+  "country": "Country"
+}

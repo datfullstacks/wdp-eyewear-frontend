@@ -1,0 +1,13 @@
+{
+  "title": "Products",
+  "search": "Search products...",
+  "category": "Category",
+  "brand": "Brand",
+  "price": "Price",
+  "addToCart": "Add to Cart",
+  "outOfStock": "Out of Stock",
+  "viewDetails": "View Details",
+  "sunglasses": "Sunglasses",
+  "eyeglasses": "Eyeglasses",
+  "contactLenses": "Contact Lenses"
+}

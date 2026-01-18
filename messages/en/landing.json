@@ -1,0 +1,62 @@
+{
+  "nav": {
+    "collection": "Collection",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "hero": {
+    "badge": "Premium Eyewear Collection",
+    "title": "See The World In Style",
+    "description": "Discover our curated collection of premium eyewear crafted for those who appreciate refined elegance and exceptional quality.",
+    "cta1": "Explore Collection",
+    "cta2": "Learn More"
+  },
+  "features": {
+    "title": "Why Choose WDP",
+    "quality": {
+      "title": "Premium Quality",
+      "desc": "Handpicked frames from the world's finest manufacturers"
+    },
+    "curation": {
+      "title": "Expert Curation",
+      "desc": "Our specialists carefully select every piece in our collection"
+    },
+    "support": {
+      "title": "Lifetime Support",
+      "desc": "Complimentary adjustments and maintenance for life"
+    },
+    "packaging": {
+      "title": "Luxury Packaging",
+      "desc": "Every purchase comes in premium presentation"
+    }
+  },
+  "testimonials": {
+    "title": "Loved by Connoisseurs",
+    "items": [
+      {
+        "name": "Alexandra Chen",
+        "role": "Architect",
+        "text": "The finest eyewear I've ever owned. The quality is unmatched."
+      },
+      {
+        "name": "Marcus Rivera",
+        "role": "Designer",
+        "text": "Every detail is perfection. This is true luxury."
+      },
+      {
+        "name": "Sophie Laurent",
+        "role": "CEO",
+        "text": "WDP understands what elegance really means."
+      }
+    ]
+  },
+  "cta": {
+    "title": "Start Your Luxury Journey",
+    "description": "Explore our exclusive collection and find the perfect pair that defines your style.",
+    "button": "View Collection"
+  },
+  "footer": {
+    "copyright": "© 2026 WDP Eyewear. All rights reserved.",
+    "tagline": "Crafted for those who see beyond fashion."
+  }
+}

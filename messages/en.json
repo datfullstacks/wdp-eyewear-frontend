@@ -1,4 +1,14 @@
 {
+  "welcome": "Welcome to WDP Eyewear",
+  "description": "Premium eyewear collection for everyone",
+  "shop_now": "Shop Now",
+  "learn_more": "Learn More",
+  "quality": "Premium Quality",
+  "quality_desc": "Handpicked eyewear from top brands worldwide",
+  "affordable": "Affordable Prices",
+  "affordable_desc": "Best value for your money guaranteed",
+  "support": "Expert Support",
+  "support_desc": "Get help from our eyewear specialists anytime",
   "common": {
     "appName": "WDP Eyewear",
     "welcome": "Welcome",
@@ -32,6 +42,12 @@
     "confirmPassword": "Confirm Password",
     "forgotPassword": "Forgot Password?",
     "name": "Full Name",
+    "signInTitle": "Sign in to your account",
+    "signUpTitle": "Create your account",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "signInButton": "Sign In",
+    "signUpButton": "Sign Up",
     "loginSuccess": "Login successful",
     "registerSuccess": "Registration successful",
     "loginError": "Invalid email or password",
@@ -80,5 +96,107 @@
     "contactUs": "Contact Us",
     "privacyPolicy": "Privacy Policy",
     "termsOfService": "Terms of Service"
+  },
+  "home": {
+    "welcome": "Welcome to WDP Eyewear",
+    "description": "Premium eyewear collection for everyone",
+    "shop_now": "Shop Now",
+    "learn_more": "Learn More",
+    "quality": "Premium Quality",
+    "quality_desc": "Handpicked eyewear from top brands worldwide",
+    "affordable": "Affordable Prices",
+    "affordable_desc": "Best value for your money guaranteed",
+    "support": "Expert Support",
+    "support_desc": "Get help from our eyewear specialists anytime"
+  },
+  "landing": {
+    "nav": {
+      "collection": "Collection",
+      "about": "About",
+      "contact": "Contact"
+    },
+    "hero": {
+      "badge": "Premium Eyewear Collection",
+      "title": "See The World In Style",
+      "description": "Discover our curated collection of premium eyewear crafted for those who appreciate refined elegance and exceptional quality.",
+      "cta1": "Explore Collection",
+      "cta2": "Learn More"
+    },
+    "features": {
+      "title": "Why Choose WDP",
+      "quality": {
+        "title": "Premium Quality",
+        "desc": "Handpicked frames from the world's finest manufacturers"
+      },
+      "curation": {
+        "title": "Expert Curation",
+        "desc": "Our specialists carefully select every piece in our collection"
+      },
+      "support": {
+        "title": "Lifetime Support",
+        "desc": "Complimentary adjustments and maintenance for life"
+      },
+      "packaging": {
+        "title": "Luxury Packaging",
+        "desc": "Every purchase comes in premium presentation"
+      }
+    },
+    "testimonials": {
+      "title": "Loved by Connoisseurs",
+      "items": [
+        {
+          "name": "Alexandra Chen",
+          "role": "Architect",
+          "text": "The finest eyewear I've ever owned. The quality is unmatched."
+        },
+        {
+          "name": "Marcus Rivera",
+          "role": "Designer",
+          "text": "Every detail is perfection. This is true luxury."
+        },
+        {
+          "name": "Sophie Laurent",
+          "role": "CEO",
+          "text": "WDP understands what elegance really means."
+        }
+      ]
+    },
+    "cta": {
+      "title": "Start Your Luxury Journey",
+      "description": "Explore our exclusive collection and find the perfect pair that defines your style.",
+      "button": "View Collection"
+    },
+    "footer": {
+      "copyright": "© 2026 WDP Eyewear. All rights reserved.",
+      "tagline": "Crafted for those who see beyond fashion."
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "home": "Home",
+    "welcome": "Welcome back! Here's what's happening today.",
+    "orders": "Orders",
+    "prescriptions": "Prescriptions",
+    "customers": "Customers",
+    "returns": "Returns & Refunds",
+    "inventory": "Inventory",
+    "products": "Products",
+    "users": "Users & Staff",
+    "reports": "Reports",
+    "settings": "Settings",
+    "stats": {
+      "ordersToProcess": "Orders to Process",
+      "pendingShipments": "Pending Shipments",
+      "totalRevenue": "Total Revenue",
+      "activeCustomers": "Active Customers",
+      "lowInventory": "Low Inventory Items",
+      "pendingReturns": "Pending Returns"
+    }
+  },
+  "notFound": {
+    "title": "Page Not Found",
+    "description": "The page you're looking for doesn't exist or has been moved.",
+    "backHome": "Back to Home",
+    "shopNow": "Shop Eyewear"
   }
 }

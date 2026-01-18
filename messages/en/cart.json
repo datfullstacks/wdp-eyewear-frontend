@@ -1,0 +1,11 @@
+{
+  "title": "Shopping Cart",
+  "empty": "Your cart is empty",
+  "quantity": "Quantity",
+  "subtotal": "Subtotal",
+  "total": "Total",
+  "checkout": "Proceed to Checkout",
+  "continueShopping": "Continue Shopping",
+  "removeItem": "Remove",
+  "updateCart": "Update Cart"
+}
