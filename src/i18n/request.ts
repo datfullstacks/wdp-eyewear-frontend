@@ -26,6 +26,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     landing,
     dashboard,
     notFound,
+    manager,
   ] = await Promise.all([
     import(`../../messages/${locale}/common.json`).then((m) => m.default),
     import(`../../messages/${locale}/nav.json`).then((m) => m.default),
@@ -38,6 +39,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     import(`../../messages/${locale}/landing.json`).then((m) => m.default),
     import(`../../messages/${locale}/dashboard.json`).then((m) => m.default),
     import(`../../messages/${locale}/notFound.json`).then((m) => m.default),
+    import(`../../messages/${locale}/manager.json`).then((m) => m.default),
   ]);
 
   return {
@@ -54,6 +56,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       landing,
       dashboard,
       notFound,
+      manager,
     },
   };
 });
