@@ -19,17 +19,44 @@ export default function ManagerRevenuePage() {
   const avgOrderValue = totalRevenue / totalOrders;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
-        <p className="mt-1 text-sm text-gray-600">{t('subtitle')}</p>
+    <div className="space-y-8">
+      {/* Page Header with Decorative Elements */}
+      <div className="relative">
+        <div className="absolute -top-4 -left-4 h-24 w-24 rounded-full bg-gradient-to-br from-green-200 to-emerald-200 opacity-30 blur-3xl" />
+        <div className="absolute -top-4 -right-4 h-32 w-32 rounded-full bg-gradient-to-br from-emerald-200 to-teal-200 opacity-30 blur-3xl" />
+
+        <div className="relative flex items-center gap-4">
+          <div className="rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 p-3 shadow-lg shadow-green-500/30">
+            <svg
+              className="h-8 w-8 text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
+            </svg>
+          </div>
+          <div>
+            <h1 className="bg-gradient-to-r from-gray-900 via-green-900 to-emerald-900 bg-clip-text text-4xl font-bold text-transparent">
+              {t('title')}
+            </h1>
+            <p className="mt-2 flex items-center gap-2 text-gray-600">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500" />
+              {t('subtitle')}
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title={t('stats.totalRevenue')}
           value={`$${totalRevenue.toLocaleString()}`}
-          variant="primary"
           trend={{ value: 12.5, isPositive: true }}
           icon={
             <svg
@@ -51,7 +78,6 @@ export default function ManagerRevenuePage() {
         <StatCard
           title={t('stats.totalOrders')}
           value={totalOrders}
-          variant="success"
           trend={{ value: 8.3, isPositive: true }}
           icon={
             <svg
@@ -73,7 +99,6 @@ export default function ManagerRevenuePage() {
         <StatCard
           title={t('stats.avgOrderValue')}
           value={`$${avgOrderValue.toFixed(2)}`}
-          variant="warning"
           trend={{ value: 3.2, isPositive: false }}
           icon={
             <svg
@@ -95,7 +120,6 @@ export default function ManagerRevenuePage() {
         <StatCard
           title={t('stats.totalCustomers')}
           value={mockCustomerMetrics.totalCustomers.toLocaleString()}
-          variant="danger"
           trend={{ value: 15.7, isPositive: true }}
           icon={
             <svg

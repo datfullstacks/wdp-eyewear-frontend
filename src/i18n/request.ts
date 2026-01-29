@@ -6,8 +6,8 @@ export default getRequestConfig(async ({ requestLocale }) => {
   // Read locale from cookie first
   const cookieStore = await cookies();
   const cookieLocale = cookieStore.get('NEXT_LOCALE')?.value;
-  
-  let locale = cookieLocale || await requestLocale;
+
+  let locale = cookieLocale || (await requestLocale);
 
   // Ensure that a valid locale is used
   if (!locale || !routing.locales.includes(locale as any)) {
