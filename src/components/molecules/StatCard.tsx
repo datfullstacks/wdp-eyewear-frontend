@@ -10,7 +10,12 @@ interface StatCardProps {
     value: number;
     isPositive: boolean;
   };
+  iconColor?: string;
   className?: string;
+  titleClassName?: string;
+  valueClassName?: string;
+  showIcon?: boolean;
+  inline?: boolean;
 }
 
 export const StatCard = ({
@@ -18,25 +23,45 @@ export const StatCard = ({
   value,
   icon,
   trend,
+  iconColor,
   className,
+  titleClassName,
+  valueClassName,
+  showIcon = true,
+  inline = false,
 }: StatCardProps) => {
   return (
     <div
       className={cn(
-        'rounded-xl border border-slate-200/70 bg-white/80 p-6 shadow-sm backdrop-blur transition-all duration-300 hover:scale-[1.02]',
+        'glass-card rounded-xl p-4 transition-all duration-300 hover:scale-[1.02]',
         className
       )}
     >
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-muted-foreground text-sm font-medium">{title}</p>
-          <p className="font-display text-foreground mt-2 text-3xl font-semibold">
+      <div
+        className={cn('flex items-start justify-between', inline && 'items-center')}
+      >
+        <div className={cn(inline ? 'flex items-center gap-2' : 'block')}>
+          <p
+            className={cn(
+              'text-muted-foreground text-sm font-medium',
+              titleClassName
+            )}
+          >
+            {title}
+          </p>
+          <p
+            className={cn(
+              'font-display text-foreground mt-1 text-2xl font-semibold',
+              inline && 'mt-0',
+              valueClassName
+            )}
+          >
             {value}
           </p>
           {trend && (
             <p
               className={cn(
-                'mt-2 text-sm font-medium',
+                'mt-1 text-sm font-medium',
                 trend.isPositive ? 'text-success' : 'text-destructive'
               )}
             >
@@ -45,9 +70,15 @@ export const StatCard = ({
             </p>
           )}
         </div>
-        <div className="rounded-lg border border-amber-200/70 bg-amber-50 p-3">
-          <Icon icon={icon} size="lg" className="text-amber-700" />
-        </div>
+        {showIcon && (
+          <div className="gradient-gold rounded-lg p-3">
+            <Icon
+              icon={icon}
+              size="lg"
+              className={iconColor || 'text-primary'}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

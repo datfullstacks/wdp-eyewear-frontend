@@ -59,7 +59,7 @@ export const ProductCard = ({
           >
             <Eye className="h-4 w-4" />
           </Button>
-          <Button
+          {/* <Button
             size="sm"
             variant="secondary"
             className="gap-1 border border-white/40 bg-black/35 text-white hover:bg-black/55"
@@ -72,14 +72,14 @@ export const ProductCard = ({
             className="gap-1 border border-rose-200/80 bg-rose-500/15 text-rose-100 hover:bg-rose-500/30"
           >
             <Trash2 className="h-4 w-4" />
-          </Button>
+          </Button> */}
         </div>
       </div>
       <div className="p-4">
         <p className="text-xs font-semibold tracking-wide text-amber-500 uppercase">
           {brand}
         </p>
-        <h3 className="mt-1 line-clamp-1 font-display text-lg font-semibold text-slate-900">
+        <h3 className="font-display mt-1 line-clamp-1 text-lg font-semibold text-slate-900">
           {name}
         </h3>
         <p className="text-sm text-slate-500">{category}</p>

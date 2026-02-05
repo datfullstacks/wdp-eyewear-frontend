@@ -51,6 +51,7 @@ type MenuItem = {
   icon: LucideIcon;
   label: string;
   path?: string; // leaf
+  exact?: boolean;
   badge?: string;
   badgeType?: BadgeType;
   children?: MenuItem[]; // group
@@ -63,7 +64,12 @@ const menuItems: MenuItem[] = [
     icon: ShoppingCart,
     label: 'Đơn hàng',
     children: [
-      { icon: ClipboardList, label: 'Tất cả đơn hàng', path: '/orders' },
+      {
+        icon: ClipboardList,
+        label: 'Tất cả đơn hàng',
+        path: '/orders',
+        exact: true,
+      },
       {
         icon: Clock,
         label: 'Đơn cần xử lý',
@@ -256,8 +262,9 @@ function MenuItemBadge({
   );
 }
 
-function isActivePath(pathname: string, itemPath?: string) {
+function isActivePath(pathname: string, itemPath?: string, exact?: boolean) {
   if (!itemPath) return false;
+  if (exact) return pathname === itemPath;
   return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
 }
 
@@ -270,7 +277,9 @@ export const Sidebar: React.FC = () => {
     const map = new Map<string, boolean>();
     for (const item of menuItems) {
       if (!item.children) continue;
-      const open = item.children.some((c) => isActivePath(pathname, c.path));
+      const open = item.children.some((c) =>
+        isActivePath(pathname, c.path, c.exact)
+      );
       map.set(item.label, open);
     }
     return map;
@@ -293,7 +302,7 @@ export const Sidebar: React.FC = () => {
       for (const item of menuItems) {
         if (!item.children) continue;
         const shouldOpen = item.children.some((c) =>
-          isActivePath(pathname, c.path)
+          isActivePath(pathname, c.path, c.exact)
         );
         if (shouldOpen) next[item.label] = true;
       }
@@ -351,7 +360,7 @@ export const Sidebar: React.FC = () => {
         {menuItems.map((item) => {
           // Leaf
           if (!item.children) {
-            const active = isActivePath(pathname, item.path);
+            const active = isActivePath(pathname, item.path, item.exact);
             return (
               <Link
                 key={item.label}
@@ -375,7 +384,7 @@ export const Sidebar: React.FC = () => {
 
           // Group
           const hasActiveChild = item.children.some((c) =>
-            isActivePath(pathname, c.path)
+            isActivePath(pathname, c.path, c.exact)
           );
           const isOpen = !!openGroups[item.label];
 
@@ -416,7 +425,11 @@ export const Sidebar: React.FC = () => {
               {!collapsed && isOpen && (
                 <div className="mt-1 space-y-1">
                   {item.children.map((child) => {
-                    const active = isActivePath(pathname, child.path);
+                    const active = isActivePath(
+                      pathname,
+                      child.path,
+                      child.exact
+                    );
                     return (
                       <Link
                         key={child.path}
