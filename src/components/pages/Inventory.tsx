@@ -22,33 +22,18 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
+  TrendingUp,
+  TrendingDown,
   Package,
   AlertTriangle,
   CheckCircle,
   XCircle,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  History,
-  TrendingUp,
-  TrendingDown,
-  Filter,
-  Download,
-  RefreshCw,
 } from 'lucide-react';
-import { Button, Input } from '@/components/atoms';
+import { Input } from '@/components/atoms/Input';
 import { Header } from '@/components/organisms/Header';
 
 interface InventoryItem {

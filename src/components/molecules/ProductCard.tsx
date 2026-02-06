@@ -1,4 +1,4 @@
-import { Eye, Edit, Trash2 } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import { StatusBadge } from '@/components/atoms/StatusBadge';
 
 import { cn } from '@/lib/utils';
