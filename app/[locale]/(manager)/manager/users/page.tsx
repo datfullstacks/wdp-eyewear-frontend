@@ -355,103 +355,107 @@ function UsersPage() {
         {/* Quick Actions */}
         <section className="animate-slide-in">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            {/* Manager Actions */}
+            {activeTab === 'managers' && (
+              <>
+                <div className="bg-card border-border cursor-pointer rounded-lg border p-6 transition-shadow hover:shadow-md">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-full bg-amber-100 p-2 text-amber-600">
+                      <Shield className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-900">Quản lý quyền</h3>
+                      <p className="text-gray-500 text-sm">
+                        Cấp và thu hồi quyền
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-card border-border cursor-pointer rounded-lg border p-6 transition-shadow hover:shadow-md">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-full bg-blue-100 p-2 text-blue-600">
+                      <Activity className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-900">Theo dõi hiệu suất</h3>
+                      <p className="text-gray-500 text-sm">
+                        Báo cáo và đánh giá Manager
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Staff Actions */}
             {activeTab === 'staff' && (
-              <div
-                onClick={() => setShowAssignModal(true)}
-                className="bg-card border-border cursor-pointer rounded-lg border p-6 transition-shadow hover:shadow-md"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-blue-100 p-2 text-blue-600">
-                    <Calendar className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Phân công Staff</h3>
-                    <p className="text-muted-foreground text-sm">
-                      Giao việc và lập lịch
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'staff' && (
-              <div
-                onClick={() => setShowRequestModal(true)}
-                className="bg-card border-border cursor-pointer rounded-lg border p-6 transition-shadow hover:shadow-md"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-orange-100 p-2 text-orange-600">
-                    <MessageSquare className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Yêu cầu Staff</h3>
-                    <p className="text-muted-foreground text-sm">
-                      Gửi yêu cầu công việc
-                    </p>
+              <>
+                <div
+                  onClick={() => setShowAssignModal(true)}
+                  className="bg-card border-border cursor-pointer rounded-lg border p-6 transition-shadow hover:shadow-md"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-full bg-blue-100 p-2 text-blue-600">
+                      <Calendar className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-900">Phân công Staff</h3>
+                      <p className="text-gray-500 text-sm">
+                        Giao việc và lập lịch
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+                <div
+                  onClick={() => setShowRequestModal(true)}
+                  className="bg-card border-border cursor-pointer rounded-lg border p-6 transition-shadow hover:shadow-md"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-full bg-orange-100 p-2 text-orange-600">
+                      <MessageSquare className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-900">Yêu cầu Staff</h3>
+                      <p className="text-gray-500 text-sm">
+                        Gửi yêu cầu công việc
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </>
             )}
 
+            {/* Customer Actions */}
             {activeTab === 'customers' && (
-              <div className="bg-card border-border cursor-pointer rounded-lg border p-6 transition-shadow hover:shadow-md">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-purple-100 p-2 text-purple-600">
-                    <UserCheck className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Chăm sóc khách hàng</h3>
-                    <p className="text-muted-foreground text-sm">
-                      Hỗ trợ và tư vấn
-                    </p>
+              <>
+                <div className="bg-card border-border cursor-pointer rounded-lg border p-6 transition-shadow hover:shadow-md">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-full bg-purple-100 p-2 text-purple-600">
+                      <UserCheck className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-900">Chăm sóc khách hàng</h3>
+                      <p className="text-gray-500 text-sm">
+                        Hỗ trợ và tư vấn
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+                <div className="bg-card border-border cursor-pointer rounded-lg border p-6 transition-shadow hover:shadow-md">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-full bg-green-100 p-2 text-green-600">
+                      <Activity className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-900">Phân tích hành vi</h3>
+                      <p className="text-gray-500 text-sm">
+                        Thống kê mua sắm
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </>
             )}
-
-            {activeTab === 'customers' && (
-              <div className="bg-card border-border cursor-pointer rounded-lg border p-6 transition-shadow hover:shadow-md">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-green-100 p-2 text-green-600">
-                    <Activity className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Phân tích hành vi</h3>
-                    <p className="text-muted-foreground text-sm">
-                      Thống kê mua sắm
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="bg-card border-border rounded-lg border p-6 transition-shadow hover:shadow-md">
-              <div className="flex items-center gap-3">
-                <div className="bg-accent/20 text-accent rounded-full p-2">
-                  <Shield className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="font-medium">Quản lý quyền</h3>
-                  <p className="text-muted-foreground text-sm">
-                    Cấp và thu hồi quyền
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-card border-border rounded-lg border p-6 transition-shadow hover:shadow-md">
-              <div className="flex items-center gap-3">
-                <div className="rounded-full bg-green-100 p-2 text-green-600">
-                  <Activity className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="font-medium">Theo dõi hiệu suất</h3>
-                  <p className="text-muted-foreground text-sm">
-                    Báo cáo và đánh giá
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
         </section>
 
@@ -812,7 +816,7 @@ const AddUserModal = ({
   <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
     <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-semibold">
+        <h2 className="text-xl font-semibold text-gray-900">
           Thêm {type === 'managers' ? 'Manager' : 'Staff'} mới
         </h2>
         <Button variant="ghost" onClick={onClose}>
@@ -823,18 +827,18 @@ const AddUserModal = ({
       <form className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="mb-1 block text-sm font-medium">Họ và tên</label>
+            <label className="mb-1 block text-sm font-medium text-gray-900">Họ và tên</label>
             <input
               type="text"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
               placeholder="Nhập họ và tên"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium">Email</label>
+            <label className="mb-1 block text-sm font-medium text-gray-900">Email</label>
             <input
               type="email"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
               placeholder="email@company.com"
             />
           </div>
@@ -842,20 +846,20 @@ const AddUserModal = ({
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="mb-1 block text-sm font-medium">
+            <label className="mb-1 block text-sm font-medium text-gray-900">
               Số điện thoại
             </label>
             <input
               type="tel"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
               placeholder="0901234567"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium">
+            <label className="mb-1 block text-sm font-medium text-gray-900">
               {type === 'managers' ? 'Phòng ban quản lý' : 'Vị trí công việc'}
             </label>
-            <select className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+            <select className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
               {type === 'managers' ? (
                 <>
                   <option value="">Chọn phòng ban</option>
@@ -878,7 +882,7 @@ const AddUserModal = ({
 
         {type === 'managers' && (
           <div>
-            <label className="mb-1 block text-sm font-medium">Quyền hạn</label>
+            <label className="mb-1 block text-sm font-medium text-gray-900">Quyền hạn</label>
             <div className="grid grid-cols-2 gap-2">
               {[
                 'user_management',
@@ -889,7 +893,7 @@ const AddUserModal = ({
               ].map((perm) => (
                 <label key={perm} className="flex items-center">
                   <input type="checkbox" className="mr-2" />
-                  <span className="text-sm">{perm}</span>
+                  <span className="text-sm text-gray-700">{perm}</span>
                 </label>
               ))}
             </div>
@@ -899,10 +903,10 @@ const AddUserModal = ({
         {type === 'staff' && (
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="mb-1 block text-sm font-medium">
+              <label className="mb-1 block text-sm font-medium text-gray-900">
                 Manager phụ trách
               </label>
-              <select className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+              <select className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
                 <option value="">Chọn Manager</option>
                 <option value="1">Nguyễn Văn A</option>
                 <option value="2">Trần Thị B</option>
@@ -910,10 +914,10 @@ const AddUserModal = ({
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium">
+              <label className="mb-1 block text-sm font-medium text-gray-900">
                 Ca làm việc
               </label>
-              <select className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+              <select className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
                 <option value="morning">Ca sáng (8:00-16:00)</option>
                 <option value="evening">Ca chiều (14:00-22:00)</option>
                 <option value="flexible">Linh hoạt</option>
@@ -941,7 +945,7 @@ const AssignWorkModal = ({ onClose }: { onClose: () => void }) => (
   <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
     <div className="w-full max-w-lg rounded-lg bg-white p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Phân công công việc</h2>
+        <h2 className="text-xl font-semibold text-gray-900">Phân công công việc</h2>
         <Button variant="ghost" onClick={onClose}>
           ✕
         </Button>
@@ -949,8 +953,8 @@ const AssignWorkModal = ({ onClose }: { onClose: () => void }) => (
 
       <form className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-medium">Chọn Staff</label>
-          <select className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          <label className="mb-1 block text-sm font-medium text-gray-900">Chọn Staff</label>
+          <select className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
             <option value="">Chọn nhân viên</option>
             <option value="4">Ngô Thị G (Chờ phân công)</option>
             <option value="2">Hoàng Thị E (Sẵn sàng)</option>
@@ -958,10 +962,10 @@ const AssignWorkModal = ({ onClose }: { onClose: () => void }) => (
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium">
+          <label className="mb-1 block text-sm font-medium text-gray-900">
             Loại công việc
           </label>
-          <select className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          <select className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
             <option value="sales">Bán hàng</option>
             <option value="inventory">Quản lý kho</option>
             <option value="customer-service">Chăm sóc khách hàng</option>
@@ -970,11 +974,11 @@ const AssignWorkModal = ({ onClose }: { onClose: () => void }) => (
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium">
+          <label className="mb-1 block text-sm font-medium text-gray-900">
             Mô tả công việc
           </label>
           <textarea
-            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
             rows={3}
             placeholder="Nhập mô tả chi tiết công việc cần giao..."
           ></textarea>
@@ -982,21 +986,21 @@ const AssignWorkModal = ({ onClose }: { onClose: () => void }) => (
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="mb-1 block text-sm font-medium">
+            <label className="mb-1 block text-sm font-medium text-gray-900">
               Ngày bắt đầu
             </label>
             <input
               type="date"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:outline-none"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium">
+            <label className="mb-1 block text-sm font-medium text-gray-900">
               Hạn hoàn thành
             </label>
             <input
               type="date"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:outline-none"
             />
           </div>
         </div>
@@ -1020,7 +1024,7 @@ const RequestStaffModal = ({ onClose }: { onClose: () => void }) => (
   <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
     <div className="w-full max-w-lg rounded-lg bg-white p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Yêu cầu Staff</h2>
+        <h2 className="text-xl font-semibold text-gray-900">Yêu cầu Staff</h2>
         <Button variant="ghost" onClick={onClose}>
           ✕
         </Button>
@@ -1028,8 +1032,8 @@ const RequestStaffModal = ({ onClose }: { onClose: () => void }) => (
 
       <form className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-medium">Chọn Staff</label>
-          <select className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          <label className="mb-1 block text-sm font-medium text-gray-900">Chọn Staff</label>
+          <select className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
             <option value="">Chọn nhân viên</option>
             <option value="1">Phạm Văn D</option>
             <option value="2">Hoàng Thị E</option>
@@ -1037,8 +1041,8 @@ const RequestStaffModal = ({ onClose }: { onClose: () => void }) => (
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium">Loại yêu cầu</label>
-          <select className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          <label className="mb-1 block text-sm font-medium text-gray-900">Loại yêu cầu</label>
+          <select className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
             <option value="urgent-task">Công việc khẩn cấp</option>
             <option value="overtime">Làm thêm giờ</option>
             <option value="support">Hỗ trợ công việc</option>
@@ -1047,21 +1051,21 @@ const RequestStaffModal = ({ onClose }: { onClose: () => void }) => (
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium">
+          <label className="mb-1 block text-sm font-medium text-gray-900">
             Nội dung yêu cầu
           </label>
           <textarea
-            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
             rows={4}
             placeholder="Nhập nội dung yêu cầu chi tiết..."
           ></textarea>
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium">
+          <label className="mb-1 block text-sm font-medium text-gray-900">
             Mức độ ưu tiên
           </label>
-          <select className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          <select className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
             <option value="low">Thấp</option>
             <option value="normal">Bình thường</option>
             <option value="high">Cao</option>
