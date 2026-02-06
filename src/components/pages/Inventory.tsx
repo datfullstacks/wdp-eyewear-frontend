@@ -22,33 +22,19 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+
 import {
   Package,
   AlertTriangle,
   CheckCircle,
   XCircle,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  History,
   TrendingUp,
   TrendingDown,
-  Filter,
-  Download,
-  RefreshCw,
 } from 'lucide-react';
-import { Button, Input } from '@/components/atoms';
+import { Input } from '@/components/atoms';
 import { Header } from '@/components/organisms/Header';
 
 interface InventoryItem {
@@ -171,7 +157,7 @@ const Inventory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [selectedItem] = useState<InventoryItem | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);

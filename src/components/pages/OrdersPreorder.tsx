@@ -1,11 +1,10 @@
 'use client';
 import { useState } from 'react';
-import { DashboardLayout } from '@/components/templates/DashboardLayout';
 
 import { Button } from '@/components/ui/button';
 
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
+
 import {
   Table,
   TableBody,
@@ -57,13 +56,7 @@ import {
   XCircle,
   MoreHorizontal,
 } from 'lucide-react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Input,
-} from '@/components/atoms';
+import { Card, CardContent, Input } from '@/components/atoms';
 import { Header } from '@/components/organisms/Header';
 
 interface PreorderOrder {
@@ -247,8 +240,8 @@ const OrdersPreorder = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
-  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
-  const [showFilters, setShowFilters] = useState(false);
+  // const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+  // const [showFilters, setShowFilters] = useState(false);
   const [detailOrder, setDetailOrder] = useState<PreorderOrder | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isLinkBatchOpen, setIsLinkBatchOpen] = useState(false);
@@ -282,21 +275,21 @@ const OrdersPreorder = () => {
     urgent: orders.filter((o) => o.priority === 'urgent').length,
   };
 
-  const handleSelectOrder = (orderId: string) => {
-    setSelectedOrders((prev) =>
-      prev.includes(orderId)
-        ? prev.filter((id) => id !== orderId)
-        : [...prev, orderId]
-    );
-  };
+  // const handleSelectOrder = (orderId: string) => {
+  //   setSelectedOrders((prev) =>
+  //     prev.includes(orderId)
+  //       ? prev.filter((id) => id !== orderId)
+  //       : [...prev, orderId]
+  //   );
+  // };
 
-  const handleSelectAll = () => {
-    if (selectedOrders.length === filteredOrders.length) {
-      setSelectedOrders([]);
-    } else {
-      setSelectedOrders(filteredOrders.map((o) => o.id));
-    }
-  };
+  // const handleSelectAll = () => {
+  //   if (selectedOrders.length === filteredOrders.length) {
+  //     setSelectedOrders([]);
+  //   } else {
+  //     setSelectedOrders(filteredOrders.map((o) => o.id));
+  //   }
+  // };
 
   const handleViewDetail = (order: PreorderOrder) => {
     setDetailOrder(order);
@@ -334,7 +327,7 @@ const OrdersPreorder = () => {
     }
   };
 
-  const handleProcessReady = (order: PreorderOrder) => {};
+  // const handleProcessReady = (order: PreorderOrder) => {};
 
   const getStatusBadge = (status: PreorderOrder['status']) => {
     switch (status) {
@@ -504,39 +497,39 @@ const OrdersPreorder = () => {
 
         {/* Filters */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center">
-              <div className="relative flex-1">
-                <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                <Input
-                  placeholder="Tìm theo mã đơn, tên khách, SĐT..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <Filter className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="Trạng thái" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả trạng thái</SelectItem>
-                  <SelectItem value="waiting_stock">Chờ hàng</SelectItem>
-                  <SelectItem value="partial_stock">Đủ một phần</SelectItem>
-                  <SelectItem value="ready">Sẵn sàng</SelectItem>
-                  <SelectItem value="cancelled">Đã hủy</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Độ ưu tiên" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả</SelectItem>
-                  <SelectItem value="urgent">Gấp</SelectItem>
-                  <SelectItem value="high">Ưu tiên</SelectItem>
-                  <SelectItem value="normal">Bình thường</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="relative flex-1">
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+            <Input
+              placeholder="Tìm theo mã đơn, tên khách, SĐT..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <Filter className="mr-2 h-4 w-4" />
+              <SelectValue placeholder="Trạng thái" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả trạng thái</SelectItem>
+              <SelectItem value="waiting_stock">Chờ hàng</SelectItem>
+              <SelectItem value="partial_stock">Đủ một phần</SelectItem>
+              <SelectItem value="ready">Sẵn sàng</SelectItem>
+              <SelectItem value="cancelled">Đã hủy</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Độ ưu tiên" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả</SelectItem>
+              <SelectItem value="urgent">Gấp</SelectItem>
+              <SelectItem value="high">Ưu tiên</SelectItem>
+              <SelectItem value="normal">Bình thường</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         {/* Orders Table */}
         <Card>
@@ -667,7 +660,10 @@ const OrdersPreorder = () => {
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="text-black">
+                          <DropdownMenuContent
+                            align="end"
+                            className="text-black"
+                          >
                             <DropdownMenuItem
                               onClick={() => handleViewDetail(order)}
                               className="text-black"
@@ -692,11 +688,11 @@ const OrdersPreorder = () => {
                             {order.status === 'ready' && (
                               <>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem
+                                {/* <DropdownMenuItem
                                   onClick={() => handleProcessReady(order)}
                                 >
                                   Xử lý
-                                </DropdownMenuItem>
+                                </DropdownMenuItem> */}
                               </>
                             )}
                             {order.status !== 'cancelled' &&
@@ -725,7 +721,7 @@ const OrdersPreorder = () => {
 
         {/* Detail Modal */}
         <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-          <DialogContent className="text-black max-w-xl max-h-[70vh] overflow-y-auto p-4 text-sm">
+          <DialogContent className="max-h-[70vh] max-w-xl overflow-y-auto p-4 text-sm text-black">
             <DialogHeader>
               <DialogTitle>Chi tiết đơn Pre-order</DialogTitle>
               <DialogDescription>

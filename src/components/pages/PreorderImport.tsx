@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import { DashboardLayout } from '@/components/templates/DashboardLayout';
 
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
@@ -34,7 +33,6 @@ import {
   Search,
   Filter,
   Plus,
-  Calendar,
   Truck,
   CheckCircle2,
   Clock,
@@ -521,7 +519,10 @@ const PreorderImport = () => {
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="text-black">
+                          <DropdownMenuContent
+                            align="end"
+                            className="text-black"
+                          >
                             <DropdownMenuItem
                               onClick={() => handleOpenDetail(batch)}
                               className="text-black"
@@ -556,7 +557,7 @@ const PreorderImport = () => {
 
       {/* Detail Modal */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="text-black max-w-3xl">
+        <DialogContent className="max-w-3xl text-black">
           <DialogHeader>
             <DialogTitle>
               Chi tiết đợt hàng {selectedBatch?.batchCode}
@@ -655,7 +656,7 @@ const PreorderImport = () => {
 
       {/* Receive Stock Modal */}
       <Dialog open={isReceiveOpen} onOpenChange={setIsReceiveOpen}>
-        <DialogContent className="text-black max-w-3xl">
+        <DialogContent className="max-w-3xl text-black">
           <DialogHeader>
             <DialogTitle>
               Xác nhận nhập kho - {selectedBatch?.batchCode}
