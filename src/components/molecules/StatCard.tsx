@@ -74,11 +74,11 @@ export const StatCard = ({
           )}
         </div>
         {showIcon && (
-          <div className="gradient-gold rounded-lg p-3">
+          <div className="rounded-lg bg-amber-100 p-3">
             <Icon
               icon={icon}
               size="lg"
-              className={iconColor || 'text-primary'}
+              className={iconColor || 'text-amber-600'}
             />
           </div>
         )}
