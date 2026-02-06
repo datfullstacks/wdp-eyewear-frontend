@@ -1,8 +1,8 @@
 import { Header } from '@/components/organisms/Header';
 import { Button } from '@/components/atoms/Button';
-import { 
-  Settings, 
-  AlertTriangle, 
+import {
+  Settings,
+  AlertTriangle,
   Clock,
   CheckCircle,
   Edit3,
@@ -89,8 +89,8 @@ const systemSettings = [
 function PoliciesPage() {
   return (
     <>
-      <Header 
-        title="Chính sách & Cài đặt" 
+      <Header
+        title="Chính sách & Cài đặt"
         subtitle="Quản lý chính sách cửa hàng và cài đặt hệ thống"
         showAddButton
         addButtonLabel="Tạo chính sách mới"
@@ -101,7 +101,7 @@ function PoliciesPage() {
         <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <div className="bg-card border-border rounded-lg border p-6">
             <div className="flex items-center gap-3">
-              <div className="bg-green-100 text-green-600 rounded-full p-2">
+              <div className="rounded-full bg-green-100 p-2 text-green-600">
                 <CheckCircle className="h-5 w-5" />
               </div>
               <div>
@@ -113,7 +113,7 @@ function PoliciesPage() {
 
           <div className="bg-card border-border rounded-lg border p-6">
             <div className="flex items-center gap-3">
-              <div className="bg-yellow-100 text-yellow-600 rounded-full p-2">
+              <div className="rounded-full bg-yellow-100 p-2 text-yellow-600">
                 <Clock className="h-5 w-5" />
               </div>
               <div>
@@ -125,7 +125,7 @@ function PoliciesPage() {
 
           <div className="bg-card border-border rounded-lg border p-6">
             <div className="flex items-center gap-3">
-              <div className="bg-blue-100 text-blue-600 rounded-full p-2">
+              <div className="rounded-full bg-blue-100 p-2 text-blue-600">
                 <Edit3 className="h-5 w-5" />
               </div>
               <div>
@@ -137,7 +137,7 @@ function PoliciesPage() {
 
           <div className="bg-card border-border rounded-lg border p-6">
             <div className="flex items-center gap-3">
-              <div className="bg-red-100 text-red-600 rounded-full p-2">
+              <div className="rounded-full bg-red-100 p-2 text-red-600">
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <div>
@@ -153,7 +153,7 @@ function PoliciesPage() {
           <div className="border-b border-gray-200 p-6">
             <h2 className="text-lg font-semibold">Danh sách chính sách</h2>
           </div>
-          
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
@@ -178,44 +178,52 @@ function PoliciesPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 bg-white">
                 {policies.map((policy) => (
                   <tr key={policy.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <div>
-                        <div className="font-medium text-gray-900">{policy.title}</div>
-                        <div className="text-gray-500 text-sm">{policy.description}</div>
+                        <div className="font-medium text-gray-900">
+                          {policy.title}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {policy.description}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
                         {policy.category}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        policy.status === 'Active' 
-                          ? 'bg-green-100 text-green-800'
-                          : policy.status === 'Draft'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          policy.status === 'Active'
+                            ? 'bg-green-100 text-green-800'
+                            : policy.status === 'Draft'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-blue-100 text-blue-800'
+                        }`}
+                      >
                         {policy.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        policy.priority === 'high' 
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          policy.priority === 'high'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}
+                      >
                         {policy.priority === 'high' ? 'Cao' : 'Trung bình'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                       {policy.lastModified}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                    <td className="space-x-2 px-6 py-4 text-sm font-medium whitespace-nowrap">
                       <Button size="sm" variant="outline">
                         Sửa
                       </Button>
@@ -238,17 +246,24 @@ function PoliciesPage() {
               <h2 className="text-lg font-semibold">Cài đặt hệ thống</h2>
             </div>
           </div>
-          
-          <div className="p-6 space-y-6">
+
+          <div className="space-y-6 p-6">
             {systemSettings.map((section) => (
               <div key={section.id}>
-                <h3 className="text-md font-medium mb-3">{section.category}</h3>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                <h3 className="text-md mb-3 font-medium">{section.category}</h3>
+                <div className="space-y-2 rounded-lg bg-gray-50 p-4">
                   {section.settings.map((setting, index) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <span className="text-sm text-gray-700">{setting.key}</span>
+                    <div
+                      key={index}
+                      className="flex items-center justify-between"
+                    >
+                      <span className="text-sm text-gray-700">
+                        {setting.key}
+                      </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{setting.value}</span>
+                        <span className="text-sm font-medium">
+                          {setting.value}
+                        </span>
                         <Button size="sm" variant="ghost">
                           <Edit3 className="h-3 w-3" />
                         </Button>

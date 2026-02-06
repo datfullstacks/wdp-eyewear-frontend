@@ -55,9 +55,9 @@ const managerStats = [
 const ManagerDashboard = () => {
   return (
     <>
-      <Header 
-        title="Manager Dashboard" 
-        subtitle="Tổng quan quản lý và điều hành cửa hàng" 
+      <Header
+        title="Manager Dashboard"
+        subtitle="Tổng quan quản lý và điều hành cửa hàng"
       />
 
       <div className="space-y-8 p-6">
@@ -79,7 +79,7 @@ const ManagerDashboard = () => {
             </h2>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <div className="bg-card border-border rounded-lg border p-6 hover:shadow-md transition-shadow">
+            <div className="bg-card border-border rounded-lg border p-6 transition-shadow hover:shadow-md">
               <div className="flex items-center gap-3">
                 <div className="bg-accent/20 text-accent rounded-full p-2">
                   <TrendingUp className="h-5 w-5" />
@@ -90,8 +90,8 @@ const ManagerDashboard = () => {
                 </div>
               </div>
             </div>
-            
-            <div className="bg-card border-border rounded-lg border p-6 hover:shadow-md transition-shadow">
+
+            <div className="bg-card border-border rounded-lg border p-6 transition-shadow hover:shadow-md">
               <div className="flex items-center gap-3">
                 <div className="bg-accent/20 text-accent rounded-full p-2">
                   <Percent className="h-5 w-5" />
@@ -103,7 +103,7 @@ const ManagerDashboard = () => {
               </div>
             </div>
 
-            <div className="bg-card border-border rounded-lg border p-6 hover:shadow-md transition-shadow">
+            <div className="bg-card border-border rounded-lg border p-6 transition-shadow hover:shadow-md">
               <div className="flex items-center gap-3">
                 <div className="bg-accent/20 text-accent rounded-full p-2">
                   <Users className="h-5 w-5" />
@@ -115,7 +115,7 @@ const ManagerDashboard = () => {
               </div>
             </div>
 
-            <div className="bg-card border-border rounded-lg border p-6 hover:shadow-md transition-shadow">
+            <div className="bg-card border-border rounded-lg border p-6 transition-shadow hover:shadow-md">
               <div className="flex items-center gap-3">
                 <div className="bg-accent/20 text-accent rounded-full p-2">
                   <Package className="h-5 w-5" />
@@ -136,7 +136,10 @@ const ManagerDashboard = () => {
               <TrendingUp className="text-accent h-5 w-5" />
               Hoạt động gần đây
             </h2>
-            <a href="/manager/reports" className="text-accent text-sm hover:underline">
+            <a
+              href="/manager/reports"
+              className="text-accent text-sm hover:underline"
+            >
               Xem báo cáo chi tiết
             </a>
           </div>
@@ -150,7 +153,10 @@ const ManagerDashboard = () => {
               <Package className="text-accent h-5 w-5" />
               Top sản phẩm bán chạy
             </h2>
-            <a href="/manager/products" className="text-accent text-sm hover:underline">
+            <a
+              href="/manager/products"
+              className="text-accent text-sm hover:underline"
+            >
               Quản lý sản phẩm
             </a>
           </div>

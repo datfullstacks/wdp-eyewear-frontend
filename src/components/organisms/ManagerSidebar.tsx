@@ -38,14 +38,22 @@ type MenuItem = {
 
 const managerMenuItems: MenuItem[] = [
   { icon: LayoutDashboard, label: 'Tổng quan', path: '/manager/dashboard' },
-  
+
   {
     icon: BarChart3,
     label: 'Báo cáo & Thống kê',
     children: [
       { icon: TrendingUp, label: 'Doanh thu', path: '/manager/revenue' },
-      { icon: BarChart3, label: 'Báo cáo bán hàng', path: '/manager/reports/sales' },
-      { icon: FileText, label: 'Báo cáo tồn kho', path: '/manager/reports/inventory' },
+      {
+        icon: BarChart3,
+        label: 'Báo cáo bán hàng',
+        path: '/manager/reports/sales',
+      },
+      {
+        icon: FileText,
+        label: 'Báo cáo tồn kho',
+        path: '/manager/reports/inventory',
+      },
     ],
   },
 
@@ -54,7 +62,11 @@ const managerMenuItems: MenuItem[] = [
     label: 'Khuyến mãi',
     children: [
       { icon: Percent, label: 'Quản lý Discount', path: '/manager/discounts' },
-      { icon: FileText, label: 'Chương trình khuyến mãi', path: '/manager/promotions' },
+      {
+        icon: FileText,
+        label: 'Chương trình khuyến mãi',
+        path: '/manager/promotions',
+      },
     ],
   },
 
@@ -63,7 +75,11 @@ const managerMenuItems: MenuItem[] = [
     label: 'Quản lý sản phẩm',
     children: [
       { icon: Package, label: 'Danh sách sản phẩm', path: '/manager/products' },
-      { icon: Settings, label: 'Danh mục sản phẩm', path: '/manager/categories' },
+      {
+        icon: Settings,
+        label: 'Danh mục sản phẩm',
+        path: '/manager/categories',
+      },
     ],
   },
 
@@ -80,7 +96,11 @@ const managerMenuItems: MenuItem[] = [
     icon: Shield,
     label: 'Chính sách',
     children: [
-      { icon: FileText, label: 'Chính sách cửa hàng', path: '/manager/policies' },
+      {
+        icon: FileText,
+        label: 'Chính sách cửa hàng',
+        path: '/manager/policies',
+      },
       { icon: Settings, label: 'Cài đặt hệ thống', path: '/manager/settings' },
     ],
   },
@@ -94,14 +114,11 @@ interface BadgeProps {
 const MenuItemBadge = ({ badge, type = 'info' }: BadgeProps) => {
   return (
     <span
-      className={cn(
-        'text-xs font-medium px-2 py-0.5 rounded-full',
-        {
-          'bg-blue-100 text-blue-600': type === 'info',
-          'bg-yellow-100 text-yellow-600': type === 'warning',
-          'bg-red-100 text-red-600': type === 'error',
-        }
-      )}
+      className={cn('rounded-full px-2 py-0.5 text-xs font-medium', {
+        'bg-blue-100 text-blue-600': type === 'info',
+        'bg-yellow-100 text-yellow-600': type === 'warning',
+        'bg-red-100 text-red-600': type === 'error',
+      })}
     >
       {badge}
     </span>
@@ -120,17 +137,21 @@ function isActivePath(currentPath: string, menuPath?: string, exact?: boolean) {
 
 export const ManagerSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
-  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set(['default']));
+  const [openGroups, setOpenGroups] = useState<Set<string>>(
+    new Set(['default'])
+  );
   const pathname = usePathname();
 
   const activeItemsWithChildren = useMemo(() => {
-    return managerMenuItems.filter(item => 
-      item.children?.some(child => isActivePath(pathname, child.path, child.exact))
+    return managerMenuItems.filter((item) =>
+      item.children?.some((child) =>
+        isActivePath(pathname, child.path, child.exact)
+      )
     );
   }, [pathname]);
 
   const toggleGroup = (label: string) => {
-    setOpenGroups(prev => {
+    setOpenGroups((prev) => {
       const newGroups = new Set(prev);
       if (newGroups.has(label)) {
         newGroups.delete(label);
@@ -144,7 +165,7 @@ export const ManagerSidebar = () => {
   return (
     <aside
       className={cn(
-        'text-foreground bg-card border-border fixed left-0 top-0 z-50 h-full border-r transition-all duration-300',
+        'text-foreground bg-card border-border fixed top-0 left-0 z-50 h-full border-r transition-all duration-300',
         collapsed ? 'w-16' : 'w-64'
       )}
     >

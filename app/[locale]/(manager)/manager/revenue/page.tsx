@@ -39,9 +39,9 @@ const revenueStats = [
 function RevenuePage() {
   return (
     <>
-      <Header 
-        title="Báo cáo Doanh thu" 
-        subtitle="Thống kê và phân tích doanh thu cửa hàng" 
+      <Header
+        title="Báo cáo Doanh thu"
+        subtitle="Thống kê và phân tích doanh thu cửa hàng"
       />
 
       <div className="space-y-8 p-6">
@@ -63,17 +63,23 @@ function RevenuePage() {
                 <h3 className="font-semibold">Biểu đồ doanh thu theo tháng</h3>
               </div>
               <div className="bg-muted flex h-64 items-center justify-center rounded-lg">
-                <p className="text-muted-foreground">Chart sẽ được implement sau</p>
+                <p className="text-muted-foreground">
+                  Chart sẽ được implement sau
+                </p>
               </div>
             </div>
 
             <div className="bg-card border-border rounded-lg border p-6">
               <div className="mb-4 flex items-center gap-2">
                 <PieChart className="text-accent h-5 w-5" />
-                <h3 className="font-semibold">Phân tích theo danh mục sản phẩm</h3>
+                <h3 className="font-semibold">
+                  Phân tích theo danh mục sản phẩm
+                </h3>
               </div>
               <div className="bg-muted flex h-64 items-center justify-center rounded-lg">
-                <p className="text-muted-foreground">Pie chart sẽ được implement sau</p>
+                <p className="text-muted-foreground">
+                  Pie chart sẽ được implement sau
+                </p>
               </div>
             </div>
           </div>

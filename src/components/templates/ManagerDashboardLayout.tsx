@@ -5,7 +5,9 @@ interface ManagerDashboardLayoutProps {
   children: React.ReactNode;
 }
 
-export const ManagerDashboardLayout = ({ children }: ManagerDashboardLayoutProps) => {
+export const ManagerDashboardLayout = ({
+  children,
+}: ManagerDashboardLayoutProps) => {
   return (
     <div className="bg-background min-h-screen">
       <ManagerSidebar />

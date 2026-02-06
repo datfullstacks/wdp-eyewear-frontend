@@ -33,8 +33,8 @@ const productStats = [
 function ProductsPage() {
   return (
     <>
-      <Header 
-        title="Quản lý Sản phẩm" 
+      <Header
+        title="Quản lý Sản phẩm"
         subtitle="Quản lý danh mục và thông tin sản phẩm"
         showAddButton
         addButtonLabel="Thêm sản phẩm mới"
@@ -55,21 +55,21 @@ function ProductsPage() {
           <div className="bg-card border-border rounded-lg border">
             <div className="border-b border-gray-200">
               <nav className="-mb-px flex space-x-8 px-6">
-                <button className="border-accent text-accent whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium">
+                <button className="border-accent text-accent border-b-2 px-1 py-4 text-sm font-medium whitespace-nowrap">
                   Tất cả sản phẩm
                 </button>
-                <button className="text-muted-foreground hover:text-foreground whitespace-nowrap border-b-2 border-transparent py-4 px-1 text-sm font-medium">
+                <button className="text-muted-foreground hover:text-foreground border-b-2 border-transparent px-1 py-4 text-sm font-medium whitespace-nowrap">
                   Đang bán
                 </button>
-                <button className="text-muted-foreground hover:text-foreground whitespace-nowrap border-b-2 border-transparent py-4 px-1 text-sm font-medium">
+                <button className="text-muted-foreground hover:text-foreground border-b-2 border-transparent px-1 py-4 text-sm font-medium whitespace-nowrap">
                   Sắp hết hàng
                 </button>
-                <button className="text-muted-foreground hover:text-foreground whitespace-nowrap border-b-2 border-transparent py-4 px-1 text-sm font-medium">
+                <button className="text-muted-foreground hover:text-foreground border-b-2 border-transparent px-1 py-4 text-sm font-medium whitespace-nowrap">
                   Ngừng bán
                 </button>
               </nav>
             </div>
-            
+
             <div className="p-6">
               <ProductGrid />
             </div>
@@ -80,38 +80,44 @@ function ProductsPage() {
         <section className="animate-slide-in">
           <h2 className="mb-4 text-lg font-semibold">Thao tác nhanh</h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="bg-card border-border rounded-lg border p-6 hover:shadow-md transition-shadow">
+            <div className="bg-card border-border rounded-lg border p-6 transition-shadow hover:shadow-md">
               <div className="flex items-center gap-3">
                 <div className="bg-accent/20 text-accent rounded-full p-2">
                   <Package className="h-5 w-5" />
                 </div>
                 <div>
                   <h3 className="font-medium">Import sản phẩm</h3>
-                  <p className="text-muted-foreground text-sm">Nhập từ Excel file</p>
+                  <p className="text-muted-foreground text-sm">
+                    Nhập từ Excel file
+                  </p>
                 </div>
               </div>
             </div>
-            
-            <div className="bg-card border-border rounded-lg border p-6 hover:shadow-md transition-shadow">
+
+            <div className="bg-card border-border rounded-lg border p-6 transition-shadow hover:shadow-md">
               <div className="flex items-center gap-3">
                 <div className="bg-accent/20 text-accent rounded-full p-2">
                   <Eye className="h-5 w-5" />
                 </div>
                 <div>
                   <h3 className="font-medium">Quản lý danh mục</h3>
-                  <p className="text-muted-foreground text-sm">Tạo và sửa danh mục</p>
+                  <p className="text-muted-foreground text-sm">
+                    Tạo và sửa danh mục
+                  </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-card border-border rounded-lg border p-6 hover:shadow-md transition-shadow">
+            <div className="bg-card border-border rounded-lg border p-6 transition-shadow hover:shadow-md">
               <div className="flex items-center gap-3">
                 <div className="bg-accent/20 text-accent rounded-full p-2">
                   <AlertTriangle className="h-5 w-5" />
                 </div>
                 <div>
                   <h3 className="font-medium">Cảnh báo tồn kho</h3>
-                  <p className="text-muted-foreground text-sm">Thiết lập ngưỡng cảnh báo</p>
+                  <p className="text-muted-foreground text-sm">
+                    Thiết lập ngưỡng cảnh báo
+                  </p>
                 </div>
               </div>
             </div>

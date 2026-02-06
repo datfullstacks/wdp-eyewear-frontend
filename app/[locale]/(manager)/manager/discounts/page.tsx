@@ -41,8 +41,8 @@ const currentDiscounts = [
 function DiscountsPage() {
   return (
     <>
-      <Header 
-        title="Quản lý Khuyến mãi" 
+      <Header
+        title="Quản lý Khuyến mãi"
         subtitle="Tạo và quản lý các chương trình khuyến mãi"
         showAddButton
         addButtonLabel="Tạo khuyến mãi mới"
@@ -53,11 +53,13 @@ function DiscountsPage() {
         <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="bg-card border-border rounded-lg border p-6">
             <div className="flex items-center gap-3">
-              <div className="bg-green-100 text-green-600 rounded-full p-2">
+              <div className="rounded-full bg-green-100 p-2 text-green-600">
                 <Percent className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Khuyến mãi đang hoạt động</p>
+                <p className="text-sm text-gray-600">
+                  Khuyến mãi đang hoạt động
+                </p>
                 <p className="text-2xl font-bold">5</p>
               </div>
             </div>
@@ -65,7 +67,7 @@ function DiscountsPage() {
 
           <div className="bg-card border-border rounded-lg border p-6">
             <div className="flex items-center gap-3">
-              <div className="bg-blue-100 text-blue-600 rounded-full p-2">
+              <div className="rounded-full bg-blue-100 p-2 text-blue-600">
                 <Calendar className="h-5 w-5" />
               </div>
               <div>
@@ -77,7 +79,7 @@ function DiscountsPage() {
 
           <div className="bg-card border-border rounded-lg border p-6">
             <div className="flex items-center gap-3">
-              <div className="bg-purple-100 text-purple-600 rounded-full p-2">
+              <div className="rounded-full bg-purple-100 p-2 text-purple-600">
                 <Tag className="h-5 w-5" />
               </div>
               <div>
@@ -93,7 +95,7 @@ function DiscountsPage() {
           <div className="border-b border-gray-200 p-6">
             <h2 className="text-lg font-semibold">Danh sách khuyến mãi</h2>
           </div>
-          
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
@@ -121,38 +123,42 @@ function DiscountsPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 bg-white">
                 {currentDiscounts.map((discount) => (
                   <tr key={discount.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">{discount.name}</div>
+                      <div className="font-medium text-gray-900">
+                        {discount.name}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
                         {discount.type}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
                       {discount.value}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        discount.status === 'Active' 
-                          ? 'bg-green-100 text-green-800'
-                          : discount.status === 'Scheduled'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          discount.status === 'Active'
+                            ? 'bg-green-100 text-green-800'
+                            : discount.status === 'Scheduled'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
                         {discount.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                       {discount.startDate} - {discount.endDate}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                       {discount.usedCount}/{discount.maxUsage}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                    <td className="space-x-2 px-6 py-4 text-sm font-medium whitespace-nowrap">
                       <Button size="sm" variant="outline">
                         Sửa
                       </Button>
