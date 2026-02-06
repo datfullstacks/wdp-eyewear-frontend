@@ -28,19 +28,21 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      'bg-primary/10 inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
+      'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
 
     const variants: Record<NonNullable<ButtonProps['variant']>, string> = {
       primary:
-        'bg-primary-600 text-white hover:bg-primary-700 focus-visible:ring-primary-600',
-      secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+        'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm',
+      secondary: 
+        'bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm',
       outline:
-        'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
-      ghost: 'hover:bg-accent hover:text-accent-foreground',
+        'border border-input bg-background hover:bg-accent hover:text-accent-foreground shadow-sm',
+      ghost: 
+        'hover:bg-accent hover:text-accent-foreground',
       danger:
-        'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+        'bg-destructive text-white hover:bg-destructive/90 shadow-sm',
       destructive:
-        'bg-destructive text-destructive-foreground hover:bg-destructive/90', // ✅ alias
+        'bg-destructive text-white hover:bg-destructive/90 shadow-sm',
     };
 
     const sizes = {

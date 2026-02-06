@@ -578,16 +578,16 @@ const ManagerTable = ({
           </td>
           <td className="space-x-2 px-6 py-4 text-sm font-medium whitespace-nowrap">
             <Button size="sm" variant="outline" onClick={() => onEdit(manager)}>
-              <Edit3 className="mr-1 h-3 w-3" />
-              Sửa
+              <Edit3 className="mr-1 h-3 w-3 text-gray-700" />
+              <span className="text-gray-700">Sửa</span>
             </Button>
             <Button size="sm" variant="outline">
-              <UserCog className="mr-1 h-3 w-3" />
-              Quyền
+              <UserCog className="mr-1 h-3 w-3 text-gray-700" />
+              <span className="text-gray-700">Quyền</span>
             </Button>
             <Button size="sm" variant="destructive">
-              <Trash2 className="mr-1 h-3 w-3" />
-              Xóa
+              <Trash2 className="mr-1 h-3 w-3 text-white" />
+              <span className="text-white">Xóa</span>
             </Button>
           </td>
         </tr>
@@ -679,16 +679,16 @@ const StaffTable = ({
           </td>
           <td className="space-x-2 px-6 py-4 text-sm font-medium whitespace-nowrap">
             <Button size="sm" variant="outline" onClick={() => onEdit(staff)}>
-              <Edit3 className="mr-1 h-3 w-3" />
-              Sửa
+              <Edit3 className="mr-1 h-3 w-3 text-gray-700" />
+              <span className="text-gray-700">Sửa</span>
             </Button>
             <Button size="sm" variant="outline">
-              <Calendar className="mr-1 h-3 w-3" />
-              Phân công
+              <Calendar className="mr-1 h-3 w-3 text-gray-700" />
+              <span className="text-gray-700">Phân công</span>
             </Button>
             <Button size="sm" variant="outline">
-              <MessageSquare className="mr-1 h-3 w-3" />
-              Yêu cầu
+              <MessageSquare className="mr-1 h-3 w-3 text-gray-700" />
+              <span className="text-gray-700">Yêu cầu</span>
             </Button>
           </td>
         </tr>
