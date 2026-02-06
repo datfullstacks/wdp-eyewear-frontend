@@ -309,35 +309,47 @@ function UsersPage() {
           <nav className="-mb-px flex space-x-8">
             <button
               onClick={() => setActiveTab('managers')}
-              className={`border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
+              className={`flex items-center border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
                 activeTab === 'managers'
                   ? 'border-amber-500 text-amber-600'
                   : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
               }`}
             >
-              <Shield className="mr-2 inline h-5 w-5" />
+              <Shield
+                className={`mr-2 h-5 w-5 ${
+                  activeTab === 'managers' ? 'text-amber-600' : 'text-gray-500'
+                }`}
+              />
               Quản lý Manager ({managers.length})
             </button>
             <button
               onClick={() => setActiveTab('staff')}
-              className={`border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
+              className={`flex items-center border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
                 activeTab === 'staff'
                   ? 'border-amber-500 text-amber-600'
                   : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
               }`}
             >
-              <Users className="mr-2 inline h-5 w-5" />
+              <Users
+                className={`mr-2 h-5 w-5 ${
+                  activeTab === 'staff' ? 'text-amber-600' : 'text-gray-500'
+                }`}
+              />
               Quản lý Staff ({staffMembers.length})
             </button>
             <button
               onClick={() => setActiveTab('customers')}
-              className={`border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
+              className={`flex items-center border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
                 activeTab === 'customers'
                   ? 'border-amber-500 text-amber-600'
                   : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
               }`}
             >
-              <UserCheck className="mr-2 inline h-5 w-5" />
+              <UserCheck
+                className={`mr-2 h-5 w-5 ${
+                  activeTab === 'customers' ? 'text-amber-600' : 'text-gray-500'
+                }`}
+              />
               Quản lý Khách hàng ({customers.length})
             </button>
           </nav>
@@ -364,8 +376,10 @@ function UsersPage() {
                       <Shield className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="font-medium text-gray-900">Quản lý quyền</h3>
-                      <p className="text-gray-500 text-sm">
+                      <h3 className="font-medium text-gray-900">
+                        Quản lý quyền
+                      </h3>
+                      <p className="text-sm text-gray-500">
                         Cấp và thu hồi quyền
                       </p>
                     </div>
@@ -377,8 +391,10 @@ function UsersPage() {
                       <Activity className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="font-medium text-gray-900">Theo dõi hiệu suất</h3>
-                      <p className="text-gray-500 text-sm">
+                      <h3 className="font-medium text-gray-900">
+                        Theo dõi hiệu suất
+                      </h3>
+                      <p className="text-sm text-gray-500">
                         Báo cáo và đánh giá Manager
                       </p>
                     </div>
@@ -399,8 +415,10 @@ function UsersPage() {
                       <Calendar className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="font-medium text-gray-900">Phân công Staff</h3>
-                      <p className="text-gray-500 text-sm">
+                      <h3 className="font-medium text-gray-900">
+                        Phân công Staff
+                      </h3>
+                      <p className="text-sm text-gray-500">
                         Giao việc và lập lịch
                       </p>
                     </div>
@@ -415,8 +433,10 @@ function UsersPage() {
                       <MessageSquare className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="font-medium text-gray-900">Yêu cầu Staff</h3>
-                      <p className="text-gray-500 text-sm">
+                      <h3 className="font-medium text-gray-900">
+                        Yêu cầu Staff
+                      </h3>
+                      <p className="text-sm text-gray-500">
                         Gửi yêu cầu công việc
                       </p>
                     </div>
@@ -434,10 +454,10 @@ function UsersPage() {
                       <UserCheck className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="font-medium text-gray-900">Chăm sóc khách hàng</h3>
-                      <p className="text-gray-500 text-sm">
-                        Hỗ trợ và tư vấn
-                      </p>
+                      <h3 className="font-medium text-gray-900">
+                        Chăm sóc khách hàng
+                      </h3>
+                      <p className="text-sm text-gray-500">Hỗ trợ và tư vấn</p>
                     </div>
                   </div>
                 </div>
@@ -447,10 +467,10 @@ function UsersPage() {
                       <Activity className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="font-medium text-gray-900">Phân tích hành vi</h3>
-                      <p className="text-gray-500 text-sm">
-                        Thống kê mua sắm
-                      </p>
+                      <h3 className="font-medium text-gray-900">
+                        Phân tích hành vi
+                      </h3>
+                      <p className="text-sm text-gray-500">Thống kê mua sắm</p>
                     </div>
                   </div>
                 </div>
@@ -462,7 +482,7 @@ function UsersPage() {
         {/* User List */}
         <section className="animate-slide-in bg-card border-border rounded-lg border">
           <div className="border-b border-gray-200 p-6">
-            <h2 className="text-lg font-semibold">
+            <h2 className="text-lg font-semibold text-gray-900">
               {activeTab === 'managers'
                 ? 'Danh sách Manager'
                 : activeTab === 'staff'
@@ -488,7 +508,10 @@ function UsersPage() {
 
       {/* Modals */}
       {showAddModal && activeTab !== 'customers' && (
-        <AddUserModal type={activeTab as 'managers' | 'staff'} onClose={() => setShowAddModal(false)} />
+        <AddUserModal
+          type={activeTab as 'managers' | 'staff'}
+          onClose={() => setShowAddModal(false)}
+        />
       )}
 
       {showAssignModal && (
@@ -827,7 +850,9 @@ const AddUserModal = ({
       <form className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-900">Họ và tên</label>
+            <label className="mb-1 block text-sm font-medium text-gray-900">
+              Họ và tên
+            </label>
             <input
               type="text"
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
@@ -835,7 +860,9 @@ const AddUserModal = ({
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-900">Email</label>
+            <label className="mb-1 block text-sm font-medium text-gray-900">
+              Email
+            </label>
             <input
               type="email"
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
@@ -882,7 +909,9 @@ const AddUserModal = ({
 
         {type === 'managers' && (
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-900">Quyền hạn</label>
+            <label className="mb-1 block text-sm font-medium text-gray-900">
+              Quyền hạn
+            </label>
             <div className="grid grid-cols-2 gap-2">
               {[
                 'user_management',
@@ -945,7 +974,9 @@ const AssignWorkModal = ({ onClose }: { onClose: () => void }) => (
   <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
     <div className="w-full max-w-lg rounded-lg bg-white p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900">Phân công công việc</h2>
+        <h2 className="text-xl font-semibold text-gray-900">
+          Phân công công việc
+        </h2>
         <Button variant="ghost" onClick={onClose}>
           ✕
         </Button>
@@ -953,7 +984,9 @@ const AssignWorkModal = ({ onClose }: { onClose: () => void }) => (
 
       <form className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-900">Chọn Staff</label>
+          <label className="mb-1 block text-sm font-medium text-gray-900">
+            Chọn Staff
+          </label>
           <select className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
             <option value="">Chọn nhân viên</option>
             <option value="4">Ngô Thị G (Chờ phân công)</option>
@@ -1032,7 +1065,9 @@ const RequestStaffModal = ({ onClose }: { onClose: () => void }) => (
 
       <form className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-900">Chọn Staff</label>
+          <label className="mb-1 block text-sm font-medium text-gray-900">
+            Chọn Staff
+          </label>
           <select className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
             <option value="">Chọn nhân viên</option>
             <option value="1">Phạm Văn D</option>
@@ -1041,7 +1076,9 @@ const RequestStaffModal = ({ onClose }: { onClose: () => void }) => (
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-900">Loại yêu cầu</label>
+          <label className="mb-1 block text-sm font-medium text-gray-900">
+            Loại yêu cầu
+          </label>
           <select className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
             <option value="urgent-task">Công việc khẩn cấp</option>
             <option value="overtime">Làm thêm giờ</option>

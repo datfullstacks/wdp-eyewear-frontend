@@ -38,7 +38,10 @@ export const StatCard = ({
       )}
     >
       <div
-        className={cn('flex items-start justify-between', inline && 'items-center')}
+        className={cn(
+          'flex items-start justify-between',
+          inline && 'items-center'
+        )}
       >
         <div className={cn(inline ? 'flex items-center gap-2' : 'block')}>
           <p

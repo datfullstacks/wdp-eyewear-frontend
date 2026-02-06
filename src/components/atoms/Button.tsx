@@ -33,14 +33,12 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const variants: Record<NonNullable<ButtonProps['variant']>, string> = {
       primary:
         'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm',
-      secondary: 
+      secondary:
         'bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm',
       outline:
         'border border-input bg-background hover:bg-accent hover:text-accent-foreground shadow-sm',
-      ghost: 
-        'hover:bg-accent hover:text-accent-foreground',
-      danger:
-        'bg-destructive text-white hover:bg-destructive/90 shadow-sm',
+      ghost: 'hover:bg-accent hover:text-accent-foreground',
+      danger: 'bg-destructive text-white hover:bg-destructive/90 shadow-sm',
       destructive:
         'bg-destructive text-white hover:bg-destructive/90 shadow-sm',
     };
