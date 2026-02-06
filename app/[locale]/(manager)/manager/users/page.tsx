@@ -842,7 +842,7 @@ const AddUserModal = ({
         <h2 className="text-xl font-semibold text-gray-900">
           Thêm {type === 'managers' ? 'Manager' : 'Staff'} mới
         </h2>
-        <Button variant="ghost" onClick={onClose}>
+        <Button variant="ghost" onClick={onClose} className="text-gray-900 hover:text-gray-700">
           ✕
         </Button>
       </div>
@@ -977,7 +977,7 @@ const AssignWorkModal = ({ onClose }: { onClose: () => void }) => (
         <h2 className="text-xl font-semibold text-gray-900">
           Phân công công việc
         </h2>
-        <Button variant="ghost" onClick={onClose}>
+        <Button variant="ghost" onClick={onClose} className="text-gray-900 hover:text-gray-700">
           ✕
         </Button>
       </div>
@@ -1058,7 +1058,7 @@ const RequestStaffModal = ({ onClose }: { onClose: () => void }) => (
     <div className="w-full max-w-lg rounded-lg bg-white p-6">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-900">Yêu cầu Staff</h2>
-        <Button variant="ghost" onClick={onClose}>
+        <Button variant="ghost" onClick={onClose} className="text-gray-900 hover:text-gray-700">
           ✕
         </Button>
       </div>
