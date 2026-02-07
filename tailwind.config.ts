@@ -24,6 +24,8 @@ const config: Config = {
         accent: 'hsl(var(--accent))',
         'accent-foreground': 'hsl(var(--accent-foreground))',
         destructive: 'hsl(var(--destructive))',
+        success: 'oklch(var(--success))',
+        warning: 'oklch(var(--warning))',
         'destructive-foreground': 'hsl(var(--destructive-foreground))',
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
