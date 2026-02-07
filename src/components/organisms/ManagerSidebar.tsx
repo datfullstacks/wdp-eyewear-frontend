@@ -1,334 +1,156 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useMemo, useState } from 'react';
-import {
-  LayoutDashboard,
-  Users,
-  Settings,
-  LogOut,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  BarChart3,
-  TrendingUp,
-  Percent,
-  Package,
-  FileText,
-  UserCheck,
-  Shield,
-  type LucideIcon,
-} from 'lucide-react';
-
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/atoms';
 
-type BadgeType = 'warning' | 'error' | 'info';
-
-type MenuItem = {
-  icon: LucideIcon;
+interface NavItem {
+  href: string;
   label: string;
-  path?: string;
-  exact?: boolean;
-  badge?: string;
-  badgeType?: BadgeType;
-  children?: MenuItem[];
-};
-
-const managerMenuItems: MenuItem[] = [
-  { icon: LayoutDashboard, label: 'Tổng quan', path: '/manager/dashboard' },
-
-  {
-    icon: BarChart3,
-    label: 'Báo cáo & Thống kê',
-    children: [
-      { icon: TrendingUp, label: 'Doanh thu', path: '/manager/revenue' },
-      {
-        icon: BarChart3,
-        label: 'Báo cáo bán hàng',
-        path: '/manager/reports/sales',
-      },
-      {
-        icon: FileText,
-        label: 'Báo cáo tồn kho',
-        path: '/manager/reports/inventory',
-      },
-    ],
-  },
-
-  {
-    icon: Percent,
-    label: 'Khuyến mãi',
-    children: [
-      { icon: Percent, label: 'Quản lý Discount', path: '/manager/discounts' },
-      {
-        icon: FileText,
-        label: 'Chương trình khuyến mãi',
-        path: '/manager/promotions',
-      },
-    ],
-  },
-
-  {
-    icon: Package,
-    label: 'Quản lý sản phẩm',
-    children: [
-      { icon: Package, label: 'Danh sách sản phẩm', path: '/manager/products' },
-      {
-        icon: Settings,
-        label: 'Danh mục sản phẩm',
-        path: '/manager/categories',
-      },
-    ],
-  },
-
-  {
-    icon: Users,
-    label: 'Quản lý nhân sự',
-    children: [
-      { icon: Users, label: 'Danh sách người dùng', path: '/manager/users' },
-      { icon: UserCheck, label: 'Phân quyền', path: '/manager/permissions' },
-    ],
-  },
-
-  {
-    icon: Shield,
-    label: 'Chính sách',
-    children: [
-      {
-        icon: FileText,
-        label: 'Chính sách cửa hàng',
-        path: '/manager/policies',
-      },
-      { icon: Settings, label: 'Cài đặt hệ thống', path: '/manager/settings' },
-    ],
-  },
-];
-
-interface BadgeProps {
-  badge: string;
-  type?: BadgeType;
+  icon: React.ReactNode;
 }
 
-const MenuItemBadge = ({ badge, type = 'info' }: BadgeProps) => {
-  return (
-    <span
-      className={cn('rounded-full px-2 py-0.5 text-xs font-medium', {
-        'bg-blue-100 text-blue-600': type === 'info',
-        'bg-yellow-100 text-yellow-600': type === 'warning',
-        'bg-red-100 text-red-600': type === 'error',
-      })}
-    >
-      {badge}
-    </span>
-  );
-};
-
-function isActivePath(currentPath: string, menuPath?: string, exact?: boolean) {
-  if (!menuPath) return false;
-
-  if (exact) {
-    return currentPath === menuPath;
-  }
-
-  return currentPath.startsWith(menuPath);
-}
-
-export const ManagerSidebar = () => {
-  const [collapsed, setCollapsed] = useState(false);
-  const [openGroups, setOpenGroups] = useState<Set<string>>(
-    new Set(['default'])
-  );
+export const ManagerSidebar: React.FC = () => {
+  const t = useTranslations('manager');
   const pathname = usePathname();
 
-  const activeItemsWithChildren = useMemo(() => {
-    return managerMenuItems.filter((item) =>
-      item.children?.some((child) =>
-        isActivePath(pathname, child.path, child.exact)
-      )
-    );
-  }, [pathname]);
-
-  const toggleGroup = (label: string) => {
-    setOpenGroups((prev) => {
-      const newGroups = new Set(prev);
-      if (newGroups.has(label)) {
-        newGroups.delete(label);
-      } else {
-        newGroups.add(label);
-      }
-      return newGroups;
-    });
-  };
+  const navItems: NavItem[] = [
+    {
+      href: '/manager/products',
+      label: t('nav.products'),
+      icon: (
+        <svg
+          className="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+          />
+        </svg>
+      ),
+    },
+    {
+      href: '/manager/pricing',
+      label: t('nav.pricing'),
+      icon: (
+        <svg
+          className="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      ),
+    },
+    {
+      href: '/manager/users',
+      label: t('nav.users'),
+      icon: (
+        <svg
+          className="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+          />
+        </svg>
+      ),
+    },
+    {
+      href: '/manager/policies',
+      label: t('nav.policies'),
+      icon: (
+        <svg
+          className="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+      ),
+    },
+    {
+      href: '/manager/revenue',
+      label: t('nav.revenue'),
+      icon: (
+        <svg
+          className="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+          />
+        </svg>
+      ),
+    },
+  ];
 
   return (
-    <aside
-      className={cn(
-        'text-foreground bg-card border-border fixed top-0 left-0 z-50 h-full border-r transition-all duration-300',
-        collapsed ? 'w-16' : 'w-64'
-      )}
-    >
-      {/* Header */}
-      <div className="border-border flex h-16 items-center justify-between border-b px-4">
-        {!collapsed && (
-          <div className="flex items-center gap-2">
-            <div className="gradient-gold text-primary flex h-8 w-8 items-center justify-center rounded-lg font-bold">
-              M
-            </div>
-            <h2 className="font-display text-lg font-semibold">Manager</h2>
+    <aside className="sticky top-0 h-screen w-64 overflow-y-auto bg-[#f8f9fb] border-r border-gray-200">
+      {/* Logo Section */}
+      <div className="p-6 border-b border-gray-200">
+        <div className="flex items-center gap-3">
+          <div className="bg-blue-600 p-2 rounded-lg">
+            <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
           </div>
-        )}
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setCollapsed(!collapsed)}
-          className="text-muted-foreground hover:text-foreground"
-        >
-          {collapsed ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
-          )}
-        </Button>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4">
-        {managerMenuItems.map((item) => {
-          if (item.path) {
-            // Direct menu item
-            const active = isActivePath(pathname, item.path, item.exact);
-            return (
-              <Link
-                key={item.path}
-                href={item.path}
-                aria-current={active ? 'page' : undefined}
-                className={cn(
-                  'mb-2 flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200',
-                  active
-                    ? 'bg-yellow-400 text-yellow-950'
-                    : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900',
-                  collapsed && 'justify-center'
-                )}
-              >
-                <item.icon className="h-5 w-5 flex-shrink-0" />
-                {!collapsed && (
-                  <>
-                    <span className="flex-1 font-medium">{item.label}</span>
-                    {item.badge && (
-                      <MenuItemBadge badge={item.badge} type={item.badgeType} />
-                    )}
-                  </>
-                )}
-              </Link>
-            );
-          } else {
-            // Group menu item
-            const isOpen = openGroups.has(item.label);
-            const hasActiveChild = activeItemsWithChildren.includes(item);
-
-            return (
-              <div key={item.label} className="mb-2">
-                <button
-                  onClick={() => !collapsed && toggleGroup(item.label)}
-                  className={cn(
-                    'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200',
-                    hasActiveChild
-                      ? 'bg-yellow-400/40 text-yellow-950'
-                      : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900',
-                    collapsed && 'justify-center'
-                  )}
-                  aria-expanded={!collapsed ? isOpen : undefined}
-                >
-                  <item.icon className="h-5 w-5 flex-shrink-0" />
-                  {!collapsed && (
-                    <>
-                      <span className="flex-1 text-left font-medium">
-                        {item.label}
-                      </span>
-                      <ChevronDown
-                        className={cn(
-                          'h-4 w-4 transition-transform duration-200',
-                          isOpen && 'rotate-180'
-                        )}
-                      />
-                    </>
-                  )}
-                </button>
-
-                {/* Children */}
-                {!collapsed && isOpen && (
-                  <div className="mt-1 space-y-1">
-                    {item.children?.map((child) => {
-                      const active = isActivePath(
-                        pathname,
-                        child.path,
-                        child.exact
-                      );
-                      return (
-                        <Link
-                          key={child.path}
-                          href={child.path!}
-                          aria-current={active ? 'page' : undefined}
-                          className={cn(
-                            'ml-6 flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-all duration-200',
-                            active
-                              ? 'bg-yellow-400 text-yellow-950'
-                              : 'text-gray-600 hover:bg-gray-200 hover:text-gray-900'
-                          )}
-                        >
-                          <child.icon className="h-4 w-4 flex-shrink-0" />
-                          <span className="flex-1 truncate">{child.label}</span>
-                          {child.badge && (
-                            <MenuItemBadge
-                              badge={child.badge}
-                              type={child.badgeType}
-                            />
-                          )}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          }
-        })}
-      </nav>
-
-      {/* User */}
-      <div className="border-t border-gray-200 p-4">
-        <div
-          className={cn(
-            'flex items-center gap-3',
-            collapsed && 'justify-center'
-          )}
-        >
-          <div className="gradient-gold text-primary flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full font-semibold">
-            MG
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">{t('title')}</h2>
           </div>
-
-          {!collapsed && (
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-medium text-gray-900">Manager</p>
-              <p className="truncate text-xs text-gray-500">Quản lý</p>
-            </div>
-          )}
-
-          {!collapsed && (
-            <Button
-              variant="ghost"
-              size="sm"
-              type="button"
-              className="text-gray-600 hover:text-gray-900"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
-          )}
         </div>
       </div>
+
+      <nav className="p-4 space-y-1">
+        {navItems.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors',
+                isActive
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-700 hover:bg-white hover:text-blue-600'
+              )}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
     </aside>
   );
 };
