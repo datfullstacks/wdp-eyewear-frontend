@@ -7,26 +7,36 @@ import { Button } from '@/components/atoms';
 interface HeaderProps {
   title: string;
   subtitle?: string;
+  onAddProduct?: () => void;
+  onSearch?: (query: string) => void;
+  // Backward compatibility
   showAddButton?: boolean;
   addButtonLabel?: string;
   onAdd?: () => void;
+  addButtonClassName?: string;
   titleClassName?: string;
   subtitleClassName?: string;
-  addButtonClassName?: string;
   avatarClassName?: string;
 }
 
 export const Header = ({
   title,
   subtitle,
+  onAddProduct,
+  onSearch,
   showAddButton,
   addButtonLabel = 'Thêm mới',
   onAdd,
+  addButtonClassName,
   titleClassName,
   subtitleClassName,
-  addButtonClassName,
   avatarClassName,
 }: HeaderProps) => {
+  // Handle both old and new props
+  const handleAddClick = onAddProduct || onAdd;
+  const shouldShowAddButton = onAddProduct || (showAddButton && onAdd);
+  const finalButtonLabel = addButtonLabel === 'Thêm mới' ? 'Thêm sản phẩm mới' : addButtonLabel;
+
   return (
     <header className="bg-card border-border flex h-16 items-center justify-between gap-4 border-b px-6">
       <div>
@@ -45,15 +55,19 @@ export const Header = ({
       </div>
 
       <div className="flex items-center gap-4">
-        <SearchBar className="hidden w-64 md:block" placeholder="Tìm kiếm..." />
+        <SearchBar 
+          className="hidden w-64 md:block" 
+          placeholder="Tìm kiếm..." 
+          onSearch={onSearch}
+        />
 
-        {showAddButton && (
+        {shouldShowAddButton && (
           <Button
-            onClick={onAdd}
+            onClick={handleAddClick}
             className={`gap-2 bg-amber-400 text-slate-900 hover:opacity-90 ${addButtonClassName ?? ''}`}
           >
             <Plus className="h-4 w-4 text-slate-900" />
-            {addButtonLabel}
+            {finalButtonLabel}
           </Button>
         )}
 

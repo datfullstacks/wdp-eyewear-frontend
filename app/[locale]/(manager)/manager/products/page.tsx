@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Header } from '@/components/organisms/Header';
 import { StatCard } from '@/components/molecules/StatCard';
 import { Button } from '@/components/atoms';
-import { Input } from '@/components/atoms/Input';
 import {
   Table,
   TableBody,
@@ -45,13 +44,13 @@ import {
   AlertTriangle,
   Edit,
   Trash2,
-  Plus,
   ChevronLeft,
   ChevronRight,
   Power,
   PowerOff,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/atoms/Input';
 
 // Types
 interface Product {
@@ -316,7 +315,12 @@ function ProductsPage() {
     setCurrentPage(1);
   };
 
-  const handleOpenCreateDialog = () => {
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  }, []);
+
+  const handleOpenCreateDialog = useCallback(() => {
     setFormData({
       name: '',
       brand: '',
@@ -326,9 +330,9 @@ function ProductsPage() {
       category: '',
     });
     setIsCreateDialogOpen(true);
-  };
+  }, []);
 
-  const handleOpenEditDialog = (product: Product) => {
+  const handleOpenEditDialog = useCallback((product: Product) => {
     setSelectedProduct(product);
     setFormData({
       name: product.name,
@@ -339,12 +343,12 @@ function ProductsPage() {
       category: product.category,
     });
     setIsEditDialogOpen(true);
-  };
+  }, []);
 
-  const handleOpenDeleteDialog = (product: Product) => {
+  const handleOpenDeleteDialog = useCallback((product: Product) => {
     setSelectedProduct(product);
     setIsDeleteDialogOpen(true);
-  };
+  }, []);
 
   const handleCreateProduct = () => {
     const newProduct: Product = {
@@ -447,6 +451,15 @@ function ProductsPage() {
     );
   };
 
+  const formatTabLabel = (label: string, count: number) => {
+    // If the entire text is too long, truncate with ellipsis
+    const fullText = `${label} (${count})`;
+    if (fullText.length > 25) {
+      return `${label.substring(0, 20)}... (${count})`;
+    }
+    return fullText;
+  };
+
   const tabs: { id: TabType; label: string; count: number }[] = [
     { id: 'all', label: 'Tất cả sản phẩm', count: stats.total },
     { id: 'active', label: 'Đang bán', count: stats.active },
@@ -459,6 +472,8 @@ function ProductsPage() {
       <Header
         title="Quản lý Sản phẩm"
         subtitle="Quản lý danh mục và thông tin sản phẩm"
+        onAddProduct={handleOpenCreateDialog}
+        onSearch={handleSearch}
       />
 
       <div className="space-y-6 p-6">
@@ -473,51 +488,33 @@ function ProductsPage() {
 
         {/* Product Management */}
         <section className="animate-slide-in">
-          <div className="rounded-lg border border-gray-200 bg-white">
-            {/* Header with search and add button */}
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 p-4">
-              <Input
-                placeholder="Tìm kiếm sản phẩm..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="max-w-xs"
-              />
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleOpenCreateDialog}
-                className="gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Thêm sản phẩm mới
-              </Button>
-            </div>
-
+          <div className="rounded-lg border border-gray-200 bg-gray-50">
             {/* Tabs */}
-            <div className="border-b border-gray-200">
-              <nav className="-mb-px flex space-x-6 px-4">
+            <div className="border-b border-gray-200 bg-white px-4">
+              <nav className="flex space-x-2 overflow-x-auto">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => handleTabChange(tab.id)}
                     className={cn(
-                      'border-b-2 px-1 py-3 text-sm font-medium whitespace-nowrap',
+                      'whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors',
                       activeTab === tab.id
                         ? 'border-amber-500 text-amber-600'
                         : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                     )}
+                    title={`${tab.label} (${tab.count})`}
                   >
-                    {tab.label} ({tab.count})
+                    {formatTabLabel(tab.label, tab.count)}
                   </button>
                 ))}
               </nav>
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto bg-white">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-gray-50">
+                  <TableRow className="bg-gray-50 hover:bg-gray-50">
                     <TableHead className="w-16">Ảnh</TableHead>
                     <TableHead className="min-w-[200px]">Tên sản phẩm</TableHead>
                     <TableHead className="w-28">Thương hiệu</TableHead>
@@ -529,7 +526,7 @@ function ProductsPage() {
                 </TableHeader>
                 <TableBody>
                   {paginatedProducts.length === 0 ? (
-                    <TableRow>
+                    <TableRow className="hover:bg-gray-50">
                       <TableCell colSpan={7} className="py-8 text-center text-gray-500">
                         Không có sản phẩm nào
                       </TableCell>
@@ -544,12 +541,12 @@ function ProductsPage() {
                             className="h-10 w-10 rounded-md object-cover"
                           />
                         </TableCell>
-                        <TableCell className="font-medium">{product.name}</TableCell>
-                        <TableCell>{product.brand}</TableCell>
-                        <TableCell className="text-right font-medium">
+                        <TableCell className="font-medium text-gray-900">{product.name}</TableCell>
+                        <TableCell className="text-gray-700">{product.brand}</TableCell>
+                        <TableCell className="text-right font-medium text-gray-900">
                           {formatPrice(product.price)}
                         </TableCell>
-                        <TableCell>{product.category}</TableCell>
+                        <TableCell className="text-gray-700">{product.category}</TableCell>
                         <TableCell>{getStockBadge(product.stock, product.status)}</TableCell>
                         <TableCell>
                           <div className="flex items-center justify-center gap-1">
@@ -595,7 +592,7 @@ function ProductsPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3">
+              <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3">
                 <p className="text-sm text-gray-600">
                   Hiển thị {(currentPage - 1) * ITEMS_PER_PAGE + 1} -{' '}
                   {Math.min(currentPage * ITEMS_PER_PAGE, filteredProducts.length)} trong{' '}
@@ -632,7 +629,7 @@ function ProductsPage() {
 
       {/* Create Product Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md bg-white">
           <DialogHeader>
             <DialogTitle>Thêm sản phẩm mới</DialogTitle>
             <DialogDescription>
@@ -708,7 +705,7 @@ function ProductsPage() {
 
       {/* Edit Product Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md bg-white">
           <DialogHeader>
             <DialogTitle>Chỉnh sửa sản phẩm</DialogTitle>
             <DialogDescription>
@@ -784,7 +781,7 @@ function ProductsPage() {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-white">
           <AlertDialogHeader>
             <AlertDialogTitle>
               {selectedProduct?.hasSold ? 'Ngừng bán sản phẩm?' : 'Xóa sản phẩm?'}
