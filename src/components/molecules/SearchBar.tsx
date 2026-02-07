@@ -1,5 +1,8 @@
-import React from 'react';
-import { Input } from '../atoms';
+'use client';
+
+import { Search } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Input } from '@/components/atoms';
 
 interface SearchBarProps {
   placeholder?: string;

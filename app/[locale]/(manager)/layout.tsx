@@ -1,10 +1,9 @@
-import { ReactNode } from 'react';
-import { ManagerLayout } from '@/components/templates';
+import { ManagerDashboardLayout } from '@/components/templates/ManagerDashboardLayout';
 
-export default function ManagerRouteLayout({
+export default function ManagerLayout({
   children,
 }: {
-  children: ReactNode;
+  children: React.ReactNode;
 }) {
-  return <ManagerLayout>{children}</ManagerLayout>;
+  return <ManagerDashboardLayout>{children}</ManagerDashboardLayout>;
 }

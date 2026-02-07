@@ -1,58 +1,88 @@
-import React from 'react';
-import { Card, CardContent } from '../atoms';
+import { LucideIcon } from 'lucide-react';
+import { Icon } from '@/components/atoms/Icon';
+import { cn } from '@/lib/utils';
 
 interface StatCardProps {
   title: string;
   value: string | number;
-  icon?: React.ReactNode;
+  icon: LucideIcon;
   trend?: {
     value: number;
     isPositive: boolean;
   };
-  description?: string;
+  iconColor?: string;
+  className?: string;
+  titleClassName?: string;
+  valueClassName?: string;
+  showIcon?: boolean;
+  inline?: boolean;
 }
 
-export const StatCard: React.FC<StatCardProps> = ({
+export const StatCard = ({
   title,
   value,
   icon,
   trend,
-  description,
-}) => {
+  iconColor,
+  className,
+  titleClassName,
+  valueClassName,
+  showIcon = true,
+  inline = false,
+}: StatCardProps) => {
   return (
-    <Card className="bg-white border border-gray-200">
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-600 mb-2">
-              {title}
-            </p>
-            <p className="text-3xl font-bold text-gray-900">
-              {value}
-            </p>
-            {trend && (
-              <div className="mt-2 flex items-center text-sm">
-                <span
-                  className={
-                    trend.isPositive ? 'text-green-600' : 'text-red-600'
-                  }
-                >
-                  {trend.isPositive ? '↑' : '↓'} {Math.abs(trend.value)}%
-                </span>
-                <span className="ml-2 text-gray-500">vs last month</span>
-              </div>
+    <div
+      className={cn(
+        'glass-card rounded-xl p-4 transition-all duration-300 hover:scale-[1.02]',
+        className
+      )}
+    >
+      <div
+        className={cn(
+          'flex items-start justify-between',
+          inline && 'items-center'
+        )}
+      >
+        <div className={cn(inline ? 'flex items-center gap-2' : 'block')}>
+          <p
+            className={cn(
+              'text-muted-foreground text-sm font-medium',
+              titleClassName
             )}
-            {description && (
-              <p className="mt-2 text-sm text-gray-500">{description}</p>
+          >
+            {title}
+          </p>
+          <p
+            className={cn(
+              'font-display text-foreground mt-1 text-2xl font-semibold',
+              inline && 'mt-0',
+              valueClassName
             )}
-          </div>
-          {icon && (
-            <div className="text-gray-400">
-              {icon}
-            </div>
+          >
+            {value}
+          </p>
+          {trend && (
+            <p
+              className={cn(
+                'mt-1 text-sm font-medium',
+                trend.isPositive ? 'text-success' : 'text-destructive'
+              )}
+            >
+              {trend.isPositive ? '+' : '-'}
+              {Math.abs(trend.value)}% so với tháng trước
+            </p>
           )}
         </div>
-      </CardContent>
-    </Card>
+        {showIcon && (
+          <div className="rounded-lg bg-amber-100 p-3">
+            <Icon
+              icon={icon}
+              size="lg"
+              className={iconColor || 'text-amber-600'}
+            />
+          </div>
+        )}
+      </div>
+    </div>
   );
 };

@@ -1,264 +1,283 @@
-'use client';
-
-import React from 'react';
-import { useTranslations } from 'next-intl';
+import { Header } from '@/components/organisms/Header';
+import { Button } from '@/components/atoms/Button';
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Badge,
-  Button,
-  Textarea,
-} from '@/components/atoms';
-import { DataTable, Column } from '@/components/molecules';
-import { mockPolicies, Policy } from '@/lib/mock-data';
+  Settings,
+  AlertTriangle,
+  Clock,
+  CheckCircle,
+  Edit3,
+} from 'lucide-react';
 
-export default function ManagerPoliciesPage() {
-  const t = useTranslations('manager.policies');
-  const [selectedPolicy, setSelectedPolicy] = React.useState<Policy | null>(
-    null
-  );
+const policies = [
+  {
+    id: 1,
+    title: 'Chính sách Đổi trả sản phẩm',
+    category: 'Bán hàng',
+    status: 'Active',
+    lastModified: '2024-01-15',
+    description: 'Quy định về việc đổi trả sản phẩm trong vòng 30 ngày',
+    priority: 'high',
+  },
+  {
+    id: 2,
+    title: 'Chính sách Bảo hành',
+    category: 'Hỗ trợ',
+    status: 'Active',
+    lastModified: '2024-01-10',
+    description: 'Điều kiện và quy trình bảo hành sản phẩm',
+    priority: 'high',
+  },
+  {
+    id: 3,
+    title: 'Quy trình Xử lý khiếu nại',
+    category: 'Hỗ trợ',
+    status: 'Draft',
+    lastModified: '2024-02-01',
+    description: 'Hướng dẫn xử lý khiếu nại của khách hàng',
+    priority: 'medium',
+  },
+  {
+    id: 4,
+    title: 'Chính sách Bảo mật thông tin',
+    category: 'Bảo mật',
+    status: 'Active',
+    lastModified: '2023-12-20',
+    description: 'Quy định về bảo vệ thông tin cá nhân khách hàng',
+    priority: 'high',
+  },
+  {
+    id: 5,
+    title: 'Quy trình Thanh toán',
+    category: 'Tài chính',
+    status: 'Review',
+    lastModified: '2024-01-25',
+    description: 'Các phương thức thanh toán và quy trình xử lý',
+    priority: 'medium',
+  },
+];
 
-  const policyColumns: Column<Policy>[] = [
-    {
-      key: 'title',
-      label: t('columns.title'),
-      render: (policy) => (
-        <div>
-          <p className="font-medium text-gray-900">{policy.title}</p>
-          <p className="text-sm text-gray-500">{policy.description}</p>
-        </div>
-      ),
-    },
-    {
-      key: 'category',
-      label: t('columns.category'),
-      render: (policy) => {
-        const variantMap = {
-          purchase: 'info',
-          return: 'warning',
-          warranty: 'success',
-          shipping: 'secondary',
-        } as const;
+const systemSettings = [
+  {
+    id: 1,
+    category: 'Cấu hình chung',
+    settings: [
+      { key: 'Thời gian làm việc', value: '8:00 - 17:00' },
+      { key: 'Múi giờ', value: 'UTC+7 (Việt Nam)' },
+      { key: 'Ngôn ngữ mặc định', value: 'Tiếng Việt' },
+    ],
+  },
+  {
+    id: 2,
+    category: 'Cấu hình bán hàng',
+    settings: [
+      { key: 'Thời gian giữ giỏ hàng', value: '30 phút' },
+      { key: 'Số lượng tối đa/đơn hàng', value: '10 sản phẩm' },
+      { key: 'Phí ship mặc định', value: '25,000 VND' },
+    ],
+  },
+  {
+    id: 3,
+    category: 'Thông báo',
+    settings: [
+      { key: 'Email thông báo đơn hàng', value: 'Bật' },
+      { key: 'SMS xác nhận', value: 'Bật' },
+      { key: 'Push notification', value: 'Tắt' },
+    ],
+  },
+];
 
-        const labelMap = {
-          purchase: 'Purchase',
-          return: 'Return',
-          warranty: 'Warranty',
-          shipping: 'Shipping',
-        };
-
-        return (
-          <Badge variant={variantMap[policy.category]}>
-            {labelMap[policy.category]}
-          </Badge>
-        );
-      },
-    },
-    {
-      key: 'lastUpdated',
-      label: t('columns.lastUpdated'),
-      render: (policy) => (
-        <span className="text-sm text-gray-600">{policy.lastUpdated}</span>
-      ),
-    },
-    {
-      key: 'active',
-      label: t('columns.status'),
-      render: (policy) => (
-        <Badge variant={policy.active ? 'success' : 'warning'}>
-          {policy.active ? 'Active' : 'Inactive'}
-        </Badge>
-      ),
-    },
-  ];
-
-  const categoryStats = {
-    purchase: mockPolicies.filter((p) => p.category === 'purchase').length,
-    return: mockPolicies.filter((p) => p.category === 'return').length,
-    warranty: mockPolicies.filter((p) => p.category === 'warranty').length,
-    shipping: mockPolicies.filter((p) => p.category === 'shipping').length,
-  };
-
+function PoliciesPage() {
   return (
-    <div className="space-y-8">
-      {/* Page Header with Decorative Elements */}
-      <div className="relative">
-        <div className="absolute -top-4 -left-4 h-24 w-24 rounded-full bg-gradient-to-br from-purple-200 to-pink-200 opacity-30 blur-3xl" />
-        <div className="absolute -top-4 -right-4 h-32 w-32 rounded-full bg-gradient-to-br from-pink-200 to-rose-200 opacity-30 blur-3xl" />
+    <>
+      <Header
+        title="Chính sách & Cài đặt"
+        subtitle="Quản lý chính sách cửa hàng và cài đặt hệ thống"
+        showAddButton
+        addButtonLabel="Tạo chính sách mới"
+      />
 
-        <div className="relative flex items-start justify-between">
-          <div className="flex items-center gap-4">
-            <div className="rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 p-3 shadow-lg shadow-purple-500/30">
-              <svg
-                className="h-8 w-8 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-            </div>
-            <div>
-              <h1 className="bg-gradient-to-r from-gray-900 via-purple-900 to-pink-900 bg-clip-text text-4xl font-bold text-transparent">
-                {t('title')}
-              </h1>
-              <p className="mt-2 flex items-center gap-2 text-gray-600">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-purple-500" />
-                {t('subtitle')}
-              </p>
+      <div className="space-y-8 p-6">
+        {/* Quick Stats */}
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <div className="bg-card border-border rounded-lg border p-6">
+            <div className="flex items-center gap-3">
+              <div className="rounded-full bg-green-100 p-2 text-green-600">
+                <CheckCircle className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Chính sách hiệu lực</p>
+                <p className="text-2xl font-bold">8</p>
+              </div>
             </div>
           </div>
-          <Button variant="primary" className="shadow-xl shadow-purple-500/30">
-            <svg
-              className="mr-2 h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            {t('createPolicy')}
-          </Button>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-blue-700">
-              {t('stats.purchase')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-blue-900">
-              {categoryStats.purchase}
-            </p>
-          </CardContent>
-        </Card>
+          <div className="bg-card border-border rounded-lg border p-6">
+            <div className="flex items-center gap-3">
+              <div className="rounded-full bg-yellow-100 p-2 text-yellow-600">
+                <Clock className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Đang soạn thảo</p>
+                <p className="text-2xl font-bold">3</p>
+              </div>
+            </div>
+          </div>
 
-        <Card className="border-yellow-200 bg-gradient-to-br from-yellow-50 to-yellow-100">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-yellow-700">
-              {t('stats.return')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-yellow-900">
-              {categoryStats.return}
-            </p>
-          </CardContent>
-        </Card>
+          <div className="bg-card border-border rounded-lg border p-6">
+            <div className="flex items-center gap-3">
+              <div className="rounded-full bg-blue-100 p-2 text-blue-600">
+                <Edit3 className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Đang xem xét</p>
+                <p className="text-2xl font-bold">2</p>
+              </div>
+            </div>
+          </div>
 
-        <Card className="border-green-200 bg-gradient-to-br from-green-50 to-green-100">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-green-700">
-              {t('stats.warranty')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-green-900">
-              {categoryStats.warranty}
-            </p>
-          </CardContent>
-        </Card>
+          <div className="bg-card border-border rounded-lg border p-6">
+            <div className="flex items-center gap-3">
+              <div className="rounded-full bg-red-100 p-2 text-red-600">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Cần cập nhật</p>
+                <p className="text-2xl font-bold">1</p>
+              </div>
+            </div>
+          </div>
+        </section>
 
-        <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-purple-700">
-              {t('stats.shipping')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-purple-900">
-              {categoryStats.shipping}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+        {/* Policies List */}
+        <section className="bg-card border-border rounded-lg border">
+          <div className="border-b border-gray-200 p-6">
+            <h2 className="text-lg font-semibold">Danh sách chính sách</h2>
+          </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('policiesList')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              columns={policyColumns}
-              data={mockPolicies}
-              onRowClick={(policy) => setSelectedPolicy(policy)}
-              actions={() => (
-                <div className="flex items-center gap-2">
-                  <Button size="sm" variant="outline">
-                    Edit
-                  </Button>
-                  <Button size="sm" variant="danger">
-                    Delete
-                  </Button>
-                </div>
-              )}
-            />
-          </CardContent>
-        </Card>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Tiêu đề
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Danh mục
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Trạng thái
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Độ ưu tiên
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Cập nhật cuối
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Hành động
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {policies.map((policy) => (
+                  <tr key={policy.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <div>
+                        <div className="font-medium text-gray-900">
+                          {policy.title}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {policy.description}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
+                        {policy.category}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          policy.status === 'Active'
+                            ? 'bg-green-100 text-green-800'
+                            : policy.status === 'Draft'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-blue-100 text-blue-800'
+                        }`}
+                      >
+                        {policy.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          policy.priority === 'high'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}
+                      >
+                        {policy.priority === 'high' ? 'Cao' : 'Trung bình'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+                      {policy.lastModified}
+                    </td>
+                    <td className="space-x-2 px-6 py-4 text-sm font-medium whitespace-nowrap">
+                      <Button size="sm" variant="outline">
+                        Sửa
+                      </Button>
+                      <Button size="sm" variant="outline">
+                        Xem
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('policyDetails')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {selectedPolicy ? (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {selectedPolicy.title}
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-600">
-                    {selectedPolicy.description}
-                  </p>
-                </div>
+        {/* System Settings */}
+        <section className="bg-card border-border rounded-lg border">
+          <div className="border-b border-gray-200 p-6">
+            <div className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              <h2 className="text-lg font-semibold">Cài đặt hệ thống</h2>
+            </div>
+          </div>
 
-                <div className="flex items-center gap-3">
-                  <Badge
-                    variant={selectedPolicy.active ? 'success' : 'warning'}
-                  >
-                    {selectedPolicy.active ? 'Active' : 'Inactive'}
-                  </Badge>
-                  <span className="text-sm text-gray-600">
-                    Last updated: {selectedPolicy.lastUpdated}
-                  </span>
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">
-                    {t('detailsLabel')}
-                  </label>
-                  <Textarea
-                    value={selectedPolicy.details}
-                    rows={10}
-                    readOnly
-                    className="bg-gray-50"
-                  />
+          <div className="space-y-6 p-6">
+            {systemSettings.map((section) => (
+              <div key={section.id}>
+                <h3 className="text-md mb-3 font-medium">{section.category}</h3>
+                <div className="space-y-2 rounded-lg bg-gray-50 p-4">
+                  {section.settings.map((setting, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between"
+                    >
+                      <span className="text-sm text-gray-700">
+                        {setting.key}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">
+                          {setting.value}
+                        </span>
+                        <Button size="sm" variant="ghost">
+                          <Edit3 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ) : (
-              <div className="flex h-64 items-center justify-center text-gray-500">
-                {t('selectPolicy')}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            ))}
+          </div>
+        </section>
       </div>
-    </div>
+    </>
   );
 }
+
+export default PoliciesPage;
