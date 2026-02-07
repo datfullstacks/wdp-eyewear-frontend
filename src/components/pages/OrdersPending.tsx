@@ -1,13 +1,13 @@
 'use client';
 
 import { Header } from '@/components/organisms/Header';
-
-// import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/badge';
 
 // import { StatusBadge } from '@/components/atoms/StatusBadge';
 import {
   Table,
   TableBody,
+  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -18,13 +18,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-// import {
-//   DropdownMenu,
-//   DropdownMenuContent,
-//   DropdownMenuItem,
-//   DropdownMenuSeparator,
-//   DropdownMenuTrigger,
-// } from '@/components/ui/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Select,
   SelectContent,
@@ -45,9 +45,14 @@ import {
   Phone,
   MapPin,
   RefreshCw,
+  MoreVertical,
+  Eye,
+  FileText,
+  Printer,
+  Send,
 } from 'lucide-react';
 import { useState } from 'react';
-// import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { Button, Input } from '@/components/atoms';
 
 // Mock data for pending orders
@@ -177,19 +182,19 @@ const pendingOrders = [
   },
 ];
 
-// const priorityConfig = {
-//   urgent: { label: 'Khẩn cấp', color: 'error' as const, icon: AlertTriangle },
-//   high: { label: 'Cao', color: 'warning' as const, icon: Clock },
-//   normal: { label: 'Bình thường', color: 'info' as const, icon: Package },
-//   low: { label: 'Thấp', color: 'default' as const, icon: Package },
-// };
+const priorityConfig = {
+  urgent: { label: 'Kh?n c?p', icon: AlertTriangle },
+  high: { label: 'Cao', icon: Clock },
+  normal: { label: 'B?nh th??ng', icon: Package },
+  low: { label: 'Th?p', icon: Package },
+};
 
-// const paymentStatusConfig = {
-//   paid: { label: 'Đã thanh toán', color: 'success' as const },
-//   pending: { label: 'Chưa thanh toán', color: 'warning' as const },
-//   partial: { label: 'Thanh toán một phần', color: 'info' as const },
-//   cod: { label: 'COD', color: 'default' as const },
-// };
+const paymentStatusConfig = {
+  paid: { label: '?? thanh to?n' },
+  pending: { label: 'Ch?a thanh to?n' },
+  partial: { label: 'Thanh to?n m?t ph?n' },
+  cod: { label: 'COD' },
+};
 
 const OrdersPending = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -517,7 +522,7 @@ const OrdersPending = () => {
                     </TableCell>
                   </TableRow>
                 );
-              })} */}
+              })}
             </TableBody>
           </Table>
 

@@ -15,11 +15,37 @@ const intlMiddleware = createMiddleware(routing, {
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
+  // Legacy dashboard routes are deprecated.
+  if (pathname === '/dashboard' || pathname.startsWith('/dashboard/')) {
+    const nextPath = pathname.replace(/^\/dashboard/, '') || '/products';
+    return NextResponse.redirect(new URL(nextPath, request.url));
+  }
+
+  // Root: send authenticated users to products, guests to login.
+  if (pathname === '/') {
+    const session = await auth();
+    return NextResponse.redirect(
+      new URL(session ? '/products' : '/login', request.url)
+    );
+  }
+
   // Handle internationalization first (reads cookie for locale)
   const intlResponse = intlMiddleware(request);
 
   // Protected routes
-  const protectedRoutes = ['/dashboard', '/profile', '/orders', '/checkout'];
+  const protectedRoutes = [
+    '/profile',
+    '/orders',
+    '/checkout',
+    '/prescriptions',
+    '/customers',
+    '/returns',
+    '/inventory',
+    '/products',
+    '/users',
+    '/reports',
+    '/settings',
+  ];
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );
@@ -42,7 +68,7 @@ export async function proxy(request: NextRequest) {
   if (isAuthRoute) {
     const session = await auth();
     if (session) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      return NextResponse.redirect(new URL('/products', request.url));
     }
   }
 
