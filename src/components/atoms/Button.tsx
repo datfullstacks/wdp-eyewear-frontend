@@ -1,8 +1,15 @@
+'use client';
 import React from 'react';
 import { cn } from '@/lib/utils';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+  variant?:
+    | 'primary'
+    | 'secondary'
+    | 'outline'
+    | 'ghost'
+    | 'danger'
+    | 'destructive'; // ✅ add
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
 }
@@ -23,23 +30,24 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const baseStyles =
       'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
 
-    const variants = {
+    const variants: Record<NonNullable<ButtonProps['variant']>, string> = {
       primary:
-        'bg-primary-600 text-white hover:bg-primary-700 focus-visible:ring-primary-600',
+        'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm',
       secondary:
-        'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+        'bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm',
       outline:
-        'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
-      ghost: 'hover:bg-accent hover:text-accent-foreground',
-      danger:
-        'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+        'border border-input bg-background text-gray-900 hover:bg-accent hover:text-accent-foreground shadow-sm',
+      ghost: 'text-gray-700 hover:bg-accent hover:text-accent-foreground',
+      danger: 'bg-destructive text-white hover:bg-destructive/90 shadow-sm',
+      destructive:
+        'bg-destructive text-white hover:bg-destructive/90 shadow-sm',
     };
 
     const sizes = {
       sm: 'h-9 px-3 text-sm',
       md: 'h-10 px-4 py-2',
       lg: 'h-11 px-8 text-lg',
-    };
+    } as const;
 
     return (
       <button
