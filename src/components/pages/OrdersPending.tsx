@@ -2,13 +2,12 @@
 
 import { Header } from '@/components/organisms/Header';
 
-import { Badge } from '@/components/ui/badge';
+// import { Badge } from '@/components/ui/badge';
 
-import { StatusBadge } from '@/components/atoms/StatusBadge';
+// import { StatusBadge } from '@/components/atoms/StatusBadge';
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -19,13 +18,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+// import {
+//   DropdownMenu,
+//   DropdownMenuContent,
+//   DropdownMenuItem,
+//   DropdownMenuSeparator,
+//   DropdownMenuTrigger,
+// } from '@/components/ui/dropdown-menu';
 import {
   Select,
   SelectContent,
@@ -37,8 +36,6 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Search,
   Filter,
-  MoreVertical,
-  Eye,
   CheckCircle,
   XCircle,
   Clock,
@@ -47,13 +44,10 @@ import {
   User,
   Phone,
   MapPin,
-  FileText,
-  Send,
-  Printer,
   RefreshCw,
 } from 'lucide-react';
 import { useState } from 'react';
-import { cn } from '@/lib/utils';
+// import { cn } from '@/lib/utils';
 import { Button, Input } from '@/components/atoms';
 
 // Mock data for pending orders
@@ -183,19 +177,19 @@ const pendingOrders = [
   },
 ];
 
-const priorityConfig = {
-  urgent: { label: 'Khẩn cấp', color: 'error' as const, icon: AlertTriangle },
-  high: { label: 'Cao', color: 'warning' as const, icon: Clock },
-  normal: { label: 'Bình thường', color: 'info' as const, icon: Package },
-  low: { label: 'Thấp', color: 'default' as const, icon: Package },
-};
+// const priorityConfig = {
+//   urgent: { label: 'Khẩn cấp', color: 'error' as const, icon: AlertTriangle },
+//   high: { label: 'Cao', color: 'warning' as const, icon: Clock },
+//   normal: { label: 'Bình thường', color: 'info' as const, icon: Package },
+//   low: { label: 'Thấp', color: 'default' as const, icon: Package },
+// };
 
-const paymentStatusConfig = {
-  paid: { label: 'Đã thanh toán', color: 'success' as const },
-  pending: { label: 'Chưa thanh toán', color: 'warning' as const },
-  partial: { label: 'Thanh toán một phần', color: 'info' as const },
-  cod: { label: 'COD', color: 'default' as const },
-};
+// const paymentStatusConfig = {
+//   paid: { label: 'Đã thanh toán', color: 'success' as const },
+//   pending: { label: 'Chưa thanh toán', color: 'warning' as const },
+//   partial: { label: 'Thanh toán một phần', color: 'info' as const },
+//   cod: { label: 'COD', color: 'default' as const },
+// };
 
 const OrdersPending = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -222,21 +216,21 @@ const OrdersPending = () => {
     return matchesSearch && matchesPriority;
   });
 
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedOrders(filteredOrders.map((o) => o.id));
-    } else {
-      setSelectedOrders([]);
-    }
-  };
+  // const handleSelectAll = (checked: boolean) => {
+  //   if (checked) {
+  //     setSelectedOrders(filteredOrders.map((o) => o.id));
+  //   } else {
+  //     setSelectedOrders([]);
+  //   }
+  // };
 
-  const handleSelectOrder = (orderId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedOrders([...selectedOrders, orderId]);
-    } else {
-      setSelectedOrders(selectedOrders.filter((id) => id !== orderId));
-    }
-  };
+  // const handleSelectOrder = (orderId: string, checked: boolean) => {
+  //   if (checked) {
+  //     setSelectedOrders([...selectedOrders, orderId]);
+  //   } else {
+  //     setSelectedOrders(selectedOrders.filter((id) => id !== orderId));
+  //   }
+  // };
 
   const handleProcessOrder = () => {
     setProcessModal(null);
@@ -523,7 +517,7 @@ const OrdersPending = () => {
                     </TableCell>
                   </TableRow>
                 );
-              })}
+              })} */}
             </TableBody>
           </Table>
 
@@ -603,7 +597,7 @@ const OrdersPending = () => {
               </div>
 
               {/* Summary */}
-              <div className="flex items-center justify-between border-t pt-4">
+              {/* <div className="flex items-center justify-between border-t pt-4">
                 <div className="flex items-center gap-4">
                   <StatusBadge
                     status={
@@ -638,7 +632,7 @@ const OrdersPending = () => {
                     {formatCurrency(detailModal.total)}
                   </p>
                 </div>
-              </div>
+              </div> */}
 
               {detailModal.note && (
                 <div className="bg-warning/10 border-warning/20 rounded-lg border p-3">

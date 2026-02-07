@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import { DashboardLayout } from '@/components/templates/DashboardLayout';
 
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -306,13 +305,41 @@ export default function OrdersPrescription() {
   const getStatusBadge = (status: PrescriptionOrder['prescriptionStatus']) => {
     switch (status) {
       case 'missing':
-        return <StatusBadge status="error">Thiếu Rx</StatusBadge>;
+        return (
+          <StatusBadge
+            status="error"
+            className="rounded-none border-0 bg-transparent px-0 py-0"
+          >
+            Thiếu Rx
+          </StatusBadge>
+        );
       case 'incomplete':
-        return <StatusBadge status="warning">Chưa đầy đủ</StatusBadge>;
+        return (
+          <StatusBadge
+            status="warning"
+            className="rounded-none border-0 bg-transparent px-0 py-0"
+          >
+            Chưa đầy đủ
+          </StatusBadge>
+        );
       case 'pending_review':
-        return <StatusBadge status="info">Chờ duyệt</StatusBadge>;
+        return (
+          <StatusBadge
+            status="info"
+            className="rounded-none border-0 bg-transparent px-0 py-0"
+          >
+            Chờ duyệt
+          </StatusBadge>
+        );
       case 'approved':
-        return <StatusBadge status="success">Đã duyệt</StatusBadge>;
+        return (
+          <StatusBadge
+            status="success"
+            className="rounded-none border-0 bg-transparent px-0 py-0"
+          >
+            Đã duyệt
+          </StatusBadge>
+        );
     }
   };
 
@@ -410,91 +437,100 @@ export default function OrdersPrescription() {
       />
       <div className="space-y-6 p-6 text-black">
         {/* Stats Cards */}
-        <div className="grid gap-3 md:grid-cols-5">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-              <CardTitle className="text-xs font-medium">Tổng đơn Rx</CardTitle>
-              <Glasses className="text-muted-foreground h-3.5 w-3.5" />
+        <div className="grid gap-1.5 md:grid-cols-5">
+          <Card className="py-0.5">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 px-2.5 pt-1.5 pb-0">
+              <CardTitle className="text-[10px] font-medium">
+                Tổng đơn Rx
+              </CardTitle>
+              <Glasses className="text-muted-foreground h-2.5 w-2.5" />
             </CardHeader>
-            <CardContent className="pt-0">
-              <div className="text-lg font-semibold">{stats.total}</div>
+            <CardContent className="px-2.5 pt-0 pb-1.5">
+              <div className="text-sm font-semibold">{stats.total}</div>
             </CardContent>
           </Card>
-          <Card className="border-destructive/50 bg-destructive/5">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-              <CardTitle className="text-xs font-medium">Thiếu Rx</CardTitle>
-              <AlertTriangle className="text-destructive h-3.5 w-3.5" />
+          <Card className="border-destructive/50 bg-destructive/5 py-0.5">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 px-2.5 pt-1.5 pb-0">
+              <CardTitle className="text-[10px] font-medium">
+                Thiếu Rx
+              </CardTitle>
+              <AlertTriangle className="text-destructive h-2.5 w-2.5" />
             </CardHeader>
-            <CardContent className="pt-0">
-              <div className="text-destructive text-lg font-semibold">
+            <CardContent className="px-2.5 pt-0 pb-1.5">
+              <div className="text-destructive text-sm font-semibold">
                 {stats.missing}
               </div>
             </CardContent>
           </Card>
-          <Card className="border-warning/50 bg-warning/5">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-              <CardTitle className="text-xs font-medium">Chưa đầy đủ</CardTitle>
-              <Clock className="text-warning h-3.5 w-3.5" />
+          <Card className="border-warning/50 bg-warning/5 py-0.5">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 px-2.5 pt-1.5 pb-0">
+              <CardTitle className="text-[10px] font-medium">
+                Chưa đầy đủ
+              </CardTitle>
+              <Clock className="text-warning h-2.5 w-2.5" />
             </CardHeader>
-            <CardContent className="pt-0">
-              <div className="text-warning text-lg font-semibold">
+            <CardContent className="px-2.5 pt-0 pb-1.5">
+              <div className="text-warning text-sm font-semibold">
                 {stats.incomplete}
               </div>
             </CardContent>
           </Card>
-          <Card className="border-primary/50 bg-primary/5">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-              <CardTitle className="text-xs font-medium">Chờ duyệt</CardTitle>
-              <FileText className="text-primary h-3.5 w-3.5" />
+          <Card className="border-primary/50 bg-primary/5 py-0.5">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 px-2.5 pt-1.5 pb-0">
+              <CardTitle className="text-[10px] font-medium">
+                Chờ duyệt
+              </CardTitle>
+              <FileText className="text-primary h-2.5 w-2.5" />
             </CardHeader>
-            <CardContent className="pt-0">
-              <div className="text-primary text-lg font-semibold">
+            <CardContent className="px-2.5 pt-0 pb-1.5">
+              <div className="text-primary text-sm font-semibold">
                 {stats.pendingReview}
               </div>
             </CardContent>
           </Card>
-          <Card className="border-success/50 bg-success/5">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-              <CardTitle className="text-xs font-medium">Đã duyệt</CardTitle>
-              <CheckCircle2 className="text-success h-3.5 w-3.5" />
+          <Card className="border-success/50 bg-success/5 py-0.5">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 px-2.5 pt-1.5 pb-0">
+              <CardTitle className="text-[10px] font-medium">
+                Đã duyệt
+              </CardTitle>
+              <CheckCircle2 className="text-success h-2.5 w-2.5" />
             </CardHeader>
-            <CardContent className="pt-0">
-              <div className="text-success text-lg font-semibold">
+            <CardContent className="px-2.5 pt-0 pb-1.5">
+              <div className="text-success text-sm font-semibold">
                 {stats.approved}
               </div>
             </CardContent>
           </Card>
         </div>
-
         {/* Filters */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center">
-              <div className="relative flex-1">
-                <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                <Input
-                  placeholder="Tìm theo mã đơn, tên khách, SĐT..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full md:w-[180px]">
-                  <SelectValue placeholder="Trạng thái Rx" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả</SelectItem>
-                  <SelectItem value="missing">Thiếu Rx</SelectItem>
-                  <SelectItem value="incomplete">Chưa đầy đủ</SelectItem>
-                  <SelectItem value="pending_review">Chờ duyệt</SelectItem>
-                  <SelectItem value="approved">Đã duyệt</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="relative flex-1">
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+            <Input
+              placeholder="Tìm theo mã đơn, tên khách, SĐT..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full md:w-[180px]">
+              <SelectValue placeholder="Trạng thái Rx" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả</SelectItem>
+              <SelectItem value="missing">Thiếu Rx</SelectItem>
+              <SelectItem value="incomplete">Chưa đầy đủ</SelectItem>
+              <SelectItem value="pending_review">Chờ duyệt</SelectItem>
+              <SelectItem value="approved">Đã duyệt</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Orders Table */}
         <Card>
           <CardContent className="p-0">
-            <Table className="table-fixed w-full">
+            <Table className="w-full table-fixed">
               <TableHeader>
                 <TableRow>
                   <TableHead>Mã đơn</TableHead>
@@ -626,7 +662,7 @@ export default function OrdersPrescription() {
 
         {/* Detail Modal */}
         <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-          <DialogContent className="text-black max-w-xl max-h-[70vh] overflow-y-auto p-4 text-sm">
+          <DialogContent className="max-h-[70vh] max-w-xl overflow-y-auto p-4 text-sm text-black">
             <DialogHeader>
               <DialogTitle>
                 Chi tiết đơn hàng {selectedOrder?.orderId}
@@ -794,7 +830,7 @@ export default function OrdersPrescription() {
           open={inputPrescriptionOpen}
           onOpenChange={setInputPrescriptionOpen}
         >
-          <DialogContent className="text-black max-w-xl max-h-[70vh] overflow-y-auto p-4 text-sm">
+          <DialogContent className="max-h-[70vh] max-w-xl overflow-y-auto p-4 text-sm text-black">
             <DialogHeader>
               <DialogTitle>Nhập thông số mắt</DialogTitle>
               <DialogDescription>
@@ -1009,7 +1045,7 @@ export default function OrdersPrescription() {
 
         {/* Contact Customer Modal */}
         <Dialog open={contactOpen} onOpenChange={setContactOpen}>
-          <DialogContent className="text-black max-w-lg max-h-[70vh] overflow-y-auto p-4 text-sm">
+          <DialogContent className="max-h-[70vh] max-w-lg overflow-y-auto p-4 text-sm text-black">
             <DialogHeader>
               <DialogTitle>Liên hệ khách hàng</DialogTitle>
               <DialogDescription>
@@ -1055,7 +1091,7 @@ export default function OrdersPrescription() {
 
         {/* Approve Prescription Modal */}
         <Dialog open={approveOpen} onOpenChange={setApproveOpen}>
-          <DialogContent className="text-black max-w-md max-h-[70vh] overflow-y-auto p-4 text-sm">
+          <DialogContent className="max-h-[70vh] max-w-md overflow-y-auto p-4 text-sm text-black">
             <DialogHeader>
               <DialogTitle>Duyệt thông số mắt</DialogTitle>
               <DialogDescription>

@@ -32,8 +32,10 @@ import {
   AlertTriangle,
   CheckCircle,
   XCircle,
+  TrendingUp,
+  TrendingDown,
 } from 'lucide-react';
-import { Input } from '@/components/atoms/Input';
+import { Input } from '@/components/atoms';
 import { Header } from '@/components/organisms/Header';
 
 interface InventoryItem {
@@ -156,7 +158,7 @@ const Inventory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [selectedItem] = useState<InventoryItem | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
