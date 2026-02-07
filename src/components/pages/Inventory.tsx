@@ -25,8 +25,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-
 import {
+  TrendingUp,
+  TrendingDown,
   Package,
   AlertTriangle,
   CheckCircle,

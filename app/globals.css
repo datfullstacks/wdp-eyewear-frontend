@@ -5,6 +5,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+
 /* Reset and base styles */
 * {
   /* margin: 0;

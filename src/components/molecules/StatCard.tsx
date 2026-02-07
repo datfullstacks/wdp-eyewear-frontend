@@ -38,7 +38,10 @@ export const StatCard = ({
       )}
     >
       <div
-        className={cn('flex items-start justify-between', inline && 'items-center')}
+        className={cn(
+          'flex items-start justify-between',
+          inline && 'items-center'
+        )}
       >
         <div className={cn(inline ? 'flex items-center gap-2' : 'block')}>
           <p
@@ -71,11 +74,11 @@ export const StatCard = ({
           )}
         </div>
         {showIcon && (
-          <div className="gradient-gold rounded-lg p-3">
+          <div className="rounded-lg bg-amber-100 p-3">
             <Icon
               icon={icon}
               size="lg"
-              className={iconColor || 'text-primary'}
+              className={iconColor || 'text-amber-600'}
             />
           </div>
         )}

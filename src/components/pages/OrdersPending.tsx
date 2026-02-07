@@ -381,8 +381,10 @@ const OrdersPending = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {/* {filteredOrders.map((order) => {
-                const PriorityIcon = priorityConfig[order.priority].icon;
+              {filteredOrders.map((order) => {
+                const PriorityIcon =
+                  priorityConfig[order.priority as keyof typeof priorityConfig]
+                    .icon;
                 return (
                   <TableRow
                     key={order.id}
@@ -434,7 +436,11 @@ const OrdersPending = () => {
                             'text-muted-foreground'
                         )}
                       >
-                        {paymentStatusConfig[order.paymentStatus].label}
+                        {
+                          paymentStatusConfig[
+                            order.paymentStatus as keyof typeof paymentStatusConfig
+                          ].label
+                        }
                       </span>
                     </TableCell>
                     <TableCell>
@@ -447,7 +453,11 @@ const OrdersPending = () => {
                           order.priority === 'low' && 'text-muted-foreground'
                         )}
                       >
-                        {priorityConfig[order.priority].label}
+                        {
+                          priorityConfig[
+                            order.priority as keyof typeof priorityConfig
+                          ].label
+                        }
                       </span>
                     </TableCell>
                     <TableCell>
@@ -590,16 +600,30 @@ const OrdersPending = () => {
               {/* <div className="flex items-center justify-between border-t pt-4">
                 <div className="flex items-center gap-4">
                   <StatusBadge
-                    status={priorityConfig[detailModal.priority].color}
+                    status={
+                      priorityConfig[
+                        detailModal.priority as keyof typeof priorityConfig
+                      ].color
+                    }
                   >
-                    {priorityConfig[detailModal.priority].label}
+                    {
+                      priorityConfig[
+                        detailModal.priority as keyof typeof priorityConfig
+                      ].label
+                    }
                   </StatusBadge>
                   <StatusBadge
                     status={
-                      paymentStatusConfig[detailModal.paymentStatus].color
+                      paymentStatusConfig[
+                        detailModal.paymentStatus as keyof typeof paymentStatusConfig
+                      ].color
                     }
                   >
-                    {paymentStatusConfig[detailModal.paymentStatus].label}
+                    {
+                      paymentStatusConfig[
+                        detailModal.paymentStatus as keyof typeof paymentStatusConfig
+                      ].label
+                    }
                   </StatusBadge>
                 </div>
                 <div className="text-right">

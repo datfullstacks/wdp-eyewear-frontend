@@ -1,0 +1,97 @@
+{
+  "title": "Manager Dashboard",
+  "subtitle": "Management Control Panel",
+  "nav": {
+    "dashboard": "Dashboard",
+    "products": "Product Management",
+    "pricing": "Pricing & Promotions",
+    "users": "User Management",
+    "policies": "Policies & Terms",
+    "revenue": "Revenue Reports"
+  },
+  "header": {
+    "welcome": "Manager Dashboard",
+    "subtitle": "Manage your business operations"
+  },
+  "products": {
+    "title": "Product Management",
+    "subtitle": "Manage eyewear products, variants, and inventory",
+    "addProduct": "Add New Product",
+    "searchPlaceholder": "Search by name or SKU...",
+    "filters": {
+      "category": "Category",
+      "status": "Status"
+    }
+  },
+  "pricing": {
+    "title": "Pricing & Promotions",
+    "subtitle": "Manage product prices, combos, and promotional campaigns",
+    "createPromotion": "Create Promotion",
+    "stats": {
+      "activePromotions": "Active Promotions",
+      "totalUsage": "Total Usage",
+      "avgDiscount": "Average Discount"
+    },
+    "promotionsList": "Promotions List",
+    "columns": {
+      "name": "Promotion Name",
+      "type": "Type",
+      "discount": "Discount",
+      "period": "Period",
+      "usage": "Usage",
+      "status": "Status"
+    }
+  },
+  "users": {
+    "title": "User Management",
+    "subtitle": "Manage staff, operations personnel, and user permissions",
+    "addUser": "Add New User",
+    "searchPlaceholder": "Search by name or email...",
+    "stats": {
+      "staff": "Staff Members",
+      "operations": "Operations",
+      "managers": "Managers",
+      "admins": "Admins"
+    }
+  },
+  "policies": {
+    "title": "Policies & Terms",
+    "subtitle": "Manage business policies: purchase, return, warranty, shipping",
+    "createPolicy": "Create Policy",
+    "stats": {
+      "purchase": "Purchase Policies",
+      "return": "Return Policies",
+      "warranty": "Warranty Policies",
+      "shipping": "Shipping Policies"
+    },
+    "policiesList": "Policies List",
+    "policyDetails": "Policy Details",
+    "detailsLabel": "Full Policy Details",
+    "selectPolicy": "Select a policy to view details",
+    "columns": {
+      "title": "Policy Title",
+      "category": "Category",
+      "lastUpdated": "Last Updated",
+      "status": "Status"
+    }
+  },
+  "revenue": {
+    "title": "Revenue Reports",
+    "subtitle": "View revenue analytics, sales performance, and business metrics",
+    "stats": {
+      "totalRevenue": "Total Revenue",
+      "totalOrders": "Total Orders",
+      "avgOrderValue": "Avg Order Value",
+      "totalCustomers": "Total Customers"
+    },
+    "revenueChart": "Monthly Revenue",
+    "categoryRevenue": "Revenue by Category",
+    "topProducts": "Top Selling Products",
+    "table": {
+      "product": "Product",
+      "category": "Category",
+      "unitsSold": "Units Sold",
+      "revenue": "Revenue"
+    }
+  }
+}
