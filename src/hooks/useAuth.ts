@@ -8,10 +8,10 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: (credentials: AuthCredentials) => authApi.login(credentials),
     onSuccess: (data) => {
-      setAuth(data.user, data.access_token, data.refresh_token);
+      setAuth(data.user, data.token, '');
       if (typeof window !== 'undefined') {
-        localStorage.setItem('access_token', data.access_token);
-        localStorage.setItem('refresh_token', data.refresh_token);
+        localStorage.setItem('access_token', data.token);
+        localStorage.removeItem('refresh_token');
       }
     },
   });
@@ -23,10 +23,10 @@ export const useRegister = () => {
   return useMutation({
     mutationFn: (userData: RegisterData) => authApi.register(userData),
     onSuccess: (data) => {
-      setAuth(data.user, data.access_token, data.refresh_token);
+      setAuth(data.user, data.token, '');
       if (typeof window !== 'undefined') {
-        localStorage.setItem('access_token', data.access_token);
-        localStorage.setItem('refresh_token', data.refresh_token);
+        localStorage.setItem('access_token', data.token);
+        localStorage.removeItem('refresh_token');
       }
     },
   });

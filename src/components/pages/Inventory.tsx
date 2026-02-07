@@ -32,8 +32,6 @@ import {
   AlertTriangle,
   CheckCircle,
   XCircle,
-  TrendingUp,
-  TrendingDown,
 } from 'lucide-react';
 import { Input } from '@/components/atoms';
 import { Header } from '@/components/organisms/Header';
