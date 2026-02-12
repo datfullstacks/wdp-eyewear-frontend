@@ -327,7 +327,7 @@ export const Sidebar: React.FC = () => {
             </div>
             <div className="leading-tight">
               <span className="font-display text-lg font-semibold text-gray-900">
-                OpticStore
+                Eyes Dream
               </span>
               <div className="text-xs text-gray-500">Staff Dashboard</div>
             </div>

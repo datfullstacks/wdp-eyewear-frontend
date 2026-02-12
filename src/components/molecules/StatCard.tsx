@@ -14,8 +14,11 @@ interface StatCardProps {
   className?: string;
   titleClassName?: string;
   valueClassName?: string;
+  trendClassName?: string;
   showIcon?: boolean;
   inline?: boolean;
+  iconWrapperClassName?: string;
+  iconSize?: 'sm' | 'md' | 'lg';
 }
 
 export const StatCard = ({
@@ -27,8 +30,11 @@ export const StatCard = ({
   className,
   titleClassName,
   valueClassName,
+  trendClassName,
   showIcon = true,
   inline = false,
+  iconWrapperClassName,
+  iconSize = 'lg',
 }: StatCardProps) => {
   return (
     <div
@@ -38,31 +44,41 @@ export const StatCard = ({
       )}
     >
       <div
-        className={cn('flex items-start justify-between', inline && 'items-center')}
+        className={cn(
+          'flex items-start justify-between',
+          inline && 'items-center'
+        )}
       >
-        <div className={cn(inline ? 'flex items-center gap-2' : 'block')}>
-          <p
+        <div>
+          <div
             className={cn(
-              'text-muted-foreground text-sm font-medium',
-              titleClassName
+              inline ? 'flex w-full items-center justify-between gap-3' : 'block'
             )}
           >
-            {title}
-          </p>
-          <p
-            className={cn(
-              'font-display text-foreground mt-1 text-2xl font-semibold',
-              inline && 'mt-0',
-              valueClassName
-            )}
-          >
-            {value}
-          </p>
+            <p
+              className={cn(
+                'text-muted-foreground text-sm font-medium',
+                titleClassName
+              )}
+            >
+              {title}
+            </p>
+            <p
+              className={cn(
+                'font-display text-foreground mt-1 text-2xl font-semibold',
+                inline && 'mt-0',
+                valueClassName
+              )}
+            >
+              {value}
+            </p>
+          </div>
           {trend && (
             <p
               className={cn(
                 'mt-1 text-sm font-medium',
-                trend.isPositive ? 'text-success' : 'text-destructive'
+                trend.isPositive ? 'text-success' : 'text-destructive',
+                trendClassName
               )}
             >
               {trend.isPositive ? '+' : '-'}
@@ -71,10 +87,14 @@ export const StatCard = ({
           )}
         </div>
         {showIcon && (
-          <div className="gradient-gold rounded-lg p-3">
+          <div
+            className={cn(
+              iconWrapperClassName || 'gradient-gold rounded-lg p-3'
+            )}
+          >
             <Icon
               icon={icon}
-              size="lg"
+              size={iconSize}
               className={iconColor || 'text-primary'}
             />
           </div>
@@ -83,3 +103,4 @@ export const StatCard = ({
     </div>
   );
 };
+

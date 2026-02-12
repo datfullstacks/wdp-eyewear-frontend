@@ -37,10 +37,14 @@ const Products = () => {
             {categories.map((cat) => (
               <Button
                 key={cat}
-                variant={activeCategory === cat ? 'primary' : 'outline'}
+                variant="outline"
                 size="sm"
                 onClick={() => setActiveCategory(cat)}
-                className={cn('gradient-gold text-black hover:opacity-90')}
+                className={cn(
+                  'text-black hover:opacity-90',
+                  activeCategory === cat &&
+                    'border-yellow-400 bg-yellow-400 text-black hover:bg-yellow-500'
+                )}
               >
                 {cat}
               </Button>
@@ -58,22 +62,22 @@ const Products = () => {
             </Button>
             <div className="border-border flex overflow-hidden rounded-lg border">
               <Button
-                variant={viewMode === 'grid' ? 'primary' : 'ghost'}
+                variant="ghost"
                 size="sm"
                 className={cn(
-                  'gradient-gold rounded-none text-black hover:opacity-90',
-                  viewMode !== 'grid' && 'opacity-70'
+                  'rounded-none text-black hover:opacity-90',
+                  viewMode === 'grid' ? 'gradient-gold' : 'opacity-70'
                 )}
                 onClick={() => setViewMode('grid')}
               >
                 <Grid className="h-4 w-4" />
               </Button>
               <Button
-                variant={viewMode === 'list' ? 'primary' : 'ghost'}
+                variant="ghost"
                 size="sm"
                 className={cn(
-                  'gradient-gold rounded-none text-black hover:opacity-90',
-                  viewMode !== 'list' && 'opacity-70'
+                  'rounded-none text-black hover:opacity-90',
+                  viewMode === 'list' ? 'gradient-gold' : 'opacity-70'
                 )}
                 onClick={() => setViewMode('list')}
               >
@@ -82,8 +86,6 @@ const Products = () => {
             </div>
           </div>
         </div>
-
-        {/* Product Grid */}
         <ProductGrid />
       </div>
     </>
