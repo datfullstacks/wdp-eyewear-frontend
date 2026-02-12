@@ -2,14 +2,13 @@
 
 import { useState, useTransition, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useLocale, useTranslations } from 'next-intl';
-import { signIn } from 'next-auth/react';
+import { useTranslations } from 'next-intl';
+import { getSession, signIn } from 'next-auth/react';
 import { authApi } from '@/api';
 
 export default function RegisterPage() {
   const t = useTranslations('auth');
   const tCommon = useTranslations('common');
-  const locale = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -19,7 +18,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
 
-  const callbackUrl = searchParams.get('callbackUrl') || `/${locale}/dashboard`;
+  const callbackUrl = searchParams.get('callbackUrl') || '/';
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -49,6 +48,11 @@ export default function RegisterPage() {
         if (result?.error) {
           setError(t('loginError'));
           return;
+        }
+
+        const session = await getSession();
+        if (session?.accessToken) {
+          localStorage.setItem('access_token', session.accessToken);
         }
 
         router.push(result?.url || callbackUrl);
@@ -189,7 +193,7 @@ export default function RegisterPage() {
 
         <div style={{ marginTop: '20px', fontSize: '14px', color: '#94a3b8' }}>
           {t('haveAccount')} {' '}
-          <a href={`/${locale}/login`} style={{ color: '#38bdf8', fontWeight: 600 }}>
+          <a href="/login" style={{ color: '#38bdf8', fontWeight: 600 }}>
             {t('login')}
           </a>
         </div>

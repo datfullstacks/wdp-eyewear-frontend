@@ -24,15 +24,5 @@ export const Icon = ({
   size = 'md',
   className,
 }: IconProps) => {
-  return (
-    <span
-      className={cn(
-        'inline-flex items-center justify-center rounded bg-black text-white transition-colors hover:bg-amber-500',
-        wrapperClasses[size],
-        className
-      )}
-    >
-      <IconComponent className={sizeClasses[size]} />
-    </span>
-  );
+  return <IconComponent className={cn(sizeClasses[size], className)} />;
 };

@@ -1,0 +1,97 @@
+{
+  "title": "Bảng Điều Khiển Quản Lý",
+  "subtitle": "Bảng Điều Khiển Quản Trị",
+  "nav": {
+    "dashboard": "Trang Chủ",
+    "products": "Quản Lý Sản Phẩm",
+    "pricing": "Giá & Khuyến Mãi",
+    "users": "Quản Lý Người Dùng",
+    "policies": "Chính Sách & Quy Định",
+    "revenue": "Báo Cáo Doanh Thu"
+  },
+  "header": {
+    "welcome": "Bảng Điều Khiển Quản Lý",
+    "subtitle": "Quản lý hoạt động kinh doanh của bạn"
+  },
+  "products": {
+    "title": "Quản Lý Sản Phẩm",
+    "subtitle": "Quản lý sản phẩm kính, biến thể và tồn kho",
+    "addProduct": "Thêm Sản Phẩm Mới",
+    "searchPlaceholder": "Tìm kiếm theo tên hoặc mã SKU...",
+    "filters": {
+      "category": "Danh Mục",
+      "status": "Trạng Thái"
+    }
+  },
+  "pricing": {
+    "title": "Giá & Khuyến Mãi",
+    "subtitle": "Quản lý giá sản phẩm, combo và các chiến dịch khuyến mãi",
+    "createPromotion": "Tạo Khuyến Mãi",
+    "stats": {
+      "activePromotions": "Khuyến Mãi Đang Hoạt Động",
+      "totalUsage": "Tổng Lượt Sử Dụng",
+      "avgDiscount": "Giảm Giá Trung Bình"
+    },
+    "promotionsList": "Danh Sách Khuyến Mãi",
+    "columns": {
+      "name": "Tên Khuyến Mãi",
+      "type": "Loại",
+      "discount": "Giảm Giá",
+      "period": "Thời Gian",
+      "usage": "Đã Sử Dụng",
+      "status": "Trạng Thái"
+    }
+  },
+  "users": {
+    "title": "Quản Lý Người Dùng",
+    "subtitle": "Quản lý nhân viên, vận hành và quyền người dùng",
+    "addUser": "Thêm Người Dùng Mới",
+    "searchPlaceholder": "Tìm kiếm theo tên hoặc email...",
+    "stats": {
+      "staff": "Nhân Viên",
+      "operations": "Vận Hành",
+      "managers": "Quản Lý",
+      "admins": "Quản Trị Viên"
+    }
+  },
+  "policies": {
+    "title": "Chính Sách & Quy Định",
+    "subtitle": "Quản lý chính sách: mua hàng, đổi trả, bảo hành, vận chuyển",
+    "createPolicy": "Tạo Chính Sách",
+    "stats": {
+      "purchase": "Chính Sách Mua Hàng",
+      "return": "Chính Sách Đổi Trả",
+      "warranty": "Chính Sách Bảo Hành",
+      "shipping": "Chính Sách Vận Chuyển"
+    },
+    "policiesList": "Danh Sách Chính Sách",
+    "policyDetails": "Chi Tiết Chính Sách",
+    "detailsLabel": "Nội Dung Chính Sách Đầy Đủ",
+    "selectPolicy": "Chọn một chính sách để xem chi tiết",
+    "columns": {
+      "title": "Tiêu Đề Chính Sách",
+      "category": "Danh Mục",
+      "lastUpdated": "Cập Nhật Lần Cuối",
+      "status": "Trạng Thái"
+    }
+  },
+  "revenue": {
+    "title": "Báo Cáo Doanh Thu",
+    "subtitle": "Xem phân tích doanh thu, hiệu suất bán hàng và chỉ số kinh doanh",
+    "stats": {
+      "totalRevenue": "Tổng Doanh Thu",
+      "totalOrders": "Tổng Đơn Hàng",
+      "avgOrderValue": "Giá Trị ĐH Trung Bình",
+      "totalCustomers": "Tổng Khách Hàng"
+    },
+    "revenueChart": "Doanh Thu Theo Tháng",
+    "categoryRevenue": "Doanh Thu Theo Danh Mục",
+    "topProducts": "Sản Phẩm Bán Chạy",
+    "table": {
+      "product": "Sản Phẩm",
+      "category": "Danh Mục",
+      "unitsSold": "Đã Bán",
+      "revenue": "Doanh Thu"
+    }
+  }
+}

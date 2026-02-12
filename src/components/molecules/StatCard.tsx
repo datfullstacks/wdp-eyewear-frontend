@@ -52,7 +52,9 @@ export const StatCard = ({
         <div>
           <div
             className={cn(
-              inline ? 'flex w-full items-center justify-between gap-3' : 'block'
+              inline
+                ? 'flex w-full items-center justify-between gap-3'
+                : 'block'
             )}
           >
             <p
@@ -103,4 +105,3 @@ export const StatCard = ({
     </div>
   );
 };
-
