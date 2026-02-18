@@ -1,6 +1,6 @@
 import { Header } from '@/components/organisms/Header';
 import { StatCard } from '@/components/molecules/StatCard';
-import { OrderList } from '@/components/organisms/OrderList';
+import { RecentOrdersTable } from '@/components/organisms/RecentOrdersTable';
 import { ProductGrid } from '@/components/organisms/ProductGrid';
 import {
   DollarSign,
@@ -45,9 +45,18 @@ const Dashboard = () => {
       <div className="space-y-8 p-6">
         {/* Stats */}
         <section className="animate-fade-in">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             {stats.map((stat) => (
-              <StatCard key={stat.title} {...stat} />
+              <StatCard
+                key={stat.title}
+                {...stat}
+                className="p-3"
+                titleClassName="text-xs"
+                valueClassName="text-xl"
+                trendClassName="text-xs"
+                iconWrapperClassName="gradient-gold rounded-md p-2"
+                iconSize="md"
+              />
             ))}
           </div>
         </section>
@@ -63,7 +72,7 @@ const Dashboard = () => {
               Xem tất cả
             </a>
           </div>
-          <OrderList />
+          <RecentOrdersTable />
         </section>
 
         {/* Featured Products */}
@@ -77,7 +86,7 @@ const Dashboard = () => {
               Xem tất cả
             </a>
           </div>
-          <ProductGrid />
+          <ProductGrid compact />
         </section>
       </div>
     </>

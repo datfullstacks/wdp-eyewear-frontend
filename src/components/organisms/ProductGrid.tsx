@@ -57,11 +57,21 @@ const mockProducts = [
   },
 ];
 
-export const ProductGrid = () => {
+interface ProductGridProps {
+  compact?: boolean;
+}
+
+export const ProductGrid = ({ compact = false }: ProductGridProps) => {
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div
+      className={
+        compact
+          ? 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+          : 'grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+      }
+    >
       {mockProducts.map((product) => (
-        <ProductCard key={product.id} {...product} />
+        <ProductCard key={product.id} {...product} compact={compact} />
       ))}
     </div>
   );

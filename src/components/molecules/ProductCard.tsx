@@ -13,6 +13,7 @@ interface ProductCardProps {
   image: string;
   category: string;
   className?: string;
+  compact?: boolean;
 }
 
 export const ProductCard = ({
@@ -23,6 +24,7 @@ export const ProductCard = ({
   image,
   category,
   className,
+  compact = false,
 }: ProductCardProps) => {
   const stockStatus = stock > 10 ? 'success' : stock > 0 ? 'warning' : 'error';
   const stockLabel =
@@ -36,7 +38,8 @@ export const ProductCard = ({
   return (
     <div
       className={cn(
-        'group overflow-hidden rounded-2xl border border-slate-200/70 bg-white/90 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-md',
+        'group overflow-hidden border border-slate-200/70 bg-white/90 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-md',
+        compact ? 'rounded-xl' : 'rounded-2xl',
         className
       )}
     >
@@ -46,7 +49,7 @@ export const ProductCard = ({
           alt={name}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute top-3 left-3">
+        <div className={cn('absolute left-3', compact ? 'top-2' : 'top-3')}>
           <StatusBadge status={stockStatus} className={stockBadgeClassName}>
             {stockLabel}
           </StatusBadge>
@@ -75,22 +78,41 @@ export const ProductCard = ({
           </Button> */}
         </div>
       </div>
-      <div className="p-4">
-        <p className="text-xs font-semibold tracking-wide text-amber-500 uppercase">
+      <div className={cn(compact ? 'p-3' : 'p-4')}>
+        <p
+          className={cn(
+            'font-semibold tracking-wide text-amber-500 uppercase',
+            compact ? 'text-[10px]' : 'text-xs'
+          )}
+        >
           {brand}
         </p>
-        <h3 className="font-display mt-1 line-clamp-1 text-lg font-semibold text-slate-900">
+        <h3
+          className={cn(
+            'font-display mt-1 line-clamp-1 font-semibold text-slate-900',
+            compact ? 'text-base' : 'text-lg'
+          )}
+        >
           {name}
         </h3>
-        <p className="text-sm text-slate-500">{category}</p>
+        <p className={cn('text-slate-500', compact ? 'text-xs' : 'text-sm')}>
+          {category}
+        </p>
         <div className="mt-3 flex items-center justify-between">
-          <p className="font-display text-lg font-semibold text-slate-900">
+          <p
+            className={cn(
+              'font-display font-semibold text-slate-900',
+              compact ? 'text-base' : 'text-lg'
+            )}
+          >
             {new Intl.NumberFormat('vi-VN', {
               style: 'currency',
               currency: 'VND',
             }).format(price)}
           </p>
-          <p className="text-sm text-slate-500">SL: {stock}</p>
+          <p className={cn('text-slate-500', compact ? 'text-xs' : 'text-sm')}>
+            SL: {stock}
+          </p>
         </div>
       </div>
     </div>
