@@ -17,9 +17,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         try {
+          const email = credentials?.email as string | undefined;
+          const password = credentials?.password as string | undefined;
+
+          if (!email || !password) {
+            console.warn('[auth] Missing credentials payload');
+            return null;
+          }
+
           const response = await authApi.login({
-            email: credentials.email as string,
-            password: credentials.password as string,
+            email,
+            password,
           });
 
           if (response.user) {
@@ -27,12 +35,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               id: response.user.id,
               email: response.user.email,
               name: response.user.name,
-              accessToken: response.access_token,
-              refreshToken: response.refresh_token,
+              accessToken: response.token,
+              refreshToken: '',
             };
           }
           return null;
         } catch (error) {
+          const message =
+            (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+            (error as { message?: string })?.message ||
+            'Unknown credentials signin error';
+          console.error('[auth] Credentials authorize failed:', message);
           return null;
         }
       },

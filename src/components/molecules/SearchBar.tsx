@@ -1,41 +1,42 @@
 'use client';
 
-import { Search } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState, type ChangeEvent, type KeyboardEvent } from 'react';
 import { Input } from '@/components/atoms';
 
 interface SearchBarProps {
   placeholder?: string;
   value?: string;
+  className?: string;
   onChange?: (value: string) => void;
-  onSearch?: () => void;
+  onSearch?: (value: string) => void;
 }
 
-export const SearchBar: React.FC<SearchBarProps> = ({
+export const SearchBar = ({
   placeholder = 'Search...',
   value = '',
+  className,
   onChange,
   onSearch,
-}) => {
-  const [searchValue, setSearchValue] = React.useState(value);
+}: SearchBarProps) => {
+  const [searchValue, setSearchValue] = useState(value);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchValue(e.target.value);
     onChange?.(e.target.value);
   };
 
   const handleSearch = () => {
-    onSearch?.();
+    onSearch?.(searchValue);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
   };
 
   return (
-    <div className="group relative flex w-full max-w-md items-center">
+    <div className={`group relative flex w-full max-w-md items-center ${className ?? ''}`}>
       {/* Decorative gradient border */}
       <div className="absolute -inset-0.5 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 blur transition duration-300 group-focus-within:opacity-100" />
 

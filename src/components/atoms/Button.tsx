@@ -41,6 +41,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         'text-gray-700 hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-200 hover:scale-105',
       danger:
         'bg-gradient-to-r from-rose-600 to-red-600 text-white hover:from-rose-700 hover:to-red-700 shadow-lg shadow-rose-500/30 hover:shadow-xl hover:shadow-rose-500/50 hover:scale-105',
+      destructive:
+        'bg-gradient-to-r from-rose-600 to-red-600 text-white hover:from-rose-700 hover:to-red-700 shadow-lg shadow-rose-500/30 hover:shadow-xl hover:shadow-rose-500/50 hover:scale-105',
     };
 
     const sizes = {
