@@ -21,20 +21,21 @@ import {
   UserX,
   Banknote,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { mockCustomers } from '@/data/customerData';
+import { useEffect, useMemo, useState } from 'react';
+import userApi, { User } from '@/api/users';
 
 const Customers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [segmentFilter, setSegmentFilter] = useState('all');
+  const [customers, setCustomers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const stats = useMemo(() => {
-    const total = mockCustomers.length;
-    const active = mockCustomers.filter((c) => c.status === 'active').length;
-    const inactive = mockCustomers.filter(
-      (c) => c.status === 'inactive'
-    ).length;
-    const totalSpent = mockCustomers.reduce((sum, c) => sum + c.totalSpent, 0);
+    const total = customers.length;
+    const active = total;
+    const inactive = 0;
+    const totalSpent = 0;
 
     return {
       total,
@@ -42,7 +43,7 @@ const Customers = () => {
       inactive,
       totalSpent,
     };
-  }, []);
+  }, [customers.length]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -51,6 +52,89 @@ const Customers = () => {
       notation: 'compact',
     }).format(amount);
   };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadCustomers = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const result = await userApi.getAll({
+          page: 1,
+          limit: 100,
+          role: 'customer',
+        });
+        if (isMounted) {
+          setCustomers(result.users);
+        }
+      } catch (err) {
+        if (isMounted) {
+          const message =
+            (
+              err as {
+                response?: { data?: { message?: string } };
+                message?: string;
+              }
+            )?.response?.data?.message ||
+            (err as { message?: string })?.message ||
+            'Không thể tải khách hàng. Vui lòng thử lại.';
+          setError(message);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void loadCustomers();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filteredCustomers = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    let rows = customers;
+
+    if (q) {
+      rows = rows.filter((c) => {
+        const phone = c.phone || '';
+        return (
+          c.name.toLowerCase().includes(q) ||
+          c.email.toLowerCase().includes(q) ||
+          phone.toLowerCase().includes(q)
+        );
+      });
+    }
+
+    // Segment filter is UI-only for now; backend doesn't provide VIP/loyal tags.
+    if (segmentFilter !== 'all') return rows;
+
+    return rows;
+  }, [customers, searchTerm, segmentFilter]);
+
+  const customerListItems = useMemo(() => {
+    const formatLastVisit = (value?: string) => {
+      if (!value) return '-';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '-';
+      return date.toLocaleDateString('vi-VN');
+    };
+
+    return filteredCustomers.map((user) => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone || '-',
+      totalOrders: 0,
+      totalSpent: 0,
+      lastVisit: formatLastVisit(user.updatedAt || user.createdAt),
+      status: 'active' as const,
+    }));
+  }, [filteredCustomers]);
 
   return (
     <>
@@ -161,7 +245,17 @@ const Customers = () => {
         </div>
 
         {/* Customer List */}
-        <CustomerList />
+        {isLoading ? (
+          <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-6 text-sm text-slate-600">
+            Đang tải khách hàng...
+          </div>
+        ) : error ? (
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-600">
+            {error}
+          </div>
+        ) : (
+          <CustomerList customers={customerListItems} />
+        )}
       </div>
     </>
   );

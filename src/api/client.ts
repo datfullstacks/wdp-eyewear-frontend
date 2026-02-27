@@ -11,14 +11,35 @@ const apiClient = axios.create({
   },
 });
 
+let cachedAccessToken: { value: string | null; expiresAt: number } = {
+  value: null,
+  expiresAt: 0,
+};
+
+async function getBrowserAccessToken() {
+  if (typeof window === 'undefined') return null;
+
+  const now = Date.now();
+  if (now < cachedAccessToken.expiresAt) return cachedAccessToken.value;
+
+  const { getSession } = await import('next-auth/react');
+  const session = await getSession();
+  const token = session?.accessToken ?? null;
+
+  cachedAccessToken = {
+    value: token,
+    // Avoid hitting /api/auth/session too frequently (it can be slow in dev mode).
+    expiresAt: now + 10 * 60_000,
+  };
+
+  return token;
+}
+
 // Request interceptor
 apiClient.interceptors.request.use(
-  (config) => {
+  async (config) => {
     // Add auth token if available
-    const token =
-      typeof window !== 'undefined'
-        ? localStorage.getItem('access_token')
-        : null;
+    const token = await getBrowserAccessToken();
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -35,12 +56,6 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    // Backend currently has no /auth/refresh flow.
-    if (error.response?.status === 401 && typeof window !== 'undefined') {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-    }
-
     return Promise.reject(error);
   }
 );

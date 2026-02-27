@@ -1,9 +1,21 @@
-import { Sidebar } from '@/components/organisms/Sidebar';
+'use client';
+
+import dynamic from 'next/dynamic';
 import { cn } from '@/lib/utils';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
+
+const Sidebar = dynamic(
+  () => import('@/components/organisms/Sidebar').then((m) => m.Sidebar),
+  {
+    ssr: false,
+    loading: () => (
+      <aside className="fixed inset-y-0 left-0 w-64 border-r border-slate-200/70 bg-white/90" />
+    ),
+  }
+);
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (

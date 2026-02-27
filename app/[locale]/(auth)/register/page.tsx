@@ -3,7 +3,7 @@
 import { useState, useTransition, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { getSession, signIn } from 'next-auth/react';
+import { signIn } from 'next-auth/react';
 import { authApi } from '@/api';
 
 export default function RegisterPage() {
@@ -48,11 +48,6 @@ export default function RegisterPage() {
         if (result?.error) {
           setError(t('loginError'));
           return;
-        }
-
-        const session = await getSession();
-        if (session?.accessToken) {
-          localStorage.setItem('access_token', session.accessToken);
         }
 
         router.push(result?.url || callbackUrl);
