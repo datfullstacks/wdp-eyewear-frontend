@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+
 import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { DelayedOrder } from '@/types/delayed';
 import { ArrowUpRight } from 'lucide-react';
+import { Button } from '@/components/atoms';
 
 interface EscalateModalProps {
   order: DelayedOrder | null;
