@@ -83,30 +83,33 @@ export default function LoginPage() {
               <span className="text-amber-400">thông minh & hiệu quả</span>
             </h2>
             <p className="mt-6 text-base leading-relaxed text-slate-300">
-              Giải pháp toàn diện cho việc quản lý đơn hàng, tồn kho, vận chuyển
-              và chăm sóc khách hàng — tất cả trong một nền tảng duy nhất.
+              Chào mừng trở lại. Trải nghiệm giải pháp quản lý toàn diện — nơi
+              mọi đơn hàng và khách hàng được vận hành trong một nền tảng duy
+              nhất.
             </p>
           </div>
 
           <div className="mt-16 grid max-w-xl grid-cols-3 gap-10">
             <div>
-              <div className="text-3xl font-semibold text-amber-400">500+</div>
+              <div className="text-3xl font-semibold text-amber-400">24/7</div>
+              <div className="mt-1 text-sm text-slate-300">Hỗ trợ liên tục</div>
+            </div>
+            <div>
+              <div className="text-3xl font-semibold text-amber-400">
+                Bảo mật
+              </div>
               <div className="mt-1 text-sm text-slate-300">
-                Cửa hàng tin dùng
+                Dữ liệu được mã hóa
               </div>
             </div>
             <div>
-              <div className="text-3xl font-semibold text-amber-400">10K+</div>
-              <div className="mt-1 text-sm text-slate-300">Đơn hàng/ngày</div>
+              <div className="text-3xl font-semibold text-amber-400">
+                All-in-One
+              </div>
+              <div className="mt-1 text-sm text-slate-300">
+                Quản lý trên một nền tảng
+              </div>
             </div>
-            <div>
-              <div className="text-3xl font-semibold text-amber-400">99.9%</div>
-              <div className="mt-1 text-sm text-slate-300">Uptime</div>
-            </div>
-          </div>
-
-          <div className="mt-auto pt-10 text-sm text-slate-400">
-            © 2026 OptiManager. All rights reserved.
           </div>
         </div>
       </aside>
