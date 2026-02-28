@@ -1,156 +1,401 @@
 'use client';
 
-import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useTranslations } from 'next-intl';
-import { cn } from '@/lib/utils';
+import { useMemo, useState } from 'react';
+import {
+  LayoutDashboard,
+  Glasses,
+  Package,
+  DollarSign,
+  Users,
+  Settings,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  BarChart3,
+  Bell,
+  User,
+  FileText,
+  TrendingUp,
+  Percent,
+  Tag,
+  Shield,
+  UserCog,
+  ClipboardList,
+  type LucideIcon,
+} from 'lucide-react';
 
-interface NavItem {
-  href: string;
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/atoms';
+
+type BadgeType = 'warning' | 'error' | 'info';
+
+type MenuItem = {
+  icon: LucideIcon;
   label: string;
-  icon: React.ReactNode;
+  path?: string;
+  exact?: boolean;
+  badge?: string;
+  badgeType?: BadgeType;
+  children?: MenuItem[];
+};
+
+const menuItems: MenuItem[] = [
+  {
+    icon: LayoutDashboard,
+    label: 'Tổng quan',
+    path: '/manager/dashboard',
+    exact: true,
+  },
+
+  {
+    icon: Package,
+    label: 'Sản phẩm & Giá',
+    children: [
+      {
+        icon: Package,
+        label: 'Quản lý sản phẩm',
+        path: '/manager/products',
+      },
+      {
+        icon: DollarSign,
+        label: 'Chiến lược giá',
+        path: '/manager/pricing',
+      },
+      {
+        icon: Tag,
+        label: 'Khuyến mãi & Giảm giá',
+        path: '/manager/discounts',
+      },
+    ],
+  },
+
+  {
+    icon: BarChart3,
+    label: 'Doanh thu & Báo cáo',
+    children: [
+      {
+        icon: TrendingUp,
+        label: 'Tổng quan doanh thu',
+        path: '/manager/revenue',
+      },
+      {
+        icon: Percent,
+        label: 'Báo cáo chi tiết',
+        path: '/manager/revenue-new',
+      },
+    ],
+  },
+
+  {
+    icon: Users,
+    label: 'Nhân sự',
+    children: [
+      {
+        icon: UserCog,
+        label: 'Quản lý người dùng',
+        path: '/manager/users',
+      },
+    ],
+  },
+
+  {
+    icon: Shield,
+    label: 'Chính sách & Hệ thống',
+    children: [
+      {
+        icon: FileText,
+        label: 'Chính sách',
+        path: '/manager/policies',
+      },
+      {
+        icon: ClipboardList,
+        label: 'Cài đặt hệ thống',
+        path: '/manager/settings',
+      },
+    ],
+  },
+
+  {
+    icon: Settings,
+    label: 'Thiết lập cá nhân',
+    children: [
+      {
+        icon: Bell,
+        label: 'Thông báo',
+        path: '/manager/notifications',
+        badge: '2',
+        badgeType: 'info',
+      },
+      {
+        icon: User,
+        label: 'Cài đặt tài khoản',
+        path: '/manager/account',
+      },
+    ],
+  },
+];
+
+function MenuItemBadge({
+  badge,
+  type = 'info',
+}: {
+  badge: string;
+  type?: BadgeType;
+}) {
+  const colors: Record<BadgeType, string> = {
+    warning: 'bg-amber-500/20 text-amber-500 border-amber-500/30',
+    error: 'bg-red-500/20 text-red-500 border-red-500/30',
+    info: 'bg-blue-500/20 text-blue-500 border-blue-500/30',
+  };
+
+  return (
+    <span
+      className={cn(
+        'ml-auto rounded-full border px-1.5 py-0.5 text-xs font-medium',
+        colors[type]
+      )}
+    >
+      {badge}
+    </span>
+  );
+}
+
+function isActivePath(pathname: string, itemPath?: string, exact?: boolean) {
+  if (!itemPath) return false;
+  if (exact) return pathname === itemPath || pathname.endsWith(itemPath);
+  return (
+    pathname === itemPath ||
+    pathname.endsWith(itemPath) ||
+    pathname.includes(`${itemPath}/`)
+  );
 }
 
 export const ManagerSidebar: React.FC = () => {
-  const t = useTranslations('manager');
+  const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
 
-  const navItems: NavItem[] = [
-    {
-      href: '/manager/products',
-      label: t('nav.products'),
-      icon: (
-        <svg
-          className="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-          />
-        </svg>
-      ),
-    },
-    {
-      href: '/manager/pricing',
-      label: t('nav.pricing'),
-      icon: (
-        <svg
-          className="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-      ),
-    },
-    {
-      href: '/manager/users',
-      label: t('nav.users'),
-      icon: (
-        <svg
-          className="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-          />
-        </svg>
-      ),
-    },
-    {
-      href: '/manager/policies',
-      label: t('nav.policies'),
-      icon: (
-        <svg
-          className="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-      ),
-    },
-    {
-      href: '/manager/revenue',
-      label: t('nav.revenue'),
-      icon: (
-        <svg
-          className="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-          />
-        </svg>
-      ),
-    },
-  ];
+  const defaultOpenMap = useMemo(() => {
+    const map = new Map<string, boolean>();
+    for (const item of menuItems) {
+      if (!item.children) continue;
+      const open = item.children.some((c) =>
+        isActivePath(pathname, c.path, c.exact)
+      );
+      map.set(item.label, open);
+    }
+    return map;
+  }, [pathname]);
+
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    const obj: Record<string, boolean> = {};
+    for (const item of menuItems) {
+      if (item.children)
+        obj[item.label] = defaultOpenMap.get(item.label) ?? false;
+    }
+    return obj;
+  });
+
+  useMemo(() => {
+    setOpenGroups((prev) => {
+      const next = { ...prev };
+      for (const item of menuItems) {
+        if (!item.children) continue;
+        const shouldOpen = item.children.some((c) =>
+          isActivePath(pathname, c.path, c.exact)
+        );
+        if (shouldOpen) next[item.label] = true;
+      }
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   return (
-    <aside className="sticky top-0 h-screen w-64 overflow-y-auto bg-[#f8f9fb] border-r border-gray-200">
-      {/* Logo Section */}
-      <div className="p-6 border-b border-gray-200">
-        <div className="flex items-center gap-3">
-          <div className="bg-blue-600 p-2 rounded-lg">
-            <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
+    <aside
+      className={cn(
+        'fixed top-0 left-0 z-40 flex h-screen flex-col border-r border-gray-200 bg-gray-100 transition-all duration-300',
+        collapsed ? 'w-20' : 'w-72'
+      )}
+    >
+      {/* Logo */}
+      <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4">
+        {!collapsed ? (
+          <div className="flex items-center gap-2">
+            <div className="gradient-gold flex h-10 w-10 items-center justify-center rounded-lg">
+              <Glasses className="text-primary h-6 w-6" />
+            </div>
+            <div className="leading-tight">
+              <span className="font-display text-lg font-semibold text-gray-900">
+                Eyes Dream
+              </span>
+              <div className="text-xs text-gray-500">Manager Dashboard</div>
+            </div>
           </div>
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">{t('title')}</h2>
+        ) : (
+          <div className="gradient-gold mx-auto flex h-10 w-10 items-center justify-center rounded-lg">
+            <Glasses className="text-primary h-6 w-6" />
           </div>
-        </div>
+        )}
       </div>
 
-      <nav className="p-4 space-y-1">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
+      {/* Toggle */}
+      <Button
+        variant="ghost"
+        size="sm"
+        type="button"
+        onClick={() => setCollapsed((v) => !v)}
+        className="absolute top-20 -right-3 h-6 w-6 rounded-full border border-gray-200 bg-gray-100 p-0 shadow-sm hover:bg-gray-200"
+        aria-label={collapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
+      >
+        {collapsed ? (
+          <ChevronRight className="h-4 w-4" />
+        ) : (
+          <ChevronLeft className="h-4 w-4" />
+        )}
+      </Button>
+
+      {/* Nav */}
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+        {menuItems.map((item) => {
+          // Leaf
+          if (!item.children) {
+            const active = isActivePath(pathname, item.path, item.exact);
+            return (
+              <Link
+                key={item.label}
+                href={item.path ?? '/'}
+                aria-current={active ? 'page' : undefined}
+                className={cn(
+                  'flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200',
+                  active
+                    ? 'bg-yellow-400 text-yellow-950'
+                    : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900',
+                  collapsed && 'justify-center'
+                )}
+              >
+                <item.icon className="h-5 w-5 flex-shrink-0" />
+                {!collapsed && (
+                  <span className="font-medium">{item.label}</span>
+                )}
+              </Link>
+            );
+          }
+
+          // Group
+          const hasActiveChild = item.children.some((c) =>
+            isActivePath(pathname, c.path, c.exact)
+          );
+          const isOpen = !!openGroups[item.label];
+
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-700 hover:bg-white hover:text-blue-600'
+            <div key={item.label} className="space-y-1">
+              <button
+                type="button"
+                onClick={() =>
+                  !collapsed &&
+                  setOpenGroups((p) => ({
+                    ...p,
+                    [item.label]: !p[item.label],
+                  }))
+                }
+                className={cn(
+                  'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200',
+                  hasActiveChild
+                    ? 'bg-yellow-400/40 text-yellow-950'
+                    : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900',
+                  collapsed && 'justify-center'
+                )}
+                aria-expanded={!collapsed ? isOpen : undefined}
+              >
+                <item.icon className="h-5 w-5 flex-shrink-0" />
+                {!collapsed && (
+                  <>
+                    <span className="flex-1 text-left font-medium">
+                      {item.label}
+                    </span>
+                    <ChevronDown
+                      className={cn(
+                        'h-4 w-4 transition-transform duration-200',
+                        isOpen && 'rotate-180'
+                      )}
+                    />
+                  </>
+                )}
+              </button>
+
+              {/* Children */}
+              {!collapsed && isOpen && (
+                <div className="mt-1 space-y-1">
+                  {item.children.map((child) => {
+                    const active = isActivePath(
+                      pathname,
+                      child.path,
+                      child.exact
+                    );
+                    return (
+                      <Link
+                        key={child.path}
+                        href={child.path!}
+                        aria-current={active ? 'page' : undefined}
+                        className={cn(
+                          'ml-6 flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-all duration-200',
+                          active
+                            ? 'bg-yellow-400 text-yellow-950'
+                            : 'text-gray-600 hover:bg-gray-200 hover:text-gray-900'
+                        )}
+                      >
+                        <child.icon className="h-4 w-4 flex-shrink-0" />
+                        <span className="flex-1 truncate">{child.label}</span>
+                        {child.badge && (
+                          <MenuItemBadge
+                            badge={child.badge}
+                            type={child.badgeType}
+                          />
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
               )}
-            >
-              {item.icon}
-              <span>{item.label}</span>
-            </Link>
+            </div>
           );
         })}
       </nav>
+
+      {/* User */}
+      <div className="border-t border-gray-200 p-4">
+        <div
+          className={cn(
+            'flex items-center gap-3',
+            collapsed && 'justify-center'
+          )}
+        >
+          <div className="gradient-gold text-primary flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full font-semibold">
+            QL
+          </div>
+
+          {!collapsed && (
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-medium text-gray-900">Quản lý</p>
+              <p className="truncate text-xs text-gray-500">Manager</p>
+            </div>
+          )}
+
+          {!collapsed && (
+            <Button
+              variant="ghost"
+              size="sm"
+              type="button"
+              className="text-gray-600 hover:text-gray-900"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      </div>
     </aside>
   );
 };
