@@ -58,7 +58,7 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = [
-  { icon: LayoutDashboard, label: 'Tổng quan', path: '/dashboard-staff' },
+  { icon: LayoutDashboard, label: 'Tổng quan', path: '/staff/dashboard-staff' },
 
   {
     icon: ShoppingCart,
@@ -67,34 +67,38 @@ const menuItems: MenuItem[] = [
       {
         icon: ClipboardList,
         label: 'Tất cả đơn hàng',
-        path: '/orders',
+        path: '/staff/orders',
         exact: true,
       },
       {
         icon: Clock,
         label: 'Đơn cần xử lý',
-        path: '/orders/pending',
+        path: '/staff/orders/pending',
         badge: '12',
         badgeType: 'warning',
       },
       {
         icon: FileText,
         label: 'Đơn cần bổ sung Prescription',
-        path: '/orders/prescription-needed',
+        path: '/staff/orders/prescription-needed',
         badge: '5',
         badgeType: 'info',
       },
-      { icon: Package, label: 'Đơn Pre-order', path: '/orders/preorder' },
+      { icon: Package, label: 'Đơn Pre-order', path: '/staff/orders/preorder' },
       {
         icon: Glasses,
         label: 'Đơn Prescription (làm tròng)',
-        path: '/orders/prescription',
+        path: '/staff/orders/prescription',
       },
-      { icon: Wrench, label: 'Đơn đang gia công', path: '/orders/processing' },
+      {
+        icon: Wrench,
+        label: 'Đơn đang gia công',
+        path: '/staff/orders/processing',
+      },
       {
         icon: AlertTriangle,
         label: 'Đơn trễ / cảnh báo',
-        path: '/orders/alerts',
+        path: '/staff/orders/alerts',
         badge: '3',
         badgeType: 'error',
       },
@@ -108,19 +112,19 @@ const menuItems: MenuItem[] = [
       {
         icon: RefreshCw,
         label: 'Đổi / trả / bảo hành',
-        path: '/cases/returns',
+        path: 'staff/cases/returns',
         badge: '4',
         badgeType: 'warning',
       },
       {
         icon: MessageSquare,
         label: 'Khiếu nại & hỗ trợ',
-        path: '/cases/complaints',
+        path: '/staff/cases/complaints',
       },
       {
         icon: CreditCard,
         label: 'Hoàn tiền / điều chỉnh',
-        path: '/cases/refunds',
+        path: '/staff/cases/refunds',
       },
     ],
   },
@@ -132,17 +136,17 @@ const menuItems: MenuItem[] = [
       {
         icon: Printer,
         label: 'Tạo vận đơn / In nhãn',
-        path: '/shipping/create',
+        path: '/staff/shipping/create',
       },
       {
         icon: MapPin,
         label: 'Tracking / Đối soát',
-        path: '/shipping/tracking',
+        path: '/staff/shipping/tracking',
       },
       {
         icon: PackageCheck,
         label: 'Bàn giao vận chuyển',
-        path: '/shipping/handover',
+        path: '/staff/shipping/handover',
       },
     ],
   },
@@ -154,19 +158,19 @@ const menuItems: MenuItem[] = [
       {
         icon: ClipboardList,
         label: 'Hàng đợi gia công',
-        path: '/lab/queue',
+        path: '/staff/lab/queue',
         badge: '8',
         badgeType: 'info',
       },
       {
         icon: ClipboardCheck,
         label: 'Thông số lắp tròng / QC',
-        path: '/lab/specs',
+        path: '/staff/lab/specs',
       },
       {
         icon: CheckSquare,
         label: 'Kết quả QC & đóng gói',
-        path: '/lab/qc-results',
+        path: '/staff/lab/qc-results',
       },
     ],
   },
@@ -175,16 +179,16 @@ const menuItems: MenuItem[] = [
     icon: Warehouse,
     label: 'Sản phẩm & kho',
     children: [
-      { icon: Search, label: 'Tra cứu sản phẩm', path: '/products' },
+      { icon: Search, label: 'Tra cứu sản phẩm', path: '/staff/products' },
       {
         icon: FileSearch,
         label: 'Tồn kho / tình trạng',
-        path: '/inventory/stock',
+        path: '/staff/inventory/stock',
       },
       {
         icon: Package,
         label: 'Nhập hàng Pre-order',
-        path: '/inventory/import',
+        path: '/staff/inventory/import',
       },
     ],
   },
@@ -193,16 +197,16 @@ const menuItems: MenuItem[] = [
     icon: Users,
     label: 'Khách hàng',
     children: [
-      { icon: Users, label: 'Danh sách khách hàng', path: '/customers' },
+      { icon: Users, label: 'Danh sách khách hàng', path: '/staff/customers' },
       {
         icon: History,
         label: 'Lịch sử đơn & ghi chú',
-        path: '/customers/history',
+        path: '/staff/customers/history',
       },
       {
         icon: FileHeart,
         label: 'Hồ sơ Prescription',
-        path: '/customers/prescriptions',
+        path: '/staff/customers/prescriptions',
       },
     ],
   },
@@ -214,9 +218,13 @@ const menuItems: MenuItem[] = [
       {
         icon: TrendingUp,
         label: 'Báo cáo đơn theo trạng thái',
-        path: '/reports/orders',
+        path: '/staff/reports/orders',
       },
-      { icon: Percent, label: 'Vận chuyển / hoàn', path: '/reports/shipping' },
+      {
+        icon: Percent,
+        label: 'Vận chuyển / hoàn',
+        path: '/staff/reports/shipping',
+      },
     ],
   },
 
@@ -227,12 +235,20 @@ const menuItems: MenuItem[] = [
       {
         icon: Bell,
         label: 'Thông báo',
-        path: '/settings/notifications',
+        path: '/staff/settings/notifications',
         badge: '2',
         badgeType: 'info',
       },
-      { icon: ListTodo, label: 'Nhiệm vụ của tôi', path: '/settings/tasks' },
-      { icon: User, label: 'Cài đặt tài khoản', path: '/settings/account' },
+      {
+        icon: ListTodo,
+        label: 'Nhiệm vụ của tôi',
+        path: '/staff/settings/tasks',
+      },
+      {
+        icon: User,
+        label: 'Cài đặt tài khoản',
+        path: '/staff/settings/account',
+      },
     ],
   },
 ];

@@ -14,9 +14,12 @@ interface ProductCardProps {
   category: string;
   className?: string;
   compact?: boolean;
+  onPreview?: (id: string) => void;
+  previewLoading?: boolean;
 }
 
 export const ProductCard = ({
+  id,
   name,
   brand,
   price,
@@ -25,6 +28,8 @@ export const ProductCard = ({
   category,
   className,
   compact = false,
+  onPreview,
+  previewLoading = false,
 }: ProductCardProps) => {
   const stockStatus = stock > 10 ? 'success' : stock > 0 ? 'warning' : 'error';
   const stockLabel =
@@ -59,6 +64,8 @@ export const ProductCard = ({
             size="sm"
             variant="secondary"
             className="gap-1 border border-white/40 bg-black/35 text-white hover:bg-black/55"
+            onClick={() => onPreview?.(id)}
+            disabled={previewLoading}
           >
             <Eye className="h-4 w-4" />
           </Button>
