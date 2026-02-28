@@ -15,10 +15,24 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { mockCustomers } from '@/data/customerData';
 import { MoreHorizontal, Phone, Mail } from 'lucide-react';
 
-export const CustomerList = () => {
+export type CustomerListItem = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  totalOrders: number;
+  totalSpent: number;
+  lastVisit: string;
+  status: 'active' | 'inactive';
+};
+
+type CustomerListProps = {
+  customers?: CustomerListItem[];
+};
+
+export const CustomerList = ({ customers = [] }: CustomerListProps) => {
   return (
     <div className="glass-card overflow-hidden rounded-xl">
       <Table className="text-sm font-normal">
@@ -33,7 +47,14 @@ export const CustomerList = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {mockCustomers.map((customer) => (
+          {customers.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} className="text-foreground/80 py-8 text-center">
+                Không có khách hàng.
+              </TableCell>
+            </TableRow>
+          ) : (
+            customers.map((customer) => (
             <TableRow key={customer.id} className="hover:bg-muted/30">
               <TableCell>
                 <div className="flex items-center gap-3">
@@ -103,7 +124,8 @@ export const CustomerList = () => {
                 </DropdownMenu>
               </TableCell>
             </TableRow>
-          ))}
+            ))
+          )}
         </TableBody>
       </Table>
     </div>

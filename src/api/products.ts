@@ -24,6 +24,76 @@ export interface Product {
   hasSold: boolean;
 }
 
+export interface ProductDetail extends Product {
+  slug?: string;
+  pricing?: {
+    currency?: string;
+    basePrice?: number;
+    salePrice?: number;
+    discountPercent?: number;
+    taxRate?: number;
+  };
+  inventory?: {
+    track?: boolean;
+    threshold?: number;
+    warehouseDefaultLocation?: string;
+  };
+  preOrder?: {
+    enabled?: boolean;
+    allowCod?: boolean;
+  };
+  fulfillment?: {
+    supplier?: string;
+    leadTime?: string;
+    returnWindowDays?: number;
+    warrantyMonths?: number;
+    warehouseDefaultLocation?: string;
+  };
+  seo?: {
+    keywords?: string[];
+    modelCode?: string;
+    collections?: string[];
+    countryOfOrigin?: string;
+  };
+  media?: {
+    tryOn?: {
+      enabled?: boolean;
+      assetIds?: string[];
+    };
+    assets?: Array<{
+      _id?: string;
+      assetType?: '2d' | '3d';
+      role?:
+        | 'hero'
+        | 'gallery'
+        | 'thumbnail'
+        | 'lifestyle'
+        | 'try_on'
+        | 'viewer';
+      url?: string;
+      order?: number;
+      format?: string;
+      posterUrl?: string;
+      ['ar.glbUrl']?: string;
+      ['ar.usdzUrl']?: string;
+    }>;
+  };
+  servicesIncluded?: unknown[];
+  bundleIds?: string[];
+  specs?: Record<string, unknown>;
+  variants?: Array<{
+    _id?: string;
+    options?: Record<string, string>;
+    sku?: string;
+    price?: number;
+    stock?: number;
+    assetIds?: string[];
+  }>;
+  ratingsAverage?: number;
+  ratingsQuantity?: number;
+  updatedAt?: string;
+}
+
 export interface ProductsResponse {
   products: Product[];
   total: number;
@@ -49,26 +119,76 @@ interface BackendProduct {
   name?: string;
   description?: string;
   type?: string;
+  slug?: string;
   brand?: string;
   status?: ProductStatus;
   seo?: {
     collections?: string[];
+    keywords?: string[];
+    modelCode?: string;
+    countryOfOrigin?: string;
   };
   pricing?: {
+    currency?: string;
     basePrice?: number;
     salePrice?: number;
+    discountPercent?: number;
+    taxRate?: number;
+  };
+  inventory?: {
+    track?: boolean;
+    threshold?: number;
+    warehouseDefaultLocation?: string;
+  };
+  preOrder?: {
+    enabled?: boolean;
+    allowCod?: boolean;
+  };
+  fulfillment?: {
+    supplier?: string;
+    leadTime?: string;
+    returnWindowDays?: number;
+    warrantyMonths?: number;
+    warehouseDefaultLocation?: string;
   };
   media?: {
+    tryOn?: {
+      enabled?: boolean;
+      assetIds?: string[];
+    };
     assets?: Array<{
+      _id?: string;
       assetType?: '2d' | '3d';
-      role?: 'hero' | 'gallery' | 'thumbnail' | 'lifestyle' | 'try_on' | 'viewer';
+      role?:
+        | 'hero'
+        | 'gallery'
+        | 'thumbnail'
+        | 'lifestyle'
+        | 'try_on'
+        | 'viewer';
       url?: string;
       order?: number;
+      format?: string;
+      posterUrl?: string;
+      ['ar.glbUrl']?: string;
+      ['ar.usdzUrl']?: string;
     }>;
   };
+  servicesIncluded?: unknown[];
+  bundleIds?: string[];
+  specs?: Record<string, unknown>;
   variants?: Array<{
+    _id?: string;
+    options?: Record<string, string>;
+    sku?: string;
+    price?: number;
     stock?: number;
+    assetIds?: string[];
   }>;
+  ratingsAverage?: number;
+  ratingsQuantity?: number;
+  updatedAt?: string;
+  __v?: number;
 }
 
 export interface ProductUpsertInput {
@@ -159,6 +279,105 @@ function mapBackendProduct(raw: BackendProduct): Product {
   };
 }
 
+function mapBackendProductDetail(raw: BackendProduct): ProductDetail {
+  const base = mapBackendProduct(raw);
+  return {
+    ...base,
+    slug: raw.slug,
+    pricing: raw.pricing,
+    inventory: raw.inventory,
+    preOrder: raw.preOrder,
+    fulfillment: raw.fulfillment,
+    seo: raw.seo,
+    media: raw.media,
+    servicesIncluded: raw.servicesIncluded,
+    bundleIds: raw.bundleIds,
+    specs: raw.specs,
+    variants: raw.variants?.map((variant) => ({
+      _id: variant._id,
+      options: variant.options,
+      sku: variant.sku,
+      price: variant.price,
+      stock: variant.stock,
+      assetIds: variant.assetIds,
+    })),
+    ratingsAverage: raw.ratingsAverage,
+    ratingsQuantity: raw.ratingsQuantity,
+    updatedAt: raw.updatedAt,
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function extractProductsPayload(
+  payload: unknown
+): { rows: BackendProduct[]; pagination?: BackendEnvelope<unknown>['pagination'] } {
+  if (typeof payload === 'string') {
+    throw new Error(
+      'Invalid products response (received string). Check NEXT_PUBLIC_API_URL.'
+    );
+  }
+
+  if (Array.isArray(payload)) {
+    return { rows: payload as BackendProduct[] };
+  }
+
+  if (!isRecord(payload)) {
+    throw new Error('Invalid products response. Check NEXT_PUBLIC_API_URL.');
+  }
+
+  const pagination =
+    (payload.pagination as BackendEnvelope<unknown>['pagination']) ||
+    (isRecord(payload.data) ? (payload.data.pagination as any) : undefined);
+
+  const dataField = payload.data;
+
+  if (Array.isArray(dataField)) {
+    return { rows: dataField as BackendProduct[], pagination };
+  }
+
+  if (isRecord(dataField) && Array.isArray((dataField as any).data)) {
+    return { rows: (dataField as any).data as BackendProduct[], pagination };
+  }
+
+  if (Array.isArray((payload as any).products)) {
+    return { rows: (payload as any).products as BackendProduct[], pagination };
+  }
+
+  throw new Error('Invalid products response shape. Check NEXT_PUBLIC_API_URL.');
+}
+
+function extractProductPayload(payload: unknown): BackendProduct {
+  if (typeof payload === 'string') {
+    throw new Error(
+      'Invalid product response (received string). Check NEXT_PUBLIC_API_URL.'
+    );
+  }
+
+  if (!isRecord(payload)) {
+    throw new Error('Invalid product response. Check NEXT_PUBLIC_API_URL.');
+  }
+
+  const dataField = payload.data;
+
+  if (isRecord(dataField)) {
+    return dataField as BackendProduct;
+  }
+
+  if (isRecord((payload as any).product)) {
+    return (payload as any).product as BackendProduct;
+  }
+
+  // Some backends return the product object directly.
+  if (typeof (payload as any)._id === 'string' || typeof (payload as any).id === 'string') {
+    return payload as BackendProduct;
+  }
+
+  throw new Error('Invalid product response shape. Check NEXT_PUBLIC_API_URL.');
+}
+
 function resolveType(category: string): string {
   const normalized = (category || '').trim();
   if (PRODUCT_TYPES.has(normalized)) return normalized;
@@ -236,16 +455,13 @@ export const productApi = {
   getAll: async (params?: {
     page?: number;
     limit?: number;
+    sort?: string;
     search?: string;
     brand?: string;
     status?: string;
   }): Promise<ProductsResponse> => {
-    const { data } = await apiClient.get<BackendEnvelope<BackendProduct[]>>(
-      '/api/products',
-      { params }
-    );
-    const rows = Array.isArray(data?.data) ? data.data : [];
-    const pagination = data?.pagination;
+    const response = await apiClient.get('/api/products', { params });
+    const { rows, pagination } = extractProductsPayload(response.data);
 
     return {
       products: rows.map(mapBackendProduct),
@@ -255,18 +471,18 @@ export const productApi = {
     };
   },
 
-  getById: async (id: string): Promise<Product> => {
-    const { data } = await apiClient.get<BackendEnvelope<BackendProduct>>(
-      `/api/products/${id}`
-    );
-    const raw =
-      (data as BackendEnvelope<BackendProduct>)?.data ||
-      (data as unknown as BackendProduct);
-    return mapBackendProduct(raw);
+  getById: async (id: string): Promise<ProductDetail> => {
+    const response = await apiClient.get(`/api/products/${id}`);
+    const raw = extractProductPayload(response.data);
+    return mapBackendProductDetail(raw);
   },
 
   search: async (query: string): Promise<Product[]> => {
-    const result = await productApi.getAll({ page: 1, limit: 50, search: query });
+    const result = await productApi.getAll({
+      page: 1,
+      limit: 50,
+      search: query,
+    });
     return result.products;
   },
 

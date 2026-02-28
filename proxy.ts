@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { auth } from '@/lib/auth';
 import createMiddleware from 'next-intl/middleware';
 import { routing } from '@/i18n/routing';
 
@@ -21,12 +20,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(nextPath, request.url));
   }
 
-  // Root: send authenticated users to products, guests to login.
+  // Root: send guests to login (do not force authenticated users to /products).
   if (pathname === '/') {
+    const { auth } = await import('@/lib/auth');
     const session = await auth();
-    return NextResponse.redirect(
-      new URL(session ? '/products' : '/login', request.url)
-    );
+    if (!session) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
   }
 
   // Handle internationalization first (reads cookie for locale)
@@ -51,6 +51,7 @@ export async function proxy(request: NextRequest) {
   );
 
   if (isProtectedRoute) {
+    const { auth } = await import('@/lib/auth');
     const session = await auth();
     if (!session) {
       const loginUrl = new URL('/login', request.url);
@@ -59,24 +60,9 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Redirect authenticated users away from auth pages
-  const authRoutes = ['/login', '/register'];
-  const isAuthRoute = authRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
-
-  if (isAuthRoute) {
-    const session = await auth();
-    if (session) {
-      return NextResponse.redirect(new URL('/products', request.url));
-    }
-  }
-
   return intlResponse;
 }
 
 export const config = {
-  matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|public).*)',
-  ],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|public).*)'],
 };
