@@ -303,7 +303,7 @@ function UsersPage() {
         onAdd={() => setShowAddModal(true)}
       />
 
-      <div className="space-y-8 p-6">
+      <div className="space-y-6 p-6">
         {/* Tab Navigation */}
         <section className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
@@ -357,9 +357,18 @@ function UsersPage() {
 
         {/* Stats */}
         <section className="animate-fade-in">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             {currentStats.map((stat) => (
-              <StatCard key={stat.title} {...stat} />
+              <StatCard
+                key={stat.title}
+                {...stat}
+                className="p-3"
+                titleClassName="text-xs"
+                valueClassName="text-xl"
+                trendClassName="text-xs"
+                iconWrapperClassName="gradient-gold rounded-md p-2"
+                iconSize="md"
+              />
             ))}
           </div>
         </section>

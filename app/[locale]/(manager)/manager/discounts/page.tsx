@@ -1,4 +1,5 @@
 import { Header } from '@/components/organisms/Header';
+import { StatCard } from '@/components/molecules/StatCard';
 import { Button } from '@/components/atoms/Button';
 import { Percent, Calendar, Tag } from 'lucide-react';
 
@@ -51,43 +52,36 @@ function DiscountsPage() {
       <div className="space-y-6 p-6">
         {/* Stats Overview */}
         <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="bg-card border-border rounded-lg border p-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-full bg-green-100 p-2 text-green-600">
-                <Percent className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">
-                  Khuyến mãi đang hoạt động
-                </p>
-                <p className="text-2xl font-bold">5</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-card border-border rounded-lg border p-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-full bg-blue-100 p-2 text-blue-600">
-                <Calendar className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Khuyến mãi sắp diễn ra</p>
-                <p className="text-2xl font-bold">3</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-card border-border rounded-lg border p-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-full bg-purple-100 p-2 text-purple-600">
-                <Tag className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Lượt sử dụng hôm nay</p>
-                <p className="text-2xl font-bold">68</p>
-              </div>
-            </div>
-          </div>
+          <StatCard
+            title="Khuyến mãi đang hoạt động"
+            value="5"
+            icon={Percent}
+            className="p-3"
+            titleClassName="text-xs"
+            valueClassName="text-xl"
+            iconWrapperClassName="gradient-gold rounded-md p-2"
+            iconSize="md"
+          />
+          <StatCard
+            title="Khuyến mãi sắp diễn ra"
+            value="3"
+            icon={Calendar}
+            className="p-3"
+            titleClassName="text-xs"
+            valueClassName="text-xl"
+            iconWrapperClassName="gradient-gold rounded-md p-2"
+            iconSize="md"
+          />
+          <StatCard
+            title="Lượt sử dụng hôm nay"
+            value="68"
+            icon={Tag}
+            className="p-3"
+            titleClassName="text-xs"
+            valueClassName="text-xl"
+            iconWrapperClassName="gradient-gold rounded-md p-2"
+            iconSize="md"
+          />
         </section>
 
         {/* Discounts List */}

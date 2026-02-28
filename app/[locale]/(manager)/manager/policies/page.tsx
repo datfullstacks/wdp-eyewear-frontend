@@ -1,4 +1,5 @@
 import { Header } from '@/components/organisms/Header';
+import { StatCard } from '@/components/molecules/StatCard';
 import { Button } from '@/components/atoms/Button';
 import {
   Settings,
@@ -98,54 +99,47 @@ function PoliciesPage() {
 
       <div className="space-y-8 p-6">
         {/* Quick Stats */}
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
-          <div className="bg-card border-border rounded-lg border p-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-full bg-green-100 p-2 text-green-600">
-                <CheckCircle className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Chính sách hiệu lực</p>
-                <p className="text-2xl font-bold">8</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-card border-border rounded-lg border p-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-full bg-yellow-100 p-2 text-yellow-600">
-                <Clock className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Đang soạn thảo</p>
-                <p className="text-2xl font-bold">3</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-card border-border rounded-lg border p-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-full bg-blue-100 p-2 text-blue-600">
-                <Edit3 className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Đang xem xét</p>
-                <p className="text-2xl font-bold">2</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-card border-border rounded-lg border p-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-full bg-red-100 p-2 text-red-600">
-                <AlertTriangle className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Cần cập nhật</p>
-                <p className="text-2xl font-bold">1</p>
-              </div>
-            </div>
-          </div>
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            title="Chính sách hiệu lực"
+            value="8"
+            icon={CheckCircle}
+            className="p-3"
+            titleClassName="text-xs"
+            valueClassName="text-xl"
+            iconWrapperClassName="gradient-gold rounded-md p-2"
+            iconSize="md"
+          />
+          <StatCard
+            title="Đang soạn thảo"
+            value="3"
+            icon={Clock}
+            className="p-3"
+            titleClassName="text-xs"
+            valueClassName="text-xl"
+            iconWrapperClassName="gradient-gold rounded-md p-2"
+            iconSize="md"
+          />
+          <StatCard
+            title="Đang xem xét"
+            value="2"
+            icon={Edit3}
+            className="p-3"
+            titleClassName="text-xs"
+            valueClassName="text-xl"
+            iconWrapperClassName="gradient-gold rounded-md p-2"
+            iconSize="md"
+          />
+          <StatCard
+            title="Cần cập nhật"
+            value="1"
+            icon={AlertTriangle}
+            className="p-3"
+            titleClassName="text-xs"
+            valueClassName="text-xl"
+            iconWrapperClassName="gradient-gold rounded-md p-2"
+            iconSize="md"
+          />
         </section>
 
         {/* Policies List */}

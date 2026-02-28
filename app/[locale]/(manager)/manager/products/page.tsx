@@ -554,7 +554,16 @@ function ProductsPage() {
 
         <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {productStats.map((stat) => (
-            <StatCard key={stat.title} {...stat} />
+            <StatCard
+              key={stat.title}
+              {...stat}
+              className="p-3"
+              titleClassName="text-xs"
+              valueClassName="text-xl"
+              trendClassName="text-xs"
+              iconWrapperClassName="gradient-gold rounded-md p-2"
+              iconSize="md"
+            />
           ))}
         </section>
 

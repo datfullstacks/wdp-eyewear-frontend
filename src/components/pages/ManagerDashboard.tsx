@@ -60,12 +60,21 @@ const ManagerDashboard = () => {
         subtitle="Tổng quan quản lý và điều hành cửa hàng"
       />
 
-      <div className="space-y-8 p-6">
+      <div className="space-y-6 p-6">
         {/* Manager Stats */}
         <section className="animate-fade-in">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {managerStats.map((stat) => (
-              <StatCard key={stat.title} {...stat} />
+              <StatCard
+                key={stat.title}
+                {...stat}
+                className="p-3"
+                titleClassName="text-xs"
+                valueClassName="text-xl"
+                trendClassName="text-xs"
+                iconWrapperClassName="gradient-gold rounded-md p-2"
+                iconSize="md"
+              />
             ))}
           </div>
         </section>
