@@ -39,7 +39,7 @@ const currentDiscounts = [
   },
 ];
 
-function DiscountsPage() {
+function ManagerDiscounts() {
   return (
     <>
       <Header
@@ -171,4 +171,4 @@ function DiscountsPage() {
   );
 }
 
-export default DiscountsPage;
+export default ManagerDiscounts;

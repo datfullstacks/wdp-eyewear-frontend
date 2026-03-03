@@ -8,7 +8,7 @@ import { DataTable, Column } from '@/components/molecules';
 import { mockPromotions, Promotion } from '@/lib/mock-data';
 import { DollarSign, CheckCircle, BarChart3, Percent } from 'lucide-react';
 
-export default function ManagerPricingPage() {
+export default function ManagerPricing() {
   const t = useTranslations('manager.pricing');
 
   const activeCount = mockPromotions.filter((p) => p.active).length;

@@ -264,7 +264,7 @@ const customers = [
   },
 ];
 
-function UsersPage() {
+function ManagerUsers() {
   const [activeTab, setActiveTab] = useState<
     'managers' | 'staff' | 'customers'
   >('managers');
@@ -280,17 +280,10 @@ function UsersPage() {
         ? staffStats
         : customerStats;
 
-  const currentData =
-    activeTab === 'managers'
-      ? managers
-      : activeTab === 'staff'
-        ? staffMembers
-        : customers;
-
   const getAddButtonLabel = () => {
     if (activeTab === 'managers') return 'Thêm Manager mới';
     if (activeTab === 'staff') return 'Thêm Staff mới';
-    return null; // Không cho phép thêm Customer mới
+    return null;
   };
 
   return (
@@ -376,7 +369,6 @@ function UsersPage() {
         {/* Quick Actions */}
         <section className="animate-slide-in">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-            {/* Manager Actions */}
             {activeTab === 'managers' && (
               <>
                 <div className="bg-card border-border cursor-pointer rounded-lg border p-6 transition-shadow hover:shadow-md">
@@ -412,7 +404,6 @@ function UsersPage() {
               </>
             )}
 
-            {/* Staff Actions */}
             {activeTab === 'staff' && (
               <>
                 <div
@@ -454,7 +445,6 @@ function UsersPage() {
               </>
             )}
 
-            {/* Customer Actions */}
             {activeTab === 'customers' && (
               <>
                 <div className="bg-card border-border cursor-pointer rounded-lg border p-6 transition-shadow hover:shadow-md">
@@ -1133,4 +1123,4 @@ const RequestStaffModal = ({ onClose }: { onClose: () => void }) => (
   </div>
 );
 
-export default UsersPage;
+export default ManagerUsers;

@@ -14,7 +14,7 @@ import {
   Filter,
 } from 'lucide-react';
 
-export default function ManagerRevenuePage() {
+export default function ManagerRevenueNew() {
   const t = useTranslations('manager.revenue');
 
   const stats = [

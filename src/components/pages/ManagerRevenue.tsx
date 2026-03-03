@@ -12,7 +12,7 @@ import {
   mockCustomerMetrics,
 } from '@/lib/mock-data';
 
-export default function ManagerRevenuePage() {
+export default function ManagerRevenue() {
   const t = useTranslations('manager.revenue');
 
   const totalRevenue = mockRevenueData.reduce((sum, d) => sum + d.revenue, 0);

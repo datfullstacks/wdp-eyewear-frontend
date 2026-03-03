@@ -183,7 +183,7 @@ function buildUpsertPayload(form: ProductFormState): ProductUpsertInput {
   };
 }
 
-function ProductsPage() {
+function ManagerProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -988,4 +988,4 @@ function ProductForm({
   );
 }
 
-export default ProductsPage;
+export default ManagerProducts;

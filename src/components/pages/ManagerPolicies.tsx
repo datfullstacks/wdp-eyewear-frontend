@@ -87,7 +87,7 @@ const systemSettings = [
   },
 ];
 
-function PoliciesPage() {
+function ManagerPolicies() {
   return (
     <>
       <Header
@@ -274,4 +274,4 @@ function PoliciesPage() {
   );
 }
 
-export default PoliciesPage;
+export default ManagerPolicies;
