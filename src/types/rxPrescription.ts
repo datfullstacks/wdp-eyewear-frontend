@@ -16,6 +16,7 @@ export interface PrescriptionData {
 export interface PrescriptionOrder {
   id: string;
   orderId: string;
+  rawOrderStatus?: string;
   customer: string;
   phone: string;
   email: string;
@@ -33,6 +34,8 @@ export interface PrescriptionOrder {
   dueDate: string;
   notes?: string;
   source: 'customer_upload' | 'store_input' | 'pending';
+  rxItemIds?: string[];
+  primaryRxItemId?: string;
 }
 
 export const emptyPrescriptionForm: PrescriptionData = {

@@ -10,6 +10,7 @@ export interface PendingOrderProduct {
 
 export interface PendingOrder {
   id: string;
+  orderDbId?: string;
   customer: string;
   phone: string;
   address: string;
