@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import type { ProducgitDetail } from '@/api/products';
+import type { ProductDetail } from '@/api/products';
 
 type Props = {
   product: ProductDetail;

@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/atoms';
 import { Input } from '@/components/atoms/Input';
-import type { UserRole } from './UserTable';
+import type { UserTabRole } from './UserTable';
 
 export interface UserFormData {
   name: string;
@@ -15,7 +15,7 @@ export interface UserFormData {
 }
 
 interface UserFormProps {
-  role: UserRole;
+  role: UserTabRole;
   formData: UserFormData;
   onChange: (data: UserFormData) => void;
   onSubmit: () => void;

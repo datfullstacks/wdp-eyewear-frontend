@@ -3,13 +3,16 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/organisms/Header';
-import { UserForm, type UserFormData, type UserRole } from '@/components/organisms/manager';
+import { UserForm, type UserFormData } from '@/components/organisms/manager';
 import { Card } from '@/components/ui/card';
 import { AlertTriangle, Shield, Briefcase } from 'lucide-react';
+import { userApi } from '@/api';
+
+type CreateRole = 'manager' | 'staff';
 
 export default function CreateUserPage() {
   const router = useRouter();
-  const [selectedRole, setSelectedRole] = useState<UserRole>('manager');
+  const [selectedRole, setSelectedRole] = useState<CreateRole>('manager');
   const [formData, setFormData] = useState<UserFormData>({
     name: '',
     email: '',
@@ -24,7 +27,7 @@ export default function CreateUserPage() {
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.email || !formData.password) {
-      setApiError('Please fill all required fields');
+      setApiError('Vui lòng điền đầy đủ các trường bắt buộc');
       return;
     }
 
@@ -32,12 +35,17 @@ export default function CreateUserPage() {
     setApiError('');
 
     try {
-      // TODO: Implement API call
-      console.log('Creating user:', { ...formData, role: selectedRole });
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // "staff" will be mapped to "operations" in the API layer
+      await userApi.create({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: selectedRole === 'staff' ? 'operations' : 'manager',
+        phone: formData.phone || undefined,
+      });
       router.push('/manager/users');
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Create failed');
+      setApiError(error instanceof Error ? error.message : 'Tạo người dùng thất bại');
     } finally {
       setIsSubmitting(false);
     }
@@ -87,7 +95,7 @@ export default function CreateUserPage() {
               }`}
             >
               <Briefcase className="mb-2 h-8 w-8 text-blue-600" />
-              <h4 className="mb-1 font-semibold text-gray-900">Staff</h4>
+              <h4 className="mb-1 font-semibold text-gray-900">Staff (Operations)</h4>
               <p className="text-sm text-gray-600">
                 Xử lý đơn hàng, kho, vận chuyển và chăm sóc khách hàng
               </p>

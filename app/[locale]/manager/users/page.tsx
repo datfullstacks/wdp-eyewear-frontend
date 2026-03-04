@@ -1,144 +1,71 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/organisms/Header';
 import { StatCard } from '@/components/molecules/StatCard';
-import { UserTable, type UserData, type UserRole } from '@/components/organisms/manager';
-import { Shield, Briefcase, Users } from 'lucide-react';
-
-// Mock data
-const managers: UserData[] = [
-  {
-    id: 1,
-    name: 'Nguyễn Văn A',
-    email: 'nguyenvana@company.com',
-    phone: '0901234567',
-    department: 'Quản lý Bán hàng',
-    permissions: ['Quản lý sản phẩm', 'Quản lý giá', 'Báo cáo'],
-    managesStaff: 8,
-    status: 'Active',
-  },
-  {
-    id: 2,
-    name: 'Trần Thị B',
-    email: 'tranthib@company.com',
-    phone: '0902345678',
-    department: 'Quản lý Kho',
-    permissions: ['Quản lý kho', 'Nhập hàng'],
-    managesStaff: 5,
-    status: 'Active',
-  },
-  {
-    id: 3,
-    name: 'Lê Minh C',
-    email: 'leminhc@company.com',
-    phone: '0903456789',
-    department: 'Quản lý Marketing',
-    permissions: ['Quản lý khuyến mãi', 'Báo cáo'],
-    managesStaff: 3,
-    status: 'Active',
-  },
-];
-
-const staffMembers: UserData[] = [
-  {
-    id: 4,
-    name: 'Phạm Thị D',
-    email: 'phamthid@company.com',
-    phone: '0904567890',
-    position: 'Nhân viên bán hàng',
-    manager: 'Nguyễn Văn A',
-    performance: 'Xuất sắc',
-    tasksCompleted: 245,
-    status: 'Active',
-  },
-  {
-    id: 5,
-    name: 'Hoàng Văn E',
-    email: 'hoangvane@company.com',
-    phone: '0905678901',
-    position: 'Nhân viên kho',
-    manager: 'Trần Thị B',
-    performance: 'Tốt',
-    tasksCompleted: 198,
-    status: 'Active',
-  },
-];
-
-const customers: UserData[] = [
-  {
-    id: 6,
-    name: 'Đỗ Minh F',
-    email: 'dominhf@gmail.com',
-    phone: '0906789012',
-    tier: 'Platinum',
-    totalSpent: '85,000,000 VND',
-    lastOrderDate: '2024-02-15',
-    joinDate: '2022-01-10',
-    status: 'Active',
-  },
-  {
-    id: 7,
-    name: 'Vũ Thị G',
-    email: 'vuthig@gmail.com',
-    phone: '0907890123',
-    tier: 'Gold',
-    totalSpent: '45,000,000 VND',
-    lastOrderDate: '2024-02-10',
-    joinDate: '2022-05-20',
-    status: 'Active',
-  },
-];
-
-const managerStats = [
-  {
-    title: 'Tổng Manager',
-    value: managers.length.toString(),
-    icon: Shield,
-    trend: { value: 0, isPositive: true },
-  },
-  {
-    title: 'Manager hoạt động',
-    value: managers.filter((m) => m.status === 'Active').length.toString(),
-    icon: Shield,
-    trend: { value: 0, isPositive: true },
-  },
-];
-
-const staffStats = [
-  {
-    title: 'Tổng Staff',
-    value: staffMembers.length.toString(),
-    icon: Briefcase,
-    trend: { value: 0, isPositive: true },
-  },
-  {
-    title: 'Staff hoạt động',
-    value: staffMembers.filter((s) => s.status === 'Active').length.toString(),
-    icon: Briefcase,
-    trend: { value: 0, isPositive: true },
-  },
-];
-
-const customerStats = [
-  {
-    title: 'Tổng khách hàng',
-    value: customers.length.toString(),
-    icon: Users,
-    trend: { value: 0, isPositive: true },
-  },
-  {
-    title: 'Khách hàng VIP',
-    value: customers.filter((c) => c.tier === 'Platinum').length.toString(),
-    icon: Users,
-    trend: { value: 0, isPositive: true },
-  },
-];
+import { UserTable, type UserTabRole } from '@/components/organisms/manager';
+import { userApi, type User } from '@/api';
+import { Shield, Briefcase, Users, AlertTriangle, Loader2 } from 'lucide-react';
 
 export default function UsersPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'managers' | 'staff' | 'customers'>('managers');
+  const [managers, setManagers] = useState<User[]>([]);
+  const [staffMembers, setStaffMembers] = useState<User[]>([]);
+  const [customers, setCustomers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState('');
+
+  const loadUsers = useCallback(async () => {
+    setIsLoading(true);
+    setApiError('');
+    try {
+      const [mgrRes, staffRes, custRes] = await Promise.all([
+        userApi.getAll({ role: 'manager', limit: 100 }),
+        userApi.getAll({ role: 'staff', limit: 100 }), // mapped to "operations" in API layer
+        userApi.getAll({ role: 'customer', limit: 100 }),
+      ]);
+      setManagers(mgrRes.users);
+      setStaffMembers(staffRes.users);
+      setCustomers(custRes.users);
+    } catch (error) {
+      setApiError(error instanceof Error ? error.message : 'Failed to load users');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadUsers();
+  }, [loadUsers]);
+
+  const managerStats = [
+    {
+      title: 'Tổng Manager',
+      value: managers.length.toString(),
+      icon: Shield,
+      trend: { value: 0, isPositive: true },
+    },
+  ];
+
+  const staffStats = [
+    {
+      title: 'Tổng Staff (Operations)',
+      value: staffMembers.length.toString(),
+      icon: Briefcase,
+      trend: { value: 0, isPositive: true },
+    },
+  ];
+
+  const customerStats = [
+    {
+      title: 'Tổng khách hàng',
+      value: customers.length.toString(),
+      icon: Users,
+      trend: { value: 0, isPositive: true },
+    },
+  ];
 
   const currentStats =
     activeTab === 'managers'
@@ -154,7 +81,7 @@ export default function UsersPage() {
         ? staffMembers
         : customers;
 
-  const currentRole: UserRole =
+  const currentRole: UserTabRole =
     activeTab === 'managers' ? 'manager' : activeTab === 'staff' ? 'staff' : 'customer';
 
   const getAddButtonLabel = () => {
@@ -163,19 +90,29 @@ export default function UsersPage() {
     return null;
   };
 
-  const handleView = (user: UserData) => {
+  const handleView = (user: User) => {
     router.push(`/manager/users/${user.id}`);
   };
 
-  const handleEdit = (user: UserData) => {
+  const handleEdit = (user: User) => {
     router.push(`/manager/users/${user.id}/edit`);
+  };
+
+  const handleDelete = async (user: User) => {
+    if (!confirm(`Bạn có chắc muốn xóa ${user.name}?`)) return;
+    try {
+      await userApi.remove(user.id);
+      await loadUsers();
+    } catch (error) {
+      setApiError(error instanceof Error ? error.message : 'Delete failed');
+    }
   };
 
   return (
     <>
       <Header
         title="Quản lý Nhân sự"
-        subtitle="Quản lý Manager, Staff và Customer - Phân quyền và chăm sóc khách hàng"
+        subtitle="Quản lý Manager, Staff và Customer"
         showAddButton={activeTab !== 'customers'}
         addButtonLabel={getAddButtonLabel() || ''}
         onAdd={() => router.push('/manager/users/create')}
@@ -233,6 +170,14 @@ export default function UsersPage() {
           </nav>
         </section>
 
+        {/* Error Message */}
+        {apiError && (
+          <div className="flex items-center gap-2 rounded-md bg-red-50 p-4 text-red-700">
+            <AlertTriangle className="h-5 w-5" />
+            <span>{apiError}</span>
+          </div>
+        )}
+
         {/* Stats */}
         <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {currentStats.map((stat, index) => (
@@ -240,17 +185,25 @@ export default function UsersPage() {
           ))}
         </section>
 
+        {/* Loading */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+          </div>
+        )}
+
         {/* Users Table */}
-        <section className="rounded-lg border border-gray-200 bg-white overflow-x-auto">
-          <UserTable
-            users={currentData}
-            role={currentRole}
-            onEdit={(user) => {
-              handleView(user);
-              handleEdit(user);
-            }}
-          />
-        </section>
+        {!isLoading && (
+          <section className="rounded-lg border border-gray-200 bg-white overflow-x-auto">
+            <UserTable
+              users={currentData}
+              role={currentRole}
+              onView={handleView}
+              onEdit={handleEdit}
+              onDelete={activeTab !== 'customers' ? handleDelete : undefined}
+            />
+          </section>
+        )}
       </div>
     </>
   );

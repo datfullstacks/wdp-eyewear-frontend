@@ -3,16 +3,19 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Header } from '@/components/organisms/Header';
-import { UserForm, type UserFormData, type UserRole } from '@/components/organisms/manager';
+import { UserForm, type UserFormData } from '@/components/organisms/manager';
 import { Card } from '@/components/ui/card';
 import { AlertTriangle, Loader2 } from 'lucide-react';
+import { userApi, toFrontendRole } from '@/api';
+
+type EditRole = 'manager' | 'staff' | 'customer';
 
 export default function EditUserPage() {
   const router = useRouter();
   const params = useParams();
   const userId = params.id as string;
 
-  const [role, setRole] = useState<UserRole>('manager');
+  const [role, setRole] = useState<EditRole>('manager');
   const [formData, setFormData] = useState<UserFormData>({
     name: '',
     email: '',
@@ -30,19 +33,18 @@ export default function EditUserPage() {
     const loadUser = async () => {
       try {
         setIsLoading(true);
-        // TODO: Implement API call
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        
-        // Mock data
+        const user = await userApi.getById(userId);
+        const frontendRole = toFrontendRole(user.role) as EditRole;
+        setRole(frontendRole);
         setFormData({
-          name: 'Nguyễn Văn A',
-          email: 'nguyenvana@company.com',
-          phone: '0901234567',
-          department: 'sales',
-          permissions: ['products', 'pricing'],
+          name: user.name,
+          email: user.email,
+          phone: user.phone || '',
+          department: '',
+          position: '',
+          permissions: [],
           password: '',
         });
-        setRole('manager');
       } catch (error) {
         setApiError(error instanceof Error ? error.message : 'Failed to load user');
       } finally {
@@ -57,7 +59,7 @@ export default function EditUserPage() {
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.email) {
-      setApiError('Please fill all required fields');
+      setApiError('Vui lòng điền đầy đủ các trường bắt buộc');
       return;
     }
 
@@ -65,12 +67,14 @@ export default function EditUserPage() {
     setApiError('');
 
     try {
-      // TODO: Implement API call
-      console.log('Updating user:', { ...formData, id: userId, role });
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await userApi.update(userId, {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || undefined,
+      });
       router.push('/manager/users');
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Update failed');
+      setApiError(error instanceof Error ? error.message : 'Cập nhật thất bại');
     } finally {
       setIsSubmitting(false);
     }

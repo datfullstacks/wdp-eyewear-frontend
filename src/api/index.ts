@@ -11,6 +11,7 @@ export type {
   ProductUpsertInput,
   ProductMediaAsset,
 } from './products';
-export type { User, UsersResponse, UserRole } from './users';
+export type { User, UsersResponse, UserRole, CreateUserInput, UpdateUserInput } from './users';
+export { toBackendRole, toFrontendRole } from './users';
 export type { AuthCredentials, RegisterData, AuthResponse } from './auth';
 export type { UploadResult } from './uploads';
