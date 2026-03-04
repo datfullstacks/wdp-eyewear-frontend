@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { SearchBar } from '@/components/molecules/SearchBar';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,13 +10,12 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Filter } from 'lucide-react';
+import { Filter, RefreshCw } from 'lucide-react';
 import {
   emptyPrescriptionForm,
   PrescriptionData,
   PrescriptionOrder,
 } from '@/types/rxPrescription';
-import { mockPrescriptionOrders } from '@/data/rxPrescriptionData';
 import { Header } from '@/components/organisms/Header';
 import {
   RxApproveModal,
@@ -26,11 +25,36 @@ import {
   RxOrderTable,
   RxStatsGrid,
 } from '@/components/organisms/rx-prescription';
+import { orderApi } from '@/api';
+import { toPrescriptionOrder } from '@/lib/orderAdapters';
+
+function buildPrescriptionPayload(form: PrescriptionData) {
+  return {
+    mode: 'manual' as const,
+    isMyopic: true,
+    rightEye: {
+      sphere: form.sphereRight || '',
+      cyl: form.cylinderRight || '',
+      axis: form.axisRight || '',
+      add: form.addRight || '',
+    },
+    leftEye: {
+      sphere: form.sphereLeft || '',
+      cyl: form.cylinderLeft || '',
+      axis: form.axisLeft || '',
+      add: form.addLeft || '',
+    },
+    pd: form.pd || '',
+    note: form.notes || '',
+    attachmentUrls: [],
+  };
+}
 
 export default function OrdersPrescription() {
-  const [orders, setOrders] = useState<PrescriptionOrder[]>(
-    mockPrescriptionOrders
-  );
+  const [orders, setOrders] = useState<PrescriptionOrder[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSubmittingAction, setIsSubmittingAction] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<PrescriptionOrder | null>(
@@ -44,6 +68,27 @@ export default function OrdersPrescription() {
     emptyPrescriptionForm
   );
   const [contactNote, setContactNote] = useState('');
+
+  const loadOrders = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const result = await orderApi.getAll({ page: 1, limit: 200 });
+      const mapped = result.orders
+        .map(toPrescriptionOrder)
+        .filter((value): value is PrescriptionOrder => value !== null);
+      setOrders(mapped);
+    } catch {
+      setErrorMessage('Không tải được danh sách đơn prescription.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadOrders();
+  }, [loadOrders]);
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -92,33 +137,54 @@ export default function OrdersPrescription() {
     setApproveOpen(true);
   };
 
-  const handleSavePrescription = () => {
+  const handleSavePrescription = async () => {
     if (!selectedOrder) return;
-    setOrders(
-      orders.map((o) =>
-        o.id === selectedOrder.id
-          ? {
-              ...o,
-              prescription: prescriptionForm,
-              prescriptionStatus: 'pending_review' as const,
-              source: 'store_input' as const,
-            }
-          : o
-      )
-    );
-    setInputPrescriptionOpen(false);
+
+    const targetItemIds =
+      selectedOrder.rxItemIds && selectedOrder.rxItemIds.length > 0
+        ? selectedOrder.rxItemIds
+        : selectedOrder.primaryRxItemId
+          ? [selectedOrder.primaryRxItemId]
+          : [];
+
+    if (targetItemIds.length === 0) {
+      setInputPrescriptionOpen(false);
+      return;
+    }
+
+    try {
+      setIsSubmittingAction(true);
+      await Promise.all(
+        targetItemIds.map((itemId) =>
+          orderApi.patchItem(selectedOrder.id, itemId, {
+            customization: {
+              prescription: buildPrescriptionPayload(prescriptionForm),
+            },
+          })
+        )
+      );
+      await loadOrders();
+      setInputPrescriptionOpen(false);
+    } catch {
+      setErrorMessage('Không thể lưu thông số prescription.');
+    } finally {
+      setIsSubmittingAction(false);
+    }
   };
 
-  const handleApprovePrescription = () => {
+  const handleApprovePrescription = async () => {
     if (!selectedOrder) return;
-    setOrders(
-      orders.map((o) =>
-        o.id === selectedOrder.id
-          ? { ...o, prescriptionStatus: 'approved' as const }
-          : o
-      )
-    );
-    setApproveOpen(false);
+
+    try {
+      setIsSubmittingAction(true);
+      await orderApi.updateStatus(selectedOrder.id, 'processing');
+      await loadOrders();
+      setApproveOpen(false);
+    } catch {
+      setErrorMessage('Không thể duyệt prescription cho đơn hàng này.');
+    } finally {
+      setIsSubmittingAction(false);
+    }
   };
 
   const handleSendContact = () => {
@@ -181,7 +247,26 @@ export default function OrdersPrescription() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => {
+              void loadOrders();
+            }}
+            disabled={isLoading || isSubmittingAction}
+          >
+            <RefreshCw className="h-4 w-4" />
+            Làm mới
+          </Button>
         </div>
+
+        {isLoading && (
+          <p className="text-foreground/70 text-sm">Đang tải dữ liệu đơn prescription...</p>
+        )}
+        {!isLoading && errorMessage && (
+          <p className="text-destructive text-sm">{errorMessage}</p>
+        )}
 
         {/* Orders Table */}
         <RxOrderTable
@@ -207,7 +292,9 @@ export default function OrdersPrescription() {
           customerName={selectedOrder?.customer}
           form={prescriptionForm}
           onFormChange={setPrescriptionForm}
-          onSave={handleSavePrescription}
+          onSave={() => {
+            void handleSavePrescription();
+          }}
         />
 
         <RxContactModal
@@ -223,7 +310,9 @@ export default function OrdersPrescription() {
           open={approveOpen}
           onOpenChange={setApproveOpen}
           order={selectedOrder}
-          onApprove={handleApprovePrescription}
+          onApprove={() => {
+            void handleApprovePrescription();
+          }}
         />
       </div>
     </>

@@ -12,6 +12,7 @@ import { PendingOrderRow } from '@/components/molecules/PendingOrderRow';
 interface PendingOrderTableProps {
   orders: PendingOrder[];
   selectedOrders: string[];
+  showEmptyState?: boolean;
   onSelectAll: (checked: boolean) => void;
   onSelectOrder: (orderId: string, checked: boolean) => void;
   onViewDetail: (order: PendingOrder) => void;
@@ -22,7 +23,7 @@ interface PendingOrderTableProps {
 export const PendingOrderTable = ({
   orders,
   selectedOrders,
-
+  showEmptyState = true,
   onSelectOrder,
   onViewDetail,
   onProcess,
@@ -58,7 +59,7 @@ export const PendingOrderTable = ({
         </TableBody>
       </Table>
 
-      {orders.length === 0 && (
+      {showEmptyState && orders.length === 0 && (
         <div className="p-12 text-center">
           <Package className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
           <p className="text-muted-foreground">

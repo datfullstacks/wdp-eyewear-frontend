@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { SearchBar } from '@/components/molecules/SearchBar';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,16 +20,19 @@ import {
   CancelModal,
 } from '@/components/organisms/preorder';
 import {
-  mockPreorderOrders,
   statusFilterOptions,
   priorityFilterOptions,
 } from '@/data/preorderData';
 import type { PreorderOrder } from '@/types/preorder';
 import { Filter } from 'lucide-react';
 import { Header } from '@/components/organisms/Header';
+import { orderApi } from '@/api';
+import { toPreorderOrder } from '@/lib/orderAdapters';
 
 const OrdersPreorder = () => {
-  const [orders, setOrders] = useState<PreorderOrder[]>(mockPreorderOrders);
+  const [orders, setOrders] = useState<PreorderOrder[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
@@ -46,6 +49,35 @@ const OrdersPreorder = () => {
   const [isCancelOpen, setIsCancelOpen] = useState(false);
   const [cancelOrder, setCancelOrder] = useState<PreorderOrder | null>(null);
   const [cancelReason, setCancelReason] = useState('');
+
+  const loadPreorderOrders = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const result = await orderApi.getAll({ page: 1, limit: 200 });
+      const mapped = result.orders
+        .filter(
+          (order) =>
+            order.orderType === 'pre_order' ||
+            order.items.some((item) => item.preOrder)
+        )
+        .map(toPreorderOrder);
+
+      setOrders(mapped);
+      setSelectedOrders((prev) =>
+        prev.filter((id) => mapped.some((order) => order.id === id))
+      );
+    } catch {
+      setErrorMessage('Không tải được danh sách đơn pre-order.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadPreorderOrders();
+  }, [loadPreorderOrders]);
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -144,6 +176,7 @@ const OrdersPreorder = () => {
         <PreorderTable
           orders={filteredOrders}
           selectedOrders={selectedOrders}
+          showEmptyState={!isLoading && !errorMessage}
           onSelectOrder={handleSelectOrder}
           onSelectAll={handleSelectAll}
           onViewDetail={(order) => {
@@ -166,6 +199,12 @@ const OrdersPreorder = () => {
           }}
           onProcess={() => {}}
         />
+        {isLoading && (
+          <p className="text-foreground/70 text-sm">Đang tải dữ liệu pre-order...</p>
+        )}
+        {!isLoading && errorMessage && (
+          <p className="text-destructive text-sm">{errorMessage}</p>
+        )}
 
         <PreorderDetailModal
           order={detailOrder}

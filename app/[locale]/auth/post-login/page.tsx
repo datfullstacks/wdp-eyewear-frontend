@@ -16,8 +16,9 @@ export default async function PostLoginPage({
 
   const role = (session.user.role ?? '').trim().toLowerCase();
   const shouldRedirectToStaff = role === 'sales' || role === 'operations';
+  const shouldRedirectToManager = role === 'admin' || role === 'manager';
 
-  if (role === 'admin') {
+  if (shouldRedirectToManager) {
     redirect('/manager');
   }
 

@@ -12,10 +12,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Filter, CheckCircle, RefreshCw } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { PendingOrder } from '@/types/pending';
-import { pendingOrders } from '@/data/pendingData';
 import {
   PendingStatsGrid,
   PendingOrderTable,
@@ -24,16 +23,48 @@ import {
   RejectModal,
 } from '@/components/organisms/pending';
 import { Button } from '@/components/atoms';
+import { orderApi } from '@/api';
+import { toPendingOrder } from '@/lib/orderAdapters';
 
 const OrdersPending = () => {
+  const [orders, setOrders] = useState<PendingOrder[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [detailModal, setDetailModal] = useState<PendingOrder | null>(null);
   const [processModal, setProcessModal] = useState<PendingOrder | null>(null);
   const [rejectModal, setRejectModal] = useState<PendingOrder | null>(null);
+  const [isSubmittingAction, setIsSubmittingAction] = useState(false);
 
-  const filteredOrders = pendingOrders.filter((order) => {
+  const loadPendingOrders = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const result = await orderApi.getAll({
+        page: 1,
+        limit: 200,
+        status: 'pending',
+      });
+      const mapped = result.orders.map(toPendingOrder);
+      setOrders(mapped);
+      setSelectedOrders((prev) =>
+        prev.filter((id) => mapped.some((order) => order.id === id))
+      );
+    } catch {
+      setErrorMessage('Không tải được danh sách đơn cần xử lý.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadPendingOrders();
+  }, [loadPendingOrders]);
+
+  const filteredOrders = orders.filter((order) => {
     const matchesSearch =
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -55,22 +86,67 @@ const OrdersPending = () => {
     );
   };
 
-  const handleProcessOrder = () => {
-    setProcessModal(null);
+  const handleProcessOrder = async () => {
+    if (!processModal?.orderDbId) {
+      setProcessModal(null);
+      return;
+    }
+
+    try {
+      setIsSubmittingAction(true);
+      await orderApi.updateStatus(processModal.orderDbId, 'confirmed');
+      await loadPendingOrders();
+      setProcessModal(null);
+    } finally {
+      setIsSubmittingAction(false);
+    }
   };
 
-  const handleRejectOrder = () => {
-    setRejectModal(null);
+  const handleRejectOrder = async (reason: string) => {
+    if (!rejectModal?.orderDbId) {
+      setRejectModal(null);
+      return;
+    }
+
+    try {
+      setIsSubmittingAction(true);
+      await orderApi.cancel(rejectModal.orderDbId, {
+        reason: reason || 'Đơn bị từ chối bởi nhân viên',
+      });
+      await loadPendingOrders();
+      setRejectModal(null);
+    } finally {
+      setIsSubmittingAction(false);
+    }
   };
 
-  const handleBulkProcess = () => {
-    setSelectedOrders([]);
+  const handleBulkProcess = async () => {
+    const selected = filteredOrders.filter((order) =>
+      selectedOrders.includes(order.id)
+    );
+    const targetIds = selected
+      .map((order) => order.orderDbId)
+      .filter((value): value is string => Boolean(value));
+
+    if (targetIds.length === 0) {
+      setSelectedOrders([]);
+      return;
+    }
+
+    try {
+      setIsSubmittingAction(true);
+      await Promise.all(
+        targetIds.map((id) => orderApi.updateStatus(id, 'confirmed'))
+      );
+      await loadPendingOrders();
+      setSelectedOrders([]);
+    } finally {
+      setIsSubmittingAction(false);
+    }
   };
 
-  const urgentCount = pendingOrders.filter(
-    (o) => o.priority === 'urgent'
-  ).length;
-  const highCount = pendingOrders.filter((o) => o.priority === 'high').length;
+  const urgentCount = orders.filter((o) => o.priority === 'urgent').length;
+  const highCount = orders.filter((o) => o.priority === 'high').length;
 
   return (
     <>
@@ -78,7 +154,7 @@ const OrdersPending = () => {
 
       <div className="space-y-6 p-6">
         <PendingStatsGrid
-          totalCount={pendingOrders.length}
+          totalCount={orders.length}
           urgentCount={urgentCount}
           highCount={highCount}
           selectedCount={selectedOrders.length}
@@ -140,26 +216,50 @@ const OrdersPending = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => setSelectedOrders([])}
+                  disabled={isSubmittingAction}
                 >
                   Bỏ chọn ({selectedOrders.length})
                 </Button>
-                <Button size="sm" className="gap-2" onClick={handleBulkProcess}>
+                <Button
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => {
+                    void handleBulkProcess();
+                  }}
+                  disabled={isSubmittingAction}
+                >
                   <CheckCircle className="h-4 w-4" />
                   Xác nhận hàng loạt
                 </Button>
               </>
             )}
 
-            <Button variant="outline" size="sm" className="gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => {
+                void loadPendingOrders();
+              }}
+              disabled={isLoading || isSubmittingAction}
+            >
               <RefreshCw className="h-4 w-4" />
               Làm mới
             </Button>
           </div>
         </div>
 
+        {isLoading && (
+          <p className="text-foreground/70 text-sm">Đang tải dữ liệu đơn hàng...</p>
+        )}
+        {!isLoading && errorMessage && (
+          <p className="text-destructive text-sm">{errorMessage}</p>
+        )}
+
         <PendingOrderTable
           orders={filteredOrders}
           selectedOrders={selectedOrders}
+          showEmptyState={!isLoading && !errorMessage}
           onSelectAll={handleSelectAll}
           onSelectOrder={handleSelectOrder}
           onViewDetail={setDetailModal}
@@ -177,12 +277,16 @@ const OrdersPending = () => {
       <ProcessModal
         order={processModal}
         onClose={() => setProcessModal(null)}
-        onConfirm={handleProcessOrder}
+        onConfirm={() => {
+          void handleProcessOrder();
+        }}
       />
       <RejectModal
         order={rejectModal}
         onClose={() => setRejectModal(null)}
-        onConfirm={handleRejectOrder}
+        onConfirm={(reason) => {
+          void handleRejectOrder(reason);
+        }}
       />
     </>
   );

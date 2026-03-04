@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import { SupplementOrder, ContactType } from '@/types/prescription';
-import { mockSupplementOrders } from '@/data/prescriptionData';
 import { Filter, Clock, AlertTriangle, Send, RefreshCw } from 'lucide-react';
 import {
   BulkContactModal,
@@ -26,6 +25,8 @@ import {
   PrescriptionStatsGrid,
   UploadImageModal,
 } from '@/components/organisms/prescription';
+import { orderApi } from '@/api';
+import { toSupplementOrder } from '@/lib/orderAdapters';
 
 const typeOptions = [
   { value: 'no_prescription', label: 'Chưa có Rx' },
@@ -41,7 +42,9 @@ const priorityOptions = [
 ];
 
 export default function OrdersPrescriptionSupplement() {
-  const [orders, setOrders] = useState<SupplementOrder[]>(mockSupplementOrders);
+  const [orders, setOrders] = useState<SupplementOrder[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
@@ -56,6 +59,31 @@ export default function OrdersPrescriptionSupplement() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [bulkContactOpen, setBulkContactOpen] = useState(false);
   const [uploadImageOpen, setUploadImageOpen] = useState(false);
+
+  const loadOrders = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const result = await orderApi.getAll({ page: 1, limit: 200 });
+      const mapped = result.orders
+        .map(toSupplementOrder)
+        .filter((value): value is SupplementOrder => value !== null);
+
+      setOrders(mapped);
+      setSelectedOrders((prev) =>
+        prev.filter((id) => mapped.some((order) => order.id === id))
+      );
+    } catch {
+      setErrorMessage('Không tải được danh sách đơn cần bổ sung prescription.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadOrders();
+  }, [loadOrders]);
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -108,23 +136,6 @@ export default function OrdersPrescriptionSupplement() {
     setSelectedOrder(order);
     setter(true);
   };
-
-  // const handleSendContact = (contact: Omit<ContactHistory, 'id'>) => {
-  //   if (!selectedOrder) return;
-  //   const newContact: ContactHistory = { ...contact, id: `C${Date.now()}` };
-  //   setOrders((prev) =>
-  //     prev.map((o) =>
-  //       o.id === selectedOrder.id
-  //         ? {
-  //             ...o,
-  //             contactAttempts: o.contactAttempts + 1,
-  //             lastContactDate: new Date().toISOString().split('T')[0],
-  //             contactHistory: [...o.contactHistory, newContact],
-  //           }
-  //         : o
-  //     )
-  //   );
-  // };
 
   const handleBulkContact = (
     _contactType?: ContactType,
@@ -219,12 +230,27 @@ export default function OrdersPrescriptionSupplement() {
                 Liên hệ ({selectedOrders.length})
               </Button>
             )}
-            <Button variant="outline" size="sm" className="gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => {
+                void loadOrders();
+              }}
+              disabled={isLoading}
+            >
               <RefreshCw className="h-4 w-4" />
               Làm mới
             </Button>
           </div>
         </div>
+
+        {isLoading && (
+          <p className="text-foreground/70 text-sm">Đang tải dữ liệu đơn cần bổ sung...</p>
+        )}
+        {!isLoading && errorMessage && (
+          <p className="text-destructive text-sm">{errorMessage}</p>
+        )}
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -279,12 +305,6 @@ export default function OrdersPrescriptionSupplement() {
             selectedOrder && handleOpenModal(selectedOrder, setContactOpen)
           }
         />
-        {/* <ContactModal
-          open={contactOpen}
-          onOpenChange={setContactOpen}
-          order={selectedOrder}
-          onSend={handleSendContact}
-        /> */}
         <ContactHistoryModal
           open={historyOpen}
           onOpenChange={setHistoryOpen}
