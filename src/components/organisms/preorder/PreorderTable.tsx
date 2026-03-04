@@ -7,12 +7,13 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { PreorderOrderRow } from '@/components/molecules/PreorderOrderRow';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Package } from 'lucide-react';
 import type { PreorderOrder } from '@/types/preorder';
 
 interface PreorderTableProps {
   orders: PreorderOrder[];
   selectedOrders: string[];
+  showEmptyState?: boolean;
   onSelectOrder: (id: string) => void;
   onSelectAll: () => void;
   onViewDetail: (order: PreorderOrder) => void;
@@ -25,6 +26,7 @@ interface PreorderTableProps {
 export const PreorderTable = ({
   orders,
   selectedOrders,
+  showEmptyState = true,
   onSelectOrder,
 
   onViewDetail,
@@ -75,5 +77,11 @@ export const PreorderTable = ({
         </TableBody>
       </Table>
     </div>
+    {showEmptyState && orders.length === 0 && (
+      <div className="p-12 text-center">
+        <Package className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
+        <p className="text-muted-foreground">Không có đơn pre-order</p>
+      </div>
+    )}
   </div>
 );
