@@ -35,7 +35,7 @@ export const Header = ({
   // Handle both old and new props
   const handleAddClick = onAddProduct || onAdd;
   const shouldShowAddButton = onAddProduct || (showAddButton && onAdd);
-  const finalButtonLabel = addButtonLabel === 'Thêm mới' ? 'Thêm sản phẩm mới' : addButtonLabel;
+  const finalButtonLabel = addButtonLabel;
 
   return (
     <header className="bg-card border-border flex h-16 items-center justify-between gap-4 border-b px-6">

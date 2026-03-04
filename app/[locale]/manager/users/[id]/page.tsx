@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
 import { Header } from '@/components/organisms/Header';
 import { Button } from '@/components/atoms';
 import { Avatar } from '@/components/atoms/Avatar';
 import { Card } from '@/components/ui/card';
 import { userApi, type User } from '@/api';
-import { AlertTriangle, Loader2, User as UserIcon, Shield } from 'lucide-react';
+import { AlertTriangle, Loader2, User as UserIcon, Shield, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 function roleBadge(role: string) {
@@ -96,6 +97,15 @@ export default function UserDetailPage() {
       />
 
       <div className="space-y-6 p-6">
+        {/* Back navigation */}
+        <Link
+          href="/manager/users"
+          className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-amber-600 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Quay lại Quản lý người dùng
+        </Link>
+
         {apiError && (
           <div className="flex items-center gap-2 rounded-md bg-red-50 p-4 text-red-700">
             <AlertTriangle className="h-5 w-5" />

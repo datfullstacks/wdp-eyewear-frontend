@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Header } from '@/components/organisms/Header';
 import { UserForm, type UserFormData } from '@/components/organisms/manager';
 import { Card } from '@/components/ui/card';
-import { AlertTriangle, Shield, Briefcase } from 'lucide-react';
+import { AlertTriangle, Shield, Briefcase, ArrowLeft } from 'lucide-react';
 import { userApi } from '@/api';
 
 type CreateRole = 'manager' | 'staff';
@@ -35,7 +36,6 @@ export default function CreateUserPage() {
     setApiError('');
 
     try {
-      // "staff" will be mapped to "operations" in the API layer
       await userApi.create({
         name: formData.name,
         email: formData.email,
@@ -59,6 +59,15 @@ export default function CreateUserPage() {
       />
 
       <div className="space-y-6 p-6">
+        {/* Back navigation */}
+        <Link
+          href="/manager/users"
+          className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-amber-600 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Quay lại Quản lý người dùng
+        </Link>
+
         {apiError && (
           <div className="flex items-center gap-2 rounded-md bg-red-50 p-4 text-red-700">
             <AlertTriangle className="h-5 w-5" />
@@ -68,14 +77,14 @@ export default function CreateUserPage() {
 
         {/* Role Selection */}
         <Card className="p-6">
-          <h3 className="mb-4 text-lg font-semibold">Chọn vai trò</h3>
+          <h3 className="mb-4 text-lg font-semibold text-gray-900">Chọn vai trò</h3>
           <div className="grid gap-4 md:grid-cols-2">
             <button
               type="button"
               onClick={() => setSelectedRole('manager')}
               className={`rounded-lg border-2 p-6 text-left transition-all ${
                 selectedRole === 'manager'
-                  ? 'border-amber-500 bg-amber-50'
+                  ? 'border-amber-500 bg-amber-50 shadow-sm'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
@@ -90,7 +99,7 @@ export default function CreateUserPage() {
               onClick={() => setSelectedRole('staff')}
               className={`rounded-lg border-2 p-6 text-left transition-all ${
                 selectedRole === 'staff'
-                  ? 'border-amber-500 bg-amber-50'
+                  ? 'border-blue-500 bg-blue-50 shadow-sm'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
@@ -105,14 +114,15 @@ export default function CreateUserPage() {
 
         {/* User Form */}
         <Card className="p-6">
-          <h3 className="mb-4 text-lg font-semibold">Thông tin người dùng</h3>
+          <h3 className="mb-4 text-lg font-semibold text-gray-900">Thông tin người dùng</h3>
           <UserForm
             role={selectedRole}
             formData={formData}
             onChange={setFormData}
             onSubmit={handleSubmit}
-            onCancel={() => router.back()}
+            onCancel={() => router.push('/manager/users')}
             isSubmitting={isSubmitting}
+            showPassword
           />
         </Card>
       </div>
