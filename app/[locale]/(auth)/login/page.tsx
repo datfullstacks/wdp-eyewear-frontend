@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { getCsrfToken, getProviders, signIn } from 'next-auth/react';
 import { Eye, EyeOff, Glasses, Lock, Mail } from 'lucide-react';
@@ -149,7 +150,7 @@ export default function LoginPage() {
                     onChange={(event) => setEmail(event.target.value)}
                     required
                     placeholder="name@company.com"
-                    className="h-11 bg-slate-50 pl-10"
+                    className="h-11 border-slate-200 bg-slate-50 pl-10 text-slate-900 placeholder:text-slate-400 focus:border-amber-400 focus:ring-amber-400"
                     autoComplete="email"
                   />
                 </div>
@@ -160,12 +161,12 @@ export default function LoginPage() {
                   <Label htmlFor="password" className="text-sm text-slate-700">
                     {t('password')}
                   </Label>
-                  <button
-                    type="button"
-                    className="text-sm text-slate-500 hover:text-slate-700"
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm text-amber-600 hover:text-amber-700 font-medium"
                   >
                     {t('forgotPassword')}
-                  </button>
+                  </Link>
                 </div>
 
                 <div className="relative">
@@ -180,7 +181,7 @@ export default function LoginPage() {
                     onChange={(event) => setPassword(event.target.value)}
                     required
                     placeholder="••••••••"
-                    className="h-11 bg-slate-50 pr-10 pl-10"
+                    className="h-11 border-slate-200 bg-slate-50 pr-10 pl-10 text-slate-900 placeholder:text-slate-400 focus:border-amber-400 focus:ring-amber-400 [&::-ms-reveal]:hidden [&::-ms-clear]:hidden [&::-webkit-credentials-auto-fill-button]:hidden [&::-webkit-contacts-auto-fill-button]:hidden"
                     autoComplete="current-password"
                   />
                   <button
@@ -224,9 +225,9 @@ export default function LoginPage() {
 
           <div className="mt-8 text-center text-sm text-slate-500">
             {t('noAccount')}{' '}
-            <span className="font-medium text-slate-700">
-              Liên hệ quản trị viên
-            </span>
+            <Link href="/register" className="font-medium text-amber-600 hover:text-amber-700">
+              {t('register')}
+            </Link>
           </div>
         </div>
       </main>
