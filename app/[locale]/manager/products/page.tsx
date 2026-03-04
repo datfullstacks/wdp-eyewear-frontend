@@ -40,8 +40,8 @@ export default function ProductsPage() {
     setIsLoading(true);
     setApiError('');
     try {
-      const data = await productApi.getProducts();
-      setProducts(data);
+      const response = await productApi.getAll();
+      setProducts(response.products);
     } catch (error) {
       setApiError(error instanceof Error ? error.message : 'Failed to load products');
     } finally {
