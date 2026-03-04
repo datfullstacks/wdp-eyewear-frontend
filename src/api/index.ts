@@ -3,6 +3,7 @@ export { default as productApi } from './products';
 export { default as authApi } from './auth';
 export { default as uploadApi } from './uploads';
 export { default as userApi } from './users';
+export { default as orderApi } from './orders';
 
 export type {
   Product,
@@ -15,3 +16,10 @@ export type { User, UsersResponse, UserRole, CreateUserInput, UpdateUserInput } 
 export { toBackendRole, toFrontendRole } from './users';
 export type { AuthCredentials, RegisterData, AuthResponse } from './auth';
 export type { UploadResult } from './uploads';
+export type {
+  UiOrderStatus,
+  UiPaymentStatus,
+  OrderItem,
+  OrderRecord,
+  OrdersResponse,
+} from './orders';
