@@ -1182,7 +1182,13 @@ export function ProductFormFull({
         </div>
         <div className="flex items-center gap-3">
           {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onCancel} 
+              disabled={isSubmitting}
+              className="border-slate-300 text-slate-700 hover:bg-slate-50"
+            >
               Huỷ
             </Button>
           )}
@@ -1191,6 +1197,7 @@ export function ProductFormFull({
             variant="outline"
             onClick={() => doSubmit('draft')}
             disabled={isSubmitting}
+            className="border-slate-300 text-slate-700 hover:bg-slate-50"
           >
             {isSubmitting ? (
               <Loader2 className="mr-1 h-4 w-4 animate-spin" />
