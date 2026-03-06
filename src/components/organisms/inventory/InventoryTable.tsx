@@ -37,12 +37,10 @@ export const InventoryTable = ({
       <Table className="text-sm font-normal">
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead className="w-[120px]">SKU</TableHead>
             <TableHead>Sản phẩm</TableHead>
+            <TableHead>Thương hiệu</TableHead>
             <TableHead>Biến thể</TableHead>
             <TableHead className="text-center">Tồn kho</TableHead>
-            <TableHead className="text-center">Đã giữ</TableHead>
-            <TableHead className="text-center">Có thể bán</TableHead>
             <TableHead>Vị trí</TableHead>
             <TableHead>Trạng thái</TableHead>
             <TableHead className="w-[60px]"></TableHead>
@@ -51,16 +49,16 @@ export const InventoryTable = ({
         <TableBody>
           {items.map((item) => (
             <TableRow key={item.id} className="hover:bg-muted/30">
-              <TableCell className="text-foreground font-mono text-sm font-normal">
-                {item.sku}
-              </TableCell>
               <TableCell>
                 <div>
                   <p className="text-foreground font-normal">{item.name}</p>
                   <p className="text-foreground/80 text-sm">
-                    {item.brand} • {item.category}
+                    {item.category}
                   </p>
                 </div>
+              </TableCell>
+              <TableCell className="text-foreground/90 text-sm">
+                {item.brand}
               </TableCell>
               <TableCell className="text-foreground/80 text-sm">
                 {item.variant}
@@ -71,12 +69,6 @@ export const InventoryTable = ({
                     {item.stock}
                   </span>
                 </div>
-              </TableCell>
-              <TableCell className="text-foreground/90 text-center">
-                {item.reserved}
-              </TableCell>
-              <TableCell className="text-primary text-center font-normal">
-                {item.available}
               </TableCell>
               <TableCell className="text-foreground/90 text-sm">
                 {item.location}

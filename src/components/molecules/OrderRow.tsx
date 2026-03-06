@@ -50,7 +50,7 @@ export const OrderRow = ({
           className="bg-yellow-400 bg-none text-yellow-950 ring-yellow-500"
         />
         <div>
-          <p className="text-foreground font-medium">#{id}</p>
+          <p className="text-foreground font-medium">{id}</p>
           <p className="text-muted-foreground truncate text-sm">
             {customerName}
           </p>

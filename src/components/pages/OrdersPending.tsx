@@ -25,6 +25,7 @@ import {
 import { Button } from '@/components/atoms';
 import { orderApi } from '@/api';
 import { toPendingOrder } from '@/lib/orderAdapters';
+import { needsActionOrder } from '@/lib/orderWorkflow';
 
 const OrdersPending = () => {
   const [orders, setOrders] = useState<PendingOrder[]>([]);
@@ -46,9 +47,8 @@ const OrdersPending = () => {
       const result = await orderApi.getAll({
         page: 1,
         limit: 200,
-        status: 'pending',
       });
-      const mapped = result.orders.map(toPendingOrder);
+      const mapped = result.orders.filter(needsActionOrder).map(toPendingOrder);
       setOrders(mapped);
       setSelectedOrders((prev) =>
         prev.filter((id) => mapped.some((order) => order.id === id))

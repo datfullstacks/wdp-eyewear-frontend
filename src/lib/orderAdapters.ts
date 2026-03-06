@@ -311,7 +311,7 @@ export function toPendingOrder(order: OrderRecord): PendingOrder {
     priority: inferPendingPriority(order),
     createdAt: formatDateTime(order.createdAt),
     note: order.note || '',
-    hasPrescription: order.items.some((item) => item.hasPrescription),
+    hasPrescription: order.items.some(requiresPrescription),
     paymentStatus: mapPaymentStatus(order.paymentStatus),
   };
 }

@@ -85,9 +85,7 @@ export const CustomerRow = ({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem>Xem chi tiết</DropdownMenuItem>
-          <DropdownMenuItem>Chỉnh sửa</DropdownMenuItem>
           <DropdownMenuItem>Lịch sử đơn hàng</DropdownMenuItem>
-          <DropdownMenuItem className="text-destructive">Xóa</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

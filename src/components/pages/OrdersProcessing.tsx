@@ -1,20 +1,21 @@
 'use client';
 
+import { useState } from 'react';
+import { Filter } from 'lucide-react';
+
 import { Header } from '@/components/organisms/Header';
-import { RecentOrdersTable } from '@/components/organisms/RecentOrdersTable';
 import { SearchBar } from '@/components/molecules/SearchBar';
 import { Button } from '@/components/ui/button';
-import { Filter } from 'lucide-react';
-import { useState } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { RecentOrdersTable } from '@/components/organisms/RecentOrdersTable';
+import { isProcessingPrescriptionOrder } from '@/lib/orderWorkflow';
 
 const statusFilters = [
   { key: 'all', label: 'Tất cả' },
@@ -22,9 +23,9 @@ const statusFilters = [
   { key: 'processing', label: 'Đang xử lý' },
   { key: 'completed', label: 'Hoàn thành' },
   { key: 'cancelled', label: 'Đã hủy' },
-];
+] as const;
 
-const Orders = () => {
+export default function OrdersProcessing() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<
     'all' | 'pending' | 'processing' | 'completed' | 'cancelled'
@@ -33,14 +34,11 @@ const Orders = () => {
   return (
     <>
       <Header
-        title="Đơn hàng"
-        subtitle="Quản lý đơn hàng khách mua"
-        showAddButton
-        addButtonLabel="Tạo đơn mới"
+        title="Đơn đang gia công"
+        subtitle="Tập con của đơn Prescription: prescription hợp lệ và đang ở trạng thái confirmed/processing"
       />
 
       <div className="space-y-6 p-6">
-        {/* Filters */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
           <div className="w-full sm:max-w-[240px]">
             <SearchBar
@@ -55,7 +53,7 @@ const Orders = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  aria-label="B? l?c"
+                  aria-label="Bộ lọc"
                   className="text-foreground/80 hover:text-foreground"
                 >
                   <Filter />
@@ -65,9 +63,7 @@ const Orders = () => {
                 <DropdownMenuLabel>Trạng thái</DropdownMenuLabel>
                 <DropdownMenuRadioGroup
                   value={statusFilter}
-                  onValueChange={(value) =>
-                    setStatusFilter(value as typeof statusFilter)
-                  }
+                  onValueChange={(value) => setStatusFilter(value as typeof statusFilter)}
                 >
                   {statusFilters.map((filter) => (
                     <DropdownMenuRadioItem key={filter.key} value={filter.key}>
@@ -75,23 +71,20 @@ const Orders = () => {
                     </DropdownMenuRadioItem>
                   ))}
                 </DropdownMenuRadioGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel>Thời gian</DropdownMenuLabel>
-                <DropdownMenuRadioGroup value="today">
-                  <DropdownMenuRadioItem value="today">
-                    Hôm nay
-                  </DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
 
-        {/* Order List */}
-        <RecentOrdersTable searchTerm={searchTerm} statusFilter={statusFilter} />
+        <RecentOrdersTable
+          limit={200}
+          searchTerm={searchTerm}
+          statusFilter={statusFilter}
+          filter={isProcessingPrescriptionOrder}
+          emptyMessage="Không có đơn nào đang gia công."
+        />
       </div>
     </>
   );
-};
+}
 
-export default Orders;
