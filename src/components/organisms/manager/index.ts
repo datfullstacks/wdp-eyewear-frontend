@@ -1,4 +1,5 @@
 export { ProductForm, type ProductFormState, CATEGORY_OPTIONS } from './ProductForm';
+export { ProductFormFull, type ProductFormFullProps } from './ProductFormFull';
 export { ProductTable } from './ProductTable';
 export { UserForm, type UserFormData } from './UserForm';
 export { UserTable, type UserTabRole } from './UserTable';

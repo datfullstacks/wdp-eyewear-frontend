@@ -5,9 +5,9 @@ import { useRouter, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Header } from '@/components/organisms/Header';
-import { ProductForm, type ProductFormState } from '@/components/organisms/manager';
+import { ProductFormFull } from '@/components/organisms/manager';
+import { ProductDetailModalContent } from '@/components/pages/ProductDetailModalContent';
 import { Button } from '@/components/atoms';
-import { Card } from '@/components/ui/card';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,12 +18,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { productApi, uploadApi, type Product, type ProductMediaAsset } from '@/api';
-import { buildUpsertPayload, getRoleUrl, getGalleryUrls, normalizeCategoryValue } from '@/lib/productHelpers';
-import { AlertTriangle, ArrowLeft, Edit, Loader2, Package, Trash2, X, Save } from 'lucide-react';
-import { cn } from '@/lib/utils';
-
-const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400';
+import { productApi } from '@/api';
+import type { ProductDetail } from '@/api/products';
+import { buildFullUpsertPayload, getRoleUrl, getGalleryUrls } from '@/lib/productHelpers';
+import type { ProductUpsertFormValues } from '@/lib/validation/product.schema';
+import { AlertTriangle, ArrowLeft, Edit, Loader2, Trash2, X } from 'lucide-react';
 
 export default function ProductDetailPage() {
   const router = useRouter();
@@ -32,25 +31,12 @@ export default function ProductDetailPage() {
   const t = useTranslations('manager.products');
   const tDetail = useTranslations('manager.products.detail');
 
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<ProductDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadingKey, setUploadingKey] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-
-  const [formData, setFormData] = useState<ProductFormState>({
-    name: '',
-    brand: '',
-    price: '',
-    stock: '',
-    category: '',
-    description: '',
-    heroImageUrl: '',
-    thumbnailUrl: '',
-    galleryUrls: [],
-  });
 
   const loadProduct = useCallback(async () => {
     try {
@@ -58,118 +44,16 @@ export default function ProductDetailPage() {
       setApiError('');
       const data = await productApi.getById(productId);
       setProduct(data);
-      populateForm(data);
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Failed to load product');
+      setApiError(error instanceof Error ? error.message : 'Không thể tải sản phẩm');
     } finally {
       setIsLoading(false);
     }
   }, [productId]);
 
-  const populateForm = (data: Product) => {
-    setFormData({
-      name: data.name,
-      brand: data.brand,
-      price: String(data.price),
-      stock: String(data.stock),
-      category: normalizeCategoryValue(data.category),
-      description: data.description || '',
-      heroImageUrl: getRoleUrl(data, 'hero') || data.imageUrl,
-      thumbnailUrl: getRoleUrl(data, 'thumbnail'),
-      galleryUrls: getGalleryUrls(data),
-    });
-  };
-
   useEffect(() => {
-    if (productId) {
-      void loadProduct();
-    }
+    if (productId) void loadProduct();
   }, [productId, loadProduct]);
-
-  const handleStartEdit = () => {
-    if (product) {
-      populateForm(product);
-    }
-    setIsEditing(true);
-    setApiError('');
-  };
-
-  const handleCancelEdit = () => {
-    if (product) {
-      populateForm(product);
-    }
-    setIsEditing(false);
-    setApiError('');
-  };
-
-  const handleUploadSingle = useCallback(
-    async (file: File, role: ProductMediaAsset['role']) => {
-      setUploadingKey(role);
-      setApiError('');
-      try {
-        const result = await uploadApi.uploadFile(file);
-        if (role === 'hero') {
-          setFormData((prev) => ({ ...prev, heroImageUrl: result.url }));
-        } else if (role === 'thumbnail') {
-          setFormData((prev) => ({ ...prev, thumbnailUrl: result.url }));
-        }
-      } catch (error) {
-        setApiError(`Upload ${role} failed: ${error instanceof Error ? error.message : 'Unknown'}`);
-      } finally {
-        setUploadingKey('');
-      }
-    },
-    []
-  );
-
-  const handleUploadGallery = useCallback(async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    setUploadingKey('gallery');
-    setApiError('');
-    try {
-      const uploadPromises = Array.from(files).map((file) =>
-        uploadApi.uploadFile(file)
-      );
-      const results = await Promise.all(uploadPromises);
-      const uploadedUrls = results.map((result) => result.url);
-      setFormData((prev) => ({
-        ...prev,
-        galleryUrls: [...prev.galleryUrls, ...uploadedUrls],
-      }));
-    } catch (error) {
-      setApiError(`Upload gallery failed: ${error instanceof Error ? error.message : 'Unknown'}`);
-    } finally {
-      setUploadingKey('');
-    }
-  }, []);
-
-  const handleRemoveGallery = useCallback((index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      galleryUrls: prev.galleryUrls.filter((_, i) => i !== index),
-    }));
-  }, []);
-
-  const handleSave = async () => {
-    if (!formData.name.trim() || !formData.price || !formData.stock || !formData.category) {
-      setApiError(tDetail('fillRequired'));
-      return;
-    }
-
-    setIsSubmitting(true);
-    setApiError('');
-
-    try {
-      const payload = buildUpsertPayload(formData);
-      await productApi.update(productId, payload);
-      await loadProduct();
-      setIsEditing(false);
-    } catch (error) {
-      setApiError(error instanceof Error ? error.message : tDetail('updateFailed'));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleToggleStatus = async () => {
     if (!product) return;
@@ -178,7 +62,7 @@ export default function ProductDetailPage() {
       await productApi.updateStatus(productId, newStatus);
       await loadProduct();
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Update failed');
+      setApiError(error instanceof Error ? error.message : 'Cập nhật trạng thái thất bại');
     }
   };
 
@@ -187,8 +71,102 @@ export default function ProductDetailPage() {
       await productApi.remove(productId);
       router.push('/manager/products');
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Delete failed');
+      setApiError(error instanceof Error ? error.message : 'Xoá thất bại');
     }
+  };
+
+  const handleEditSubmit = async (values: ProductUpsertFormValues, action: 'draft' | 'active') => {
+    setIsSubmitting(true);
+    setApiError('');
+    try {
+      const payload = buildFullUpsertPayload(
+        { ...values, status: action === 'active' ? 'active' : values.status },
+        'update'
+      );
+      await productApi.update(productId, payload);
+      await loadProduct();
+      setIsEditing(false);
+    } catch (error) {
+      setApiError(error instanceof Error ? error.message : 'Cập nhật thất bại');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  /** Convert ProductDetail to form defaults */
+  const getEditDefaults = (): Partial<ProductUpsertFormValues> | undefined => {
+    if (!product) return undefined;
+    const specs = (product.specs || {}) as Record<string, Record<string, unknown>>;
+    return {
+      type: (product.type as ProductUpsertFormValues['type']) || 'other',
+      name: product.name,
+      slug: product.slug || '',
+      description: product.description || '',
+      brand: product.brand,
+      status: (product.status as ProductUpsertFormValues['status']) || 'draft',
+      basePrice: product.pricing?.basePrice ?? product.price ?? 0,
+      salePrice: product.pricing?.salePrice ?? undefined,
+      inventoryTrack: product.inventory?.track ?? true,
+      inventoryThreshold: product.inventory?.threshold,
+      heroImageUrl: getRoleUrl(product, 'hero') || product.imageUrl || '',
+      thumbnailUrl: getRoleUrl(product, 'thumbnail') || '',
+      galleryUrls: getGalleryUrls(product),
+      variants:
+        product.variants && product.variants.length > 0
+          ? product.variants.map((v) => ({
+              sku: v.sku || '',
+              color: v.options?.color || '',
+              size: v.options?.size || '',
+              price: v.price,
+              stock: v.stock ?? 0,
+            }))
+          : [{ sku: '', color: '', size: '', stock: 0 }],
+      preOrderEnabled: product.preOrder?.enabled ?? false,
+      preOrderAllowCod: product.preOrder?.allowCod ?? true,
+      modelCode: product.seo?.modelCode || '',
+      collections: (product.seo?.collections || []).join(', '),
+      keywords: (product.seo?.keywords || []).join(', '),
+      countryOfOrigin: product.seo?.countryOfOrigin || '',
+      returnWindowDays: product.fulfillment?.returnWindowDays,
+      warrantyMonths: product.fulfillment?.warrantyMonths,
+      compatibilityNotes: product.compatibility?.notes || '',
+      tryOnEnabled: product.media?.tryOn?.enabled ?? false,
+      specsCommon: {
+        shape: (specs.common?.shape as string) || '',
+        gender: (specs.common?.gender as string) || '',
+        weightGram: (specs.common?.weightGram as number) || undefined,
+      },
+      specsDimensions: {
+        frameWidthMm: (specs.dimensions?.frameWidthMm as number) || undefined,
+        bridgeMm: (specs.dimensions?.bridgeMm as number) || undefined,
+        templeLengthMm: (specs.dimensions?.templeLengthMm as number) || undefined,
+        lensWidthMm: (specs.dimensions?.lensWidthMm as number) || undefined,
+        lensHeightMm: (specs.dimensions?.lensHeightMm as number) || undefined,
+        fit: (specs.dimensions?.fit as string) || '',
+      },
+      specsFrame: {
+        material: (specs.frame?.material as string) || '',
+        hingeType: (specs.frame?.hingeType as string) || '',
+        rimType: (specs.frame?.rimType as string) || '',
+        nosePads: (specs.frame?.nosePads as boolean) ?? false,
+        rxReady: (specs.frame?.rxReady as boolean) ?? false,
+        polarized: (specs.frame?.polarized as boolean) ?? false,
+        uvProtection: (specs.frame?.uvProtection as string) || '',
+      },
+      specsLens: {
+        lensType: (specs.lens?.lensType as string) || '',
+        material: (specs.lens?.material as string) || '',
+        index: (specs.lens?.index as string) || '',
+        prescriptionRange: (specs.lens?.prescriptionRange as string) || '',
+        blueLightFilter: (specs.lens?.blueLightFilter as boolean) ?? false,
+        coatings: (specs.lens?.coatings as string) || '',
+      },
+      specsAccessory: {
+        accessoryType: (specs.accessory?.accessoryType as string) || '',
+        material: (specs.accessory?.material as string) || '',
+        compatibleWith: (specs.accessory?.compatibleWith as string) || '',
+      },
+    };
   };
 
   if (isLoading) {
@@ -253,7 +231,7 @@ export default function ProductDetailPage() {
                 </Button>
                 <Button
                   size="sm"
-                  onClick={handleStartEdit}
+                  onClick={() => setIsEditing(true)}
                   className="bg-amber-400 text-slate-900 hover:bg-amber-500"
                 >
                   <Edit className="mr-1 h-4 w-4" />
@@ -261,26 +239,15 @@ export default function ProductDetailPage() {
                 </Button>
               </>
             ) : (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCancelEdit}
-                  disabled={isSubmitting}
-                >
-                  <X className="mr-1 h-4 w-4" />
-                  {tDetail('cancel')}
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleSave}
-                  disabled={isSubmitting}
-                  className="bg-amber-400 text-slate-900 hover:bg-amber-500"
-                >
-                  <Save className="mr-1 h-4 w-4" />
-                  {isSubmitting ? tDetail('saving') : tDetail('save')}
-                </Button>
-              </>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditing(false)}
+                disabled={isSubmitting}
+              >
+                <X className="mr-1 h-4 w-4" />
+                {tDetail('cancel')}
+              </Button>
             )}
           </div>
         </div>
@@ -295,111 +262,15 @@ export default function ProductDetailPage() {
 
         {/* Content */}
         {isEditing ? (
-          /* Edit Mode - Show form */
-          <Card className="p-6">
-            <ProductForm
-              formData={formData}
-              isSubmitting={isSubmitting}
-              uploadingKey={uploadingKey}
-              onChange={setFormData}
-              onUploadSingle={handleUploadSingle}
-              onUploadGallery={handleUploadGallery}
-              onRemoveGallery={handleRemoveGallery}
-            />
-          </Card>
+          <ProductFormFull
+            mode="edit"
+            defaultValues={getEditDefaults()}
+            isSubmitting={isSubmitting}
+            onSubmit={handleEditSubmit}
+            onCancel={() => setIsEditing(false)}
+          />
         ) : (
-          /* View Mode */
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Product Images */}
-            <Card className="p-6">
-              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
-                <Package className="h-5 w-5" />
-                {tDetail('productImages')}
-              </h3>
-              <div className="space-y-4">
-                <img
-                  src={product.imageUrl || FALLBACK_IMAGE}
-                  alt={product.name}
-                  className="h-64 w-full rounded-md object-cover"
-                />
-                {product.mediaAssets && product.mediaAssets.length > 0 && (
-                  <div className="grid grid-cols-4 gap-2">
-                    {product.mediaAssets
-                      .filter((asset) => asset.role === 'gallery')
-                      .map((asset, index) => (
-                        <img
-                          key={index}
-                          src={asset.url}
-                          alt={`${product.name} - ${index + 1}`}
-                          className="h-20 w-20 rounded-md object-cover"
-                        />
-                      ))}
-                  </div>
-                )}
-              </div>
-            </Card>
-
-            {/* Product Details */}
-            <Card className="p-6">
-              <h3 className="mb-4 text-lg font-semibold">{tDetail('detailInfo')}</h3>
-              <dl className="space-y-3">
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">{tDetail('productName')}</dt>
-                  <dd className="mt-1 text-base text-gray-900">{product.name}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">{tDetail('brand')}</dt>
-                  <dd className="mt-1 text-base text-gray-900">{product.brand}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">{tDetail('category')}</dt>
-                  <dd className="mt-1 text-base text-gray-900">{product.category}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">{tDetail('price')}</dt>
-                  <dd className="mt-1 text-lg font-semibold text-gray-900">
-                    {product.price.toLocaleString()} VND
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">{tDetail('stock')}</dt>
-                  <dd className="mt-1">
-                    <span
-                      className={cn(
-                        'rounded-full px-3 py-1 text-sm font-medium',
-                        product.stock < 10
-                          ? 'bg-red-100 text-red-700'
-                          : 'bg-green-100 text-green-700'
-                      )}
-                    >
-                      {product.stock} {tDetail('items')}
-                    </span>
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">{tDetail('status')}</dt>
-                  <dd className="mt-1">
-                    <span
-                      className={cn(
-                        'rounded-full px-3 py-1 text-sm font-medium',
-                        product.status === 'active'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-gray-100 text-gray-700'
-                      )}
-                    >
-                      {product.status === 'active' ? t('table.active') : t('table.inactive')}
-                    </span>
-                  </dd>
-                </div>
-                {product.description && (
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">{tDetail('description')}</dt>
-                    <dd className="mt-1 text-base text-gray-900">{product.description}</dd>
-                  </div>
-                )}
-              </dl>
-            </Card>
-          </div>
+          <ProductDetailModalContent product={product} />
         )}
       </div>
 
