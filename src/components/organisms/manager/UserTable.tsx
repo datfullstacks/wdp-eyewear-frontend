@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Edit3, Trash2, Eye } from 'lucide-react';
+import { Eye, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { User } from '@/api/users';
 
@@ -20,7 +20,6 @@ interface UserTableProps {
   users: User[];
   role: UserTabRole;
   onView?: (user: User) => void;
-  onEdit?: (user: User) => void;
   onDelete?: (user: User) => void;
   /** Translation strings for table headers */
   translations?: {
@@ -31,6 +30,8 @@ interface UserTableProps {
     createdAt?: string;
     actions?: string;
     noData?: string;
+    viewDetails?: string;
+    deleteUser?: string;
   };
 }
 
@@ -59,7 +60,6 @@ export function UserTable({
   users,
   role,
   onView,
-  onEdit,
   onDelete,
   translations,
 }: UserTableProps) {
@@ -80,7 +80,7 @@ export function UserTable({
           <TableHead>{translations?.phone || 'Số điện thoại'}</TableHead>
           <TableHead>{translations?.loginVia || 'Đăng nhập qua'}</TableHead>
           <TableHead>{translations?.createdAt || 'Ngày tạo'}</TableHead>
-          <TableHead>{translations?.actions || 'Hành động'}</TableHead>
+          <TableHead className="text-center">{translations?.actions || 'Hành động'}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -105,26 +105,16 @@ export function UserTable({
             <TableCell className="text-gray-600">
               {formatDate(user.createdAt)}
             </TableCell>
-            <TableCell>
-              <div className="flex items-center gap-2">
+            <TableCell className="text-center">
+              <div className="flex items-center justify-center gap-1">
                 {onView && (
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => onView(user)}
-                    title="View details"
+                    title={translations?.viewDetails || 'View details'}
                   >
                     <Eye className="h-4 w-4" />
-                  </Button>
-                )}
-                {onEdit && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => onEdit(user)}
-                    title="Edit user"
-                  >
-                    <Edit3 className="h-4 w-4" />
                   </Button>
                 )}
                 {onDelete && (
@@ -132,7 +122,7 @@ export function UserTable({
                     size="sm"
                     variant="ghost"
                     onClick={() => onDelete(user)}
-                    title="Delete user"
+                    title={translations?.deleteUser || 'Delete user'}
                   >
                     <Trash2 className="h-4 w-4 text-red-600" />
                   </Button>

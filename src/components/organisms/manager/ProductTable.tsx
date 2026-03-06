@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Edit, Eye, Power, PowerOff, Trash2 } from 'lucide-react';
+import { Eye, Power, PowerOff, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/api';
 
@@ -25,7 +25,6 @@ interface ProductTableTranslations {
   active: string;
   inactive: string;
   viewDetails: string;
-  editProduct: string;
   activate: string;
   deactivate: string;
   deleteProduct: string;
@@ -34,9 +33,8 @@ interface ProductTableTranslations {
 interface ProductTableProps {
   products: Product[];
   onView?: (product: Product) => void;
-  onEdit?: (product: Product) => void;
-  onDelete?: (product: Product) => void;
   onToggleStatus?: (product: Product) => void;
+  onDelete?: (product: Product) => void;
   translations?: ProductTableTranslations;
 }
 
@@ -54,7 +52,6 @@ const defaultTranslations: ProductTableTranslations = {
   active: 'Active',
   inactive: 'Inactive',
   viewDetails: 'View details',
-  editProduct: 'Edit product',
   activate: 'Activate',
   deactivate: 'Deactivate',
   deleteProduct: 'Delete product',
@@ -63,9 +60,8 @@ const defaultTranslations: ProductTableTranslations = {
 export function ProductTable({
   products,
   onView,
-  onEdit,
-  onDelete,
   onToggleStatus,
+  onDelete,
   translations: t = defaultTranslations,
 }: ProductTableProps) {
   return (
@@ -78,7 +74,7 @@ export function ProductTable({
           <TableHead>{t.price}</TableHead>
           <TableHead>{t.stock}</TableHead>
           <TableHead>{t.status}</TableHead>
-          <TableHead>{t.actions}</TableHead>
+          <TableHead className="text-center">{t.actions}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -90,7 +86,7 @@ export function ProductTable({
           </TableRow>
         ) : (
           products.map((product) => (
-            <TableRow key={product.id}>
+            <TableRow key={product.id} className="hover:bg-gray-50">
               <TableCell>
                 <div className="flex items-center gap-3">
                   <img
@@ -133,8 +129,8 @@ export function ProductTable({
                   {product.status === 'active' ? t.active : t.inactive}
                 </span>
               </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
+              <TableCell className="text-center">
+                <div className="flex items-center justify-center gap-1">
                   {onView && (
                     <Button
                       size="sm"
@@ -143,16 +139,6 @@ export function ProductTable({
                       title={t.viewDetails}
                     >
                       <Eye className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {onEdit && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => onEdit(product)}
-                      title={t.editProduct}
-                    >
-                      <Edit className="h-4 w-4" />
                     </Button>
                   )}
                   {onToggleStatus && (

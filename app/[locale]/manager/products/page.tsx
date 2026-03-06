@@ -8,17 +8,7 @@ import { StatCard } from '@/components/molecules/StatCard';
 import { ProductTable } from '@/components/organisms/manager';
 import { Button } from '@/components/atoms';
 import { Input } from '@/components/atoms/Input';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Package, ShoppingCart, AlertTriangle, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { Package, ShoppingCart, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { productApi, type Product } from '@/api';
 
 type TabType = 'all' | 'active' | 'low-stock' | 'inactive';
@@ -35,8 +25,6 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState('');
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const loadProducts = useCallback(async () => {
     setIsLoading(true);
@@ -98,35 +86,23 @@ export default function ProductsPage() {
     router.push(`/manager/products/${product.id}`);
   };
 
-  const handleEdit = (product: Product) => {
-    router.push(`/manager/products/${product.id}/edit`);
-  };
-
-  const handleOpenDeleteDialog = (product: Product) => {
-    setSelectedProduct(product);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleDelete = async () => {
-    if (!selectedProduct) return;
-    
-    try {
-      await productApi.remove(selectedProduct.id);
-      await loadProducts();
-      setIsDeleteDialogOpen(false);
-      setSelectedProduct(null);
-    } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Delete failed');
-    }
-  };
-
   const handleToggleStatus = async (product: Product) => {
     try {
       const newStatus: 'active' | 'inactive' = product.status === 'active' ? 'inactive' : 'active';
       await productApi.updateStatus(product.id, newStatus);
       await loadProducts();
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Update failed');
+      setApiError(error instanceof Error ? error.message : 'Failed to update status');
+    }
+  };
+
+  const handleDelete = async (product: Product) => {
+    if (!confirm(t('deleteConfirm.description', { name: product.name }))) return;
+    try {
+      await productApi.remove(product.id);
+      await loadProducts();
+    } catch (error) {
+      setApiError(error instanceof Error ? error.message : 'Failed to delete product');
     }
   };
 
@@ -203,9 +179,8 @@ export default function ProductsPage() {
             <ProductTable
               products={paginatedProducts}
               onView={handleView}
-              onEdit={handleEdit}
-              onDelete={handleOpenDeleteDialog}
               onToggleStatus={handleToggleStatus}
+              onDelete={handleDelete}
               translations={{
                 product: t('table.product'),
                 brand: t('table.brand'),
@@ -218,7 +193,6 @@ export default function ProductsPage() {
                 active: t('table.active'),
                 inactive: t('table.inactive'),
                 viewDetails: t('table.viewDetails'),
-                editProduct: t('table.editProduct'),
                 activate: t('table.activate'),
                 deactivate: t('table.deactivate'),
                 deleteProduct: t('table.deleteProduct'),
@@ -266,22 +240,6 @@ export default function ProductsPage() {
           </section>
         )}
       </div>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('deleteConfirm.title')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('deleteConfirm.description', { name: selectedProduct?.name || '' })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('deleteConfirm.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>{t('deleteConfirm.confirm')}</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

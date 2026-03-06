@@ -25,7 +25,7 @@ export default function UsersPage() {
     try {
       const [mgrRes, staffRes, custRes] = await Promise.all([
         userApi.getAll({ role: 'manager', limit: 100 }),
-        userApi.getAll({ role: 'staff', limit: 100 }), // mapped to "operations" in API layer
+        userApi.getAll({ role: 'staff', limit: 100 }),
         userApi.getAll({ role: 'customer', limit: 100 }),
       ]);
       setManagers(mgrRes.users);
@@ -94,10 +94,6 @@ export default function UsersPage() {
 
   const handleView = (user: User) => {
     router.push(`/manager/users/${user.id}`);
-  };
-
-  const handleEdit = (user: User) => {
-    router.push(`/manager/users/${user.id}/edit`);
   };
 
   const handleDelete = async (user: User) => {
@@ -201,7 +197,6 @@ export default function UsersPage() {
               users={currentData}
               role={currentRole}
               onView={handleView}
-              onEdit={handleEdit}
               onDelete={activeTab !== 'customers' ? handleDelete : undefined}
               translations={{
                 user: t('table.user'),
@@ -211,6 +206,8 @@ export default function UsersPage() {
                 createdAt: t('table.createdAt'),
                 actions: t('table.actions'),
                 noData: t('table.noData'),
+                viewDetails: t('table.viewDetails'),
+                deleteUser: t('table.deleteUser'),
               }}
             />
           </section>
