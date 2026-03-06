@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { SearchBar } from '@/components/molecules/SearchBar';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,11 +13,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Filter } from 'lucide-react';
 import { InventoryItem } from '@/types/inventory';
-import {
-  mockInventory,
-  mockHistoryEntries,
-  inventoryCategories,
-} from '@/data/inventoryData';
+import { mockHistoryEntries } from '@/data/inventoryData';
+import inventoryApi from '@/api/inventory';
 import {
   InventoryTable,
   InventoryDetailModal,
@@ -31,13 +28,51 @@ const Inventory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [items, setItems] = useState<InventoryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const load = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const result = await inventoryApi.getStockItems({ page: 1, limit: 100 });
+        if (!isMounted) return;
+        setItems(result);
+      } catch (err) {
+        if (!isMounted) return;
+        const message =
+          (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data
+            ?.message ||
+          (err as { message?: string })?.message ||
+          'Không thể tải tồn kho. Vui lòng thử lại.';
+        setError(message);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    void load();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const inventoryCategories = useMemo(() => {
+    const set = new Set(items.map((i) => i.category).filter(Boolean));
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [items]);
+
   const filteredInventory = useMemo(() => {
-    return mockInventory.filter((item) => {
+    return items.filter((item) => {
       const matchesSearch =
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -48,17 +83,16 @@ const Inventory = () => {
         categoryFilter === 'all' || item.category === categoryFilter;
       return matchesSearch && matchesStatus && matchesCategory;
     });
-  }, [searchTerm, statusFilter, categoryFilter]);
+  }, [items, searchTerm, statusFilter, categoryFilter]);
 
   const stats = useMemo(
     () => ({
-      total: mockInventory.length,
-      inStock: mockInventory.filter((i) => i.status === 'in_stock').length,
-      lowStock: mockInventory.filter((i) => i.status === 'low_stock').length,
-      outOfStock: mockInventory.filter((i) => i.status === 'out_of_stock')
-        .length,
+      total: items.length,
+      inStock: items.filter((i) => i.status === 'in_stock').length,
+      lowStock: items.filter((i) => i.status === 'low_stock').length,
+      outOfStock: items.filter((i) => i.status === 'out_of_stock').length,
     }),
-    []
+    [items]
   );
 
   const handleViewDetail = (item: InventoryItem) => {
@@ -76,13 +110,17 @@ const Inventory = () => {
     setIsHistoryOpen(true);
   };
 
-  const handleUpdateStock = () =>
-    // item: InventoryItem,
-    // newStock: number,
-    // reason: string
-    {
-      setIsEditOpen(false);
-    };
+  const handleUpdateStock = async (item: InventoryItem, newStock: number, reason: string) => {
+    await inventoryApi.updateVariantStock({
+      rowId: item.id,
+      sku: item.sku,
+      stock: newStock,
+      reason,
+    });
+
+    const result = await inventoryApi.getStockItems({ page: 1, limit: 100 });
+    setItems(result);
+  };
 
   return (
     <>
@@ -93,6 +131,16 @@ const Inventory = () => {
       <div className="space-y-6 p-6">
         {/* Stats */}
         <InventoryStatsGrid stats={stats} />
+
+        {isLoading ? (
+          <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-6 text-sm text-slate-600">
+            Đang tải tồn kho...
+          </div>
+        ) : error ? (
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-600">
+            {error}
+          </div>
+        ) : null}
 
         {/* Filters */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
@@ -158,12 +206,14 @@ const Inventory = () => {
         </div>
 
         {/* Inventory Table */}
-        <InventoryTable
-          items={filteredInventory}
-          onViewDetail={handleViewDetail}
-          onEditStock={handleEditStock}
-          onViewHistory={handleViewHistory}
-        />
+        {!isLoading && !error ? (
+          <InventoryTable
+            items={filteredInventory}
+            onViewDetail={handleViewDetail}
+            onEditStock={handleEditStock}
+            onViewHistory={handleViewHistory}
+          />
+        ) : null}
 
         {/* Modals */}
         <InventoryDetailModal

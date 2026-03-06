@@ -4,6 +4,7 @@ import {
   ProductGrid,
   ProductCardItem,
 } from '@/components/organisms/ProductGrid';
+import { SearchBar } from '@/components/molecules/SearchBar';
 
 import { Filter, Grid, List } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -54,7 +55,10 @@ const typeLabels: Record<string, string> = {
 };
 
 const Products = () => {
+  const PAGE_SIZE = 8;
   const [activeCategory, setActiveCategory] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -105,16 +109,46 @@ const Products = () => {
   }, []);
 
   const filteredProducts = useMemo(() => {
-    if (activeCategory === 'all') return products;
-    return products.filter(
-      (product) =>
-        product.type === activeCategory || product.category === activeCategory
-    );
-  }, [activeCategory, products]);
+    const q = searchTerm.trim().toLowerCase();
+
+    let rows =
+      activeCategory === 'all'
+        ? products
+        : products.filter(
+            (product) =>
+              product.type === activeCategory ||
+              product.category === activeCategory
+          );
+
+    if (q) {
+      rows = rows.filter((product) => product.name.toLowerCase().includes(q));
+    }
+
+    return rows;
+  }, [activeCategory, products, searchTerm]);
+
+  const totalPages = useMemo(() => {
+    return Math.ceil(filteredProducts.length / PAGE_SIZE);
+  }, [PAGE_SIZE, filteredProducts.length]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCategory, searchTerm]);
+
+  useEffect(() => {
+    if (totalPages <= 0) return;
+    setCurrentPage((p) => Math.min(Math.max(1, p), totalPages));
+  }, [totalPages]);
+
+  const paginatedProducts = useMemo(() => {
+    if (filteredProducts.length === 0) return [];
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredProducts.slice(start, start + PAGE_SIZE);
+  }, [PAGE_SIZE, currentPage, filteredProducts]);
 
   const gridItems: ProductCardItem[] = useMemo(
     () =>
-      filteredProducts.map((product) => ({
+      paginatedProducts.map((product) => ({
         id: product.id,
         name: product.name,
         brand: product.brand,
@@ -123,7 +157,7 @@ const Products = () => {
         image: product.imageUrl,
         category: typeLabels[product.type] || product.category || product.type,
       })),
-    [filteredProducts]
+    [paginatedProducts]
   );
 
   const handlePreviewProduct = async (productId: string) => {
@@ -155,7 +189,12 @@ const Products = () => {
 
       <div className="space-y-6 p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div />
+          <div className="w-full sm:max-w-[320px]">
+            <SearchBar
+              placeholder="Tìm theo tên sản phẩm..."
+              onChange={setSearchTerm}
+            />
+          </div>
 
           <div className="flex items-center gap-2">
             <DropdownMenu>
@@ -194,16 +233,51 @@ const Products = () => {
           <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-600">
             {error}
           </div>
-        ) : gridItems.length === 0 ? (
+        ) : filteredProducts.length === 0 ? (
           <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-6 text-sm text-slate-600">
             Không có sản phẩm phù hợp.
           </div>
         ) : (
-          <ProductGrid
-            products={gridItems}
-            onPreview={handlePreviewProduct}
-            previewLoadingId={detailLoadingId}
-          />
+          <>
+            <ProductGrid
+              products={gridItems}
+              onPreview={handlePreviewProduct}
+              previewLoadingId={detailLoadingId}
+            />
+
+            {totalPages > 1 ? (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/70 bg-white/90 p-4 text-sm text-slate-700">
+                <p>
+                  Trang <span className="font-semibold">{currentPage}</span>/
+                  {totalPages}{' '}
+                  <span className="text-slate-500">
+                    ({filteredProducts.length} sản phẩm)
+                  </span>
+                </p>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage <= 1}
+                  >
+                    Trang trước
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setCurrentPage((p) => Math.min(totalPages, p + 1))
+                    }
+                    disabled={currentPage >= totalPages}
+                  >
+                    Trang sau
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+          </>
         )}
       </div>
 

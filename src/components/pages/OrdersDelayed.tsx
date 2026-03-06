@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { SearchBar } from '@/components/molecules/SearchBar';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,12 +19,17 @@ import {
   ContactModal,
   ResolveModal,
 } from '@/components/organisms/delayed';
-import { mockDelayedOrders, delayTypeLabels } from '@/data/delayedData';
+import { delayTypeLabels } from '@/data/delayedData';
 import { DelayedOrder, ContactMethod, ResolveAction } from '@/types/delayed';
 import { Filter } from 'lucide-react';
 import { Header } from '@/components/organisms/Header';
+import { orderApi } from '@/api';
+import { toDelayedOrdersFromApi } from '@/lib/orderWorkflow';
 
 export default function OrdersDelayed() {
+  const [orders, setOrders] = useState<DelayedOrder[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [severityFilter, setSeverityFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -35,24 +40,54 @@ export default function OrdersDelayed() {
   const [contactOrder, setContactOrder] = useState<DelayedOrder | null>(null);
   const [resolveOrder, setResolveOrder] = useState<DelayedOrder | null>(null);
 
-  const filteredOrders = mockDelayedOrders.filter((order) => {
-    const matchesSearch =
-      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerPhone.includes(searchTerm);
-    const matchesSeverity =
-      severityFilter === 'all' || order.severity === severityFilter;
-    const matchesType = typeFilter === 'all' || order.delayType === typeFilter;
-    return matchesSearch && matchesSeverity && matchesType;
-  });
+  useEffect(() => {
+    let mounted = true;
 
-  const stats = {
-    critical: mockDelayedOrders.filter((o) => o.severity === 'critical').length,
-    high: mockDelayedOrders.filter((o) => o.severity === 'high').length,
-    medium: mockDelayedOrders.filter((o) => o.severity === 'medium').length,
-    slaBreached: mockDelayedOrders.filter((o) => o.delayType === 'sla_breach')
-      .length,
-  };
+    const load = async () => {
+      try {
+        setIsLoading(true);
+        setErrorMessage(null);
+        const result = await orderApi.getAll({ page: 1, limit: 500 });
+        const derived = toDelayedOrdersFromApi(result.orders);
+        if (mounted) setOrders(derived);
+      } catch {
+        if (mounted) setErrorMessage('Không tải được danh sách cảnh báo.');
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    };
+
+    void load();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const filteredOrders = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    return orders.filter((order) => {
+      const matchesSearch =
+        !q ||
+        order.id.toLowerCase().includes(q) ||
+        order.customerName.toLowerCase().includes(q) ||
+        order.customerPhone.includes(q);
+      const matchesSeverity =
+        severityFilter === 'all' || order.severity === severityFilter;
+      const matchesType = typeFilter === 'all' || order.delayType === typeFilter;
+      return matchesSearch && matchesSeverity && matchesType;
+    });
+  }, [orders, searchTerm, severityFilter, typeFilter]);
+
+  const stats = useMemo(
+    () => ({
+      critical: orders.filter((o) => o.severity === 'critical').length,
+      high: orders.filter((o) => o.severity === 'high').length,
+      medium: orders.filter((o) => o.severity === 'medium').length,
+      slaBreached: orders.filter((o) => o.delayType === 'sla_breach').length,
+    }),
+    [orders]
+  );
 
   const toggleSelectOrder = (orderId: string) => {
     setSelectedOrders((prev) =>
@@ -170,17 +205,28 @@ export default function OrdersDelayed() {
           </div>
         </div>
 
-        {/* Order List */}
-        <DelayedOrderTable
-          orders={filteredOrders}
-          selectedOrders={selectedOrders}
-          onSelectOrder={toggleSelectOrder}
-          onSelectAll={toggleSelectAll}
-          onViewDetail={setDetailOrder}
-          onContact={setContactOrder}
-          onEscalate={setEscalateOrder}
-          onResolve={setResolveOrder}
-        />
+        {isLoading && (
+          <div className="text-foreground/70 py-10 text-center">
+            Đang tải cảnh báo...
+          </div>
+        )}
+
+        {!isLoading && errorMessage && (
+          <div className="text-destructive py-10 text-center">{errorMessage}</div>
+        )}
+
+        {!isLoading && !errorMessage && (
+          <DelayedOrderTable
+            orders={filteredOrders}
+            selectedOrders={selectedOrders}
+            onSelectOrder={toggleSelectOrder}
+            onSelectAll={toggleSelectAll}
+            onViewDetail={setDetailOrder}
+            onContact={setContactOrder}
+            onEscalate={setEscalateOrder}
+            onResolve={setResolveOrder}
+          />
+        )}
 
         {/* Modals */}
         <DelayedDetailModal
