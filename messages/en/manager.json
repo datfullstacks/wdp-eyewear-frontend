@@ -230,16 +230,41 @@
       "warranty": "Warranty Policies",
       "shipping": "Shipping Policies"
     },
-    "placeholder": "Policy list will be displayed here",
-    "policiesList": "Policies List",
-    "policyDetails": "Policy Details",
-    "detailsLabel": "Full Policy Details",
-    "selectPolicy": "Select a policy to view details",
-    "columns": {
-      "title": "Policy Title",
+    "searchPlaceholder": "Search policies...",
+    "showingResults": "Showing {count} policies",
+    "deleteConfirm": "Are you sure you want to delete '{name}'?",
+    "deleteFailed": "Failed to delete policy",
+    "filters": {
+      "allCategories": "All Categories",
+      "warranty": "Warranty",
+      "return": "Return",
+      "shipping": "Shipping",
+      "purchase": "Purchase",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "allStatus": "All Status",
+      "active": "Active",
+      "inactive": "Inactive",
+      "draft": "Draft"
+    },
+    "table": {
+      "title": "Title",
       "category": "Category",
       "lastUpdated": "Last Updated",
-      "status": "Status"
+      "status": "Status",
+      "actions": "Actions",
+      "noData": "No policies found",
+      "warranty": "Warranty",
+      "return": "Return",
+      "shipping": "Shipping",
+      "purchase": "Purchase",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "active": "Active",
+      "inactive": "Inactive",
+      "draft": "Draft",
+      "viewDetails": "View details",
+      "deletePolicy": "Delete policy"
     }
   },
   "discounts": {
@@ -251,7 +276,40 @@
       "expiringSoon": "Expiring Soon",
       "totalCoupons": "Total Coupons"
     },
-    "placeholder": "Promotion list will be displayed here"
+    "searchPlaceholder": "Search by code or name...",
+    "showingResults": "Showing {count} promotions",
+    "deleteConfirm": "Are you sure you want to delete '{name}'?",
+    "deleteFailed": "Failed to delete promotion",
+    "filters": {
+      "allStatus": "All Status",
+      "active": "Active",
+      "scheduled": "Scheduled",
+      "expired": "Expired",
+      "inactive": "Inactive",
+      "allTypes": "All Types",
+      "percentage": "Percentage",
+      "fixed": "Fixed Amount"
+    },
+    "table": {
+      "code": "Code",
+      "name": "Name",
+      "type": "Type",
+      "value": "Value",
+      "period": "Period",
+      "usage": "Usage",
+      "status": "Status",
+      "actions": "Actions",
+      "noData": "No promotions found",
+      "percentage": "Percentage",
+      "fixed": "Fixed",
+      "active": "Active",
+      "inactive": "Inactive",
+      "expired": "Expired",
+      "scheduled": "Scheduled",
+      "unlimited": "Unlimited",
+      "viewDetails": "View details",
+      "deleteDiscount": "Delete promotion"
+    }
   },
   "revenue": {
     "title": "Revenue Report",

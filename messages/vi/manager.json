@@ -230,16 +230,41 @@
       "warranty": "Chính Sách Bảo Hành",
       "shipping": "Chính Sách Vận Chuyển"
     },
-    "placeholder": "Danh sách chính sách sẽ được hiển thị ở đây",
-    "policiesList": "Danh Sách Chính Sách",
-    "policyDetails": "Chi Tiết Chính Sách",
-    "detailsLabel": "Nội Dung Chính Sách Đầy Đủ",
-    "selectPolicy": "Chọn một chính sách để xem chi tiết",
-    "columns": {
-      "title": "Tiêu Đề Chính Sách",
-      "category": "Danh Mục",
-      "lastUpdated": "Cập Nhật Lần Cuối",
-      "status": "Trạng Thái"
+    "searchPlaceholder": "Tìm kiếm chính sách...",
+    "showingResults": "Hiển thị {count} chính sách",
+    "deleteConfirm": "Bạn có chắc muốn xóa '{name}'?",
+    "deleteFailed": "Xóa chính sách thất bại",
+    "filters": {
+      "allCategories": "Tất cả danh mục",
+      "warranty": "Bảo hành",
+      "return": "Đổi trả",
+      "shipping": "Vận chuyển",
+      "purchase": "Mua hàng",
+      "privacy": "Bảo mật",
+      "terms": "Điều khoản",
+      "allStatus": "Tất cả trạng thái",
+      "active": "Đang hoạt động",
+      "inactive": "Tạm dừng",
+      "draft": "Bản nháp"
+    },
+    "table": {
+      "title": "Tiêu đề",
+      "category": "Danh mục",
+      "lastUpdated": "Cập nhật",
+      "status": "Trạng thái",
+      "actions": "Hành động",
+      "noData": "Không có chính sách",
+      "warranty": "Bảo hành",
+      "return": "Đổi trả",
+      "shipping": "Vận chuyển",
+      "purchase": "Mua hàng",
+      "privacy": "Bảo mật",
+      "terms": "Điều khoản",
+      "active": "Đang hoạt động",
+      "inactive": "Tạm dừng",
+      "draft": "Bản nháp",
+      "viewDetails": "Xem chi tiết",
+      "deletePolicy": "Xóa chính sách"
     }
   },
   "discounts": {
@@ -251,7 +276,40 @@
       "expiringSoon": "Sắp hết hạn",
       "totalCoupons": "Tổng mã giảm giá"
     },
-    "placeholder": "Danh sách khuyến mãi sẽ được hiển thị ở đây"
+    "searchPlaceholder": "Tìm kiếm theo mã hoặc tên...",
+    "showingResults": "Hiển thị {count} khuyến mãi",
+    "deleteConfirm": "Bạn có chắc muốn xóa '{name}'?",
+    "deleteFailed": "Xóa khuyến mãi thất bại",
+    "filters": {
+      "allStatus": "Tất cả trạng thái",
+      "active": "Đang hoạt động",
+      "scheduled": "Đã lên lịch",
+      "expired": "Đã hết hạn",
+      "inactive": "Tạm dừng",
+      "allTypes": "Tất cả loại",
+      "percentage": "Phần trăm",
+      "fixed": "Cố định"
+    },
+    "table": {
+      "code": "Mã",
+      "name": "Tên khuyến mãi",
+      "type": "Loại",
+      "value": "Giá trị",
+      "period": "Thời gian",
+      "usage": "Sử dụng",
+      "status": "Trạng thái",
+      "actions": "Hành động",
+      "noData": "Không có khuyến mãi",
+      "percentage": "Phần trăm",
+      "fixed": "Cố định",
+      "active": "Đang hoạt động",
+      "inactive": "Tạm dừng",
+      "expired": "Đã hết hạn",
+      "scheduled": "Đã lên lịch",
+      "unlimited": "Không giới hạn",
+      "viewDetails": "Xem chi tiết",
+      "deleteDiscount": "Xóa khuyến mãi"
+    }
   },
   "revenue": {
     "title": "Báo Cáo Doanh Thu",
