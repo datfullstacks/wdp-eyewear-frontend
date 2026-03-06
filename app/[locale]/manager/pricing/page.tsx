@@ -1,36 +1,39 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Header } from '@/components/organisms/Header';
 import { StatCard } from '@/components/molecules/StatCard';
 import { DollarSign, TrendingUp, Tag } from 'lucide-react';
 
-const pricingStats = [
-  {
-    title: 'Giá trung bình',
-    value: '1.2M',
-    icon: DollarSign,
-    trend: { value: 5, isPositive: true },
-  },
-  {
-    title: 'Sản phẩm có khuyến mãi',
-    value: '45',
-    icon: Tag,
-    trend: { value: 12, isPositive: true },
-  },
-  {
-    title: 'Tăng giá gần đây',
-    value: '8',
-    icon: TrendingUp,
-    trend: { value: 0, isPositive: true },
-  },
-];
-
 export default function PricingPage() {
+  const t = useTranslations('manager.pricing');
+
+  const pricingStats = [
+    {
+      title: t('stats.avgPrice'),
+      value: '1.2M',
+      icon: DollarSign,
+      trend: { value: 5, isPositive: true },
+    },
+    {
+      title: t('stats.promotionProducts'),
+      value: '45',
+      icon: Tag,
+      trend: { value: 12, isPositive: true },
+    },
+    {
+      title: t('stats.recentPriceChanges'),
+      value: '8',
+      icon: TrendingUp,
+      trend: { value: 0, isPositive: true },
+    },
+  ];
+
   return (
     <>
       <Header
-        title="Quản lý Giá"
-        subtitle="Quản lý giá sản phẩm và chính sách giá"
+        title={t('title')}
+        subtitle={t('subtitle')}
       />
 
       <div className="space-y-6 p-6">
@@ -41,7 +44,7 @@ export default function PricingPage() {
         </section>
 
         <section className="rounded-lg border border-gray-200 bg-white p-6">
-          <p className="text-gray-500">Danh sách giá sẽ được hiển thị ở đây</p>
+          <p className="text-gray-500">{t('placeholder')}</p>
         </section>
       </div>
     </>

@@ -22,6 +22,16 @@ interface UserTableProps {
   onView?: (user: User) => void;
   onEdit?: (user: User) => void;
   onDelete?: (user: User) => void;
+  /** Translation strings for table headers */
+  translations?: {
+    user?: string;
+    role?: string;
+    phone?: string;
+    loginVia?: string;
+    createdAt?: string;
+    actions?: string;
+    noData?: string;
+  };
 }
 
 function formatDate(dateStr?: string) {
@@ -51,11 +61,12 @@ export function UserTable({
   onView,
   onEdit,
   onDelete,
+  translations,
 }: UserTableProps) {
   if (users.length === 0) {
     return (
       <div className="flex items-center justify-center py-12 text-gray-500">
-        Không có dữ liệu người dùng
+        {translations?.noData || 'Không có dữ liệu người dùng'}
       </div>
     );
   }
@@ -64,12 +75,12 @@ export function UserTable({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Người dùng</TableHead>
-          <TableHead>Vai trò</TableHead>
-          <TableHead>Số điện thoại</TableHead>
-          <TableHead>Đăng nhập qua</TableHead>
-          <TableHead>Ngày tạo</TableHead>
-          <TableHead>Hành động</TableHead>
+          <TableHead>{translations?.user || 'Người dùng'}</TableHead>
+          <TableHead>{translations?.role || 'Vai trò'}</TableHead>
+          <TableHead>{translations?.phone || 'Số điện thoại'}</TableHead>
+          <TableHead>{translations?.loginVia || 'Đăng nhập qua'}</TableHead>
+          <TableHead>{translations?.createdAt || 'Ngày tạo'}</TableHead>
+          <TableHead>{translations?.actions || 'Hành động'}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -95,27 +106,35 @@ export function UserTable({
               {formatDate(user.createdAt)}
             </TableCell>
             <TableCell>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 {onView && (
-                  <Button size="sm" variant="outline" onClick={() => onView(user)}>
-                    <Eye className="mr-1 h-3 w-3 text-gray-700" />
-                    <span className="text-gray-700">Xem</span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => onView(user)}
+                    title="View details"
+                  >
+                    <Eye className="h-4 w-4" />
                   </Button>
                 )}
                 {onEdit && (
-                  <Button size="sm" variant="outline" onClick={() => onEdit(user)}>
-                    <Edit3 className="mr-1 h-3 w-3 text-gray-700" />
-                    <span className="text-gray-700">Sửa</span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => onEdit(user)}
+                    title="Edit user"
+                  >
+                    <Edit3 className="h-4 w-4" />
                   </Button>
                 )}
                 {onDelete && (
                   <Button
                     size="sm"
-                    variant="destructive"
+                    variant="ghost"
                     onClick={() => onDelete(user)}
+                    title="Delete user"
                   >
-                    <Trash2 className="mr-1 h-3 w-3" />
-                    Xóa
+                    <Trash2 className="h-4 w-4 text-red-600" />
                   </Button>
                 )}
               </div>

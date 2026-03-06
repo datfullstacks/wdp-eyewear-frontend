@@ -1,6 +1,11 @@
 {
   "title": "Manager Dashboard",
   "subtitle": "Management Control Panel",
+  "search": "Search...",
+  "notifications": "Notifications",
+  "profile": "Profile",
+  "settings": "Settings",
+  "logout": "Logout",
   "nav": {
     "dashboard": "Dashboard",
     "products": "Product Management",
@@ -13,25 +18,110 @@
     "welcome": "Manager Dashboard",
     "subtitle": "Manage your business operations"
   },
+  "sidebar": {
+    "brandName": "Eyes Dream",
+    "brandSubtitle": "Manager Dashboard",
+    "overview": "Overview",
+    "productsAndPricing": "Products & Pricing",
+    "productManagement": "Product Management",
+    "pricingStrategy": "Pricing Strategy",
+    "promotionsAndDiscounts": "Promotions & Discounts",
+    "revenueAndReports": "Revenue & Reports",
+    "revenueOverview": "Revenue Overview",
+    "detailedReports": "Detailed Reports",
+    "humanResources": "Human Resources",
+    "userManagement": "User Management",
+    "policiesAndSystem": "Policies & System",
+    "policies": "Policies",
+    "systemSettings": "System Settings",
+    "personalSettings": "Personal Settings",
+    "notifications": "Notifications",
+    "accountSettings": "Account Settings",
+    "manager": "Manager",
+    "managerPanel": "Manager Panel",
+    "menu": "Menu",
+    "dashboard": "Dashboard",
+    "products": "Products",
+    "pricing": "Pricing",
+    "users": "Users",
+    "revenue": "Revenue",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar"
+  },
+  "dashboard": {
+    "title": "Manager Dashboard",
+    "subtitle": "Overview - Products, Pricing, Users and Revenue",
+    "stats": {
+      "monthlyRevenue": "Monthly Revenue",
+      "totalOrders": "Total Orders",
+      "activeProducts": "Active Products",
+      "activeCustomers": "Active Customers",
+      "revenueTarget": "Revenue Target",
+      "activePromotions": "Active Promotions"
+    }
+  },
   "products": {
     "title": "Product Management",
-    "subtitle": "Manage eyewear products, variants, and inventory",
-    "addProduct": "Add New Product",
-    "searchPlaceholder": "Search by name or SKU...",
+    "subtitle": "Manage all eyewear products",
+    "addProduct": "Add Product",
+    "searchPlaceholder": "Search products...",
+    "totalProducts": "Total Products",
+    "selling": "Selling",
+    "lowStock": "Low Stock",
+    "tabs": {
+      "all": "All",
+      "active": "Selling",
+      "lowStock": "Low Stock",
+      "inactive": "Inactive"
+    },
+    "table": {
+      "product": "Product",
+      "brand": "Brand",
+      "category": "Category",
+      "price": "Price",
+      "stock": "Stock",
+      "status": "Status",
+      "actions": "Actions",
+      "noProducts": "No products found",
+      "noData": "No products found",
+      "active": "Active",
+      "inactive": "Inactive",
+      "viewDetails": "View details",
+      "editProduct": "Edit product",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "deleteProduct": "Delete product"
+    },
+    "pagination": {
+      "showing": "Showing",
+      "to": "to",
+      "of": "of",
+      "products": "products"
+    },
+    "deleteConfirm": {
+      "title": "Confirm Delete",
+      "description": "Are you sure you want to delete product \"{name}\"? This action cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Delete"
+    },
     "filters": {
       "category": "Category",
       "status": "Status"
     }
   },
   "pricing": {
-    "title": "Pricing & Promotions",
-    "subtitle": "Manage product prices, combos, and promotional campaigns",
+    "title": "Pricing Management",
+    "subtitle": "Manage product prices and pricing strategies",
     "createPromotion": "Create Promotion",
     "stats": {
+      "avgPrice": "Average Price",
+      "promotionProducts": "Products on Promotion",
+      "recentPriceChanges": "Recent Price Changes",
       "activePromotions": "Active Promotions",
       "totalUsage": "Total Usage",
       "avgDiscount": "Average Discount"
     },
+    "placeholder": "Pricing list will be displayed here",
     "promotionsList": "Promotions List",
     "columns": {
       "name": "Promotion Name",
@@ -44,26 +134,52 @@
   },
   "users": {
     "title": "User Management",
-    "subtitle": "Manage staff, operations personnel, and user permissions",
+    "subtitle": "Manage Managers, Staff and Customers",
+    "addManager": "Add New Manager",
+    "addStaff": "Add New Staff",
     "addUser": "Add New User",
     "searchPlaceholder": "Search by name or email...",
+    "tabs": {
+      "managers": "Manager Management",
+      "staff": "Staff Management",
+      "customers": "Customer Care"
+    },
     "stats": {
+      "totalManagers": "Total Managers",
+      "totalStaff": "Total Staff (Operations)",
+      "totalCustomers": "Total Customers",
       "staff": "Staff Members",
       "operations": "Operations",
       "managers": "Managers",
       "admins": "Admins"
-    }
+    },
+    "table": {
+      "user": "User",
+      "role": "Role",
+      "phone": "Phone",
+      "loginVia": "Login Via",
+      "createdAt": "Created At",
+      "actions": "Actions",
+      "noData": "No user data available"
+    },
+    "confirmDelete": "Are you sure you want to delete {name}?",
+    "deleteFailed": "Delete failed",
+    "loadFailed": "Failed to load users"
   },
   "policies": {
-    "title": "Policies & Terms",
-    "subtitle": "Manage business policies: purchase, return, warranty, shipping",
-    "createPolicy": "Create Policy",
+    "title": "Policy Management",
+    "subtitle": "Manage warranty, return and service policies",
+    "createPolicy": "Create New Policy",
     "stats": {
+      "totalPolicies": "Total Policies",
+      "activePolicies": "Active Policies",
+      "needsUpdate": "Needs Update",
       "purchase": "Purchase Policies",
       "return": "Return Policies",
       "warranty": "Warranty Policies",
       "shipping": "Shipping Policies"
     },
+    "placeholder": "Policy list will be displayed here",
     "policiesList": "Policies List",
     "policyDetails": "Policy Details",
     "detailsLabel": "Full Policy Details",
@@ -75,15 +191,31 @@
       "status": "Status"
     }
   },
-  "revenue": {
-    "title": "Revenue Reports",
-    "subtitle": "View revenue analytics, sales performance, and business metrics",
+  "discounts": {
+    "title": "Promotions Management",
+    "subtitle": "Create and manage promotional campaigns",
+    "addDiscount": "Create New Promotion",
     "stats": {
+      "activePromotions": "Active Promotions",
+      "expiringSoon": "Expiring Soon",
+      "totalCoupons": "Total Coupons"
+    },
+    "placeholder": "Promotion list will be displayed here"
+  },
+  "revenue": {
+    "title": "Revenue Report",
+    "subtitle": "Track revenue and analyze trends",
+    "stats": {
+      "monthlyRevenue": "Monthly Revenue",
+      "growth": "Growth",
+      "yearlyRevenue": "Yearly Revenue",
+      "targetAchieved": "Target Achieved",
       "totalRevenue": "Total Revenue",
       "totalOrders": "Total Orders",
       "avgOrderValue": "Avg Order Value",
       "totalCustomers": "Total Customers"
     },
+    "placeholder": "Revenue chart will be displayed here",
     "revenueChart": "Monthly Revenue",
     "categoryRevenue": "Revenue by Category",
     "topProducts": "Top Selling Products",
@@ -93,5 +225,16 @@
       "unitsSold": "Units Sold",
       "revenue": "Revenue"
     }
+  },
+  "revenueNew": {
+    "title": "Revenue Report (New)",
+    "subtitle": "Track revenue with improved interface",
+    "placeholder": "New revenue chart will be displayed here"
+  },
+  "common": {
+    "trendUp": "+{value}% compared to last month",
+    "trendDown": "-{value}% compared to last month",
+    "loading": "Loading...",
+    "error": "Error"
   }
 }

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Header } from '@/components/organisms/Header';
 import { StatCard } from '@/components/molecules/StatCard';
 import { UserTable, type UserTabRole } from '@/components/organisms/manager';
@@ -10,6 +11,7 @@ import { Shield, Briefcase, Users, AlertTriangle, Loader2 } from 'lucide-react';
 
 export default function UsersPage() {
   const router = useRouter();
+  const t = useTranslations('manager.users');
   const [activeTab, setActiveTab] = useState<'managers' | 'staff' | 'customers'>('managers');
   const [managers, setManagers] = useState<User[]>([]);
   const [staffMembers, setStaffMembers] = useState<User[]>([]);
@@ -30,7 +32,7 @@ export default function UsersPage() {
       setStaffMembers(staffRes.users);
       setCustomers(custRes.users);
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Failed to load users');
+      setApiError(error instanceof Error ? error.message : t('loadFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -42,7 +44,7 @@ export default function UsersPage() {
 
   const managerStats = [
     {
-      title: 'Tổng Manager',
+      title: t('stats.totalManagers'),
       value: managers.length.toString(),
       icon: Shield,
       trend: { value: 0, isPositive: true },
@@ -51,7 +53,7 @@ export default function UsersPage() {
 
   const staffStats = [
     {
-      title: 'Tổng Staff (Operations)',
+      title: t('stats.totalStaff'),
       value: staffMembers.length.toString(),
       icon: Briefcase,
       trend: { value: 0, isPositive: true },
@@ -60,7 +62,7 @@ export default function UsersPage() {
 
   const customerStats = [
     {
-      title: 'Tổng khách hàng',
+      title: t('stats.totalCustomers'),
       value: customers.length.toString(),
       icon: Users,
       trend: { value: 0, isPositive: true },
@@ -85,8 +87,8 @@ export default function UsersPage() {
     activeTab === 'managers' ? 'manager' : activeTab === 'staff' ? 'staff' : 'customer';
 
   const getAddButtonLabel = () => {
-    if (activeTab === 'managers') return 'Thêm Manager mới';
-    if (activeTab === 'staff') return 'Thêm Staff mới';
+    if (activeTab === 'managers') return t('addManager');
+    if (activeTab === 'staff') return t('addStaff');
     return null;
   };
 
@@ -99,20 +101,20 @@ export default function UsersPage() {
   };
 
   const handleDelete = async (user: User) => {
-    if (!confirm(`Bạn có chắc muốn xóa ${user.name}?`)) return;
+    if (!confirm(t('confirmDelete', { name: user.name }))) return;
     try {
       await userApi.remove(user.id);
       await loadUsers();
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Delete failed');
+      setApiError(error instanceof Error ? error.message : t('deleteFailed'));
     }
   };
 
   return (
     <>
       <Header
-        title="Quản lý Nhân sự"
-        subtitle="Quản lý Manager, Staff và Customer"
+        title={t('title')}
+        subtitle={t('subtitle')}
         showAddButton={activeTab !== 'customers'}
         addButtonLabel={getAddButtonLabel() || ''}
         onAdd={() => router.push('/manager/users/create')}
@@ -135,7 +137,7 @@ export default function UsersPage() {
                   activeTab === 'managers' ? 'text-amber-600' : 'text-gray-500'
                 }`}
               />
-              Quản lý Manager ({managers.length})
+              {t('tabs.managers')} ({managers.length})
             </button>
             <button
               onClick={() => setActiveTab('staff')}
@@ -150,7 +152,7 @@ export default function UsersPage() {
                   activeTab === 'staff' ? 'text-blue-600' : 'text-gray-500'
                 }`}
               />
-              Quản lý Staff ({staffMembers.length})
+              {t('tabs.staff')} ({staffMembers.length})
             </button>
             <button
               onClick={() => setActiveTab('customers')}
@@ -165,7 +167,7 @@ export default function UsersPage() {
                   activeTab === 'customers' ? 'text-green-600' : 'text-gray-500'
                 }`}
               />
-              Chăm sóc Customer ({customers.length})
+              {t('tabs.customers')} ({customers.length})
             </button>
           </nav>
         </section>
@@ -201,6 +203,15 @@ export default function UsersPage() {
               onView={handleView}
               onEdit={handleEdit}
               onDelete={activeTab !== 'customers' ? handleDelete : undefined}
+              translations={{
+                user: t('table.user'),
+                role: t('table.role'),
+                phone: t('table.phone'),
+                loginVia: t('table.loginVia'),
+                createdAt: t('table.createdAt'),
+                actions: t('table.actions'),
+                noData: t('table.noData'),
+              }}
             />
           </section>
         )}
