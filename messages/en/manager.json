@@ -336,9 +336,121 @@
     }
   },
   "revenueNew": {
-    "title": "Revenue Report (New)",
-    "subtitle": "Track revenue with improved interface",
-    "placeholder": "New revenue chart will be displayed here"
+    "title": "Detailed Revenue Report",
+    "subtitle": "In-depth analysis of revenue and business trends",
+    "sections": {
+      "timeAnalytics": "Time Analytics",
+      "productAnalytics": "Product Analytics",
+      "customerInsights": "Customer Insights",
+      "channelPerformance": "Channel Performance",
+      "qualityMetrics": "Quality Metrics"
+    },
+    "hourlyPattern": {
+      "title": "Hourly Sales Pattern",
+      "description": "Average revenue by hour of day",
+      "peakHours": "Peak Hours",
+      "offPeak": "Off-Peak",
+      "hour": "Hour"
+    },
+    "dayOfWeek": {
+      "title": "Day of Week Performance",
+      "description": "Compare revenue and orders by day",
+      "avgRevenue": "Avg Revenue",
+      "orders": "Orders"
+    },
+    "frameStyles": {
+      "title": "Frame Styles",
+      "description": "Revenue analysis by frame style",
+      "style": "Style",
+      "revenue": "Revenue",
+      "units": "Units",
+      "marketShare": "Market Share"
+    },
+    "lensTypes": {
+      "title": "Lens Types",
+      "description": "Analysis by lens type",
+      "type": "Type",
+      "avgPrice": "Avg Price"
+    },
+    "colorPreference": {
+      "title": "Color Preferences",
+      "description": "Top selling colors"
+    },
+    "ageDemo": {
+      "title": "Age Demographics",
+      "description": "Revenue by customer age groups",
+      "ageGroup": "Age Group",
+      "customers": "Customers"
+    },
+    "prescription": {
+      "title": "Prescription Analytics",
+      "description": "Compare prescription vs non-prescription",
+      "withRx": "With Prescription",
+      "withoutRx": "Without Prescription",
+      "avgValue": "Avg Value"
+    },
+    "customerSegments": {
+      "title": "Customer Segments",
+      "description": "Analysis by customer type",
+      "segment": "Segment",
+      "value": "Value",
+      "count": "Count"
+    },
+    "customerLTV": {
+      "title": "Customer Lifetime Value",
+      "description": "Analysis by lifetime value",
+      "lifetime": "Lifetime",
+      "potential": "Potential"
+    },
+    "channelStats": {
+      "title": "Channel Statistics",
+      "description": "Compare online vs store performance",
+      "online": "Online",
+      "store": "Store",
+      "conversionRate": "Conversion Rate",
+      "avgOrderValue": "Avg Order Value"
+    },
+    "conversionFunnel": {
+      "title": "Conversion Funnel",
+      "description": "Track customer journey",
+      "stage": "Stage",
+      "visitors": "Visitors",
+      "dropRate": "Drop Rate",
+      "conversionRate": "Conversion Rate"
+    },
+    "returnAnalytics": {
+      "title": "Return & Refund Analytics",
+      "description": "Return statistics by reason",
+      "reason": "Reason",
+      "cases": "Cases",
+      "rate": "Rate",
+      "avgRefund": "Avg Refund"
+    },
+    "seasonalTrends": {
+      "title": "Seasonal Trends",
+      "description": "Compare revenue across 4 seasons",
+      "spring": "Spring",
+      "summer": "Summer",
+      "autumn": "Autumn",
+      "winter": "Winter"
+    },
+    "topDays": {
+      "title": "Top Performing Days",
+      "description": "Top 5 days with highest revenue",
+      "date": "Date",
+      "type": "Type"
+    },
+    "filters": {
+      "period": "Period",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "last7days": "Last 7 Days",
+      "last30days": "Last 30 Days",
+      "thisMonth": "This Month",
+      "lastMonth": "Last Month",
+      "thisYear": "This Year",
+      "custom": "Custom"
+    }
   },
   "common": {
     "trendUp": "+{value}% compared to last month",
