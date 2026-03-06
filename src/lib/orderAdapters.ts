@@ -1,6 +1,8 @@
-import type { OrderRecord } from '@/api/orders';
+import type { OrderItem, OrderRecord } from '@/api/orders';
 import type { PendingOrder, PendingPriority, PaymentStatus } from '@/types/pending';
 import type { PreorderOrder, PreorderProduct } from '@/types/preorder';
+import type { MissingField, SupplementOrder } from '@/types/prescription';
+import type { PrescriptionData, PrescriptionOrder } from '@/types/rxPrescription';
 
 export type DashboardOrder = {
   id: string;
@@ -10,6 +12,14 @@ export type DashboardOrder = {
   status: 'pending' | 'processing' | 'completed' | 'cancelled';
   date: string;
 };
+
+const RX_RELEVANT_PRODUCT_TYPES = new Set(['lens']);
+const RX_FINALIZED_ORDER_STATUSES = new Set([
+  'processing',
+  'shipped',
+  'delivered',
+  'completed',
+]);
 
 function formatDate(dateValue?: string): string {
   if (!dateValue) return '-';
@@ -28,6 +38,29 @@ function formatDateTime(dateValue?: string): string {
   const hour = String(date.getHours()).padStart(2, '0');
   const minute = String(date.getMinutes()).padStart(2, '0');
   return `${day}-${month}-${year} ${hour}:${minute}`;
+}
+
+function formatIsoDate(dateValue?: string): string {
+  if (!dateValue) return new Date().toISOString().slice(0, 10);
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return new Date().toISOString().slice(0, 10);
+  return date.toISOString().slice(0, 10);
+}
+
+function plusDaysIso(dateValue: string, days: number): string {
+  const base = new Date(dateValue);
+  if (Number.isNaN(base.getTime())) return new Date().toISOString().slice(0, 10);
+  base.setDate(base.getDate() + days);
+  return base.toISOString().slice(0, 10);
+}
+
+function calculateDaysPending(dateValue?: string): number {
+  if (!dateValue) return 0;
+  const createdAt = new Date(dateValue).getTime();
+  if (Number.isNaN(createdAt)) return 0;
+  const diffMs = Date.now() - createdAt;
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  return Math.max(0, days);
 }
 
 function inferPendingPriority(order: OrderRecord): PendingPriority {
@@ -79,6 +112,164 @@ function inferPreorderPriority(order: OrderRecord): PreorderOrder['priority'] {
   return 'normal';
 }
 
+function inferRxPriority(order: OrderRecord): PrescriptionOrder['priority'] {
+  const now = Date.now();
+  const createdAt = order.createdAt ? new Date(order.createdAt).getTime() : NaN;
+  const ageHours = Number.isNaN(createdAt) ? 0 : (now - createdAt) / (1000 * 60 * 60);
+  const note = (order.note || '').toLowerCase();
+
+  if (note.includes('vip') || note.includes('gấp') || ageHours >= 72) return 'urgent';
+  if (ageHours >= 24 || order.total >= 8_000_000) return 'high';
+  return 'normal';
+}
+
+function requiresPrescription(item: OrderItem): boolean {
+  return (
+    item.prescriptionMode !== 'none' ||
+    item.orderMadeFromPrescriptionImage ||
+    item.hasPrescription ||
+    RX_RELEVANT_PRODUCT_TYPES.has(item.type)
+  );
+}
+
+function isOrderRelevantForRx(order: OrderRecord): boolean {
+  return !['cancelled', 'returned'].includes(order.rawStatus);
+}
+
+function getRxItems(order: OrderRecord): OrderItem[] {
+  return order.items.filter(requiresPrescription);
+}
+
+function toProductFrame(item: OrderItem): string {
+  const value = String(item.variant || '').trim();
+  return value || 'Mặc định';
+}
+
+function toProductSku(orderId: string, item: OrderItem, index: number): string {
+  if (item.id) return item.id.slice(-6).toUpperCase();
+  const seed = orderId ? orderId.slice(-6).toUpperCase() : 'ITEM';
+  return `${seed}-${index + 1}`;
+}
+
+function toPrescriptionData(item: OrderItem): PrescriptionData | undefined {
+  if (!item.prescription || item.prescriptionMode === 'none') return undefined;
+  return {
+    sphereRight: item.prescription.rightEye.sphere || '',
+    cylinderRight: item.prescription.rightEye.cyl || '',
+    axisRight: item.prescription.rightEye.axis || '',
+    sphereLeft: item.prescription.leftEye.sphere || '',
+    cylinderLeft: item.prescription.leftEye.cyl || '',
+    axisLeft: item.prescription.leftEye.axis || '',
+    pd: item.prescription.pd || '',
+    addRight: item.prescription.rightEye.add || '',
+    addLeft: item.prescription.leftEye.add || '',
+    lensType: '',
+    coating: '',
+    notes: item.prescription.note || '',
+  };
+}
+
+function isFilled(value?: string): boolean {
+  return String(value || '').trim().length > 0;
+}
+
+function isManualPrescriptionComplete(item: OrderItem): boolean {
+  const prescription = item.prescription;
+  if (!prescription) return false;
+
+  return (
+    isFilled(prescription.rightEye.sphere) &&
+    isFilled(prescription.rightEye.cyl) &&
+    isFilled(prescription.rightEye.axis) &&
+    isFilled(prescription.leftEye.sphere) &&
+    isFilled(prescription.leftEye.cyl) &&
+    isFilled(prescription.leftEye.axis) &&
+    isFilled(prescription.pd)
+  );
+}
+
+function getRxStatusByItem(item: OrderItem): PrescriptionOrder['prescriptionStatus'] {
+  if (item.prescriptionMode === 'none') return 'missing';
+
+  if (item.prescriptionMode === 'manual') {
+    return isManualPrescriptionComplete(item) ? 'pending_review' : 'incomplete';
+  }
+
+  if (item.prescriptionMode === 'upload') {
+    const hasAttachment = (item.prescription?.attachmentUrls || []).length > 0;
+    return hasAttachment ? 'pending_review' : 'missing';
+  }
+
+  return 'missing';
+}
+
+function resolveRxStatus(
+  order: OrderRecord,
+  rxItems: OrderItem[]
+): PrescriptionOrder['prescriptionStatus'] {
+  const itemStatuses = rxItems.map(getRxStatusByItem);
+
+  if (itemStatuses.includes('missing')) return 'missing';
+  if (itemStatuses.includes('incomplete')) return 'incomplete';
+
+  if (RX_FINALIZED_ORDER_STATUSES.has(order.rawStatus)) {
+    return 'approved';
+  }
+
+  if (itemStatuses.includes('pending_review')) return 'pending_review';
+  return 'approved';
+}
+
+function resolveRxSource(rxItems: OrderItem[]): PrescriptionOrder['source'] {
+  if (rxItems.some((item) => item.prescriptionMode === 'upload')) {
+    return 'customer_upload';
+  }
+  if (rxItems.some((item) => item.prescriptionMode === 'manual')) {
+    return 'store_input';
+  }
+  return 'pending';
+}
+
+function buildMissingFieldsForIncomplete(item: OrderItem): MissingField[] {
+  const prescription = item.prescription;
+  if (!prescription) return [];
+
+  const output: MissingField[] = [];
+
+  if (!isFilled(prescription.rightEye.sphere)) {
+    output.push({ field: 'sphere', label: 'SPH (Độ cầu)', eye: 'OD' });
+  }
+  if (!isFilled(prescription.leftEye.sphere)) {
+    output.push({ field: 'sphere', label: 'SPH (Độ cầu)', eye: 'OS' });
+  }
+  if (!isFilled(prescription.rightEye.cyl)) {
+    output.push({ field: 'cylinder', label: 'CYL (Độ loạn)', eye: 'OD' });
+  }
+  if (!isFilled(prescription.leftEye.cyl)) {
+    output.push({ field: 'cylinder', label: 'CYL (Độ loạn)', eye: 'OS' });
+  }
+  if (!isFilled(prescription.rightEye.axis)) {
+    output.push({ field: 'axis', label: 'AXIS (Trục)', eye: 'OD' });
+  }
+  if (!isFilled(prescription.leftEye.axis)) {
+    output.push({ field: 'axis', label: 'AXIS (Trục)', eye: 'OS' });
+  }
+  if (!isFilled(prescription.pd)) {
+    output.push({ field: 'pd', label: 'PD (Khoảng cách đồng tử)' });
+  }
+
+  return output;
+}
+
+function buildDefaultMissingFields(): MissingField[] {
+  return [
+    { field: 'sphere', label: 'SPH (Độ cầu)', eye: 'both' },
+    { field: 'cylinder', label: 'CYL (Độ loạn)', eye: 'both' },
+    { field: 'axis', label: 'AXIS (Trục)', eye: 'both' },
+    { field: 'pd', label: 'PD (Khoảng cách đồng tử)' },
+  ];
+}
+
 export function toDashboardOrder(order: OrderRecord): DashboardOrder {
   return {
     id: order.code,
@@ -110,6 +301,7 @@ export function toPendingOrder(order: OrderRecord): PendingOrder {
 
   return {
     id: order.code,
+    orderDbId: order.id,
     customer: order.customerName,
     phone: order.customerPhone || '-',
     address: order.customerAddress || '-',
@@ -119,8 +311,98 @@ export function toPendingOrder(order: OrderRecord): PendingOrder {
     priority: inferPendingPriority(order),
     createdAt: formatDateTime(order.createdAt),
     note: order.note || '',
-    hasPrescription: order.items.some((item) => item.hasPrescription),
+    hasPrescription: order.items.some(requiresPrescription),
     paymentStatus: mapPaymentStatus(order.paymentStatus),
+  };
+}
+
+export function toPrescriptionOrder(order: OrderRecord): PrescriptionOrder | null {
+  if (!isOrderRelevantForRx(order)) return null;
+
+  const rxItems = getRxItems(order);
+  if (rxItems.length === 0) return null;
+
+  const createdDate = formatIsoDate(order.createdAt);
+  const prescriptionStatus = resolveRxStatus(order, rxItems);
+  const source = resolveRxSource(rxItems);
+  const itemForPrescription =
+    rxItems.find((item) => item.prescriptionMode !== 'none') || rxItems[0];
+  const rxItemIds = rxItems.map((item) => item.id).filter(Boolean);
+
+  return {
+    id: order.id,
+    orderId: order.code,
+    rawOrderStatus: order.rawStatus,
+    customer: order.customerName,
+    phone: order.customerPhone || '-',
+    email: '-',
+    address: order.customerAddress || '-',
+    orderDate: createdDate,
+    products: rxItems.map((item, index) => ({
+      name: item.name,
+      sku: toProductSku(order.id, item, index),
+      frame: toProductFrame(item),
+      quantity: item.quantity,
+    })),
+    prescriptionStatus,
+    prescription: toPrescriptionData(itemForPrescription),
+    priority: inferRxPriority(order),
+    dueDate: plusDaysIso(createdDate, 3),
+    notes: order.note || '',
+    source,
+    rxItemIds,
+    primaryRxItemId: rxItemIds[0],
+  };
+}
+
+export function toSupplementOrder(order: OrderRecord): SupplementOrder | null {
+  const rxOrder = toPrescriptionOrder(order);
+  if (!rxOrder) return null;
+  if (rxOrder.prescriptionStatus === 'approved') return null;
+
+  const rxItems = getRxItems(order);
+  const primaryItem = rxItems[0];
+  const mode = primaryItem?.prescriptionMode || 'none';
+
+  let missingType: SupplementOrder['missingType'];
+  if (rxOrder.prescriptionStatus === 'missing') {
+    missingType = mode === 'upload' ? 'unclear_image' : 'no_prescription';
+  } else if (rxOrder.prescriptionStatus === 'incomplete') {
+    missingType = 'incomplete_data';
+  } else {
+    missingType = mode === 'upload' ? 'unclear_image' : 'need_verification';
+  }
+
+  let missingFields: MissingField[] = [];
+  if (missingType === 'no_prescription') {
+    missingFields = buildDefaultMissingFields();
+  } else if (missingType === 'incomplete_data' && primaryItem) {
+    missingFields = buildMissingFieldsForIncomplete(primaryItem);
+  } else if (missingType === 'unclear_image') {
+    missingFields = [{ field: 'all', label: 'Ảnh đơn thuốc chưa rõ, cần xác minh' }];
+  } else {
+    missingFields = [{ field: 'all', label: 'Cần xác nhận lại thông số mắt với khách' }];
+  }
+
+  const attachmentUrl = primaryItem?.prescription?.attachmentUrls?.[0];
+
+  return {
+    id: rxOrder.id,
+    orderId: rxOrder.orderId,
+    customer: rxOrder.customer,
+    phone: rxOrder.phone,
+    email: rxOrder.email,
+    orderDate: rxOrder.orderDate,
+    products: rxOrder.products,
+    missingType,
+    missingFields,
+    priority: rxOrder.priority,
+    dueDate: rxOrder.dueDate,
+    daysPending: calculateDaysPending(order.createdAt),
+    contactAttempts: 0,
+    contactHistory: [],
+    prescriptionImage: attachmentUrl,
+    notes: rxOrder.notes,
   };
 }
 

@@ -2,6 +2,7 @@ import apiClient from './client';
 
 export type UiOrderStatus = 'pending' | 'processing' | 'completed' | 'cancelled';
 export type UiPaymentStatus = 'paid' | 'pending' | 'partial' | 'cod';
+export type PrescriptionMode = 'none' | 'manual' | 'upload';
 
 interface BackendEnvelope<T> {
   success?: boolean;
@@ -24,13 +25,32 @@ interface BackendShippingAddress {
 }
 
 interface BackendItemCustomization {
+  orderMadeFromPrescriptionImage?: boolean;
   prescription?: {
-    mode?: 'none' | 'manual' | 'upload' | string;
+    mode?: PrescriptionMode | string;
+    isMyopic?: boolean;
+    rightEye?: {
+      sphere?: string;
+      cyl?: string;
+      axis?: string;
+      add?: string;
+    };
+    leftEye?: {
+      sphere?: string;
+      cyl?: string;
+      axis?: string;
+      add?: string;
+    };
+    pd?: string;
+    note?: string;
+    attachmentUrls?: string[];
   };
 }
 
 interface BackendOrderItem {
+  _id?: string;
   name?: string;
+  type?: string;
   quantity?: number;
   unitPrice?: number;
   lineTotal?: number;
@@ -61,13 +81,36 @@ interface BackendOrder {
 }
 
 export interface OrderItem {
+  id: string;
   name: string;
+  type: string;
   quantity: number;
   unitPrice: number;
   lineTotal: number;
   variant: string;
   preOrder: boolean;
   hasPrescription: boolean;
+  prescriptionMode: PrescriptionMode;
+  orderMadeFromPrescriptionImage: boolean;
+  prescription: {
+    mode: PrescriptionMode;
+    isMyopic: boolean;
+    rightEye: {
+      sphere: string;
+      cyl: string;
+      axis: string;
+      add: string;
+    };
+    leftEye: {
+      sphere: string;
+      cyl: string;
+      axis: string;
+      add: string;
+    };
+    pd: string;
+    note: string;
+    attachmentUrls: string[];
+  } | null;
 }
 
 export interface OrderRecord {
@@ -137,17 +180,58 @@ function toAddressLabel(address?: BackendShippingAddress): string {
 }
 
 function mapOrderItem(raw: BackendOrderItem): OrderItem {
-  const mode = String(raw?.customization?.prescription?.mode || '')
+  const mode = String(raw?.customization?.prescription?.mode || 'none')
     .trim()
     .toLowerCase();
+  const normalizedMode: PrescriptionMode =
+    mode === 'manual' || mode === 'upload' ? mode : 'none';
+  const prescriptionPayload = raw?.customization?.prescription;
+  const rightEye: NonNullable<BackendItemCustomization['prescription']>['rightEye'] =
+    prescriptionPayload?.rightEye || {};
+  const leftEye: NonNullable<BackendItemCustomization['prescription']>['leftEye'] =
+    prescriptionPayload?.leftEye || {};
+  const attachmentUrls = Array.isArray(prescriptionPayload?.attachmentUrls)
+    ? prescriptionPayload?.attachmentUrls
+        .map((url) => String(url || '').trim())
+        .filter(Boolean)
+    : [];
+  const hasPrescription = normalizedMode === 'manual' || normalizedMode === 'upload';
+
   return {
+    id: String(raw?._id || '').trim(),
     name: String(raw?.name || '').trim() || 'Sản phẩm',
+    type: String(raw?.type || '').trim().toLowerCase(),
     quantity: Number(raw?.quantity || 0),
     unitPrice: Number(raw?.unitPrice || 0),
     lineTotal: Number(raw?.lineTotal || 0),
     variant: toVariantLabel(raw),
     preOrder: Boolean(raw?.preOrder),
-    hasPrescription: mode === 'manual' || mode === 'upload',
+    hasPrescription,
+    prescriptionMode: normalizedMode,
+    orderMadeFromPrescriptionImage: Boolean(
+      raw?.customization?.orderMadeFromPrescriptionImage
+    ),
+    prescription: hasPrescription
+      ? {
+          mode: normalizedMode,
+          isMyopic: Boolean(prescriptionPayload?.isMyopic),
+          rightEye: {
+            sphere: String(rightEye?.sphere || '').trim(),
+            cyl: String(rightEye?.cyl || '').trim(),
+            axis: String(rightEye?.axis || '').trim(),
+            add: String(rightEye?.add || '').trim(),
+          },
+          leftEye: {
+            sphere: String(leftEye?.sphere || '').trim(),
+            cyl: String(leftEye?.cyl || '').trim(),
+            axis: String(leftEye?.axis || '').trim(),
+            add: String(leftEye?.add || '').trim(),
+          },
+          pd: String(prescriptionPayload?.pd || '').trim(),
+          note: String(prescriptionPayload?.note || '').trim(),
+          attachmentUrls,
+        }
+      : null,
   };
 }
 
@@ -262,6 +346,62 @@ export const orderApi = {
     const response = await apiClient.get(`/api/orders/${id}`);
     const raw = extractOrderPayload(response.data);
     return mapBackendOrder(raw);
+  },
+
+  updateStatus: async (id: string, status: string): Promise<void> => {
+    await apiClient.put(`/api/orders/${id}/status`, { status });
+  },
+
+  cancel: async (
+    id: string,
+    payload?: {
+      reason?: string;
+      contactChannels?: Array<'email' | 'phone'>;
+      bankAccount?: {
+        bankName?: string;
+        accountNumber?: string;
+        accountHolder?: string;
+        note?: string;
+      };
+    }
+  ): Promise<void> => {
+    await apiClient.put(`/api/orders/${id}/cancel`, payload || {});
+  },
+
+  patchItem: async (
+    orderId: string,
+    itemId: string,
+    payload: {
+      quantity?: number;
+      note?: string;
+      customization?: {
+        selectedColor?: string;
+        selectedSize?: string;
+        photochromic?: boolean;
+        note?: string;
+        prescription?: {
+          mode?: PrescriptionMode;
+          isMyopic?: boolean;
+          rightEye?: {
+            sphere?: string;
+            cyl?: string;
+            axis?: string;
+            add?: string;
+          };
+          leftEye?: {
+            sphere?: string;
+            cyl?: string;
+            axis?: string;
+            add?: string;
+          };
+          pd?: string;
+          note?: string;
+          attachmentUrls?: string[];
+        };
+      };
+    }
+  ): Promise<void> => {
+    await apiClient.patch(`/api/orders/${orderId}/items/${itemId}`, payload);
   },
 };
 

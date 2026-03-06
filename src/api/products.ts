@@ -42,6 +42,10 @@ export interface ProductDetail extends Product {
     enabled?: boolean;
     allowCod?: boolean;
   };
+  compatibility?: {
+    productIds?: string[];
+    notes?: string;
+  };
   fulfillment?: {
     supplier?: string;
     leadTime?: string;
@@ -58,6 +62,7 @@ export interface ProductDetail extends Product {
   media?: {
     tryOn?: {
       enabled?: boolean;
+      status?: string;
       assetIds?: string[];
     };
     assets?: Array<{
@@ -87,6 +92,7 @@ export interface ProductDetail extends Product {
     sku?: string;
     price?: number;
     stock?: number;
+    warehouseLocation?: string;
     assetIds?: string[];
   }>;
   ratingsAverage?: number;
@@ -144,6 +150,10 @@ interface BackendProduct {
     enabled?: boolean;
     allowCod?: boolean;
   };
+  compatibility?: {
+    productIds?: string[];
+    notes?: string;
+  };
   fulfillment?: {
     supplier?: string;
     leadTime?: string;
@@ -154,6 +164,7 @@ interface BackendProduct {
   media?: {
     tryOn?: {
       enabled?: boolean;
+      status?: string;
       assetIds?: string[];
     };
     assets?: Array<{
@@ -183,6 +194,7 @@ interface BackendProduct {
     sku?: string;
     price?: number;
     stock?: number;
+    warehouseLocation?: string;
     assetIds?: string[];
   }>;
   ratingsAverage?: number;
@@ -287,6 +299,7 @@ function mapBackendProductDetail(raw: BackendProduct): ProductDetail {
     pricing: raw.pricing,
     inventory: raw.inventory,
     preOrder: raw.preOrder,
+    compatibility: raw.compatibility,
     fulfillment: raw.fulfillment,
     seo: raw.seo,
     media: raw.media,
@@ -299,6 +312,7 @@ function mapBackendProductDetail(raw: BackendProduct): ProductDetail {
       sku: variant.sku,
       price: variant.price,
       stock: variant.stock,
+      warehouseLocation: variant.warehouseLocation,
       assetIds: variant.assetIds,
     })),
     ratingsAverage: raw.ratingsAverage,
@@ -460,14 +474,21 @@ export const productApi = {
     brand?: string;
     status?: string;
   }): Promise<ProductsResponse> => {
-    const response = await apiClient.get('/api/products', { params });
+    const { page, limit, ...rest } = params ?? {};
+    const requestParams = {
+      page: page ?? 1,
+      limit: limit ?? 100,
+      ...rest,
+    };
+
+    const response = await apiClient.get('/api/products', { params: requestParams });
     const { rows, pagination } = extractProductsPayload(response.data);
 
     return {
       products: rows.map(mapBackendProduct),
       total: pagination?.total ?? rows.length,
-      page: pagination?.page ?? (params?.page || 1),
-      pageSize: pagination?.limit ?? (params?.limit || rows.length || 10),
+      page: pagination?.page ?? requestParams.page,
+      pageSize: pagination?.limit ?? requestParams.limit,
     };
   },
 

@@ -23,7 +23,7 @@ interface InventoryEditModalProps {
   item: InventoryItem | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdate: (item: InventoryItem, newStock: number, reason: string) => void;
+  onUpdate: (item: InventoryItem, newStock: number, reason: string) => Promise<void>;
 }
 
 export const InventoryEditModal = ({
@@ -34,18 +34,41 @@ export const InventoryEditModal = ({
 }: InventoryEditModalProps) => {
   const [editStock, setEditStock] = useState('');
   const [reason, setReason] = useState('adjust');
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen && item) {
       setEditStock(item.stock.toString());
       setReason('adjust');
+      setError(null);
     }
     onOpenChange(isOpen);
   };
 
-  const handleUpdate = () => {
-    if (item) {
-      onUpdate(item, parseInt(editStock, 10), reason);
+  const handleUpdate = async () => {
+    if (!item) return;
+
+    const nextStock = Number.parseInt(editStock, 10);
+    if (!Number.isFinite(nextStock) || Number.isNaN(nextStock) || nextStock < 0) {
+      setError('Số lượng mới không hợp lệ.');
+      return;
+    }
+
+    setIsSaving(true);
+    setError(null);
+    try {
+      await onUpdate(item, nextStock, reason);
+      onOpenChange(false);
+    } catch (err) {
+      const message =
+        (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data
+          ?.message ||
+        (err as { message?: string })?.message ||
+        'Không thể cập nhật tồn kho. Vui lòng thử lại.';
+      setError(message);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -97,12 +120,19 @@ export const InventoryEditModal = ({
               </SelectContent>
             </Select>
           </div>
+          {error ? <p className="text-sm text-rose-600">{error}</p> : null}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSaving}
+          >
             Hủy
           </Button>
-          <Button onClick={handleUpdate}>Cập nhật</Button>
+          <Button onClick={handleUpdate} disabled={isSaving}>
+            {isSaving ? 'Đang cập nhật...' : 'Cập nhật'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

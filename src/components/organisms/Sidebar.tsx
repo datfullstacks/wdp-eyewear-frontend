@@ -2,64 +2,66 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  LayoutDashboard,
-  Glasses,
-  ShoppingCart,
-  Users,
-  Settings,
-  LogOut,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  ClipboardList,
   AlertTriangle,
-  FileText,
-  Truck,
-  Package,
-  Wrench,
-  CheckSquare,
-  Warehouse,
-  Search,
   BarChart3,
   Bell,
-  ListTodo,
-  User,
-  Clock,
-  RefreshCw,
-  CreditCard,
-  MessageSquare,
-  Printer,
-  MapPin,
+  CheckSquare,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ClipboardCheck,
-  FileSearch,
-  PackageCheck,
-  History,
+  ClipboardList,
+  Clock,
+  CreditCard,
   FileHeart,
-  TrendingUp,
+  FileSearch,
+  FileText,
+  Glasses,
+  History,
+  LayoutDashboard,
+  ListTodo,
+  LogOut,
+  MapPin,
+  MessageSquare,
+  Package,
+  PackageCheck,
   Percent,
+  Printer,
+  RefreshCw,
+  Search,
+  Settings,
+  ShoppingCart,
+  TrendingUp,
+  Truck,
+  User,
+  Users,
+  Warehouse,
+  Wrench,
   type LucideIcon,
 } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
+import { orderApi } from '@/api';
 import { Button } from '@/components/atoms';
+import { computeOrderMenuCounts, type OrderMenuCounts } from '@/lib/orderWorkflow';
+import { cn } from '@/lib/utils';
 
 type BadgeType = 'warning' | 'error' | 'info';
 
 type MenuItem = {
   icon: LucideIcon;
   label: string;
-  path?: string; // leaf
+  path?: string;
   exact?: boolean;
   badge?: string;
+  badgeKey?: keyof OrderMenuCounts;
   badgeType?: BadgeType;
-  children?: MenuItem[]; // group
+  children?: MenuItem[];
 };
 
 const menuItems: MenuItem[] = [
   { icon: LayoutDashboard, label: 'Tổng quan', path: '/staff/dashboard-staff' },
-
   {
     icon: ShoppingCart,
     label: 'Đơn hàng',
@@ -74,37 +76,53 @@ const menuItems: MenuItem[] = [
         icon: Clock,
         label: 'Đơn cần xử lý',
         path: '/staff/orders/pending',
-        badge: '12',
+        badgeKey: 'needsAction',
         badgeType: 'warning',
+      },
+      {
+        icon: PackageCheck,
+        label: 'Đơn có sẵn',
+        path: '/staff/orders/ready-stock',
+        badgeKey: 'readyStock',
+        badgeType: 'info',
+      },
+      {
+        icon: Package,
+        label: 'Đơn Pre-order',
+        path: '/staff/orders/preorder',
+        badgeKey: 'preorder',
+        badgeType: 'info',
+      },
+      {
+        icon: Glasses,
+        label: 'Đơn Prescription',
+        path: '/staff/orders/prescription',
+        badgeKey: 'prescription',
+        badgeType: 'info',
       },
       {
         icon: FileText,
         label: 'Đơn cần bổ sung Prescription',
         path: '/staff/orders/prescription-needed',
-        badge: '5',
-        badgeType: 'info',
-      },
-      { icon: Package, label: 'Đơn Pre-order', path: '/staff/orders/preorder' },
-      {
-        icon: Glasses,
-        label: 'Đơn Prescription (làm tròng)',
-        path: '/staff/orders/prescription',
+        badgeKey: 'prescriptionNeeded',
+        badgeType: 'warning',
       },
       {
         icon: Wrench,
         label: 'Đơn đang gia công',
         path: '/staff/orders/processing',
+        badgeKey: 'processing',
+        badgeType: 'info',
       },
       {
         icon: AlertTriangle,
         label: 'Đơn trễ / cảnh báo',
         path: '/staff/orders/alerts',
-        badge: '3',
+        badgeKey: 'alerts',
         badgeType: 'error',
       },
     ],
   },
-
   {
     icon: MessageSquare,
     label: 'Xử lý nghiệp vụ',
@@ -112,7 +130,7 @@ const menuItems: MenuItem[] = [
       {
         icon: RefreshCw,
         label: 'Đổi / trả / bảo hành',
-        path: 'staff/cases/returns',
+        path: '/staff/cases/returns',
         badge: '4',
         badgeType: 'warning',
       },
@@ -128,7 +146,6 @@ const menuItems: MenuItem[] = [
       },
     ],
   },
-
   {
     icon: Truck,
     label: 'Vận hành giao vận',
@@ -150,7 +167,6 @@ const menuItems: MenuItem[] = [
       },
     ],
   },
-
   {
     icon: Wrench,
     label: 'Gia công kính',
@@ -174,7 +190,6 @@ const menuItems: MenuItem[] = [
       },
     ],
   },
-
   {
     icon: Warehouse,
     label: 'Sản phẩm & kho',
@@ -192,7 +207,6 @@ const menuItems: MenuItem[] = [
       },
     ],
   },
-
   {
     icon: Users,
     label: 'Khách hàng',
@@ -210,7 +224,6 @@ const menuItems: MenuItem[] = [
       },
     ],
   },
-
   {
     icon: BarChart3,
     label: 'Báo cáo',
@@ -227,7 +240,6 @@ const menuItems: MenuItem[] = [
       },
     ],
   },
-
   {
     icon: Settings,
     label: 'Thiết lập cá nhân',
@@ -287,45 +299,77 @@ function isActivePath(pathname: string, itemPath?: string, exact?: boolean) {
 export const Sidebar: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+  const [orderCounts, setOrderCounts] = useState<OrderMenuCounts | null>(null);
 
-  // Which groups should be open by default (based on current route)
+  useEffect(() => {
+    let mounted = true;
+
+    const loadCounts = async () => {
+      try {
+        const result = await orderApi.getAll({ page: 1, limit: 500 });
+        const counts = computeOrderMenuCounts(result.orders);
+        if (mounted) setOrderCounts(counts);
+      } catch {
+        if (mounted) setOrderCounts(null);
+      }
+    };
+
+    void loadCounts();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const resolvedMenuItems = useMemo(() => {
+    if (!orderCounts) return menuItems;
+
+    return menuItems.map((item) => {
+      if (!item.children) return item;
+
+      return {
+        ...item,
+        children: item.children.map((child) => {
+          if (!child.badgeKey) return child;
+          const value = orderCounts[child.badgeKey];
+          return {
+            ...child,
+            badge: value > 0 ? String(value) : undefined,
+          };
+        }),
+      };
+    });
+  }, [orderCounts]);
+
   const defaultOpenMap = useMemo(() => {
     const map = new Map<string, boolean>();
-    for (const item of menuItems) {
+    for (const item of resolvedMenuItems) {
       if (!item.children) continue;
-      const open = item.children.some((c) =>
-        isActivePath(pathname, c.path, c.exact)
-      );
+      const open = item.children.some((c) => isActivePath(pathname, c.path, c.exact));
       map.set(item.label, open);
     }
     return map;
-  }, [pathname]);
+  }, [pathname, resolvedMenuItems]);
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const obj: Record<string, boolean> = {};
     for (const item of menuItems) {
-      if (item.children)
-        obj[item.label] = defaultOpenMap.get(item.label) ?? false;
+      if (item.children) obj[item.label] = defaultOpenMap.get(item.label) ?? false;
     }
     return obj;
   });
 
-  // Keep openGroups synced when route changes (optional but useful)
-  // If you want manual-only toggle, remove this memo-sync behavior.
   useMemo(() => {
     setOpenGroups((prev) => {
       const next = { ...prev };
-      for (const item of menuItems) {
+      for (const item of resolvedMenuItems) {
         if (!item.children) continue;
-        const shouldOpen = item.children.some((c) =>
-          isActivePath(pathname, c.path, c.exact)
-        );
+        const shouldOpen = item.children.some((c) => isActivePath(pathname, c.path, c.exact));
         if (shouldOpen) next[item.label] = true;
       }
       return next;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+  }, [pathname, resolvedMenuItems]);
 
   return (
     <aside
@@ -334,7 +378,6 @@ export const Sidebar: React.FC = () => {
         collapsed ? 'w-20' : 'w-72'
       )}
     >
-      {/* Logo */}
       <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4">
         {!collapsed ? (
           <div className="flex items-center gap-2">
@@ -355,7 +398,6 @@ export const Sidebar: React.FC = () => {
         )}
       </div>
 
-      {/* Toggle */}
       <Button
         variant="ghost"
         size="sm"
@@ -364,17 +406,11 @@ export const Sidebar: React.FC = () => {
         className="absolute top-20 -right-3 h-6 w-6 rounded-full border border-gray-200 bg-gray-100 p-0 shadow-sm hover:bg-gray-200"
         aria-label={collapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
       >
-        {collapsed ? (
-          <ChevronRight className="h-4 w-4" />
-        ) : (
-          <ChevronLeft className="h-4 w-4" />
-        )}
+        {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
       </Button>
 
-      {/* Nav */}
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {menuItems.map((item) => {
-          // Leaf
+        {resolvedMenuItems.map((item) => {
           if (!item.children) {
             const active = isActivePath(pathname, item.path, item.exact);
             return (
@@ -391,17 +427,12 @@ export const Sidebar: React.FC = () => {
                 )}
               >
                 <item.icon className="h-5 w-5 flex-shrink-0" />
-                {!collapsed && (
-                  <span className="font-medium">{item.label}</span>
-                )}
+                {!collapsed && <span className="font-medium">{item.label}</span>}
               </Link>
             );
           }
 
-          // Group
-          const hasActiveChild = item.children.some((c) =>
-            isActivePath(pathname, c.path, c.exact)
-          );
+          const hasActiveChild = item.children.some((c) => isActivePath(pathname, c.path, c.exact));
           const isOpen = !!openGroups[item.label];
 
           return (
@@ -424,9 +455,7 @@ export const Sidebar: React.FC = () => {
                 <item.icon className="h-5 w-5 flex-shrink-0" />
                 {!collapsed && (
                   <>
-                    <span className="flex-1 text-left font-medium">
-                      {item.label}
-                    </span>
+                    <span className="flex-1 text-left font-medium">{item.label}</span>
                     <ChevronDown
                       className={cn(
                         'h-4 w-4 transition-transform duration-200',
@@ -437,15 +466,10 @@ export const Sidebar: React.FC = () => {
                 )}
               </button>
 
-              {/* Children */}
               {!collapsed && isOpen && (
                 <div className="mt-1 space-y-1">
                   {item.children.map((child) => {
-                    const active = isActivePath(
-                      pathname,
-                      child.path,
-                      child.exact
-                    );
+                    const active = isActivePath(pathname, child.path, child.exact);
                     return (
                       <Link
                         key={child.path}
@@ -461,10 +485,7 @@ export const Sidebar: React.FC = () => {
                         <child.icon className="h-4 w-4 flex-shrink-0" />
                         <span className="flex-1 truncate">{child.label}</span>
                         {child.badge && (
-                          <MenuItemBadge
-                            badge={child.badge}
-                            type={child.badgeType}
-                          />
+                          <MenuItemBadge badge={child.badge} type={child.badgeType} />
                         )}
                       </Link>
                     );
@@ -476,14 +497,8 @@ export const Sidebar: React.FC = () => {
         })}
       </nav>
 
-      {/* User */}
       <div className="border-t border-gray-200 p-4">
-        <div
-          className={cn(
-            'flex items-center gap-3',
-            collapsed && 'justify-center'
-          )}
-        >
+        <div className={cn('flex items-center gap-3', collapsed && 'justify-center')}>
           <div className="gradient-gold text-primary flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full font-semibold">
             NV
           </div>

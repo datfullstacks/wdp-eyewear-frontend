@@ -62,7 +62,11 @@ export const PendingOrderRow = ({
       <TableCell className="text-foreground font-mono text-sm font-normal">
         <div className="flex items-center gap-2">
           <span>{order.id}</span>
-          {order.hasPrescription}
+          {order.hasPrescription && (
+            <span className="border-primary/20 bg-primary/10 text-primary rounded-full border px-1.5 py-0.5 text-[10px] font-medium">
+              Rx
+            </span>
+          )}
         </div>
       </TableCell>
       <TableCell>
