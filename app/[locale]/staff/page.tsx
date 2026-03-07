@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
 
-export default function StaffPage() {
-  redirect('/staff/products');
+export default function SalePage() {
+  redirect('/sale/products');
 }

@@ -51,8 +51,8 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = [
-  { icon: LayoutDashboard, label: 'Tổng quan', path: '/staff/dashboard-staff' },
-  { icon: Warehouse, label: 'Sản phẩm', path: '/staff/products' },
+  { icon: LayoutDashboard, label: 'Tổng quan', path: '/sale/dashboard-staff' },
+  { icon: Warehouse, label: 'Sản phẩm', path: '/sale/products' },
   {
     icon: ShoppingCart,
     label: 'Đơn hàng',
@@ -60,20 +60,20 @@ const menuItems: MenuItem[] = [
       {
         icon: ClipboardList,
         label: 'Tất cả đơn hàng',
-        path: '/staff/orders',
+        path: '/sale/orders',
         exact: true,
       },
       {
         icon: Clock,
         label: 'Đơn cần xử lý',
-        path: '/staff/orders/pending',
+        path: '/sale/orders/pending',
         badgeKey: 'needsAction',
         badgeType: 'warning',
       },
       {
         icon: AlertTriangle,
         label: 'Đơn trễ / cảnh báo',
-        path: '/staff/orders/alerts',
+        path: '/sale/orders/alerts',
         badgeKey: 'alerts',
         badgeType: 'error',
       },
@@ -86,19 +86,19 @@ const menuItems: MenuItem[] = [
       {
         icon: RefreshCw,
         label: 'Đổi / trả / bảo hành',
-        path: '/staff/cases/returns',
+        path: '/sale/cases/returns',
         badge: '4',
         badgeType: 'warning',
       },
       {
         icon: MessageSquare,
         label: 'Khiếu nại & hỗ trợ',
-        path: '/staff/cases/complaints',
+        path: '/sale/cases/complaints',
       },
       {
         icon: CreditCard,
         label: 'Hoàn tiền / điều chỉnh',
-        path: '/staff/cases/refunds',
+        path: '/sale/cases/refunds',
       },
     ],
   },
@@ -106,16 +106,16 @@ const menuItems: MenuItem[] = [
     icon: Users,
     label: 'Khách hàng',
     children: [
-      { icon: Users, label: 'Danh sách khách hàng', path: '/staff/customers' },
+      { icon: Users, label: 'Danh sách khách hàng', path: '/sale/customers' },
       {
         icon: History,
         label: 'Lịch sử đơn & ghi chú',
-        path: '/staff/customers/history',
+        path: '/sale/customers/history',
       },
       {
         icon: FileHeart,
         label: 'Hồ sơ Prescription',
-        path: '/staff/customers/prescriptions',
+        path: '/sale/customers/prescriptions',
       },
     ],
   },
@@ -126,12 +126,12 @@ const menuItems: MenuItem[] = [
       {
         icon: TrendingUp,
         label: 'Báo cáo đơn theo trạng thái',
-        path: '/staff/reports/orders',
+        path: '/sale/reports/orders',
       },
       {
         icon: Percent,
         label: 'Vận chuyển / hoàn',
-        path: '/staff/reports/shipping',
+        path: '/sale/reports/shipping',
       },
     ],
   },
@@ -142,19 +142,19 @@ const menuItems: MenuItem[] = [
       {
         icon: Bell,
         label: 'Thông báo',
-        path: '/staff/settings/notifications',
+        path: '/sale/settings/notifications',
         badge: '2',
         badgeType: 'info',
       },
       {
         icon: ListTodo,
         label: 'Nhiệm vụ của tôi',
-        path: '/staff/settings/tasks',
+        path: '/sale/settings/tasks',
       },
       {
         icon: User,
         label: 'Cài đặt tài khoản',
-        path: '/staff/settings/account',
+        path: '/sale/settings/account',
       },
     ],
   },
@@ -283,7 +283,7 @@ export const Sidebar: React.FC = () => {
               <span className="font-display text-lg font-semibold text-gray-900">
                 Eyes Dream
               </span>
-              <div className="text-xs text-gray-500">Staff Dashboard</div>
+              <div className="text-xs text-gray-500">Sale Dashboard</div>
             </div>
           </div>
         ) : (
@@ -420,3 +420,4 @@ export const Sidebar: React.FC = () => {
     </aside>
   );
 };
+

@@ -8,7 +8,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'staff' | 'operations' | 'manager' | 'admin';
+  role: 'sales' | 'operations' | 'manager' | 'admin';
   status: 'active' | 'inactive' | 'suspended';
   lastLogin: string;
   createdAt: string;
@@ -128,3 +128,4 @@ export const UserTable: React.FC<UserTableProps> = ({
     />
   );
 };
+

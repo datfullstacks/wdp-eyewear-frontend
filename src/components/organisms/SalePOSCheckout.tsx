@@ -21,14 +21,14 @@ export interface CheckoutFormData {
   note: string;
 }
 
-interface StaffPOSCheckoutProps {
+interface SalePOSCheckoutProps {
   subtotal: number;
   itemCount: number;
   disabled?: boolean;
   onCheckout: (paymentMethod: 'cash' | 'qr', formData: CheckoutFormData) => Promise<void>;
 }
 
-export const StaffPOSCheckout: React.FC<StaffPOSCheckoutProps> = ({
+export const SalePOSCheckout: React.FC<SalePOSCheckoutProps> = ({
   subtotal,
   itemCount,
   disabled = false,
@@ -298,3 +298,4 @@ export const StaffPOSCheckout: React.FC<StaffPOSCheckoutProps> = ({
     </>
   );
 };
+

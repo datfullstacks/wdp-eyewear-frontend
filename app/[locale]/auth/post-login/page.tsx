@@ -15,7 +15,7 @@ export default async function PostLoginPage({
   const safeCallbackUrl = callbackUrl?.startsWith('/') ? callbackUrl : '/';
 
   const role = (session.user.role ?? '').trim().toLowerCase();
-  const shouldRedirectToStaff = role === 'sales' || role === 'staff';
+  const shouldRedirectToSale = role === 'sales';
   const shouldRedirectToOperation = role === 'operations' || role === 'operation';
   const shouldRedirectToManager = role === 'admin' || role === 'manager';
 
@@ -31,5 +31,5 @@ export default async function PostLoginPage({
     redirect('/');
   }
 
-  redirect(shouldRedirectToStaff ? '/staff/dashboard-staff' : safeCallbackUrl);
+  redirect(shouldRedirectToSale ? '/sale/products' : safeCallbackUrl);
 }

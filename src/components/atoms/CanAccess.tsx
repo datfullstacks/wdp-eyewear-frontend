@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-type Role = 'customer' | 'staff' | 'operations' | 'operation' | 'manager' | 'admin';
+type Role = 'customer' | 'sales' | 'operations' | 'operation' | 'manager' | 'admin';
 
 interface CanAccessProps {
   roles: Role[];
@@ -14,7 +14,7 @@ export function CanAccess({ roles, children, fallback = null }: CanAccessProps) 
   // const userRole = session?.user?.role;
   
   // Mock for now
-  const userRole: Role = 'staff';
+  const userRole: Role = 'sales';
   
   const hasAccess = roles.includes(userRole);
   
@@ -24,7 +24,7 @@ export function CanAccess({ roles, children, fallback = null }: CanAccessProps) 
 // Helper hook for imperative checks
 export function useCanAccess() {
   // TODO: Get from session
-  const userRole: Role = 'staff';
+  const userRole: Role = 'sales';
   
   return (roles: Role[]) => roles.includes(userRole);
 }

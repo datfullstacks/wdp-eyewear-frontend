@@ -2,8 +2,8 @@
 
 import dynamic from 'next/dynamic';
 
-const StaffPOSDashboard = dynamic(
-  () => import('@/components/organisms/StaffPOSDashboard').then((m) => m.StaffPOSDashboard),
+const SalePOSDashboard = dynamic(
+  () => import('@/components/organisms/SalePOSDashboard').then((m) => m.SalePOSDashboard),
   {
     ssr: false,
     loading: () => (
@@ -18,5 +18,5 @@ const StaffPOSDashboard = dynamic(
 );
 
 export default function Page() {
-  return <StaffPOSDashboard />;
+  return <SalePOSDashboard />;
 }

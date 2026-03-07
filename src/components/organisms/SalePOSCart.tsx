@@ -14,14 +14,14 @@ export interface CartItem {
   type?: string;
 }
 
-interface StaffPOSCartProps {
+interface SalePOSCartProps {
   items: CartItem[];
   onUpdateQuantity: (productId: string, variantId: string | undefined, quantity: number) => void;
   onRemoveItem: (productId: string, variantId: string | undefined) => void;
   onClearCart: () => void;
 }
 
-export const StaffPOSCart: React.FC<StaffPOSCartProps> = ({
+export const SalePOSCart: React.FC<SalePOSCartProps> = ({
   items,
   onUpdateQuantity,
   onRemoveItem,
@@ -183,3 +183,4 @@ export const StaffPOSCart: React.FC<StaffPOSCartProps> = ({
     </div>
   );
 };
+

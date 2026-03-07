@@ -27,7 +27,7 @@ export default function LoginPage() {
   const postLoginUrl = `/auth/post-login?callbackUrl=${encodeURIComponent(callbackUrl)}`;
 
   useEffect(() => {
-    router.prefetch('/staff/dashboard-staff');
+    router.prefetch('/sale/products');
     router.prefetch(postLoginUrl);
 
     // Warm up NextAuth endpoints so the user doesn't pay the cost on submit

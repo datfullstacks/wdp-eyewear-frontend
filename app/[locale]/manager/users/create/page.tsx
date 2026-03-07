@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/card';
 import { AlertTriangle, Shield, Briefcase, ArrowLeft } from 'lucide-react';
 import { userApi } from '@/api';
 
-type CreateRole = 'manager' | 'staff';
+type CreateRole = 'manager' | 'sales';
 
 export default function CreateUserPage() {
   const router = useRouter();
@@ -40,7 +40,7 @@ export default function CreateUserPage() {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        role: selectedRole === 'staff' ? 'operations' : 'manager',
+        role: selectedRole === 'sales' ? 'sales' : 'manager',
         phone: formData.phone || undefined,
       });
       router.push('/manager/users');
@@ -55,7 +55,7 @@ export default function CreateUserPage() {
     <>
       <Header
         title="Thêm người dùng mới"
-        subtitle="Tạo tài khoản Manager hoặc Staff"
+        subtitle="Tạo tài khoản Manager hoặc Sale"
       />
 
       <div className="space-y-6 p-6">
@@ -96,17 +96,17 @@ export default function CreateUserPage() {
             </button>
             <button
               type="button"
-              onClick={() => setSelectedRole('staff')}
+              onClick={() => setSelectedRole('sales')}
               className={`rounded-lg border-2 p-6 text-left transition-all ${
-                selectedRole === 'staff'
+                selectedRole === 'sales'
                   ? 'border-blue-500 bg-blue-50 shadow-sm'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
               <Briefcase className="mb-2 h-8 w-8 text-blue-600" />
-              <h4 className="mb-1 font-semibold text-gray-900">Staff (Operations)</h4>
+              <h4 className="mb-1 font-semibold text-gray-900">Sale (Sales Team)</h4>
               <p className="text-sm text-gray-600">
-                Xử lý đơn hàng, kho, vận chuyển và chăm sóc khách hàng
+                Bán hàng tại cửa hàng, xử lý đơn hàng và chăm sóc khách hàng
               </p>
             </button>
           </div>

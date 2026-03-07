@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { SearchBar } from '@/components/molecules/SearchBar';
-import { StaffPOSCart, CartItem } from './StaffPOSCart';
-import { StaffPOSCheckout, CheckoutFormData } from './StaffPOSCheckout';
+import { SalePOSCart, CartItem } from './SalePOSCart';
+import { SalePOSCheckout, CheckoutFormData } from './SalePOSCheckout';
 import { productApi, checkoutApi, Product } from '@/api';
 import { Glasses, Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -20,7 +20,7 @@ const typeLabels: Record<string, string> = {
   other: 'Khác',
 };
 
-export const StaffPOSDashboard: React.FC = () => {
+export const SalePOSDashboard: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -211,7 +211,7 @@ export const StaffPOSDashboard: React.FC = () => {
                 POS - Bán hàng
               </h1>
               <p className="text-sm text-gray-600">
-                Eyes Dream Staff Dashboard
+                Eyes Dream Sale Dashboard
               </p>
             </div>
           </div>
@@ -337,7 +337,7 @@ export const StaffPOSDashboard: React.FC = () => {
         {/* Right Side - Cart & Checkout */}
         <div className="flex w-[420px] flex-col border-l border-gray-200 bg-white">
           <div className="flex h-1/2 flex-col border-b border-gray-200">
-            <StaffPOSCart
+            <SalePOSCart
               items={cartItems}
               onUpdateQuantity={updateQuantity}
               onRemoveItem={removeItem}
@@ -345,7 +345,7 @@ export const StaffPOSDashboard: React.FC = () => {
             />
           </div>
           <div className="flex h-1/2 flex-col">
-            <StaffPOSCheckout
+            <SalePOSCheckout
               subtotal={subtotal}
               itemCount={itemCount}
               disabled={isLoading}
@@ -357,3 +357,4 @@ export const StaffPOSDashboard: React.FC = () => {
     </div>
   );
 };
+

@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/card';
 import { AlertTriangle, Loader2, ArrowLeft, Shield, Briefcase } from 'lucide-react';
 import { userApi, toFrontendRole } from '@/api';
 
-type EditRole = 'manager' | 'staff' | 'customer';
+type EditRole = 'manager' | 'sales' | 'customer';
 
 export default function EditUserPage() {
   const router = useRouter();
@@ -72,7 +72,7 @@ export default function EditUserPage() {
       await userApi.update(userId, {
         name: formData.name,
         email: formData.email,
-        role: role === 'staff' ? 'operations' : role,
+        role: role === 'sales' ? 'sales' : role,
       });
       router.push('/manager/users');
     } catch (error) {
@@ -136,17 +136,17 @@ export default function EditUserPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setRole('staff')}
+                onClick={() => setRole('sales')}
                 className={`rounded-lg border-2 p-6 text-left transition-all ${
-                  role === 'staff'
+                  role === 'sales'
                     ? 'border-blue-500 bg-blue-50 shadow-sm'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
                 <Briefcase className="mb-2 h-8 w-8 text-blue-600" />
-                <h4 className="mb-1 font-semibold text-gray-900">Staff (Operations)</h4>
+                <h4 className="mb-1 font-semibold text-gray-900">Sale (Sales Team)</h4>
                 <p className="text-sm text-gray-600">
-                  Xử lý đơn hàng, kho, vận chuyển và chăm sóc khách hàng
+                  Bán hàng tại cửa hàng, xử lý đơn hàng và chăm sóc khách hàng
                 </p>
               </button>
             </div>
