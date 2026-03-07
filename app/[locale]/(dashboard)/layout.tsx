@@ -22,12 +22,12 @@ export default async function DashboardLayout({
             {t('home')}
           </a>
           
-          {/* Staff + Operations + Manager + Admin */}
+          {/* Sales + Operations + Manager + Admin */}
           <a href="/orders" className="block px-4 py-2 rounded hover:bg-gray-700">
             {t('orders')}
           </a>
           
-          {/* Staff only */}
+          {/* Sales only */}
           <a href="/prescriptions" className="block px-4 py-2 rounded hover:bg-gray-700">
             {t('prescriptions')}
           </a>

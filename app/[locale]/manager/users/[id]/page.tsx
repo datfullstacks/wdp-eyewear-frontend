@@ -26,7 +26,7 @@ function roleBadge(role: string) {
   const map: Record<string, { label: string; cls: string }> = {
     admin: { label: 'Admin', cls: 'bg-red-100 text-red-700' },
     manager: { label: 'Manager', cls: 'bg-amber-100 text-amber-700' },
-    operations: { label: 'Operations (Staff)', cls: 'bg-blue-100 text-blue-700' },
+    operations: { label: 'Operations (Logistics)', cls: 'bg-blue-100 text-blue-700' },
     sales: { label: 'Sales', cls: 'bg-indigo-100 text-indigo-700' },
     customer: { label: 'Customer', cls: 'bg-green-100 text-green-700' },
   };

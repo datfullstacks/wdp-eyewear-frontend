@@ -159,21 +159,21 @@
   },
   "users": {
     "title": "Quản Lý Nhân Sự",
-    "subtitle": "Quản lý Manager, Staff và Customer",
+    "subtitle": "Quản lý Manager, Sales và Customer",
     "addManager": "Thêm Manager mới",
-    "addStaff": "Thêm Staff mới",
+    "addStaff": "Thêm Nhân viên Sales mới",
     "addUser": "Thêm Người Dùng Mới",
     "searchPlaceholder": "Tìm kiếm theo tên hoặc email...",
     "tabs": {
       "managers": "Quản lý Manager",
-      "staff": "Quản lý Staff",
+      "staff": "Quản lý Sales",
       "customers": "Chăm sóc Customer"
     },
     "stats": {
       "totalManagers": "Tổng Manager",
-      "totalStaff": "Tổng Staff (Operations)",
+      "totalStaff": "Tổng Sales (Bán hàng)",
       "totalCustomers": "Tổng khách hàng",
-      "staff": "Nhân Viên",
+      "staff": "Nhân Viên Sales",
       "operations": "Vận Hành",
       "managers": "Quản Lý",
       "admins": "Quản Trị Viên"

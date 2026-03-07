@@ -55,14 +55,14 @@ export const UserTable: React.FC<UserTableProps> = ({
         const variantMap = {
           admin: 'danger',
           manager: 'info',
-          staff: 'success',
+          sales: 'success',
           operations: 'secondary',
         } as const;
 
         const labelMap = {
           admin: 'Admin',
           manager: 'Manager',
-          staff: 'Staff',
+          sales: 'Sales',
           operations: 'Operations',
         };
 

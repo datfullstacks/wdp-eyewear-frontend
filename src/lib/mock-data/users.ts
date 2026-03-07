@@ -66,7 +66,7 @@ export const mockUsers: User[] = [
   },
 ];
 
-export interface StaffPermission {
+export interface SalesPermission {
   module: string;
   canView: boolean;
   canCreate: boolean;
@@ -74,8 +74,8 @@ export interface StaffPermission {
   canDelete: boolean;
 }
 
-export const mockRolePermissions: Record<string, StaffPermission[]> = {
-  staff: [
+export const mockRolePermissions: Record<string, SalesPermission[]> = {
+  sales: [
     {
       module: 'orders',
       canView: true,

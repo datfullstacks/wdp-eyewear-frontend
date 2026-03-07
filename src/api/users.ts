@@ -2,19 +2,19 @@ import apiClient from './client';
 
 /**
  * Backend roles: customer, sales, operations, manager, admin
- * Frontend mapping: "staff" UI tab → backend "operations" role
+ * Frontend uses 'sales' role consistently with backend
  */
 export type UserRole = 'customer' | 'sales' | 'operations' | 'manager' | 'admin' | string;
 
 /** Map frontend display role to backend API role */
 export function toBackendRole(frontendRole: string): string {
-  if (frontendRole === 'staff') return 'operations';
+  // No mapping needed - frontend now uses 'sales' directly
   return frontendRole;
 }
 
 /** Map backend role to frontend display role */
 export function toFrontendRole(backendRole: string): string {
-  if (backendRole === 'operations') return 'staff';
+  // No mapping needed - frontend now uses 'sales' directly
   return backendRole;
 }
 

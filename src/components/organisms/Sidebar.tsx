@@ -51,7 +51,7 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = [
-  { icon: LayoutDashboard, label: 'Tổng quan', path: '/sale/dashboard-staff' },
+  { icon: LayoutDashboard, label: 'Tổng quan', path: '/sale/dashboard' },
   { icon: Warehouse, label: 'Sản phẩm', path: '/sale/products' },
   {
     icon: ShoppingCart,
@@ -401,7 +401,7 @@ export const Sidebar: React.FC = () => {
           {!collapsed && (
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium text-gray-900">Nhân viên</p>
-              <p className="truncate text-xs text-gray-500">Sales Staff</p>
+              <p className="truncate text-xs text-gray-500">Sales Team</p>
             </div>
           )}
 

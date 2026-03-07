@@ -14,7 +14,7 @@ import { Eye, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { User } from '@/api/users';
 
-export type UserTabRole = 'manager' | 'staff' | 'customer';
+export type UserTabRole = 'manager' | 'sales' | 'customer';
 
 interface UserTableProps {
   users: User[];

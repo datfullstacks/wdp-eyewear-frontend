@@ -12,9 +12,9 @@ import { Shield, Briefcase, Users, AlertTriangle, Loader2 } from 'lucide-react';
 export default function UsersPage() {
   const router = useRouter();
   const t = useTranslations('manager.users');
-  const [activeTab, setActiveTab] = useState<'managers' | 'staff' | 'customers'>('managers');
+  const [activeTab, setActiveTab] = useState<'managers' | 'sales' | 'customers'>('managers');
   const [managers, setManagers] = useState<User[]>([]);
-  const [staffMembers, setStaffMembers] = useState<User[]>([]);
+  const [salesMembers, setSalesMembers] = useState<User[]>([]);
   const [customers, setCustomers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState('');
@@ -23,13 +23,13 @@ export default function UsersPage() {
     setIsLoading(true);
     setApiError('');
     try {
-      const [mgrRes, staffRes, custRes] = await Promise.all([
+      const [mgrRes, salesRes, custRes] = await Promise.all([
         userApi.getAll({ role: 'manager', limit: 100 }),
-        userApi.getAll({ role: 'staff', limit: 100 }),
+        userApi.getAll({ role: 'sales', limit: 100 }),
         userApi.getAll({ role: 'customer', limit: 100 }),
       ]);
       setManagers(mgrRes.users);
-      setStaffMembers(staffRes.users);
+      setSalesMembers(salesRes.users);
       setCustomers(custRes.users);
     } catch (error) {
       setApiError(error instanceof Error ? error.message : t('loadFailed'));
@@ -51,10 +51,10 @@ export default function UsersPage() {
     },
   ];
 
-  const staffStats = [
+  const salesStats = [
     {
       title: t('stats.totalStaff'),
-      value: staffMembers.length.toString(),
+      value: salesMembers.length.toString(),
       icon: Briefcase,
       trend: { value: 0, isPositive: true },
     },
@@ -72,23 +72,23 @@ export default function UsersPage() {
   const currentStats =
     activeTab === 'managers'
       ? managerStats
-      : activeTab === 'staff'
-        ? staffStats
+      : activeTab === 'sales'
+        ? salesStats
         : customerStats;
 
   const currentData =
     activeTab === 'managers'
       ? managers
-      : activeTab === 'staff'
-        ? staffMembers
+      : activeTab === 'sales'
+        ? salesMembers
         : customers;
 
   const currentRole: UserTabRole =
-    activeTab === 'managers' ? 'manager' : activeTab === 'staff' ? 'staff' : 'customer';
+    activeTab === 'managers' ? 'manager' : activeTab === 'sales' ? 'sales' : 'customer';
 
   const getAddButtonLabel = () => {
     if (activeTab === 'managers') return t('addManager');
-    if (activeTab === 'staff') return t('addStaff');
+    if (activeTab === 'sales') return t('addStaff');
     return null;
   };
 
@@ -136,19 +136,19 @@ export default function UsersPage() {
               {t('tabs.managers')} ({managers.length})
             </button>
             <button
-              onClick={() => setActiveTab('staff')}
+              onClick={() => setActiveTab('sales')}
               className={`flex items-center border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
-                activeTab === 'staff'
+                activeTab === 'sales'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
               }`}
             >
               <Briefcase
                 className={`mr-2 h-4 w-4 ${
-                  activeTab === 'staff' ? 'text-blue-600' : 'text-gray-500'
+                  activeTab === 'sales' ? 'text-blue-600' : 'text-gray-500'
                 }`}
               />
-              {t('tabs.staff')} ({staffMembers.length})
+              {t('tabs.staff')} ({salesMembers.length})
             </button>
             <button
               onClick={() => setActiveTab('customers')}
