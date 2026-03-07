@@ -9,50 +9,84 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Edit, Eye, Power, PowerOff, Trash2 } from 'lucide-react';
+import { Eye, Power, PowerOff, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/api';
+
+interface ProductTableTranslations {
+  product: string;
+  brand: string;
+  category: string;
+  price: string;
+  stock: string;
+  status: string;
+  actions: string;
+  noData: string;
+  active: string;
+  inactive: string;
+  viewDetails: string;
+  activate: string;
+  deactivate: string;
+  deleteProduct: string;
+}
 
 interface ProductTableProps {
   products: Product[];
   onView?: (product: Product) => void;
-  onEdit?: (product: Product) => void;
-  onDelete?: (product: Product) => void;
   onToggleStatus?: (product: Product) => void;
+  onDelete?: (product: Product) => void;
+  translations?: ProductTableTranslations;
 }
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400';
 
+const defaultTranslations: ProductTableTranslations = {
+  product: 'Product',
+  brand: 'Brand',
+  category: 'Category',
+  price: 'Price',
+  stock: 'Stock',
+  status: 'Status',
+  actions: 'Actions',
+  noData: 'No products found',
+  active: 'Active',
+  inactive: 'Inactive',
+  viewDetails: 'View details',
+  activate: 'Activate',
+  deactivate: 'Deactivate',
+  deleteProduct: 'Delete product',
+};
+
 export function ProductTable({
   products,
   onView,
-  onEdit,
-  onDelete,
   onToggleStatus,
+  onDelete,
+  translations: t = defaultTranslations,
 }: ProductTableProps) {
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Product</TableHead>
-          <TableHead>Brand</TableHead>
-          <TableHead>Category</TableHead>
-          <TableHead>Price</TableHead>
-          <TableHead>Stock</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Actions</TableHead>
+          <TableHead>{t.product}</TableHead>
+          <TableHead>{t.brand}</TableHead>
+          <TableHead>{t.category}</TableHead>
+          <TableHead>{t.price}</TableHead>
+          <TableHead>{t.stock}</TableHead>
+          <TableHead>{t.status}</TableHead>
+          <TableHead className="text-center">{t.actions}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {products.length === 0 ? (
           <TableRow>
             <TableCell colSpan={7} className="text-center text-gray-500">
-              No products found
+              {t.noData}
             </TableCell>
           </TableRow>
         ) : (
           products.map((product) => (
-            <TableRow key={product.id}>
+            <TableRow key={product.id} className="hover:bg-gray-50">
               <TableCell>
                 <div className="flex items-center gap-3">
                   <img
@@ -92,29 +126,19 @@ export function ProductTable({
                       : 'bg-gray-100 text-gray-700'
                   )}
                 >
-                  {product.status === 'active' ? 'Active' : 'Inactive'}
+                  {product.status === 'active' ? t.active : t.inactive}
                 </span>
               </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
+              <TableCell className="text-center">
+                <div className="flex items-center justify-center gap-1">
                   {onView && (
                     <Button
                       size="sm"
                       variant="ghost"
                       onClick={() => onView(product)}
-                      title="View details"
+                      title={t.viewDetails}
                     >
                       <Eye className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {onEdit && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => onEdit(product)}
-                      title="Edit product"
-                    >
-                      <Edit className="h-4 w-4" />
                     </Button>
                   )}
                   {onToggleStatus && (
@@ -122,7 +146,7 @@ export function ProductTable({
                       size="sm"
                       variant="ghost"
                       onClick={() => onToggleStatus(product)}
-                      title={product.status === 'active' ? 'Deactivate' : 'Activate'}
+                      title={product.status === 'active' ? t.deactivate : t.activate}
                     >
                       {product.status === 'active' ? (
                         <PowerOff className="h-4 w-4 text-orange-600" />
@@ -136,7 +160,7 @@ export function ProductTable({
                       size="sm"
                       variant="ghost"
                       onClick={() => onDelete(product)}
-                      title="Delete product"
+                      title={t.deleteProduct}
                     >
                       <Trash2 className="h-4 w-4 text-red-600" />
                     </Button>

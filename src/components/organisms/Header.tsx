@@ -1,5 +1,8 @@
-import { Bell, Plus } from 'lucide-react';
-import { SearchBar } from '@/components/molecules/SearchBar';
+'use client';
+
+import { Bell, Plus, Globe } from 'lucide-react';
+import { useLocale } from 'next-intl';
+import { useLocaleSwitch } from '@/hooks/useLocaleSwitch';
 
 import { Avatar } from '@/components/atoms/Avatar';
 import { Button } from '@/components/atoms';
@@ -23,7 +26,6 @@ export const Header = ({
   title,
   subtitle,
   onAddProduct,
-  onSearch,
   showAddButton,
   addButtonLabel = 'Thêm mới',
   onAdd,
@@ -37,9 +39,12 @@ export const Header = ({
   const shouldShowAddButton = onAddProduct || (showAddButton && onAdd);
   const finalButtonLabel = addButtonLabel;
 
+  const locale = useLocale();
+  const { switchLocale, isPending } = useLocaleSwitch();
+
   return (
     <header className="bg-card border-border flex h-16 items-center justify-between gap-4 border-b px-6">
-      <div>
+      <div className="min-w-0 flex-1">
         <h1
           className={`font-display text-foreground text-xl font-semibold ${titleClassName ?? ''}`}
         >
@@ -54,20 +59,40 @@ export const Header = ({
         )}
       </div>
 
-      <div className="flex items-center gap-4">
-        <SearchBar 
-          className="hidden w-64 md:block" 
-          placeholder="Tìm kiếm..." 
-          onSearch={onSearch}
-        />
+      <div className="flex items-center gap-3">
+        {/* Language Toggle */}
+        <div className="flex items-center rounded-lg border border-gray-200 bg-gray-50 p-0.5">
+          <button
+            onClick={() => switchLocale('vi')}
+            disabled={isPending}
+            className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-200 ${
+              locale === 'vi'
+                ? 'bg-amber-400 text-slate-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+            } ${isPending ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+          >
+            VI
+          </button>
+          <button
+            onClick={() => switchLocale('en')}
+            disabled={isPending}
+            className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-200 ${
+              locale === 'en'
+                ? 'bg-amber-400 text-slate-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+            } ${isPending ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+          >
+            EN
+          </button>
+        </div>
 
         {shouldShowAddButton && (
           <Button
             onClick={handleAddClick}
-            className={`gap-2 bg-amber-400 text-slate-900 hover:opacity-90 ${addButtonClassName ?? ''}`}
+            className={`inline-flex items-center gap-2 rounded-lg bg-amber-400 px-4 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all hover:bg-amber-500 hover:shadow-md ${addButtonClassName ?? ''}`}
           >
-            <Plus className="h-4 w-4 text-slate-900" />
-            {finalButtonLabel}
+            <Plus className="h-4 w-4" />
+            <span>{finalButtonLabel}</span>
           </Button>
         )}
 

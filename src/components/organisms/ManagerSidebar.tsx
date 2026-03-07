@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   LayoutDashboard,
   Glasses,
@@ -34,6 +35,7 @@ type BadgeType = 'warning' | 'error' | 'info';
 
 type MenuItem = {
   icon: LucideIcon;
+  key: string;
   label: string;
   path?: string;
   exact?: boolean;
@@ -41,102 +43,6 @@ type MenuItem = {
   badgeType?: BadgeType;
   children?: MenuItem[];
 };
-
-const menuItems: MenuItem[] = [
-  {
-    icon: LayoutDashboard,
-    label: 'Tổng quan',
-    path: '/manager/dashboard',
-    exact: true,
-  },
-
-  {
-    icon: Package,
-    label: 'Sản phẩm & Giá',
-    children: [
-      {
-        icon: Package,
-        label: 'Quản lý sản phẩm',
-        path: '/manager/products',
-      },
-      {
-        icon: DollarSign,
-        label: 'Chiến lược giá',
-        path: '/manager/pricing',
-      },
-      {
-        icon: Tag,
-        label: 'Khuyến mãi & Giảm giá',
-        path: '/manager/discounts',
-      },
-    ],
-  },
-
-  {
-    icon: BarChart3,
-    label: 'Doanh thu & Báo cáo',
-    children: [
-      {
-        icon: TrendingUp,
-        label: 'Tổng quan doanh thu',
-        path: '/manager/revenue',
-      },
-      {
-        icon: Percent,
-        label: 'Báo cáo chi tiết',
-        path: '/manager/revenue-new',
-      },
-    ],
-  },
-
-  {
-    icon: Users,
-    label: 'Nhân sự',
-    children: [
-      {
-        icon: UserCog,
-        label: 'Quản lý người dùng',
-        path: '/manager/users',
-      },
-    ],
-  },
-
-  {
-    icon: Shield,
-    label: 'Chính sách & Hệ thống',
-    children: [
-      {
-        icon: FileText,
-        label: 'Chính sách',
-        path: '/manager/policies',
-      },
-      {
-        icon: ClipboardList,
-        label: 'Cài đặt hệ thống',
-        path: '/manager/settings',
-      },
-    ],
-  },
-
-  {
-    icon: Settings,
-    label: 'Thiết lập cá nhân',
-    children: [
-      {
-        icon: Bell,
-        label: 'Thông báo',
-        path: '/manager/notifications',
-        badge: '2',
-        badgeType: 'info',
-      },
-      {
-        icon: User,
-        label: 'Cài đặt tài khoản',
-        path: '/manager/account',
-      },
-    ],
-  },
-];
 
 function MenuItemBadge({
   badge,
@@ -176,6 +82,114 @@ function isActivePath(pathname: string, itemPath?: string, exact?: boolean) {
 export const ManagerSidebar: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+  const t = useTranslations('manager.sidebar');
+
+  const menuItems: MenuItem[] = useMemo(() => [
+    {
+      icon: LayoutDashboard,
+      key: 'overview',
+      label: t('overview'),
+      path: '/manager/dashboard',
+      exact: true,
+    },
+    {
+      icon: Package,
+      key: 'productsAndPricing',
+      label: t('productsAndPricing'),
+      children: [
+        {
+          icon: Package,
+          key: 'productManagement',
+          label: t('productManagement'),
+          path: '/manager/products',
+        },
+        {
+          icon: DollarSign,
+          key: 'pricingStrategy',
+          label: t('pricingStrategy'),
+          path: '/manager/pricing',
+        },
+        {
+          icon: Tag,
+          key: 'promotionsAndDiscounts',
+          label: t('promotionsAndDiscounts'),
+          path: '/manager/discounts',
+        },
+      ],
+    },
+    {
+      icon: BarChart3,
+      key: 'revenueAndReports',
+      label: t('revenueAndReports'),
+      children: [
+        {
+          icon: TrendingUp,
+          key: 'revenueOverview',
+          label: t('revenueOverview'),
+          path: '/manager/revenue',
+        },
+        {
+          icon: Percent,
+          key: 'detailedReports',
+          label: t('detailedReports'),
+          path: '/manager/revenue-new',
+        },
+      ],
+    },
+    {
+      icon: Users,
+      key: 'humanResources',
+      label: t('humanResources'),
+      children: [
+        {
+          icon: UserCog,
+          key: 'userManagement',
+          label: t('userManagement'),
+          path: '/manager/users',
+        },
+      ],
+    },
+    {
+      icon: Shield,
+      key: 'policiesAndSystem',
+      label: t('policiesAndSystem'),
+      children: [
+        {
+          icon: FileText,
+          key: 'policies',
+          label: t('policies'),
+          path: '/manager/policies',
+        },
+        {
+          icon: ClipboardList,
+          key: 'systemSettings',
+          label: t('systemSettings'),
+          path: '/manager/settings',
+        },
+      ],
+    },
+    {
+      icon: Settings,
+      key: 'personalSettings',
+      label: t('personalSettings'),
+      children: [
+        {
+          icon: Bell,
+          key: 'notifications',
+          label: t('notifications'),
+          path: '/manager/notifications',
+          badge: '2',
+          badgeType: 'info' as BadgeType,
+        },
+        {
+          icon: User,
+          key: 'accountSettings',
+          label: t('accountSettings'),
+          path: '/manager/account',
+        },
+      ],
+    },
+  ], [t]);
 
   const defaultOpenMap = useMemo(() => {
     const map = new Map<string, boolean>();
@@ -184,16 +198,16 @@ export const ManagerSidebar: React.FC = () => {
       const open = item.children.some((c) =>
         isActivePath(pathname, c.path, c.exact)
       );
-      map.set(item.label, open);
+      map.set(item.key, open);
     }
     return map;
-  }, [pathname]);
+  }, [pathname, menuItems]);
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const obj: Record<string, boolean> = {};
     for (const item of menuItems) {
       if (item.children)
-        obj[item.label] = defaultOpenMap.get(item.label) ?? false;
+        obj[item.key] = defaultOpenMap.get(item.key) ?? false;
     }
     return obj;
   });
@@ -206,7 +220,7 @@ export const ManagerSidebar: React.FC = () => {
         const shouldOpen = item.children.some((c) =>
           isActivePath(pathname, c.path, c.exact)
         );
-        if (shouldOpen) next[item.label] = true;
+        if (shouldOpen) next[item.key] = true;
       }
       return next;
     });
@@ -229,9 +243,9 @@ export const ManagerSidebar: React.FC = () => {
             </div>
             <div className="leading-tight">
               <span className="font-display text-lg font-semibold text-gray-900">
-                Eyes Dream
+                {t('brandName')}
               </span>
-              <div className="text-xs text-gray-500">Manager Dashboard</div>
+              <div className="text-xs text-gray-500">{t('brandSubtitle')}</div>
             </div>
           </div>
         ) : (
@@ -248,7 +262,7 @@ export const ManagerSidebar: React.FC = () => {
         type="button"
         onClick={() => setCollapsed((v) => !v)}
         className="absolute top-20 -right-3 h-6 w-6 rounded-full border border-gray-200 bg-gray-100 p-0 shadow-sm hover:bg-gray-200"
-        aria-label={collapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
+        aria-label={collapsed ? t('expandSidebar') : t('collapseSidebar')}
       >
         {collapsed ? (
           <ChevronRight className="h-4 w-4" />
@@ -265,7 +279,7 @@ export const ManagerSidebar: React.FC = () => {
             const active = isActivePath(pathname, item.path, item.exact);
             return (
               <Link
-                key={item.label}
+                key={item.key}
                 href={item.path ?? '/'}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
@@ -288,17 +302,17 @@ export const ManagerSidebar: React.FC = () => {
           const hasActiveChild = item.children.some((c) =>
             isActivePath(pathname, c.path, c.exact)
           );
-          const isOpen = !!openGroups[item.label];
+          const isOpen = !!openGroups[item.key];
 
           return (
-            <div key={item.label} className="space-y-1">
+            <div key={item.key} className="space-y-1">
               <button
                 type="button"
                 onClick={() =>
                   !collapsed &&
                   setOpenGroups((p) => ({
                     ...p,
-                    [item.label]: !p[item.label],
+                    [item.key]: !p[item.key],
                   }))
                 }
                 className={cn(
@@ -379,7 +393,7 @@ export const ManagerSidebar: React.FC = () => {
 
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <p className="truncate font-medium text-gray-900">Quản lý</p>
+              <p className="truncate font-medium text-gray-900">{t('manager')}</p>
               <p className="truncate text-xs text-gray-500">Manager</p>
             </div>
           )}

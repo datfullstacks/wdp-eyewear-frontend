@@ -1,11 +1,17 @@
 import axios from 'axios';
 
-const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-const normalizedBaseUrl = rawBaseUrl.replace(/\/$/, '');
+const isServer = typeof window === 'undefined';
+
+// On the server, read the env var at runtime.
+// On the browser, use an empty string so requests go to the same origin,
+// then Next.js rewrites proxy them to the real backend.
+const baseURL = isServer
+  ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/$/, '')
+  : '';
 
 const apiClient = axios.create({
-  baseURL: normalizedBaseUrl,
-  timeout: 10000,
+  baseURL,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -16,29 +22,48 @@ let cachedAccessToken: { value: string | null; expiresAt: number } = {
   expiresAt: 0,
 };
 
-async function getBrowserAccessToken() {
+// Deduplication: only one getSession() in-flight at a time
+let sessionPromise: Promise<string | null> | null = null;
+
+async function getBrowserAccessToken(): Promise<string | null> {
   if (typeof window === 'undefined') return null;
 
   const now = Date.now();
   if (now < cachedAccessToken.expiresAt) return cachedAccessToken.value;
 
-  const { getSession } = await import('next-auth/react');
-  const session = await getSession();
-  const token = session?.accessToken ?? null;
+  // Deduplicate concurrent calls
+  if (sessionPromise) return sessionPromise;
 
-  cachedAccessToken = {
-    value: token,
-    // Avoid hitting /api/auth/session too frequently (it can be slow in dev mode).
-    expiresAt: now + 10 * 60_000,
-  };
+  sessionPromise = (async () => {
+    try {
+      const { getSession } = await import('next-auth/react');
+      const session = await getSession();
+      const token = (session as { accessToken?: string } | null)?.accessToken ?? null;
 
-  return token;
+      cachedAccessToken = {
+        value: token,
+        expiresAt: Date.now() + 10 * 60_000,
+      };
+
+      return token;
+    } catch {
+      // Session fetch failed (e.g. 404 on deployed env) — cache null briefly
+      cachedAccessToken = {
+        value: null,
+        expiresAt: Date.now() + 30_000,
+      };
+      return null;
+    } finally {
+      sessionPromise = null;
+    }
+  })();
+
+  return sessionPromise;
 }
 
 // Request interceptor
 apiClient.interceptors.request.use(
   async (config) => {
-    // Add auth token if available
     const token = await getBrowserAccessToken();
 
     if (token) {
