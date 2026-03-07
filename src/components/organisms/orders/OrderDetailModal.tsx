@@ -36,18 +36,18 @@ function orderBadgeType(status: OrderRecord['status']) {
     case 'completed':
       return 'success' as const;
     case 'processing':
-      return 'info' as const;
+      return 'warning' as const;
     case 'cancelled':
       return 'error' as const;
     case 'pending':
     default:
-      return 'warning' as const;
+      return 'info' as const;
   }
 }
 
 const ORDER_STATUS_TEXT: Record<OrderRecord['status'], string> = {
-  pending: 'Đang xử lý',
-  processing: 'Đang xử lý',
+  pending: 'Cần xử lý',
+  processing: 'Đã xử lý',
   completed: 'Hoàn thành',
   cancelled: 'Đã hủy',
 };

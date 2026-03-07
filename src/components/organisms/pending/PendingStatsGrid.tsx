@@ -40,8 +40,10 @@ export const PendingStatsGrid = ({
                 <Icon className={`h-5 w-5 ${stat.iconColor}`} />
               </div>
               <div>
-                <p className="text-muted-foreground text-sm">{stat.label}</p>
-                <p className="text-2xl font-bold">
+                <p className="text-foreground text-sm font-bold tracking-wide">
+                  {stat.label}
+                </p>
+                <p className="text-foreground text-2xl font-extrabold leading-none">
                   {stat.value}
                 </p>
               </div>

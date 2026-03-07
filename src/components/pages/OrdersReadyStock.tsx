@@ -19,8 +19,8 @@ import { isReadyStockOrder } from '@/lib/orderWorkflow';
 
 const statusFilters = [
   { key: 'all', label: 'Tất cả' },
-  { key: 'pending', label: 'Chờ xác nhận' },
-  { key: 'processing', label: 'Đang xử lý' },
+  { key: 'pending', label: 'Cần xử lý' },
+  { key: 'processing', label: 'Đã xử lý' },
   { key: 'completed', label: 'Hoàn thành' },
   { key: 'cancelled', label: 'Đã hủy' },
 ] as const;
@@ -86,4 +86,3 @@ export default function OrdersReadyStock() {
     </>
   );
 }
-

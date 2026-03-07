@@ -27,12 +27,19 @@ import { OrderDetailModal } from '@/components/organisms/orders/OrderDetailModal
 
 type OrderStatus = 'pending' | 'processing' | 'completed' | 'cancelled';
 
+function orderTypeLabel(orderType: string): string {
+  const normalized = String(orderType || '').trim().toLowerCase();
+  if (normalized === 'ready_stock') return 'Hàng có sẵn';
+  if (normalized === 'pre_order' || normalized === 'preorder') return 'Đặt trước';
+  return orderType || '-';
+}
+
 const statusMap: Record<
   OrderStatus,
   { label: string; type: 'warning' | 'info' | 'success' | 'error' }
 > = {
-  pending: { label: 'Đang xử lý', type: 'warning' },
-  processing: { label: 'Đang xử lý', type: 'info' },
+  pending: { label: 'Cần xử lý', type: 'info' },
+  processing: { label: 'Đã xử lý', type: 'warning' },
   completed: { label: 'Hoàn thành', type: 'success' },
   cancelled: { label: 'Đã hủy', type: 'error' },
 };
@@ -122,6 +129,7 @@ export const RecentOrdersTable = ({
             <TableHead>Sản phẩm</TableHead>
             <TableHead className="text-right">Tổng tiền</TableHead>
             <TableHead className="text-center">Ngày</TableHead>
+            <TableHead className="whitespace-nowrap">Loại đơn</TableHead>
             <TableHead>Trạng thái</TableHead>
             <TableHead className="w-[60px]" />
           </TableRow>
@@ -129,7 +137,7 @@ export const RecentOrdersTable = ({
         <TableBody>
           {isLoading && (
             <TableRow>
-              <TableCell colSpan={7} className="text-foreground/70 py-10 text-center">
+              <TableCell colSpan={8} className="text-foreground/70 py-10 text-center">
                 Đang tải đơn hàng...
               </TableCell>
             </TableRow>
@@ -137,7 +145,7 @@ export const RecentOrdersTable = ({
 
           {!isLoading && errorMessage && (
             <TableRow>
-              <TableCell colSpan={7} className="text-destructive py-10 text-center">
+              <TableCell colSpan={8} className="text-destructive py-10 text-center">
                 {errorMessage}
               </TableCell>
             </TableRow>
@@ -145,7 +153,7 @@ export const RecentOrdersTable = ({
 
           {!isLoading && !errorMessage && visibleOrders.length === 0 && (
             <TableRow>
-              <TableCell colSpan={7} className="text-foreground/70 py-10 text-center">
+              <TableCell colSpan={8} className="text-foreground/70 py-10 text-center">
                 {emptyMessage}
               </TableCell>
             </TableRow>
@@ -194,6 +202,9 @@ export const RecentOrdersTable = ({
                   <TableCell className="text-center text-sm text-foreground/80">
                     {dashboard.date}
                   </TableCell>
+                  <TableCell className="text-foreground/80 text-sm whitespace-nowrap">
+                    {orderTypeLabel(order.orderType)}
+                  </TableCell>
                   <TableCell>
                     <StatusBadge status={statusInfo.type}>{statusInfo.label}</StatusBadge>
                   </TableCell>
@@ -214,10 +225,6 @@ export const RecentOrdersTable = ({
                             Xem chi tiết
                           </DropdownMenuItem>
                           <DropdownMenuItem>Cập nhật trạng thái</DropdownMenuItem>
-                          <DropdownMenuItem>In hóa đơn</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
-                            Hủy đơn
-                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>

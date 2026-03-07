@@ -18,8 +18,8 @@ import {
 
 const statusFilters = [
   { key: 'all', label: 'Tất cả' },
-  { key: 'pending', label: 'Chờ xác nhận' },
-  { key: 'processing', label: 'Đang xử lý' },
+  { key: 'pending', label: 'Cần xử lý' },
+  { key: 'processing', label: 'Đã xử lý' },
   { key: 'completed', label: 'Hoàn thành' },
   { key: 'cancelled', label: 'Đã hủy' },
 ];
@@ -46,6 +46,7 @@ const Orders = () => {
             <SearchBar
               placeholder="Tìm theo mã đơn, khách hàng..."
               value={searchTerm}
+              accent="yellow"
               onChange={setSearchTerm}
             />
           </div>
