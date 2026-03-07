@@ -310,7 +310,7 @@ export const Sidebar: React.FC = () => {
         {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
       </Button>
 
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {resolvedMenuItems.map((item) => {
           if (!item.children) {
             const active = isActivePath(pathname, item.path, item.exact);
