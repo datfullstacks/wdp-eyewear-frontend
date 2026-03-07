@@ -52,6 +52,7 @@ type MenuItem = {
 
 const menuItems: MenuItem[] = [
   { icon: LayoutDashboard, label: 'Tổng quan', path: '/staff/dashboard-staff' },
+  { icon: Warehouse, label: 'Sản phẩm', path: '/staff/products' },
   {
     icon: ShoppingCart,
     label: 'Đơn hàng',
@@ -99,13 +100,6 @@ const menuItems: MenuItem[] = [
         label: 'Hoàn tiền / điều chỉnh',
         path: '/staff/cases/refunds',
       },
-    ],
-  },
-  {
-    icon: Warehouse,
-    label: 'Sản phẩm',
-    children: [
-      { icon: Search, label: 'Tra cứu sản phẩm', path: '/staff/products' },
     ],
   },
   {
