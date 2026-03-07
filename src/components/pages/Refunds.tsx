@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { SearchBar } from '@/components/molecules/SearchBar';
+import { Pagination } from '@/components/molecules/Pagination';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -26,10 +27,13 @@ import {
 } from '@/components/organisms/refund';
 import { Header } from '@/components/organisms/Header';
 
+const ITEMS_PER_PAGE = 10;
+
 const Refunds = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [methodFilter, setMethodFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedRefund, setSelectedRefund] = useState<RefundRequest | null>(
     null
   );
@@ -53,6 +57,18 @@ const Refunds = () => {
   });
 
   const stats = getRefundStats(mockRefunds);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredRefunds.length / ITEMS_PER_PAGE);
+  const paginatedRefunds = filteredRefunds.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Reset to page 1 when search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, methodFilter]);
 
   const openModal = (refund: RefundRequest, setter: (v: boolean) => void) => {
     setSelectedRefund(refund);
@@ -132,13 +148,25 @@ const Refunds = () => {
                     Thẻ tín dụng
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="cash">
-                    Tiền mặt
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="wallet">
-                    Ví điện tử
-                  </DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
+                   paginatedRefunds}
+          onDetail={(r) => openModal(r, setIsDetailOpen)}
+          onApprove={(r) => openModal(r, setIsApproveOpen)}
+          onReject={(r) => openModal(r, setIsRejectOpen)}
+          onProcess={(r) => openModal(r, setIsProcessOpen)}
+          onContact={(r) => openModal(r, setIsContactOpen)}
+        />
+
+        {filteredRefunds.length > 0 && (
+          <div className="mt-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              itemsPerPage={ITEMS_PER_PAGE}
+              totalItems={filteredRefunds.length}
+            />
+          </div>
+        )}    </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>

@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { SearchBar } from '@/components/molecules/SearchBar';
+import { Pagination } from '@/components/molecules/Pagination';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -26,11 +27,14 @@ import {
 } from '@/components/organisms/returns';
 import { Header } from '@/components/organisms/Header';
 
+const ITEMS_PER_PAGE = 10;
+
 const Returns = () => {
   const [requests] = useState<ReturnRequest[]>(mockReturnRequests);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [detailModal, setDetailModal] = useState<ReturnRequest | null>(null);
   const [approveModal, setApproveModal] = useState<ReturnRequest | null>(null);
@@ -47,7 +51,19 @@ const Returns = () => {
     const matchesType = typeFilter === 'all' || request.type === typeFilter;
     const matchesStatus =
       statusFilter === 'all' || request.status === statusFilter;
-    return matchesSearch && matchesType && matchesStatus;
+    r
+
+  // Pagination
+  const totalPages = Math.ceil(filteredRequests.length / ITEMS_PER_PAGE);
+  const paginatedRequests = filteredRequests.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Reset to page 1 when search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, typeFilter, statusFilter]);eturn matchesSearch && matchesType && matchesStatus;
   });
 
   const handleApprove = () => {
@@ -143,13 +159,25 @@ const Returns = () => {
                     Đang xử lý
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="completed">
-                    Hoàn thành
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="rejected">
-                    Từ chối
-                  </DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
+                    paginatedRequests}
+          onDetail={setDetailModal}
+          onApprove={setApproveModal}
+          onReject={setRejectModal}
+          onProcess={setProcessModal}
+          onContact={setContactModal}
+        />
+
+        {filteredRequests.length > 0 && (
+          <div className="mt-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              itemsPerPage={ITEMS_PER_PAGE}
+              totalItems={filteredRequests.length}
+            />
+          </div>
+        )}    </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>

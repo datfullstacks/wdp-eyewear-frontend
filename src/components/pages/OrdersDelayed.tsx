@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { SearchBar } from '@/components/molecules/SearchBar';
+import { Pagination } from '@/components/molecules/Pagination';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -26,6 +27,8 @@ import { Header } from '@/components/organisms/Header';
 import { orderApi } from '@/api';
 import { toDelayedOrdersFromApi } from '@/lib/orderWorkflow';
 
+const ITEMS_PER_PAGE = 10;
+
 export default function OrdersDelayed() {
   const [orders, setOrders] = useState<DelayedOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,6 +37,7 @@ export default function OrdersDelayed() {
   const [severityFilter, setSeverityFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [detailOrder, setDetailOrder] = useState<DelayedOrder | null>(null);
   const [escalateOrder, setEscalateOrder] = useState<DelayedOrder | null>(null);
@@ -77,6 +81,19 @@ export default function OrdersDelayed() {
       const matchesType = typeFilter === 'all' || order.delayType === typeFilter;
       return matchesSearch && matchesSeverity && matchesType;
     });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE);
+  const paginatedOrders = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return filteredOrders.slice(startIndex, endIndex);
+  }, [filteredOrders, currentPage]);
+
+  // Reset to page 1 when search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, severityFilter, typeFilter]);
   }, [orders, searchTerm, severityFilter, typeFilter]);
 
   const stats = useMemo(
@@ -85,10 +102,10 @@ export default function OrdersDelayed() {
       high: orders.filter((o) => o.severity === 'high').length,
       medium: orders.filter((o) => o.severity === 'medium').length,
       slaBreached: orders.filter((o) => o.delayType === 'sla_breach').length,
-    }),
-    [orders]
-  );
-
+    }),paginatedOrders.length) {
+      setSelectedOrders([]);
+    } else {
+      setSelectedOrders(paginat
   const toggleSelectOrder = (orderId: string) => {
     setSelectedOrders((prev) =>
       prev.includes(orderId)
@@ -203,16 +220,30 @@ export default function OrdersDelayed() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </div>
+        </d>
+            <DelayedOrderTable
+              orders={paginatedOrders}
+              selectedOrders={selectedOrders}
+              onSelectOrder={toggleSelectOrder}
+              onSelectAll={toggleSelectAll}
+              onViewDetail={setDetailOrder}
+              onContact={setContactOrder}
+              onEscalate={setEscalateOrder}
+              onResolve={setResolveOrder}
+            />
 
-        {isLoading && (
-          <div className="text-foreground/70 py-10 text-center">
-            Đang tải cảnh báo...
-          </div>
-        )}
-
-        {!isLoading && errorMessage && (
-          <div className="text-destructive py-10 text-center">{errorMessage}</div>
+            {filteredOrders.length > 0 && (
+              <div className="mt-4">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                  itemsPerPage={ITEMS_PER_PAGE}
+                  totalItems={filteredOrders.length}
+                />
+              </div>
+            )}
+          <<div className="text-destructive py-10 text-center">{errorMessage}</div>
         )}
 
         {!isLoading && !errorMessage && (

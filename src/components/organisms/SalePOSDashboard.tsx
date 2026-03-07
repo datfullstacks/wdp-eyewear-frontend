@@ -2,11 +2,14 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { SearchBar } from '@/components/molecules/SearchBar';
+import { Pagination } from '@/components/molecules/Pagination';
 import { SalePOSCart, CartItem } from './SalePOSCart';
 import { SalePOSCheckout, CheckoutFormData } from './SalePOSCheckout';
 import { productApi, checkoutApi, Product } from '@/api';
 import { Glasses, Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+const ITEMS_PER_PAGE = 10;
 
 const typeLabels: Record<string, string> = {
   sunglasses: 'Kính mát',
@@ -26,6 +29,7 @@ export const SalePOSDashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Load products
   useEffect(() => {
@@ -81,6 +85,19 @@ export const SalePOSDashboard: React.FC = () => {
       return name.includes(q) || type.includes(q) || brand.includes(q);
     });
   }, [products, searchTerm]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return filteredProducts.slice(startIndex, endIndex);
+  }, [filteredProducts, currentPage]);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   // Cart operations
   const addToCart = useCallback((product: Product) => {
@@ -245,9 +262,16 @@ export const SalePOSDashboard: React.FC = () => {
               onChange={setSearchTerm}
               className="h-12 text-base"
             />
-            <p className="mt-2 text-sm text-gray-600">
-              Tìm thấy <strong>{filteredProducts.length}</strong> sản phẩm
-            </p>
+            <div className="mt-2 flex items-center justify-between">
+              <p className="text-sm text-gray-600">
+                Tìm thấy <strong>{filteredProducts.length}</strong> sản phẩm
+              </p>
+              {totalPages > 1 && (
+                <p className="text-sm text-gray-600">
+                  Trang <strong>{currentPage}</strong> / <strong>{totalPages}</strong>
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Product Grid */}
@@ -279,57 +303,70 @@ export const SalePOSDashboard: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-                {filteredProducts.map((product) => (
-                  <button
-                    key={product.id}
-                    onClick={() => addToCart(product)}
-                    className={cn(
-                      'group relative flex flex-col overflow-hidden rounded-xl border-2 border-gray-200 bg-white transition-all hover:border-yellow-400 hover:shadow-lg',
-                      'focus:outline-none focus:ring-2 focus:ring-yellow-400'
-                    )}
-                  >
-                    {/* Product Image */}
-                    <div className="aspect-square overflow-hidden bg-gray-100">
-                      <img
-                        src={product.imageUrl}
-                        alt={product.name}
-                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                        onError={(e) => {
-                          e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%239ca3af'%3ENo Image%3C/text%3E%3C/svg%3E`;
-                        }}
-                      />
-                    </div>
-
-                    {/* Product Info */}
-                    <div className="flex flex-1 flex-col p-3">
-                      <h3 className="mb-1 line-clamp-2 text-sm font-medium text-gray-900">
-                        {product.name}
-                      </h3>
-                      <p className="mb-2 text-xs text-gray-500">
-                        {typeLabels[product.type] || product.type}
-                      </p>
-                      <div className="mt-auto flex items-baseline justify-between">
-                        <span className="text-base font-bold text-yellow-600">
-                          {product.price.toLocaleString('vi-VN')} ₫
-                        </span>
-                        {product.stock <= 10 && (
-                          <span className="text-xs text-orange-600">
-                            {product.stock} sp
-                          </span>
-                        )}
+              <>
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+                  {paginatedProducts.map((product) => (
+                    <button
+                      key={product.id}
+                      onClick={() => addToCart(product)}
+                      className={cn(
+                        'group relative flex flex-col overflow-hidden rounded-xl border-2 border-gray-200 bg-white transition-all hover:border-yellow-400 hover:shadow-lg',
+                        'focus:outline-none focus:ring-2 focus:ring-yellow-400'
+                      )}
+                    >
+                      {/* Product Image */}
+                      <div className="aspect-square overflow-hidden bg-gray-100">
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
+                          className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                          onError={(e) => {
+                            e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%239ca3af'%3ENo Image%3C/text%3E%3C/svg%3E`;
+                          }}
+                        />
                       </div>
-                    </div>
 
-                    {/* Hover Overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-yellow-600/90 opacity-0 transition-opacity group-hover:opacity-100">
-                      <span className="text-lg font-semibold text-white">
-                        + Thêm vào giỏ
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
+                      {/* Product Info */}
+                      <div className="flex flex-1 flex-col p-3">
+                        <h3 className="mb-1 line-clamp-2 text-sm font-medium text-gray-900">
+                          {product.name}
+                        </h3>
+                        <p className="mb-2 text-xs text-gray-500">
+                          {typeLabels[product.type] || product.type}
+                        </p>
+                        <div className="mt-auto flex items-baseline justify-between">
+                          <span className="text-base font-bold text-yellow-600">
+                            {product.price.toLocaleString('vi-VN')} ₫
+                          </span>
+                          {product.stock <= 10 && (
+                            <span className="text-xs text-orange-600">
+                              {product.stock} sp
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Hover Overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center bg-yellow-600/90 opacity-0 transition-opacity group-hover:opacity-100">
+                        <span className="text-lg font-semibold text-white">
+                          + Thêm vào giỏ
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                {totalPages > 1 && (
+                  <div className="mt-6">
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={setCurrentPage}
+                      itemsPerPage={ITEMS_PER_PAGE}
+                      totalItems={filteredProducts.length}
+                    />
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
