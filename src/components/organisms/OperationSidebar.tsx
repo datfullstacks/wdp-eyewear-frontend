@@ -7,28 +7,31 @@ import {
   AlertTriangle,
   BarChart3,
   Bell,
+  CheckSquare,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ClipboardCheck,
   ClipboardList,
-  Clock,
-  CreditCard,
-  FileHeart,
+  FileSearch,
+  FileText,
   Glasses,
-  History,
   LayoutDashboard,
   ListTodo,
   LogOut,
-  MessageSquare,
+  MapPin,
+  Package,
+  PackageCheck,
   Percent,
-  RefreshCw,
+  Printer,
   Search,
   Settings,
   ShoppingCart,
   TrendingUp,
+  Truck,
   User,
-  Users,
   Warehouse,
+  Wrench,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -51,77 +54,106 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = [
-  { icon: LayoutDashboard, label: 'Tổng quan', path: '/staff/dashboard-staff' },
+  { icon: LayoutDashboard, label: 'Tổng quan', path: '/operation/dashboard-operation' },
   {
     icon: ShoppingCart,
     label: 'Đơn hàng',
     children: [
       {
-        icon: ClipboardList,
-        label: 'Tất cả đơn hàng',
-        path: '/staff/orders',
-        exact: true,
+        icon: PackageCheck,
+        label: 'Đơn có sẵn',
+        path: '/operation/orders/ready-stock',
+        badgeKey: 'readyStock',
+        badgeType: 'info',
       },
       {
-        icon: Clock,
-        label: 'Đơn cần xử lý',
-        path: '/staff/orders/pending',
-        badgeKey: 'needsAction',
+        icon: Package,
+        label: 'Đơn Pre-order',
+        path: '/operation/orders/preorder',
+        badgeKey: 'preorder',
+        badgeType: 'info',
+      },
+      {
+        icon: Glasses,
+        label: 'Đơn Prescription',
+        path: '/operation/orders/prescription',
+        badgeKey: 'prescription',
+        badgeType: 'info',
+      },
+      {
+        icon: FileText,
+        label: 'Đơn cần bổ sung Prescription',
+        path: '/operation/orders/prescription-needed',
+        badgeKey: 'prescriptionNeeded',
         badgeType: 'warning',
       },
       {
-        icon: AlertTriangle,
-        label: 'Đơn trễ / cảnh báo',
-        path: '/staff/orders/alerts',
-        badgeKey: 'alerts',
-        badgeType: 'error',
+        icon: Wrench,
+        label: 'Đơn đang gia công',
+        path: '/operation/orders/processing',
+        badgeKey: 'processing',
+        badgeType: 'info',
       },
     ],
   },
   {
-    icon: MessageSquare,
-    label: 'Xử lý nghiệp vụ',
+    icon: Truck,
+    label: 'Vận hành giao vận',
     children: [
       {
-        icon: RefreshCw,
-        label: 'Đổi / trả / bảo hành',
-        path: '/staff/cases/returns',
-        badge: '4',
-        badgeType: 'warning',
+        icon: Printer,
+        label: 'Tạo vận đơn / In nhãn',
+        path: '/operation/shipping/create',
       },
       {
-        icon: MessageSquare,
-        label: 'Khiếu nại & hỗ trợ',
-        path: '/staff/cases/complaints',
+        icon: MapPin,
+        label: 'Tracking / Đối soát',
+        path: '/operation/shipping/tracking',
       },
       {
-        icon: CreditCard,
-        label: 'Hoàn tiền / điều chỉnh',
-        path: '/staff/cases/refunds',
+        icon: PackageCheck,
+        label: 'Bàn giao vận chuyển',
+        path: '/operation/shipping/handover',
+      },
+    ],
+  },
+  {
+    icon: Wrench,
+    label: 'Gia công kính',
+    children: [
+      {
+        icon: ClipboardList,
+        label: 'Hàng đợi gia công',
+        path: '/operation/lab/queue',
+        badge: '8',
+        badgeType: 'info',
+      },
+      {
+        icon: ClipboardCheck,
+        label: 'Thông số lắp tròng / QC',
+        path: '/operation/lab/specs',
+      },
+      {
+        icon: CheckSquare,
+        label: 'Kết quả QC & đóng gói',
+        path: '/operation/lab/qc-results',
       },
     ],
   },
   {
     icon: Warehouse,
-    label: 'Sản phẩm',
+    label: 'Sản phẩm & kho',
     children: [
-      { icon: Search, label: 'Tra cứu sản phẩm', path: '/staff/products' },
-    ],
-  },
-  {
-    icon: Users,
-    label: 'Khách hàng',
-    children: [
-      { icon: Users, label: 'Danh sách khách hàng', path: '/staff/customers' },
+      { icon: Search, label: 'Tra cứu sản phẩm', path: '/operation/products' },
       {
-        icon: History,
-        label: 'Lịch sử đơn & ghi chú',
-        path: '/staff/customers/history',
+        icon: FileSearch,
+        label: 'Tồn kho / tình trạng',
+        path: '/operation/inventory/stock',
       },
       {
-        icon: FileHeart,
-        label: 'Hồ sơ Prescription',
-        path: '/staff/customers/prescriptions',
+        icon: Package,
+        label: 'Nhập hàng Pre-order',
+        path: '/operation/inventory/import',
       },
     ],
   },
@@ -132,12 +164,12 @@ const menuItems: MenuItem[] = [
       {
         icon: TrendingUp,
         label: 'Báo cáo đơn theo trạng thái',
-        path: '/staff/reports/orders',
+        path: '/operation/reports/orders',
       },
       {
         icon: Percent,
         label: 'Vận chuyển / hoàn',
-        path: '/staff/reports/shipping',
+        path: '/operation/reports/shipping',
       },
     ],
   },
@@ -148,19 +180,19 @@ const menuItems: MenuItem[] = [
       {
         icon: Bell,
         label: 'Thông báo',
-        path: '/staff/settings/notifications',
+        path: '/operation/settings/notifications',
         badge: '2',
         badgeType: 'info',
       },
       {
         icon: ListTodo,
         label: 'Nhiệm vụ của tôi',
-        path: '/staff/settings/tasks',
+        path: '/operation/settings/tasks',
       },
       {
         icon: User,
         label: 'Cài đặt tài khoản',
-        path: '/staff/settings/account',
+        path: '/operation/settings/account',
       },
     ],
   },
@@ -197,7 +229,7 @@ function isActivePath(pathname: string, itemPath?: string, exact?: boolean) {
   return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
 }
 
-export const Sidebar: React.FC = () => {
+export const OperationSidebar: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
   const [orderCounts, setOrderCounts] = useState<OrderMenuCounts | null>(null);
@@ -289,7 +321,7 @@ export const Sidebar: React.FC = () => {
               <span className="font-display text-lg font-semibold text-gray-900">
                 Eyes Dream
               </span>
-              <div className="text-xs text-gray-500">Staff Dashboard</div>
+              <div className="text-xs text-gray-500">Operation Dashboard</div>
             </div>
           </div>
         ) : (
@@ -310,7 +342,7 @@ export const Sidebar: React.FC = () => {
         {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
       </Button>
 
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {resolvedMenuItems.map((item) => {
           if (!item.children) {
             const active = isActivePath(pathname, item.path, item.exact);
@@ -401,13 +433,13 @@ export const Sidebar: React.FC = () => {
       <div className="border-t border-gray-200 p-4">
         <div className={cn('flex items-center gap-3', collapsed && 'justify-center')}>
           <div className="gradient-gold text-primary flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full font-semibold">
-            NV
+            OP
           </div>
 
           {!collapsed && (
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium text-gray-900">Nhân viên</p>
-              <p className="truncate text-xs text-gray-500">Sales Staff</p>
+              <p className="truncate text-xs text-gray-500">Operations</p>
             </div>
           )}
 

@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-type Role = 'customer' | 'staff' | 'operations' | 'manager' | 'admin';
+type Role = 'customer' | 'staff' | 'operations' | 'operation' | 'manager' | 'admin';
 
 interface CanAccessProps {
   roles: Role[];
