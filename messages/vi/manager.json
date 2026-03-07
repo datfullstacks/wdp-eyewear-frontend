@@ -1,6 +1,11 @@
 {
   "title": "Bảng Điều Khiển Quản Lý",
   "subtitle": "Bảng Điều Khiển Quản Trị",
+  "search": "Tìm kiếm...",
+  "notifications": "Thông báo",
+  "profile": "Hồ sơ",
+  "settings": "Cài đặt",
+  "logout": "Đăng xuất",
   "nav": {
     "dashboard": "Trang Chủ",
     "products": "Quản Lý Sản Phẩm",
@@ -13,25 +18,135 @@
     "welcome": "Bảng Điều Khiển Quản Lý",
     "subtitle": "Quản lý hoạt động kinh doanh của bạn"
   },
+  "sidebar": {
+    "brandName": "Eyes Dream",
+    "brandSubtitle": "Manager Dashboard",
+    "overview": "Tổng quan",
+    "productsAndPricing": "Sản phẩm & Giá",
+    "productManagement": "Quản lý sản phẩm",
+    "pricingStrategy": "Chiến lược giá",
+    "promotionsAndDiscounts": "Khuyến mãi & Giảm giá",
+    "revenueAndReports": "Doanh thu & Báo cáo",
+    "revenueOverview": "Tổng quan doanh thu",
+    "detailedReports": "Báo cáo chi tiết",
+    "humanResources": "Nhân sự",
+    "userManagement": "Quản lý người dùng",
+    "policiesAndSystem": "Chính sách & Hệ thống",
+    "policies": "Chính sách",
+    "systemSettings": "Cài đặt hệ thống",
+    "personalSettings": "Thiết lập cá nhân",
+    "notifications": "Thông báo",
+    "accountSettings": "Cài đặt tài khoản",
+    "manager": "Quản lý",
+    "managerPanel": "Bảng Quản Lý",
+    "menu": "Menu",
+    "dashboard": "Trang chủ",
+    "products": "Sản phẩm",
+    "pricing": "Giá cả",
+    "users": "Người dùng",
+    "revenue": "Doanh thu",
+    "expandSidebar": "Mở sidebar",
+    "collapseSidebar": "Thu gọn sidebar"
+  },
+  "dashboard": {
+    "title": "Bảng Điều Khiển",
+    "subtitle": "Tổng quan quản lý - Sản phẩm, Giá, Người dùng và Doanh thu",
+    "stats": {
+      "monthlyRevenue": "Doanh thu tháng này",
+      "totalOrders": "Tổng đơn hàng",
+      "activeProducts": "Sản phẩm đang bán",
+      "activeCustomers": "Khách hàng hoạt động",
+      "revenueTarget": "Mục tiêu doanh thu",
+      "activePromotions": "Chương trình KM active"
+    }
+  },
   "products": {
     "title": "Quản Lý Sản Phẩm",
-    "subtitle": "Quản lý sản phẩm kính, biến thể và tồn kho",
-    "addProduct": "Thêm Sản Phẩm Mới",
-    "searchPlaceholder": "Tìm kiếm theo tên hoặc mã SKU...",
+    "subtitle": "Quản lý toàn bộ sản phẩm kính mắt",
+    "addProduct": "Thêm sản phẩm",
+    "searchPlaceholder": "Tìm kiếm sản phẩm...",
+    "totalProducts": "Tổng sản phẩm",
+    "selling": "Đang bán",
+    "lowStock": "Sắp hết hàng",
+    "tabs": {
+      "all": "Tất cả",
+      "active": "Đang bán",
+      "lowStock": "Sắp hết",
+      "inactive": "Ngừng bán"
+    },
+    "table": {
+      "product": "Sản phẩm",
+      "brand": "Thương hiệu",
+      "category": "Danh mục",
+      "price": "Giá",
+      "stock": "Tồn kho",
+      "status": "Trạng thái",
+      "actions": "Hành động",
+      "noProducts": "Không tìm thấy sản phẩm",
+      "noData": "Không tìm thấy sản phẩm",
+      "active": "Đang bán",
+      "inactive": "Ngừng bán",
+      "viewDetails": "Xem chi tiết",
+      "editProduct": "Sửa sản phẩm",
+      "activate": "Kích hoạt",
+      "deactivate": "Vô hiệu hóa",
+      "deleteProduct": "Xóa sản phẩm"
+    },
+    "pagination": {
+      "showing": "Hiển thị",
+      "to": "đến",
+      "of": "trong",
+      "products": "sản phẩm"
+    },
+    "deleteConfirm": {
+      "title": "Xác nhận xóa",
+      "description": "Bạn có chắc muốn xóa sản phẩm \"{name}\"? Hành động này không thể hoàn tác.",
+      "cancel": "Hủy",
+      "confirm": "Xóa"
+    },
     "filters": {
       "category": "Danh Mục",
       "status": "Trạng Thái"
+    },
+    "detail": {
+      "title": "Chi Tiết Sản Phẩm",
+      "info": "Thông tin sản phẩm",
+      "backToList": "Quay lại danh sách sản phẩm",
+      "edit": "Chỉnh sửa",
+      "save": "Lưu",
+      "cancel": "Hủy",
+      "saving": "Đang lưu...",
+      "delete": "Xóa",
+      "activate": "Kích hoạt",
+      "deactivate": "Vô hiệu hóa",
+      "notFound": "Không tìm thấy sản phẩm",
+      "fillRequired": "Vui lòng điền đầy đủ các trường bắt buộc",
+      "updateFailed": "Cập nhật sản phẩm thất bại",
+      "productImages": "Hình Ảnh Sản Phẩm",
+      "detailInfo": "Thông Tin Chi Tiết",
+      "productName": "Tên Sản Phẩm",
+      "brand": "Thương Hiệu",
+      "category": "Danh Mục",
+      "price": "Giá",
+      "stock": "Tồn Kho",
+      "items": "sản phẩm",
+      "status": "Trạng Thái",
+      "description": "Mô Tả"
     }
   },
   "pricing": {
-    "title": "Giá & Khuyến Mãi",
-    "subtitle": "Quản lý giá sản phẩm, combo và các chiến dịch khuyến mãi",
+    "title": "Quản Lý Giá",
+    "subtitle": "Quản lý giá sản phẩm và chính sách giá",
     "createPromotion": "Tạo Khuyến Mãi",
     "stats": {
+      "avgPrice": "Giá trung bình",
+      "promotionProducts": "Sản phẩm có khuyến mãi",
+      "recentPriceChanges": "Tăng giá gần đây",
       "activePromotions": "Khuyến Mãi Đang Hoạt Động",
       "totalUsage": "Tổng Lượt Sử Dụng",
       "avgDiscount": "Giảm Giá Trung Bình"
     },
+    "placeholder": "Danh sách giá sẽ được hiển thị ở đây",
     "promotionsList": "Danh Sách Khuyến Mãi",
     "columns": {
       "name": "Tên Khuyến Mãi",
@@ -43,47 +158,173 @@
     }
   },
   "users": {
-    "title": "Quản Lý Người Dùng",
-    "subtitle": "Quản lý nhân viên, vận hành và quyền người dùng",
+    "title": "Quản Lý Nhân Sự",
+    "subtitle": "Quản lý Manager, Staff và Customer",
+    "addManager": "Thêm Manager mới",
+    "addStaff": "Thêm Staff mới",
     "addUser": "Thêm Người Dùng Mới",
     "searchPlaceholder": "Tìm kiếm theo tên hoặc email...",
+    "tabs": {
+      "managers": "Quản lý Manager",
+      "staff": "Quản lý Staff",
+      "customers": "Chăm sóc Customer"
+    },
     "stats": {
+      "totalManagers": "Tổng Manager",
+      "totalStaff": "Tổng Staff (Operations)",
+      "totalCustomers": "Tổng khách hàng",
       "staff": "Nhân Viên",
       "operations": "Vận Hành",
       "managers": "Quản Lý",
       "admins": "Quản Trị Viên"
-    }
+    },
+    "table": {
+      "user": "Người dùng",
+      "role": "Vai trò",
+      "phone": "Số điện thoại",
+      "loginVia": "Đăng nhập qua",
+      "createdAt": "Ngày tạo",
+      "actions": "Hành động",
+      "noData": "Không có dữ liệu người dùng",
+      "viewDetails": "Xem chi tiết",
+      "deleteUser": "Xóa người dùng"
+    },
+    "detail": {
+      "title": "Chi Tiết Người Dùng",
+      "info": "Thông tin người dùng",
+      "backToList": "Quay lại danh sách người dùng",
+      "edit": "Chỉnh sửa",
+      "save": "Lưu",
+      "cancel": "Hủy",
+      "saving": "Đang lưu...",
+      "delete": "Xóa",
+      "notFound": "Không tìm thấy người dùng",
+      "fillRequired": "Vui lòng điền đầy đủ các trường bắt buộc",
+      "updateFailed": "Cập nhật người dùng thất bại",
+      "personalInfo": "Thông Tin Cá Nhân",
+      "namePlaceholder": "Họ và tên",
+      "emailPlaceholder": "Địa chỉ email",
+      "phonePlaceholder": "Số điện thoại",
+      "role": "Vai trò",
+      "loginVia": "Đăng nhập qua",
+      "accountInfo": "Thông Tin Tài Khoản",
+      "createdAt": "Ngày Tạo",
+      "updatedAt": "Ngày Cập Nhật",
+      "deleteTitle": "Xác Nhận Xóa",
+      "confirmDelete": "Xóa"
+    },
+    "confirmDelete": "Bạn có chắc muốn xóa {name}?",
+    "deleteFailed": "Xóa thất bại",
+    "loadFailed": "Không thể tải danh sách người dùng"
   },
   "policies": {
-    "title": "Chính Sách & Quy Định",
-    "subtitle": "Quản lý chính sách: mua hàng, đổi trả, bảo hành, vận chuyển",
-    "createPolicy": "Tạo Chính Sách",
+    "title": "Quản Lý Chính Sách",
+    "subtitle": "Quản lý chính sách bảo hành, đổi trả và dịch vụ",
+    "createPolicy": "Tạo chính sách mới",
     "stats": {
+      "totalPolicies": "Tổng chính sách",
+      "activePolicies": "Chính sách hoạt động",
+      "needsUpdate": "Cần cập nhật",
       "purchase": "Chính Sách Mua Hàng",
       "return": "Chính Sách Đổi Trả",
       "warranty": "Chính Sách Bảo Hành",
       "shipping": "Chính Sách Vận Chuyển"
     },
-    "policiesList": "Danh Sách Chính Sách",
-    "policyDetails": "Chi Tiết Chính Sách",
-    "detailsLabel": "Nội Dung Chính Sách Đầy Đủ",
-    "selectPolicy": "Chọn một chính sách để xem chi tiết",
-    "columns": {
-      "title": "Tiêu Đề Chính Sách",
-      "category": "Danh Mục",
-      "lastUpdated": "Cập Nhật Lần Cuối",
-      "status": "Trạng Thái"
+    "searchPlaceholder": "Tìm kiếm chính sách...",
+    "showingResults": "Hiển thị {count} chính sách",
+    "deleteConfirm": "Bạn có chắc muốn xóa '{name}'?",
+    "deleteFailed": "Xóa chính sách thất bại",
+    "filters": {
+      "allCategories": "Tất cả danh mục",
+      "warranty": "Bảo hành",
+      "return": "Đổi trả",
+      "shipping": "Vận chuyển",
+      "purchase": "Mua hàng",
+      "privacy": "Bảo mật",
+      "terms": "Điều khoản",
+      "allStatus": "Tất cả trạng thái",
+      "active": "Đang hoạt động",
+      "inactive": "Tạm dừng",
+      "draft": "Bản nháp"
+    },
+    "table": {
+      "title": "Tiêu đề",
+      "category": "Danh mục",
+      "lastUpdated": "Cập nhật",
+      "status": "Trạng thái",
+      "actions": "Hành động",
+      "noData": "Không có chính sách",
+      "warranty": "Bảo hành",
+      "return": "Đổi trả",
+      "shipping": "Vận chuyển",
+      "purchase": "Mua hàng",
+      "privacy": "Bảo mật",
+      "terms": "Điều khoản",
+      "active": "Đang hoạt động",
+      "inactive": "Tạm dừng",
+      "draft": "Bản nháp",
+      "viewDetails": "Xem chi tiết",
+      "deletePolicy": "Xóa chính sách"
+    }
+  },
+  "discounts": {
+    "title": "Quản Lý Khuyến Mãi",
+    "subtitle": "Tạo và quản lý các chương trình khuyến mãi",
+    "addDiscount": "Tạo khuyến mãi mới",
+    "stats": {
+      "activePromotions": "Khuyến mãi hoạt động",
+      "expiringSoon": "Sắp hết hạn",
+      "totalCoupons": "Tổng mã giảm giá"
+    },
+    "searchPlaceholder": "Tìm kiếm theo mã hoặc tên...",
+    "showingResults": "Hiển thị {count} khuyến mãi",
+    "deleteConfirm": "Bạn có chắc muốn xóa '{name}'?",
+    "deleteFailed": "Xóa khuyến mãi thất bại",
+    "filters": {
+      "allStatus": "Tất cả trạng thái",
+      "active": "Đang hoạt động",
+      "scheduled": "Đã lên lịch",
+      "expired": "Đã hết hạn",
+      "inactive": "Tạm dừng",
+      "allTypes": "Tất cả loại",
+      "percentage": "Phần trăm",
+      "fixed": "Cố định"
+    },
+    "table": {
+      "code": "Mã",
+      "name": "Tên khuyến mãi",
+      "type": "Loại",
+      "value": "Giá trị",
+      "period": "Thời gian",
+      "usage": "Sử dụng",
+      "status": "Trạng thái",
+      "actions": "Hành động",
+      "noData": "Không có khuyến mãi",
+      "percentage": "Phần trăm",
+      "fixed": "Cố định",
+      "active": "Đang hoạt động",
+      "inactive": "Tạm dừng",
+      "expired": "Đã hết hạn",
+      "scheduled": "Đã lên lịch",
+      "unlimited": "Không giới hạn",
+      "viewDetails": "Xem chi tiết",
+      "deleteDiscount": "Xóa khuyến mãi"
     }
   },
   "revenue": {
     "title": "Báo Cáo Doanh Thu",
-    "subtitle": "Xem phân tích doanh thu, hiệu suất bán hàng và chỉ số kinh doanh",
+    "subtitle": "Theo dõi doanh thu và phân tích xu hướng",
     "stats": {
+      "monthlyRevenue": "Doanh thu tháng này",
+      "growth": "Tăng trưởng",
+      "yearlyRevenue": "Doanh thu năm",
+      "targetAchieved": "Đạt mục tiêu",
       "totalRevenue": "Tổng Doanh Thu",
       "totalOrders": "Tổng Đơn Hàng",
       "avgOrderValue": "Giá Trị ĐH Trung Bình",
       "totalCustomers": "Tổng Khách Hàng"
     },
+    "placeholder": "Biểu đồ doanh thu sẽ được hiển thị ở đây",
     "revenueChart": "Doanh Thu Theo Tháng",
     "categoryRevenue": "Doanh Thu Theo Danh Mục",
     "topProducts": "Sản Phẩm Bán Chạy",
@@ -93,5 +334,16 @@
       "unitsSold": "Đã Bán",
       "revenue": "Doanh Thu"
     }
+  },
+  "revenueNew": {
+    "title": "Báo Cáo Doanh Thu (Mới)",
+    "subtitle": "Theo dõi doanh thu với giao diện cải tiến",
+    "placeholder": "Biểu đồ doanh thu mới sẽ được hiển thị ở đây"
+  },
+  "common": {
+    "trendUp": "+{value}% so với tháng trước",
+    "trendDown": "-{value}% so với tháng trước",
+    "loading": "Đang tải...",
+    "error": "Lỗi"
   }
 }

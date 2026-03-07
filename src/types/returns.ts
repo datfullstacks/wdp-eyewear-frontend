@@ -46,7 +46,7 @@ export const typeColors: Record<
 };
 
 export const statusLabels: Record<RequestStatus, string> = {
-  pending: 'Chờ xử lý',
+  pending: 'Đang xử lý',
   reviewing: 'Đang xem xét',
   approved: 'Đã duyệt',
   processing: 'Đang xử lý',

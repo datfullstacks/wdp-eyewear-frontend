@@ -39,7 +39,6 @@ export const PendingOrderTable = ({
             <TableHead>Sản phẩm</TableHead>
             <TableHead>Tổng tiền</TableHead>
             <TableHead>Thanh toán</TableHead>
-            <TableHead>Độ ưu tiên</TableHead>
             <TableHead>Thời gian</TableHead>
             <TableHead className="text-right">Thao tác</TableHead>
           </TableRow>

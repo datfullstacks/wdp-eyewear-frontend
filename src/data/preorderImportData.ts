@@ -158,7 +158,7 @@ export const mockBatches: PreorderBatch[] = [
 export const getStatusConfig = (status: PreorderBatch['status']) => {
   switch (status) {
     case 'pending':
-      return { label: 'Chờ xử lý', variant: 'secondary' as const, icon: Clock };
+      return { label: 'Đang xử lý', variant: 'secondary' as const, icon: Clock };
     case 'in_transit':
       return {
         label: 'Đang vận chuyển',

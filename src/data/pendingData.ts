@@ -1,9 +1,7 @@
 import {
   PendingOrder,
-  PriorityConfig,
   PaymentStatusConfig,
 } from '@/types/pending';
-import { AlertTriangle, Clock, Package } from 'lucide-react';
 
 export const pendingOrders: PendingOrder[] = [
   {
@@ -27,7 +25,6 @@ export const pendingOrders: PendingOrder[] = [
     ],
     total: 5700000,
     status: 'pending',
-    priority: 'high',
     createdAt: '2024-01-15 09:30',
     note: 'Khách cần gấp trong tuần này',
     hasPrescription: true,
@@ -48,7 +45,6 @@ export const pendingOrders: PendingOrder[] = [
     ],
     total: 4500000,
     status: 'pending',
-    priority: 'normal',
     createdAt: '2024-01-15 10:15',
     note: '',
     hasPrescription: false,
@@ -75,7 +71,6 @@ export const pendingOrders: PendingOrder[] = [
     ],
     total: 8300000,
     status: 'pending',
-    priority: 'urgent',
     createdAt: '2024-01-15 08:00',
     note: 'Khách VIP - ưu tiên xử lý',
     hasPrescription: true,
@@ -96,7 +91,6 @@ export const pendingOrders: PendingOrder[] = [
     ],
     total: 1200000,
     status: 'pending',
-    priority: 'low',
     createdAt: '2024-01-15 14:20',
     note: '',
     hasPrescription: false,
@@ -123,20 +117,12 @@ export const pendingOrders: PendingOrder[] = [
     ],
     total: 3300000,
     status: 'pending',
-    priority: 'normal',
     createdAt: '2024-01-15 11:45',
     note: 'Gọi xác nhận trước khi giao',
     hasPrescription: true,
     paymentStatus: 'partial',
   },
 ];
-
-export const priorityConfig: Record<string, PriorityConfig> = {
-  urgent: { label: 'Khẩn cấp', color: 'error', icon: AlertTriangle },
-  high: { label: 'Cao', color: 'warning', icon: Clock },
-  normal: { label: 'Bình thường', color: 'info', icon: Package },
-  low: { label: 'Thấp', color: 'default', icon: Package },
-};
 
 export const paymentStatusConfig: Record<string, PaymentStatusConfig> = {
   paid: { label: 'Đã thanh toán', color: 'success' },

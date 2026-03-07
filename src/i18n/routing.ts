@@ -11,6 +11,10 @@ export const routing = defineRouting({
   // Never show locale prefix in URL
   localePrefix: 'never',
 
+  // Locale detection from cookie / accept-language header
+  localeDetection: true,
+  localeCookie: { name: 'NEXT_LOCALE' },
+
   // The `pathnames` object holds pairs of internal and
   // external paths. Based on the locale, the external
   // paths are rewritten to the internal ones.

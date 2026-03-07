@@ -1,4 +1,3 @@
-export type PendingPriority = 'urgent' | 'high' | 'normal' | 'low';
 export type PaymentStatus = 'paid' | 'pending' | 'partial' | 'cod';
 
 export interface PendingOrderProduct {
@@ -17,17 +16,10 @@ export interface PendingOrder {
   products: PendingOrderProduct[];
   total: number;
   status: string;
-  priority: PendingPriority;
   createdAt: string;
   note: string;
   hasPrescription: boolean;
   paymentStatus: PaymentStatus;
-}
-
-export interface PriorityConfig {
-  label: string;
-  color: 'error' | 'warning' | 'info' | 'default';
-  icon: React.ComponentType<{ className?: string }>;
 }
 
 export interface PaymentStatusConfig {

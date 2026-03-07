@@ -19,7 +19,6 @@ import {
 import { cn } from '@/lib/utils';
 import { PendingOrder } from '@/types/pending';
 import {
-  priorityConfig,
   paymentStatusConfig,
   formatCurrency,
 } from '@/data/pendingData';
@@ -49,20 +48,22 @@ export const PendingOrderRow = ({
     default: 'text-muted-foreground',
   };
   const paymentColor = paymentStatusConfig[order.paymentStatus].color;
-  const priorityColor = priorityConfig[order.priority].color;
 
   return (
     <TableRow
       className={cn(
         'hover:bg-muted/30',
-        order.priority === 'urgent' && 'bg-destructive/5',
         isSelected && 'bg-primary/5'
       )}
     >
       <TableCell className="text-foreground font-mono text-sm font-normal">
         <div className="flex items-center gap-2">
           <span>{order.id}</span>
-          {order.hasPrescription}
+          {order.hasPrescription && (
+            <span className="border-primary/20 bg-primary/10 text-primary rounded-full border px-1.5 py-0.5 text-[10px] font-medium">
+              Rx
+            </span>
+          )}
         </div>
       </TableCell>
       <TableCell>
@@ -94,16 +95,6 @@ export const PendingOrderRow = ({
           )}
         >
           {paymentStatusConfig[order.paymentStatus].label}
-        </span>
-      </TableCell>
-      <TableCell>
-        <span
-          className={cn(
-            'text-sm font-normal',
-            statusTextClass[priorityColor] ?? statusTextClass.default
-          )}
-        >
-          {priorityConfig[order.priority].label}
         </span>
       </TableCell>
       <TableCell className="text-foreground/90 text-sm">

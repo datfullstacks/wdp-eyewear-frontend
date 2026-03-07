@@ -1,41 +1,21 @@
-import { Package, AlertTriangle, Clock, CheckCircle } from 'lucide-react';
+import { Package, CheckCircle } from 'lucide-react';
 
 interface PendingStatsGridProps {
   totalCount: number;
-  urgentCount: number;
-  highCount: number;
   selectedCount: number;
 }
 
 export const PendingStatsGrid = ({
   totalCount,
-  urgentCount,
-  highCount,
   selectedCount,
 }: PendingStatsGridProps) => {
   const stats = [
     {
-      label: 'Tổng đơn chờ',
+      label: 'Tổng đơn',
       value: totalCount,
       icon: Package,
       iconBg: 'bg-primary/10',
       iconColor: 'text-primary',
-    },
-    {
-      label: 'Khẩn cấp',
-      value: urgentCount,
-      icon: AlertTriangle,
-      iconBg: 'bg-destructive/10',
-      iconColor: 'text-destructive',
-      valueColor: 'text-destructive',
-    },
-    {
-      label: 'Ưu tiên cao',
-      value: highCount,
-      icon: Clock,
-      iconBg: 'bg-warning/10',
-      iconColor: 'text-warning',
-      valueColor: 'text-warning',
     },
     {
       label: 'Đã chọn',
@@ -47,7 +27,7 @@ export const PendingStatsGrid = ({
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (
@@ -60,8 +40,10 @@ export const PendingStatsGrid = ({
                 <Icon className={`h-5 w-5 ${stat.iconColor}`} />
               </div>
               <div>
-                <p className="text-muted-foreground text-sm">{stat.label}</p>
-                <p className={`text-2xl font-bold ${stat.valueColor || ''}`}>
+                <p className="text-foreground text-sm font-bold tracking-wide">
+                  {stat.label}
+                </p>
+                <p className="text-foreground text-2xl font-extrabold leading-none">
                   {stat.value}
                 </p>
               </div>

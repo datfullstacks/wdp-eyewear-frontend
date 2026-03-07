@@ -3,16 +3,16 @@ import type { NextRequest } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
 import { routing } from '@/i18n/routing';
 
-// Create the internationalization middleware with cookie support
-const intlMiddleware = createMiddleware(routing, {
-  localeDetection: true,
-  localeCookie: {
-    name: 'NEXT_LOCALE',
-  },
-});
+// In next-intl v4, localeDetection & localeCookie are part of the routing config
+const intlMiddleware = createMiddleware(routing);
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+
+  // Skip API routes — handled by Next.js API routes or rewrites in next.config.js
+  if (pathname.startsWith('/api/')) {
+    return NextResponse.next();
+  }
 
   // Legacy dashboard routes are deprecated.
   if (pathname === '/dashboard' || pathname.startsWith('/dashboard/')) {
@@ -64,5 +64,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|public).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|public).*)'],
 };

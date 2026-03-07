@@ -25,8 +25,8 @@ const statusMap: Record<
   OrderStatus,
   { label: string; type: 'warning' | 'info' | 'success' | 'error' }
 > = {
-  pending: { label: 'Chờ xử lý', type: 'warning' },
-  processing: { label: 'Đang xử lý', type: 'info' },
+  pending: { label: 'Cần xử lý', type: 'info' },
+  processing: { label: 'Đã xử lý', type: 'warning' },
   completed: { label: 'Hoàn thành', type: 'success' },
   cancelled: { label: 'Đã hủy', type: 'error' },
 };
@@ -50,7 +50,7 @@ export const OrderRow = ({
           className="bg-yellow-400 bg-none text-yellow-950 ring-yellow-500"
         />
         <div>
-          <p className="text-foreground font-medium">#{id}</p>
+          <p className="text-foreground font-medium">{id}</p>
           <p className="text-muted-foreground truncate text-sm">
             {customerName}
           </p>

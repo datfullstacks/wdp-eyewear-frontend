@@ -17,27 +17,53 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Eye, MoreHorizontal } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { MoreHorizontal } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+
 import { orderApi } from '@/api';
-import { toDashboardOrder, type DashboardOrder } from '@/lib/orderAdapters';
+import type { OrderRecord } from '@/api/orders';
+import { toDashboardOrder } from '@/lib/orderAdapters';
+import { OrderDetailModal } from '@/components/organisms/orders/OrderDetailModal';
 
 type OrderStatus = 'pending' | 'processing' | 'completed' | 'cancelled';
+
+function orderTypeLabel(orderType: string): string {
+  const normalized = String(orderType || '').trim().toLowerCase();
+  if (normalized === 'ready_stock') return 'Hàng có sẵn';
+  if (normalized === 'pre_order' || normalized === 'preorder') return 'Đặt trước';
+  return orderType || '-';
+}
 
 const statusMap: Record<
   OrderStatus,
   { label: string; type: 'warning' | 'info' | 'success' | 'error' }
 > = {
-  pending: { label: 'Chờ xử lý', type: 'warning' },
-  processing: { label: 'Đang xử lý', type: 'info' },
+  pending: { label: 'Cần xử lý', type: 'info' },
+  processing: { label: 'Đã xử lý', type: 'warning' },
   completed: { label: 'Hoàn thành', type: 'success' },
   cancelled: { label: 'Đã hủy', type: 'error' },
 };
 
-export const RecentOrdersTable = () => {
-  const [orders, setOrders] = useState<DashboardOrder[]>([]);
+type RecentOrdersTableProps = {
+  limit?: number;
+  searchTerm?: string;
+  statusFilter?: 'all' | OrderStatus;
+  filter?: (order: OrderRecord) => boolean;
+  emptyMessage?: string;
+};
+
+export const RecentOrdersTable = ({
+  limit = 20,
+  searchTerm = '',
+  statusFilter = 'all',
+  filter,
+  emptyMessage = 'Chưa có đơn hàng nào.',
+}: RecentOrdersTableProps) => {
+  const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [detailOrder, setDetailOrder] = useState<OrderRecord | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -49,19 +75,12 @@ export const RecentOrdersTable = () => {
       }
 
       try {
-        const result = await orderApi.getAll({ page: 1, limit: 20 });
-        const mapped = result.orders.map(toDashboardOrder);
-        if (isMounted) {
-          setOrders(mapped);
-        }
+        const result = await orderApi.getAll({ page: 1, limit });
+        if (isMounted) setOrders(result.orders);
       } catch {
-        if (isMounted) {
-          setErrorMessage('Không tải được đơn hàng gần đây.');
-        }
+        if (isMounted) setErrorMessage('Không tải được đơn hàng gần đây.');
       } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        if (isMounted) setIsLoading(false);
       }
     };
 
@@ -70,29 +89,55 @@ export const RecentOrdersTable = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [limit]);
+
+  const visibleOrders = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    const predicate = filter ?? (() => true);
+
+    return orders
+      .filter(predicate)
+      .filter((order) =>
+        statusFilter === 'all' ? true : order.status === statusFilter
+      )
+      .filter((order) => {
+        if (!query) return true;
+        const haystack = [
+          order.code,
+          order.customerName,
+          order.customerPhone,
+          ...order.items.map((item) => item.name),
+        ]
+          .join(' ')
+          .toLowerCase();
+        return haystack.includes(query);
+      });
+  }, [filter, orders, searchTerm, statusFilter]);
+
+  const handleOpenDetail = (order: OrderRecord) => {
+    setDetailOrder(order);
+    setDetailOpen(true);
+  };
 
   return (
     <div className="glass-card overflow-hidden rounded-xl">
       <Table className="text-sm font-normal">
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead className="w-[120px]">Mã đơn</TableHead>
+            <TableHead className="w-[140px] whitespace-nowrap">Mã đơn</TableHead>
             <TableHead>Khách hàng</TableHead>
             <TableHead>Sản phẩm</TableHead>
             <TableHead className="text-right">Tổng tiền</TableHead>
             <TableHead className="text-center">Ngày</TableHead>
+            <TableHead className="whitespace-nowrap">Loại đơn</TableHead>
             <TableHead>Trạng thái</TableHead>
-            <TableHead className="w-[60px]"></TableHead>
+            <TableHead className="w-[60px]" />
           </TableRow>
         </TableHeader>
         <TableBody>
           {isLoading && (
             <TableRow>
-              <TableCell
-                colSpan={7}
-                className="text-foreground/70 py-10 text-center"
-              >
+              <TableCell colSpan={8} className="text-foreground/70 py-10 text-center">
                 Đang tải đơn hàng...
               </TableCell>
             </TableRow>
@@ -100,77 +145,71 @@ export const RecentOrdersTable = () => {
 
           {!isLoading && errorMessage && (
             <TableRow>
-              <TableCell colSpan={7} className="text-destructive py-10 text-center">
+              <TableCell colSpan={8} className="text-destructive py-10 text-center">
                 {errorMessage}
               </TableCell>
             </TableRow>
           )}
 
-          {!isLoading && !errorMessage && orders.length === 0 && (
+          {!isLoading && !errorMessage && visibleOrders.length === 0 && (
             <TableRow>
-              <TableCell
-                colSpan={7}
-                className="text-foreground/70 py-10 text-center"
-              >
-                Chưa có đơn hàng nào.
+              <TableCell colSpan={8} className="text-foreground/70 py-10 text-center">
+                {emptyMessage}
               </TableCell>
             </TableRow>
           )}
 
           {!isLoading &&
             !errorMessage &&
-            orders.map((order) => {
-              const statusInfo = statusMap[order.status];
+            visibleOrders.map((order) => {
+              const dashboard = toDashboardOrder(order);
+              const statusInfo = statusMap[dashboard.status];
               return (
                 <TableRow key={order.id} className="hover:bg-muted/30">
-                  <TableCell className="text-foreground font-mono text-sm font-normal">
-                    #{order.id}
+                  <TableCell className="text-foreground font-mono text-sm font-normal whitespace-nowrap">
+                    <span title={String(dashboard.id).replace(/^#/, '')}>
+                      {String(dashboard.id).replace(/^#/, '')}
+                    </span>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar
-                        name={order.customerName}
+                        name={dashboard.customerName}
                         size="md"
                         className="bg-yellow-400 bg-none text-yellow-950 ring-yellow-500"
                       />
                       <div>
                         <p className="text-foreground font-normal">
-                          {order.customerName}
+                          {dashboard.customerName}
                         </p>
                         <p className="text-foreground/80 text-xs">
-                          {order.products.length} sản phẩm
+                          {dashboard.products.length} sản phẩm
                         </p>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell className="text-foreground/80 text-sm">
-                    <p className="line-clamp-1">{order.products.join(', ')}</p>
+                    <p className="line-clamp-1">{dashboard.products.join(', ')}</p>
                   </TableCell>
                   <TableCell className="text-right">
                     <span className="text-foreground font-semibold">
                       {new Intl.NumberFormat('vi-VN', {
                         style: 'currency',
                         currency: 'VND',
-                      }).format(order.total)}
+                      }).format(dashboard.total)}
                     </span>
                   </TableCell>
                   <TableCell className="text-center text-sm text-foreground/80">
-                    {order.date}
+                    {dashboard.date}
+                  </TableCell>
+                  <TableCell className="text-foreground/80 text-sm whitespace-nowrap">
+                    {orderTypeLabel(order.orderType)}
                   </TableCell>
                   <TableCell>
-                    <StatusBadge status={statusInfo.type}>
-                      {statusInfo.label}
-                    </StatusBadge>
+                    <StatusBadge status={statusInfo.type}>{statusInfo.label}</StatusBadge>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-foreground/80 hover:text-foreground"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
@@ -182,12 +221,10 @@ export const RecentOrdersTable = () => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>Xem chi tiết</DropdownMenuItem>
-                          <DropdownMenuItem>Cập nhật trạng thái</DropdownMenuItem>
-                          <DropdownMenuItem>In hóa đơn</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
-                            Hủy đơn
+                          <DropdownMenuItem onClick={() => handleOpenDetail(order)}>
+                            Xem chi tiết
                           </DropdownMenuItem>
+                          <DropdownMenuItem>Cập nhật trạng thái</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -197,6 +234,15 @@ export const RecentOrdersTable = () => {
             })}
         </TableBody>
       </Table>
+
+      <OrderDetailModal
+        open={detailOpen}
+        onOpenChange={(open) => {
+          setDetailOpen(open);
+          if (!open) setDetailOrder(null);
+        }}
+        order={detailOrder}
+      />
     </div>
   );
 };

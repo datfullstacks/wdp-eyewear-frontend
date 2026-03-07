@@ -2,22 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Header } from '@/components/organisms/Header';
 import { StatCard } from '@/components/molecules/StatCard';
 import { ProductTable } from '@/components/organisms/manager';
 import { Button } from '@/components/atoms';
 import { Input } from '@/components/atoms/Input';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Package, ShoppingCart, AlertTriangle, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { Package, ShoppingCart, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { productApi, type Product } from '@/api';
 
 type TabType = 'all' | 'active' | 'low-stock' | 'inactive';
@@ -27,14 +18,13 @@ const LOW_STOCK_THRESHOLD = 10;
 
 export default function ProductsPage() {
   const router = useRouter();
+  const t = useTranslations('manager.products');
   const [products, setProducts] = useState<Product[]>([]);
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState('');
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const loadProducts = useCallback(async () => {
     setIsLoading(true);
@@ -73,19 +63,19 @@ export default function ProductsPage() {
 
   const stats = [
     {
-      title: 'Tổng sản phẩm',
+      title: t('totalProducts'),
       value: products.length.toString(),
       icon: Package,
       trend: { value: 0, isPositive: true },
     },
     {
-      title: 'Đang bán',
+      title: t('selling'),
       value: products.filter((p) => p.status === 'active').length.toString(),
       icon: ShoppingCart,
       trend: { value: 0, isPositive: true },
     },
     {
-      title: 'Sắp hết hàng',
+      title: t('lowStock'),
       value: products.filter((p) => p.stock < LOW_STOCK_THRESHOLD).length.toString(),
       icon: AlertTriangle,
       trend: { value: 0, isPositive: false },
@@ -96,45 +86,33 @@ export default function ProductsPage() {
     router.push(`/manager/products/${product.id}`);
   };
 
-  const handleEdit = (product: Product) => {
-    router.push(`/manager/products/${product.id}/edit`);
-  };
-
-  const handleOpenDeleteDialog = (product: Product) => {
-    setSelectedProduct(product);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleDelete = async () => {
-    if (!selectedProduct) return;
-    
-    try {
-      await productApi.remove(selectedProduct.id);
-      await loadProducts();
-      setIsDeleteDialogOpen(false);
-      setSelectedProduct(null);
-    } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Delete failed');
-    }
-  };
-
   const handleToggleStatus = async (product: Product) => {
     try {
       const newStatus: 'active' | 'inactive' = product.status === 'active' ? 'inactive' : 'active';
       await productApi.updateStatus(product.id, newStatus);
       await loadProducts();
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Update failed');
+      setApiError(error instanceof Error ? error.message : 'Failed to update status');
+    }
+  };
+
+  const handleDelete = async (product: Product) => {
+    if (!confirm(t('deleteConfirm.description', { name: product.name }))) return;
+    try {
+      await productApi.remove(product.id);
+      await loadProducts();
+    } catch (error) {
+      setApiError(error instanceof Error ? error.message : 'Failed to delete product');
     }
   };
 
   return (
     <>
       <Header
-        title="Quản lý Sản phẩm"
-        subtitle="Quản lý toàn bộ sản phẩm kính mắt"
+        title={t('title')}
+        subtitle={t('subtitle')}
         showAddButton
-        addButtonLabel="Thêm sản phẩm"
+        addButtonLabel={t('addProduct')}
         onAdd={() => router.push('/manager/products/create')}
       />
 
@@ -158,10 +136,10 @@ export default function ProductsPage() {
         <section className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
             {[
-              { id: 'all', label: 'Tất cả' },
-              { id: 'active', label: 'Đang bán' },
-              { id: 'low-stock', label: 'Sắp hết' },
-              { id: 'inactive', label: 'Ngừng bán' },
+              { id: 'all', label: t('tabs.all') },
+              { id: 'active', label: t('tabs.active') },
+              { id: 'low-stock', label: t('tabs.lowStock') },
+              { id: 'inactive', label: t('tabs.inactive') },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -184,7 +162,7 @@ export default function ProductsPage() {
         {/* Search */}
         <section>
           <Input
-            placeholder="Tìm kiếm sản phẩm..."
+            placeholder={t('searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -201,9 +179,24 @@ export default function ProductsPage() {
             <ProductTable
               products={paginatedProducts}
               onView={handleView}
-              onEdit={handleEdit}
-              onDelete={handleOpenDeleteDialog}
               onToggleStatus={handleToggleStatus}
+              onDelete={handleDelete}
+              translations={{
+                product: t('table.product'),
+                brand: t('table.brand'),
+                category: t('table.category'),
+                price: t('table.price'),
+                stock: t('table.stock'),
+                status: t('table.status'),
+                actions: t('table.actions'),
+                noData: t('table.noData'),
+                active: t('table.active'),
+                inactive: t('table.inactive'),
+                viewDetails: t('table.viewDetails'),
+                activate: t('table.activate'),
+                deactivate: t('table.deactivate'),
+                deleteProduct: t('table.deleteProduct'),
+              }}
             />
           )}
         </section>
@@ -212,9 +205,9 @@ export default function ProductsPage() {
         {totalPages > 1 && (
           <section className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to{' '}
-              {Math.min(currentPage * ITEMS_PER_PAGE, filteredProducts.length)} of{' '}
-              {filteredProducts.length} products
+              {t('pagination.showing')} {(currentPage - 1) * ITEMS_PER_PAGE + 1} {t('pagination.to')}{' '}
+              {Math.min(currentPage * ITEMS_PER_PAGE, filteredProducts.length)} {t('pagination.of')}{' '}
+              {filteredProducts.length} {t('pagination.products')}
             </div>
             <div className="flex gap-2">
               <Button
@@ -247,22 +240,6 @@ export default function ProductsPage() {
           </section>
         )}
       </div>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
-            <AlertDialogDescription>
-              Bạn có chắc muốn xóa sản phẩm "{selectedProduct?.name}"? Hành động này không thể hoàn tác.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Xóa</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
