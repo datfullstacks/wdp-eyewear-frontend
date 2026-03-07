@@ -2,24 +2,21 @@
 
 import dynamic from 'next/dynamic';
 
-const Products = dynamic(() => import('@/components/pages/Products'), {
-  ssr: false,
-  loading: () => (
-    <div className="space-y-4 p-6">
-      <div className="h-8 w-56 animate-pulse rounded bg-slate-200/70" />
-      <div className="h-12 animate-pulse rounded-xl bg-slate-200/70" />
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-64 animate-pulse rounded-xl bg-slate-200/70"
-          />
-        ))}
+const StaffPOSDashboard = dynamic(
+  () => import('@/components/organisms/StaffPOSDashboard').then((m) => m.StaffPOSDashboard),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-screen items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-yellow-400 border-t-transparent" />
+          <p className="mt-4 text-gray-600">Đang tải POS Dashboard...</p>
+        </div>
       </div>
-    </div>
-  ),
-});
+    ),
+  }
+);
 
 export default function Page() {
-  return <Products />;
+  return <StaffPOSDashboard />;
 }

@@ -4,6 +4,7 @@ export { default as authApi } from './auth';
 export { default as uploadApi } from './uploads';
 export { default as userApi } from './users';
 export { default as orderApi } from './orders';
+export { default as checkoutApi } from './checkout';
 
 export type {
   Product,
@@ -23,3 +24,11 @@ export type {
   OrderRecord,
   OrdersResponse,
 } from './orders';
+export type {
+  CheckoutItem,
+  ShippingAddress,
+  CheckoutQuoteRequest,
+  CheckoutQuoteResponse,
+  CheckoutRequest,
+  CheckoutResponse,
+} from './checkout';
