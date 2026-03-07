@@ -2,16 +2,7 @@
 import { Header } from '@/components/organisms/Header';
 
 import { SearchBar } from '@/components/molecules/SearchBar';
-import { Button as UiButton } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Filter, CheckCircle, RefreshCw } from 'lucide-react';
+import { CheckCircle, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { PendingOrder } from '@/types/pending';
@@ -32,7 +23,6 @@ const OrdersPending = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('all');
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [detailModal, setDetailModal] = useState<PendingOrder | null>(null);
   const [processModal, setProcessModal] = useState<PendingOrder | null>(null);
@@ -69,9 +59,7 @@ const OrdersPending = () => {
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.phone.includes(searchQuery);
-    const matchesPriority =
-      priorityFilter === 'all' || order.priority === priorityFilter;
-    return matchesSearch && matchesPriority;
+    return matchesSearch;
   });
 
   const handleSelectAll = (checked: boolean) => {
@@ -145,9 +133,6 @@ const OrdersPending = () => {
     }
   };
 
-  const urgentCount = orders.filter((o) => o.priority === 'urgent').length;
-  const highCount = orders.filter((o) => o.priority === 'high').length;
-
   return (
     <>
       <Header title="Đơn cần xử lý" subtitle="Xác nhận và xử lý đơn hàng mới" />
@@ -155,8 +140,6 @@ const OrdersPending = () => {
       <div className="space-y-6 p-6">
         <PendingStatsGrid
           totalCount={orders.length}
-          urgentCount={urgentCount}
-          highCount={highCount}
           selectedCount={selectedOrders.length}
         />
 
@@ -169,43 +152,6 @@ const OrdersPending = () => {
                 value={searchQuery}
                 onChange={setSearchQuery}
               />
-            </div>
-            <div className="flex justify-start">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <UiButton
-                    variant="outline"
-                    size="icon"
-                    aria-label="Bộ lọc"
-                    className="text-foreground/80 hover:text-foreground"
-                  >
-                    <Filter />
-                  </UiButton>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
-                  <DropdownMenuLabel>Độ ưu tiên</DropdownMenuLabel>
-                  <DropdownMenuRadioGroup
-                    value={priorityFilter}
-                    onValueChange={setPriorityFilter}
-                  >
-                    <DropdownMenuRadioItem value="all">
-                      Tất cả
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="urgent">
-                      Khẩn cấp
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="high">
-                      Ưu tiên cao
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="normal">
-                      Bình thường
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="low">
-                      Thấp
-                    </DropdownMenuRadioItem>
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
           </div>
 

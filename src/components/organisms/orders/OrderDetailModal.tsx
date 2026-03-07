@@ -45,6 +45,40 @@ function orderBadgeType(status: OrderRecord['status']) {
   }
 }
 
+const ORDER_STATUS_TEXT: Record<OrderRecord['status'], string> = {
+  pending: 'Đang xử lý',
+  processing: 'Đang xử lý',
+  completed: 'Hoàn thành',
+  cancelled: 'Đã hủy',
+};
+
+const PAYMENT_STATUS_TEXT: Record<OrderRecord['paymentStatus'], string> = {
+  paid: 'Đã thanh toán',
+  pending: 'Chưa thanh toán',
+  partial: 'Thanh toán một phần',
+  cod: 'COD',
+};
+
+const ORDER_TYPE_TEXT: Record<string, string> = {
+  ready_stock: 'Hàng có sẵn',
+  pre_order: 'Đặt trước',
+};
+
+function orderTypeLabel(order: OrderRecord, hasRx: boolean) {
+  const orderType = String(order.orderType || '').toLowerCase();
+  if (orderType && ORDER_TYPE_TEXT[orderType]) return ORDER_TYPE_TEXT[orderType];
+  if (hasRx) return 'Làm theo đơn';
+  return order.orderType || '-';
+}
+
+function Label({ children }: { children: React.ReactNode }) {
+  return <p className="text-foreground/70 text-xs font-medium">{children}</p>;
+}
+
+function Value({ children }: { children: React.ReactNode }) {
+  return <p className="text-foreground text-sm font-semibold">{children}</p>;
+}
+
 export function OrderDetailModal({
   open,
   onOpenChange,
@@ -62,66 +96,62 @@ export function OrderDetailModal({
 
   const rx = toPrescriptionOrder(order);
   const supplement = toSupplementOrder(order);
+  const orderTypeText = orderTypeLabel(order, Boolean(rx || supplement));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="w-[92vw] max-w-[640px] max-h-[72vh] overflow-y-auto p-4 text-foreground shadow-2xl">
         <DialogHeader>
           <DialogTitle>Chi tiết đơn {order.code}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 py-2">
+        <div className="space-y-4 py-1">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="space-y-1">
-              <p className="text-muted-foreground text-sm">Trạng thái</p>
+              <Label>Trạng thái</Label>
               <StatusBadge status={orderBadgeType(order.status)}>
-                {order.status}
+                {ORDER_STATUS_TEXT[order.status]}
               </StatusBadge>
-              {order.rawStatus && (
-                <p className="text-muted-foreground text-xs">
-                  Raw: {order.rawStatus}
-                </p>
-              )}
             </div>
 
             <div className="space-y-1">
-              <p className="text-muted-foreground text-sm">Thanh toán</p>
+              <Label>Thanh toán</Label>
               <StatusBadge status={paymentBadgeType(order.paymentStatus)}>
-                {order.paymentStatus}
+                {PAYMENT_STATUS_TEXT[order.paymentStatus]}
               </StatusBadge>
-              <p className="text-muted-foreground text-xs">
-                Method: {order.paymentMethod || '-'}
+              <p className="text-foreground/60 text-xs">
+                Phương thức: {order.paymentMethod || '-'}
               </p>
             </div>
 
             <div className="space-y-1">
-              <p className="text-muted-foreground text-sm">Ngày tạo</p>
-              <p className="font-medium">{createdAtLabel}</p>
-              <p className="text-muted-foreground text-xs">
-                Type: {order.orderType || '-'}
+              <Label>Ngày tạo</Label>
+              <Value>{createdAtLabel}</Value>
+              <p className="text-foreground/60 text-xs">
+                Loại đơn: {orderTypeText}
               </p>
             </div>
           </div>
 
           <div className="border-border border-t pt-4">
-            <h4 className="mb-3 font-medium">Khách hàng</h4>
+            <h4 className="text-foreground mb-3 font-semibold">Khách hàng</h4>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div className="space-y-1">
-                <p className="text-muted-foreground text-sm">Tên</p>
-                <p className="font-medium">{order.customerName}</p>
+                <Label>Tên</Label>
+                <Value>{order.customerName}</Value>
               </div>
               <div className="space-y-1">
-                <p className="text-muted-foreground text-sm">SĐT</p>
-                <p className="font-medium">{order.customerPhone || '-'}</p>
+                <Label>SĐT</Label>
+                <Value>{order.customerPhone || '-'}</Value>
               </div>
               <div className="space-y-1 sm:col-span-3">
-                <p className="text-muted-foreground text-sm">Địa chỉ</p>
-                <p className="font-medium">{order.customerAddress || '-'}</p>
+                <Label>Địa chỉ</Label>
+                <Value>{order.customerAddress || '-'}</Value>
               </div>
               {order.note && (
                 <div className="space-y-1 sm:col-span-3">
-                  <p className="text-muted-foreground text-sm">Ghi chú</p>
-                  <p className="text-foreground/90 whitespace-pre-wrap">
+                  <Label>Ghi chú</Label>
+                  <p className="text-foreground whitespace-pre-wrap text-sm">
                     {order.note}
                   </p>
                 </div>
@@ -130,8 +160,8 @@ export function OrderDetailModal({
           </div>
 
           <div className="border-border border-t pt-4">
-            <h4 className="mb-3 font-medium">Sản phẩm</h4>
-            <div className="space-y-3">
+            <h4 className="text-foreground mb-3 font-semibold">Sản phẩm</h4>
+            <div className="space-y-2">
               {order.items.map((item) => {
                 const isRx =
                   item.hasPrescription ||
@@ -141,32 +171,34 @@ export function OrderDetailModal({
                 return (
                   <div
                     key={item.id || `${item.name}-${item.variant}`}
-                    className="bg-muted/30 rounded-lg border p-3"
+                    className="bg-card border-border rounded-lg border p-3 shadow-md"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="truncate font-medium">{item.name}</p>
-                        <p className="text-muted-foreground text-sm">
-                          {item.variant} • Qty: {item.quantity}
+                        <p className="text-foreground truncate font-semibold">
+                          {item.name}
+                        </p>
+                        <p className="text-foreground/70 text-sm">
+                          {item.variant} • SL: {item.quantity}
                         </p>
                         <div className="mt-1 flex flex-wrap gap-2">
                           {item.preOrder && (
-                            <span className="bg-warning/10 text-warning rounded-full border border-warning/20 px-2 py-0.5 text-xs">
-                              Pre-order
+                            <span className="bg-warning/10 text-warning rounded-full border border-warning/20 px-2 py-0.5 text-xs font-medium">
+                              Đặt trước
                             </span>
                           )}
                           {isRx && (
-                            <span className="bg-primary/10 text-primary rounded-full border border-primary/20 px-2 py-0.5 text-xs">
+                            <span className="bg-primary/10 text-primary rounded-full border border-primary/20 px-2 py-0.5 text-xs font-medium">
                               Rx
                             </span>
                           )}
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold">
+                        <p className="text-foreground font-extrabold">
                           {formatCurrency(item.lineTotal)}
                         </p>
-                        <p className="text-muted-foreground text-xs">
+                        <p className="text-foreground/60 text-xs">
                           {formatCurrency(item.unitPrice)} / sp
                         </p>
                       </div>
@@ -178,11 +210,13 @@ export function OrderDetailModal({
 
             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="sm:col-span-2" />
-              <div className="bg-muted/30 rounded-lg border p-3 text-right">
-                <p className="text-muted-foreground text-sm">Tổng tiền</p>
-                <p className="text-lg font-bold">{formatCurrency(order.total)}</p>
+              <div className="text-right">
+                <p className="text-muted-foreground text-xs font-medium">Tổng tiền</p>
+                <p className="text-primary text-2xl font-extrabold leading-none">
+                  {formatCurrency(order.total)}
+                </p>
                 {order.paidAmount > 0 && (
-                  <p className="text-muted-foreground text-xs">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     Đã trả: {formatCurrency(order.paidAmount)}
                   </p>
                 )}
@@ -192,23 +226,21 @@ export function OrderDetailModal({
 
           {(rx || supplement) && (
             <div className="border-border border-t pt-4">
-              <h4 className="mb-3 font-medium">Prescription</h4>
+              <h4 className="text-foreground mb-3 font-semibold">Toa kính</h4>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 {rx && (
                   <div className="space-y-1">
-                    <p className="text-muted-foreground text-sm">Trạng thái Rx</p>
-                    <p className="font-medium">{rx.prescriptionStatus}</p>
-                    <p className="text-muted-foreground text-xs">
-                      Source: {rx.source}
-                    </p>
+                    <Label>Trạng thái Rx</Label>
+                    <Value>{rx.prescriptionStatus}</Value>
+                    <p className="text-foreground/60 text-xs">Nguồn: {rx.source}</p>
                   </div>
                 )}
                 {supplement && (
                   <div className="space-y-1 sm:col-span-2">
-                    <p className="text-muted-foreground text-sm">Cần bổ sung</p>
-                    <p className="font-medium">{supplement.missingType}</p>
+                    <Label>Cần bổ sung</Label>
+                    <Value>{supplement.missingType}</Value>
                     {supplement.missingFields?.length > 0 && (
-                      <p className="text-muted-foreground text-xs">
+                      <p className="text-foreground/60 text-xs">
                         {supplement.missingFields.map((f) => f.label).join(', ')}
                       </p>
                     )}
@@ -228,4 +260,3 @@ export function OrderDetailModal({
     </Dialog>
   );
 }
-

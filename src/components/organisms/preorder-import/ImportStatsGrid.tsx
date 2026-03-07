@@ -21,7 +21,7 @@ export const ImportStatsGrid = ({ stats }: ImportStatsGridProps) => (
     />
     <StatCard
       icon={Clock}
-      title="Chờ xử lý"
+      title="Đang xử lý"
       value={stats.pending.toString()}
       className="p-3"
       titleClassName="text-foreground/90 text-sm"

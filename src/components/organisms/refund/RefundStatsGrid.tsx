@@ -21,7 +21,7 @@ interface RefundStatsGridProps {
 export const RefundStatsGrid = ({ stats }: RefundStatsGridProps) => {
   const items = [
     {
-      label: 'Chờ xử lý',
+      label: 'Đang xử lý',
       value: String(stats.pending),
       icon: Clock,
       colorClass: 'bg-warning/10 text-warning',

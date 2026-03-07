@@ -32,7 +32,7 @@ export const statusConfig: Record<
   RefundStatus,
   { label: string; type: 'success' | 'warning' | 'error' | 'info' | 'default' }
 > = {
-  pending: { label: 'Chờ xử lý', type: 'warning' },
+  pending: { label: 'Đang xử lý', type: 'warning' },
   reviewing: { label: 'Đang xem xét', type: 'info' },
   approved: { label: 'Đã duyệt', type: 'success' },
   processing: { label: 'Đang hoàn tiền', type: 'info' },

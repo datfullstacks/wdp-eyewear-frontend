@@ -1,5 +1,5 @@
 import type { OrderItem, OrderRecord } from '@/api/orders';
-import type { PendingOrder, PendingPriority, PaymentStatus } from '@/types/pending';
+import type { PendingOrder, PaymentStatus } from '@/types/pending';
 import type { PreorderOrder, PreorderProduct } from '@/types/preorder';
 import type { MissingField, SupplementOrder } from '@/types/prescription';
 import type { PrescriptionData, PrescriptionOrder } from '@/types/rxPrescription';
@@ -61,18 +61,6 @@ function calculateDaysPending(dateValue?: string): number {
   const diffMs = Date.now() - createdAt;
   const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   return Math.max(0, days);
-}
-
-function inferPendingPriority(order: OrderRecord): PendingPriority {
-  const now = Date.now();
-  const createdAt = order.createdAt ? new Date(order.createdAt).getTime() : NaN;
-  const ageHours = Number.isNaN(createdAt) ? 0 : (now - createdAt) / (1000 * 60 * 60);
-  const note = (order.note || '').toLowerCase();
-
-  if (note.includes('vip') || note.includes('gấp') || ageHours >= 48) return 'urgent';
-  if (ageHours >= 24 || order.total >= 8_000_000) return 'high';
-  if (order.total <= 1_500_000) return 'low';
-  return 'normal';
 }
 
 function mapPaymentStatus(status: OrderRecord['paymentStatus']): PaymentStatus {
@@ -308,7 +296,6 @@ export function toPendingOrder(order: OrderRecord): PendingOrder {
     products,
     total: order.total,
     status: order.rawStatus || 'pending',
-    priority: inferPendingPriority(order),
     createdAt: formatDateTime(order.createdAt),
     note: order.note || '',
     hasPrescription: order.items.some(requiresPrescription),

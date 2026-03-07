@@ -9,7 +9,6 @@ import { StatusBadge } from '@/components/atoms/StatusBadge';
 import { User, Phone, MapPin, CheckCircle, XCircle } from 'lucide-react';
 import { PendingOrder } from '@/types/pending';
 import {
-  priorityConfig,
   paymentStatusConfig,
   formatCurrency,
 } from '@/data/pendingData';
@@ -97,9 +96,6 @@ export const PendingDetailModal = ({
           {/* Summary */}
           <div className="flex items-center justify-between border-t pt-3">
             <div className="flex items-center gap-4">
-              <StatusBadge status={priorityConfig[order.priority].color}>
-                {priorityConfig[order.priority].label}
-              </StatusBadge>
               <StatusBadge
                 status={paymentStatusConfig[order.paymentStatus].color}
               >

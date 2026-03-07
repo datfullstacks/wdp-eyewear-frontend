@@ -25,7 +25,7 @@ const statusMap: Record<
   OrderStatus,
   { label: string; type: 'warning' | 'info' | 'success' | 'error' }
 > = {
-  pending: { label: 'Chờ xử lý', type: 'warning' },
+  pending: { label: 'Đang xử lý', type: 'warning' },
   processing: { label: 'Đang xử lý', type: 'info' },
   completed: { label: 'Hoàn thành', type: 'success' },
   cancelled: { label: 'Đã hủy', type: 'error' },

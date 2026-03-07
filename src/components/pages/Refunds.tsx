@@ -98,7 +98,7 @@ const Refunds = () => {
                     Tất cả trạng thái
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="pending">
-                    Chờ xử lý
+                    Đang xử lý
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="reviewing">
                     Đang xem xét

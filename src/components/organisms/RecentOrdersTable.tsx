@@ -17,7 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Eye, MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { orderApi } from '@/api';
@@ -31,7 +31,7 @@ const statusMap: Record<
   OrderStatus,
   { label: string; type: 'warning' | 'info' | 'success' | 'error' }
 > = {
-  pending: { label: 'Chờ xử lý', type: 'warning' },
+  pending: { label: 'Đang xử lý', type: 'warning' },
   processing: { label: 'Đang xử lý', type: 'info' },
   completed: { label: 'Hoàn thành', type: 'success' },
   cancelled: { label: 'Đã hủy', type: 'error' },
@@ -117,7 +117,7 @@ export const RecentOrdersTable = ({
       <Table className="text-sm font-normal">
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead className="w-[120px]">Mã đơn</TableHead>
+            <TableHead className="w-[140px] whitespace-nowrap">Mã đơn</TableHead>
             <TableHead>Khách hàng</TableHead>
             <TableHead>Sản phẩm</TableHead>
             <TableHead className="text-right">Tổng tiền</TableHead>
@@ -158,8 +158,10 @@ export const RecentOrdersTable = ({
               const statusInfo = statusMap[dashboard.status];
               return (
                 <TableRow key={order.id} className="hover:bg-muted/30">
-                  <TableCell className="text-foreground font-mono text-sm font-normal">
-                    {String(dashboard.id).replace(/^#/, '')}
+                  <TableCell className="text-foreground font-mono text-sm font-normal whitespace-nowrap">
+                    <span title={String(dashboard.id).replace(/^#/, '')}>
+                      {String(dashboard.id).replace(/^#/, '')}
+                    </span>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
@@ -197,14 +199,6 @@ export const RecentOrdersTable = ({
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-foreground/80 hover:text-foreground"
-                        onClick={() => handleOpenDetail(order)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
@@ -245,4 +239,3 @@ export const RecentOrdersTable = ({
     </div>
   );
 };
-
