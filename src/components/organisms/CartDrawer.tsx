@@ -1,9 +1,10 @@
 'use client';
 
-import { X, Minus, Plus, Trash2, ShoppingCart, ArrowRight } from 'lucide-react';
+import { X, Minus, Plus, Trash2, ShoppingCart, ArrowRight, Edit } from 'lucide-react';
 import { Button } from '@/components/atoms';
 import { cn } from '@/lib/utils';
 import { useEffect } from 'react';
+import type { PrescriptionData } from '@/types/rxPrescription';
 
 export interface CartItem {
   productId: string;
@@ -13,6 +14,8 @@ export interface CartItem {
   quantity: number;
   imageUrl?: string;
   type?: string;
+  isPrescription?: boolean;
+  prescription?: PrescriptionData;
 }
 
 interface CartDrawerProps {
@@ -23,6 +26,7 @@ interface CartDrawerProps {
   onRemoveItem: (productId: string, variantId: string | undefined) => void;
   onClearCart: () => void;
   onCheckout: () => void;
+  onEditPrescription?: (productId: string) => void;
 }
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({
@@ -33,6 +37,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onRemoveItem,
   onClearCart,
   onCheckout,
+  onEditPrescription,
 }) => {
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -158,50 +163,84 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     {/* Product Info */}
                     <div className="flex min-w-0 flex-1 flex-col justify-between">
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900">
-                          {item.name}
-                        </h4>
-                        {item.type && (
-                          <p className="mt-0.5 text-xs text-gray-500">{item.type}</p>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <h4 className="text-sm font-medium text-gray-900">
+                              {item.name}
+                            </h4>
+                            {item.type && (
+                              <p className="mt-0.5 text-xs text-gray-500">{item.type}</p>
+                            )}
+                          </div>
+                          {item.isPrescription && (
+                            <span className="flex-shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+                              Đặt theo đơn
+                            </span>
+                          )}
+                        </div>
+                        
+                        {/* Prescription Info */}
+                        {item.isPrescription && item.prescription && (
+                          <div className="mt-2 rounded-md bg-blue-50 p-2">
+                            <div className="grid grid-cols-2 gap-1 text-xs">
+                              <div><span className="text-gray-600">SPH:</span> <span className="font-medium">R: {item.prescription.sphereRight} / L: {item.prescription.sphereLeft}</span></div>
+                              <div><span className="text-gray-600">CYL:</span> <span className="font-medium">R: {item.prescription.cylinderRight} / L: {item.prescription.cylinderLeft}</span></div>
+                              <div><span className="text-gray-600">AXIS:</span> <span className="font-medium">R: {item.prescription.axisRight} / L: {item.prescription.axisLeft}</span></div>
+                              <div><span className="text-gray-600">PD:</span> <span className="font-medium">{item.prescription.pd}</span></div>
+                            </div>
+                            {onEditPrescription && (
+                              <button
+                                onClick={() => onEditPrescription(item.productId)}
+                                className="mt-2 flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
+                              >
+                                <Edit className="h-3 w-3" />
+                                Chỉnh sửa thông số
+                              </button>
+                            )}
+                          </div>
                         )}
                       </div>
 
                       <div className="mt-2 flex items-center justify-between">
-                        {/* Quantity Controls */}
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              onUpdateQuantity(
-                                item.productId,
-                                item.variantId,
-                                Math.max(1, item.quantity - 1)
-                              )
-                            }
-                            className="h-8 w-8 p-0"
-                            disabled={item.quantity <= 1}
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span className="w-10 text-center text-sm font-medium text-gray-900">
-                            {item.quantity}
-                          </span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              onUpdateQuantity(
-                                item.productId,
-                                item.variantId,
-                                item.quantity + 1
-                              )
-                            }
-                            className="h-8 w-8 p-0"
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
-                        </div>
+                        {/* Quantity Controls - Disabled for prescription items */}
+                        {!item.isPrescription ? (
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                onUpdateQuantity(
+                                  item.productId,
+                                  item.variantId,
+                                  Math.max(1, item.quantity - 1)
+                                )
+                              }
+                              className="h-8 w-8 p-0"
+                              disabled={item.quantity <= 1}
+                            >
+                              <Minus className="h-3 w-3" />
+                            </Button>
+                            <span className="w-10 text-center text-sm font-medium text-gray-900">
+                              {item.quantity}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                onUpdateQuantity(
+                                  item.productId,
+                                  item.variantId,
+                                  item.quantity + 1
+                                )
+                              }
+                              className="h-8 w-8 p-0"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-500">SL: {item.quantity}</span>
+                        )}
 
                         {/* Remove button */}
                         <button
