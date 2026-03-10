@@ -1,15 +1,16 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { SearchBar } from '@/components/molecules/SearchBar';
 import { Pagination } from '@/components/molecules/Pagination';
-import { SalePOSCart, CartItem } from './SalePOSCart';
-import { SalePOSCheckout, CheckoutFormData } from './SalePOSCheckout';
-import { productApi, checkoutApi, Product } from '@/api';
+import { SaleHeader } from './SaleHeader';
+import { CartDrawer, CartItem } from './CartDrawer';
+import { productApi, Product } from '@/api';
 import { Glasses, Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 16;
 
 const typeLabels: Record<string, string> = {
   sunglasses: 'Kính mát',
@@ -24,12 +25,14 @@ const typeLabels: Record<string, string> = {
 };
 
 export const SalePOSDashboard: React.FC = () => {
+  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Load products
   useEffect(() => {
@@ -162,107 +165,36 @@ export const SalePOSDashboard: React.FC = () => {
     }
   }, []);
 
-  // Checkout
-  const handleCheckout = useCallback(
-    async (paymentMethod: 'cash' | 'qr', formData: CheckoutFormData) => {
-      try {
-        const checkoutData = {
-          items: cartItems.map((item) => ({
-            productId: item.productId,
-            variantId: item.variantId,
-            quantity: item.quantity,
-          })),
-          shippingFee: 0, // Không giao hàng - mua tại cửa hàng
-          discountAmount: 0,
-          shippingMethod: 'pickup', // Nhận tại cửa hàng
-          shippingAddress: {
-            fullName: formData.fullName,
-            phone: formData.phone,
-            email: formData.email || '',
-            line1: 'Cửa hàng Eyes Dream',
-            line2: '',
-            ward: '',
-            district: '',
-            province: '',
-            country: 'VN',
-            note: formData.note || '',
-          },
-          note: formData.note || '',
-          paymentMethod,
-        };
+  // Navigate to checkout
+  const handleCheckout = useCallback(() => {
+    setIsCartOpen(false);
+    // Store cart items in sessionStorage for checkout page
+    sessionStorage.setItem('checkoutCart', JSON.stringify(cartItems));
+    router.push('/sale/checkout');
+  }, [cartItems, router]);
 
-        const result = await checkoutApi.createOrder(checkoutData);
-
-        // Show success message
-        alert(
-          `✅ Đơn hàng đã được tạo thành công!\n\nMã đơn: ${result.orderCode}\nPhương thức: ${paymentMethod === 'cash' ? 'Tiền mặt' : 'QR Code'}\nTổng tiền: ${result.total.toLocaleString('vi-VN')} ₫`
-        );
-
-        // Clear cart
-        setCartItems([]);
-      } catch (err) {
-        console.error('Checkout error:', err);
-        throw err;
-      }
-    },
-    [cartItems]
-  );
-
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
   const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="flex h-screen flex-col bg-gray-50">
-      {/* Header */}
-      <div className="border-b border-gray-200 bg-white px-6 py-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-500">
-              <Glasses className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                POS - Bán hàng
-              </h1>
-              <p className="text-sm text-gray-600">
-                Eyes Dream Sale Dashboard
-              </p>
-            </div>
-          </div>
+    <>
+      <div className="flex h-screen flex-col bg-gray-50">
+        {/* Header */}
+        <SaleHeader 
+          cartItemCount={itemCount}
+          onCartClick={() => setIsCartOpen(true)}
+        />
 
-          {/* Date & Time */}
-          <div className="text-right">
-            <p className="text-sm font-medium text-gray-900">
-              {new Date().toLocaleDateString('vi-VN', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </p>
-            <p className="text-xs text-gray-600">
-              {new Date().toLocaleTimeString('vi-VN')}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left Side - Products */}
+        {/* Main Content - Products Only */}
         <div className="flex flex-1 flex-col overflow-hidden">
           {/* Search Bar */}
-          <div className="border-b border-gray-200 bg-white p-4">
+          <div className="border-b border-gray-200 bg-white p-6">
             <SearchBar
               placeholder="Tìm kiếm sản phẩm theo tên, loại, thương hiệu..."
               value={searchTerm}
               onChange={setSearchTerm}
               className="h-12 text-base"
             />
-            <div className="mt-2 flex items-center justify-between">
+            <div className="mt-3 flex items-center justify-between">
               <p className="text-sm text-gray-600">
                 Tìm thấy <strong>{filteredProducts.length}</strong> sản phẩm
               </p>
@@ -274,8 +206,8 @@ export const SalePOSDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Product Grid */}
-          <div className="flex-1 overflow-y-auto p-4">
+          {/* Product Grid - Full Screen */}
+          <div className="flex-1 overflow-y-auto p-6">
             {isLoading ? (
               <div className="flex h-full items-center justify-center">
                 <div className="text-center">
@@ -303,7 +235,7 @@ export const SalePOSDashboard: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <>
+              <div className="mx-auto max-w-[1800px]">
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
                   {paginatedProducts.map((product) => (
                     <button
@@ -356,7 +288,7 @@ export const SalePOSDashboard: React.FC = () => {
                   ))}
                 </div>
                 {totalPages > 1 && (
-                  <div className="mt-6">
+                  <div className="mt-8">
                     <Pagination
                       currentPage={currentPage}
                       totalPages={totalPages}
@@ -366,32 +298,23 @@ export const SalePOSDashboard: React.FC = () => {
                     />
                   </div>
                 )}
-              </>
+              </div>
             )}
           </div>
         </div>
-
-        {/* Right Side - Cart & Checkout */}
-        <div className="flex w-[420px] flex-col border-l border-gray-200 bg-white">
-          <div className="flex h-1/2 flex-col border-b border-gray-200">
-            <SalePOSCart
-              items={cartItems}
-              onUpdateQuantity={updateQuantity}
-              onRemoveItem={removeItem}
-              onClearCart={clearCart}
-            />
-          </div>
-          <div className="flex h-1/2 flex-col">
-            <SalePOSCheckout
-              subtotal={subtotal}
-              itemCount={itemCount}
-              disabled={isLoading}
-              onCheckout={handleCheckout}
-            />
-          </div>
-        </div>
       </div>
-    </div>
+
+      {/* Cart Drawer */}
+      <CartDrawer
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        items={cartItems}
+        onUpdateQuantity={updateQuantity}
+        onRemoveItem={removeItem}
+        onClearCart={clearCart}
+        onCheckout={handleCheckout}
+      />
+    </>
   );
 };
 

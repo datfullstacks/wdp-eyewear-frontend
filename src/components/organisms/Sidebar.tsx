@@ -36,6 +36,7 @@ import { orderApi } from '@/api';
 import { Button } from '@/components/atoms';
 import { computeOrderMenuCounts, type OrderMenuCounts } from '@/lib/orderWorkflow';
 import { cn } from '@/lib/utils';
+import { useSidebar } from '@/contexts/SidebarContext';
 
 type BadgeType = 'warning' | 'error' | 'info';
 
@@ -192,7 +193,7 @@ function isActivePath(pathname: string, itemPath?: string, exact?: boolean) {
 }
 
 export const Sidebar: React.FC = () => {
-  const [collapsed, setCollapsed] = useState(false);
+  const { collapsed, toggleCollapsed } = useSidebar();
   const pathname = usePathname();
   const [orderCounts, setOrderCounts] = useState<OrderMenuCounts | null>(null);
 
@@ -297,7 +298,7 @@ export const Sidebar: React.FC = () => {
         variant="ghost"
         size="sm"
         type="button"
-        onClick={() => setCollapsed((v) => !v)}
+        onClick={toggleCollapsed}
         className="absolute top-20 -right-3 h-6 w-6 rounded-full border border-gray-200 bg-gray-100 p-0 shadow-sm hover:bg-gray-200"
         aria-label={collapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
       >
