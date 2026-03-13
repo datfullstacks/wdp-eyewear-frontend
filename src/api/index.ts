@@ -4,6 +4,13 @@ export { default as authApi } from './auth';
 export { default as uploadApi } from './uploads';
 export { default as userApi } from './users';
 export { default as orderApi } from './orders';
+export {
+  getProducts as getManagerProducts,
+  getProductById,
+  createProduct,
+  updateProduct,
+  uploadFile as uploadManagerProductFile,
+} from './managerProducts';
 
 export type {
   Product,
@@ -23,3 +30,19 @@ export type {
   OrderRecord,
   OrdersResponse,
 } from './orders';
+export type {
+  Product as ManagerProduct,
+  ProductListResponse,
+  ProductDetailResponse,
+  Pricing,
+  Inventory,
+  PreOrder,
+  Variant,
+  VariantOption,
+  Asset,
+  Media,
+  TryOn,
+  ProductSpecs,
+  UpdateProductPayload,
+  UploadResponse,
+} from '@/types/managerProduct';

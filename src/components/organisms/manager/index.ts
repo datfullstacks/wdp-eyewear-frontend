@@ -1,6 +1,12 @@
 export { ProductForm, type ProductFormState, CATEGORY_OPTIONS } from './ProductForm';
 export { ProductFormFull, type ProductFormFullProps } from './ProductFormFull';
 export { ProductTable } from './ProductTable';
+export { ManagerProductsPage } from './ManagerProductsPage';
+export { ManagerProductEditorPage } from './ManagerProductEditorPage';
+export { ManagerProductCreatePage } from './ManagerProductCreatePage';
+export { VariantsEditor } from './VariantsEditor';
+export { MediaAssetsEditor } from './MediaAssetsEditor';
+export { SpecsEditor } from './SpecsEditor';
 export { UserForm, type UserFormData } from './UserForm';
 export { UserTable, type UserTabRole } from './UserTable';
 export { DiscountForm, type DiscountFormData } from './DiscountForm';
