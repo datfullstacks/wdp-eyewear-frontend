@@ -2,7 +2,10 @@ import type { OrderItem, OrderRecord } from '@/api/orders';
 import type { PendingOrder, PaymentStatus } from '@/types/pending';
 import type { PreorderOrder, PreorderProduct } from '@/types/preorder';
 import type { MissingField, SupplementOrder } from '@/types/prescription';
-import type { PrescriptionData, PrescriptionOrder } from '@/types/rxPrescription';
+import type {
+  PrescriptionData,
+  PrescriptionOrder,
+} from '@/types/rxPrescription';
 
 export type DashboardOrder = {
   id: string;
@@ -43,13 +46,15 @@ function formatDateTime(dateValue?: string): string {
 function formatIsoDate(dateValue?: string): string {
   if (!dateValue) return new Date().toISOString().slice(0, 10);
   const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return new Date().toISOString().slice(0, 10);
+  if (Number.isNaN(date.getTime()))
+    return new Date().toISOString().slice(0, 10);
   return date.toISOString().slice(0, 10);
 }
 
 function plusDaysIso(dateValue: string, days: number): string {
   const base = new Date(dateValue);
-  if (Number.isNaN(base.getTime())) return new Date().toISOString().slice(0, 10);
+  if (Number.isNaN(base.getTime()))
+    return new Date().toISOString().slice(0, 10);
   base.setDate(base.getDate() + days);
   return base.toISOString().slice(0, 10);
 }
@@ -72,7 +77,8 @@ function mapPaymentStatus(status: OrderRecord['paymentStatus']): PaymentStatus {
 
 function estimateExpectedDate(dateValue?: string): string {
   const base = dateValue ? new Date(dateValue) : new Date();
-  if (Number.isNaN(base.getTime())) return new Date().toISOString().slice(0, 10);
+  if (Number.isNaN(base.getTime()))
+    return new Date().toISOString().slice(0, 10);
   const next = new Date(base.getTime());
   next.setDate(next.getDate() + 14);
   return next.toISOString().slice(0, 10);
@@ -80,22 +86,41 @@ function estimateExpectedDate(dateValue?: string): string {
 
 function mapPreorderStatus(order: OrderRecord): PreorderOrder['status'] {
   if (order.status === 'cancelled') return 'cancelled';
-  if (order.status === 'processing' || order.status === 'completed') return 'ready';
+  if (order.status === 'processing' || order.status === 'completed')
+    return 'ready';
   return 'waiting_stock';
 }
 
-function mapPreorderProductStatus(order: OrderRecord): PreorderProduct['status'] {
-  if (order.status === 'processing' || order.status === 'completed') return 'arrived';
+function mapPreorderProductStatus(
+  order: OrderRecord
+): PreorderProduct['status'] {
+  if (order.status === 'processing' || order.status === 'completed')
+    return 'arrived';
   return 'waiting';
+}
+
+function mapPreorderOpsStatus(order: OrderRecord): PreorderOrder['opsStatus'] {
+  const rawStatus = String(order.rawStatus || '')
+    .trim()
+    .toLowerCase();
+
+  if (rawStatus === 'shipped' || rawStatus === 'delivered')
+    return 'shipment_created';
+  if (order.status === 'processing' || order.status === 'completed')
+    return 'stocked';
+  return 'waiting_arrival';
 }
 
 function inferPreorderPriority(order: OrderRecord): PreorderOrder['priority'] {
   const now = Date.now();
   const createdAt = order.createdAt ? new Date(order.createdAt).getTime() : NaN;
-  const ageHours = Number.isNaN(createdAt) ? 0 : (now - createdAt) / (1000 * 60 * 60);
+  const ageHours = Number.isNaN(createdAt)
+    ? 0
+    : (now - createdAt) / (1000 * 60 * 60);
   const note = (order.note || '').toLowerCase();
 
-  if (note.includes('vip') || note.includes('gấp') || ageHours >= 72) return 'urgent';
+  if (note.includes('vip') || note.includes('gấp') || ageHours >= 72)
+    return 'urgent';
   if (ageHours >= 24 || order.total >= 10_000_000) return 'high';
   return 'normal';
 }
@@ -103,10 +128,13 @@ function inferPreorderPriority(order: OrderRecord): PreorderOrder['priority'] {
 function inferRxPriority(order: OrderRecord): PrescriptionOrder['priority'] {
   const now = Date.now();
   const createdAt = order.createdAt ? new Date(order.createdAt).getTime() : NaN;
-  const ageHours = Number.isNaN(createdAt) ? 0 : (now - createdAt) / (1000 * 60 * 60);
+  const ageHours = Number.isNaN(createdAt)
+    ? 0
+    : (now - createdAt) / (1000 * 60 * 60);
   const note = (order.note || '').toLowerCase();
 
-  if (note.includes('vip') || note.includes('gấp') || ageHours >= 72) return 'urgent';
+  if (note.includes('vip') || note.includes('gấp') || ageHours >= 72)
+    return 'urgent';
   if (ageHours >= 24 || order.total >= 8_000_000) return 'high';
   return 'normal';
 }
@@ -176,7 +204,9 @@ function isManualPrescriptionComplete(item: OrderItem): boolean {
   );
 }
 
-function getRxStatusByItem(item: OrderItem): PrescriptionOrder['prescriptionStatus'] {
+function getRxStatusByItem(
+  item: OrderItem
+): PrescriptionOrder['prescriptionStatus'] {
   if (item.prescriptionMode === 'none') return 'missing';
 
   if (item.prescriptionMode === 'manual') {
@@ -303,7 +333,9 @@ export function toPendingOrder(order: OrderRecord): PendingOrder {
   };
 }
 
-export function toPrescriptionOrder(order: OrderRecord): PrescriptionOrder | null {
+export function toPrescriptionOrder(
+  order: OrderRecord
+): PrescriptionOrder | null {
   if (!isOrderRelevantForRx(order)) return null;
 
   const rxItems = getRxItems(order);
@@ -366,9 +398,13 @@ export function toSupplementOrder(order: OrderRecord): SupplementOrder | null {
   } else if (missingType === 'incomplete_data' && primaryItem) {
     missingFields = buildMissingFieldsForIncomplete(primaryItem);
   } else if (missingType === 'unclear_image') {
-    missingFields = [{ field: 'all', label: 'Ảnh đơn thuốc chưa rõ, cần xác minh' }];
+    missingFields = [
+      { field: 'all', label: 'Ảnh đơn thuốc chưa rõ, cần xác minh' },
+    ];
   } else {
-    missingFields = [{ field: 'all', label: 'Cần xác nhận lại thông số mắt với khách' }];
+    missingFields = [
+      { field: 'all', label: 'Cần xác nhận lại thông số mắt với khách' },
+    ];
   }
 
   const attachmentUrl = primaryItem?.prescription?.attachmentUrls?.[0];
@@ -423,7 +459,9 @@ export function toPreorderOrder(order: OrderRecord): PreorderOrder {
     customerName: order.customerName,
     customerPhone: order.customerPhone || '-',
     customerAddress: order.customerAddress || '-',
-    orderDate: order.createdAt ? order.createdAt.slice(0, 10) : new Date().toISOString().slice(0, 10),
+    orderDate: order.createdAt
+      ? order.createdAt.slice(0, 10)
+      : new Date().toISOString().slice(0, 10),
     expectedDate: estimateExpectedDate(order.createdAt),
     products,
     totalAmount: order.total,
@@ -432,5 +470,8 @@ export function toPreorderOrder(order: OrderRecord): PreorderOrder {
     status: mapPreorderStatus(order),
     notes: order.note || '',
     priority: inferPreorderPriority(order),
+    opsStatus: mapPreorderOpsStatus(order),
+    carrierId: '',
+    trackingCode: '',
   };
 }
