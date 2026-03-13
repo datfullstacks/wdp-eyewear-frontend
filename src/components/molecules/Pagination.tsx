@@ -65,10 +65,10 @@ export const Pagination = ({
     <div className={`flex items-center justify-between ${className}`}>
       {/* Info */}
       {totalItems !== undefined && (
-        <div className="text-sm text-gray-600">
-          Hiển thị <span className="font-medium">{startItem}</span> -{' '}
-          <span className="font-medium">{endItem}</span> trong tổng số{' '}
-          <span className="font-medium">{totalItems}</span>
+        <div className="text-sm text-gray-700">
+          Hiển thị <span className="font-medium text-gray-900">{startItem}</span> -{' '}
+          <span className="font-medium text-gray-900">{endItem}</span> trong tổng số{' '}
+          <span className="font-medium text-gray-900">{totalItems}</span>
         </div>
       )}
 
@@ -91,7 +91,7 @@ export const Pagination = ({
           page === '...' ? (
             <span
               key={`ellipsis-${index}`}
-              className="flex h-9 w-9 items-center justify-center text-gray-500"
+              className="flex h-9 w-9 items-center justify-center text-gray-600"
             >
               ...
             </span>
@@ -103,8 +103,8 @@ export const Pagination = ({
               onClick={() => onPageChange(page as number)}
               className={`h-9 w-9 p-0 ${
                 currentPage === page
-                  ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                  : ''
+                  ? 'bg-gray-900 hover:bg-gray-800 text-white border-gray-900'
+                  : 'text-gray-700'
               }`}
             >
               {page}

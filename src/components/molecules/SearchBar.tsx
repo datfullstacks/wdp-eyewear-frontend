@@ -53,20 +53,13 @@ export const SearchBar = ({
   };
 
   return (
-    <div className={`group relative flex w-full max-w-md items-center ${className ?? ''}`}>
-      {/* Decorative gradient border */}
-      <div
-        className={`absolute -inset-0.5 rounded-lg bg-gradient-to-r ${accents.glow} opacity-0 blur transition duration-300 group-focus-within:opacity-100`}
-      />
-
+    <div className={`relative flex w-full max-w-md items-center ${className ?? ''}`}>
       <div className="relative flex w-full items-center">
         {/* Search icon */}
-        <div
-          className={`absolute left-3 text-gray-400 transition-colors duration-300 ${accents.iconFocus}`}
-        >
+        <div className="absolute left-3 text-gray-400">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 transition-transform duration-300 group-focus-within:scale-110"
+            className="h-5 w-5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -86,7 +79,7 @@ export const SearchBar = ({
           value={searchValue}
           onChange={handleChange}
           onKeyPress={handleKeyPress}
-          className={`flex-1 border-gray-200 bg-white/80 pr-4 pl-10 shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-md focus:ring-2 ${accents.inputFocus}`}
+          className="flex-1 border-gray-300 bg-white pr-4 pl-10 focus:border-gray-400 focus:ring-1 focus:ring-gray-200"
         />
 
         {searchValue && (

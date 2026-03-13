@@ -140,7 +140,7 @@ export const PrescriptionFormModal: React.FC<PrescriptionFormModalProps> = ({
                       value={formData.sphereRight}
                       onChange={(e) => handleChange('sphereRight', e.target.value)}
                       placeholder="-2.50"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                   </div>
                   <div>
@@ -153,7 +153,7 @@ export const PrescriptionFormModal: React.FC<PrescriptionFormModalProps> = ({
                       value={formData.cylinderRight}
                       onChange={(e) => handleChange('cylinderRight', e.target.value)}
                       placeholder="-0.75"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                   </div>
                   <div>
@@ -166,7 +166,7 @@ export const PrescriptionFormModal: React.FC<PrescriptionFormModalProps> = ({
                       value={formData.axisRight}
                       onChange={(e) => handleChange('axisRight', e.target.value)}
                       placeholder="180"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                   </div>
                 </div>
@@ -179,7 +179,7 @@ export const PrescriptionFormModal: React.FC<PrescriptionFormModalProps> = ({
                     value={formData.addRight || ''}
                     onChange={(e) => handleChange('addRight', e.target.value)}
                     placeholder="+1.50"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -198,7 +198,7 @@ export const PrescriptionFormModal: React.FC<PrescriptionFormModalProps> = ({
                       value={formData.sphereLeft}
                       onChange={(e) => handleChange('sphereLeft', e.target.value)}
                       placeholder="-2.50"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                   </div>
                   <div>
@@ -211,7 +211,7 @@ export const PrescriptionFormModal: React.FC<PrescriptionFormModalProps> = ({
                       value={formData.cylinderLeft}
                       onChange={(e) => handleChange('cylinderLeft', e.target.value)}
                       placeholder="-0.75"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                   </div>
                   <div>
@@ -224,7 +224,7 @@ export const PrescriptionFormModal: React.FC<PrescriptionFormModalProps> = ({
                       value={formData.axisLeft}
                       onChange={(e) => handleChange('axisLeft', e.target.value)}
                       placeholder="180"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                   </div>
                 </div>
@@ -237,7 +237,7 @@ export const PrescriptionFormModal: React.FC<PrescriptionFormModalProps> = ({
                     value={formData.addLeft || ''}
                     onChange={(e) => handleChange('addLeft', e.target.value)}
                     placeholder="+1.50"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -253,7 +253,7 @@ export const PrescriptionFormModal: React.FC<PrescriptionFormModalProps> = ({
                   value={formData.pd}
                   onChange={(e) => handleChange('pd', e.target.value)}
                   placeholder="63"
-                  className="w-1/3 rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-1/3 rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
                 <p className="mt-1 text-xs text-gray-500">Khoảng cách giữa hai đồng tử (mm)</p>
               </div>
@@ -268,7 +268,7 @@ export const PrescriptionFormModal: React.FC<PrescriptionFormModalProps> = ({
                     required
                     value={formData.lensType}
                     onChange={(e) => handleChange('lensType', e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
                     <option value="">Chọn loại tròng</option>
                     <option value="single_vision">Đơn tròng</option>
@@ -284,7 +284,7 @@ export const PrescriptionFormModal: React.FC<PrescriptionFormModalProps> = ({
                     required
                     value={formData.coating}
                     onChange={(e) => handleChange('coating', e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
                     <option value="">Chọn lớp phủ</option>
                     <option value="none">Không</option>
@@ -305,7 +305,7 @@ export const PrescriptionFormModal: React.FC<PrescriptionFormModalProps> = ({
                   value={formData.notes || ''}
                   onChange={(e) => handleChange('notes', e.target.value)}
                   placeholder="Ghi chú đặc biệt về đơn kính..."
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
             </div>

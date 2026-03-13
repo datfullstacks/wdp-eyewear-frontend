@@ -74,7 +74,7 @@ export const SalePOSCart: React.FC<SalePOSCartProps> = ({
         ) : (
           <div className="space-y-3">
             {items.map((item) => {
-              const key = `${item.productId}-${item.variantId || 'default'}`;
+              const key = `${item.productId}-${item.variantId}`;
               return (
                 <div
                   key={key}

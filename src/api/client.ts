@@ -1,13 +1,10 @@
 import axios from 'axios';
 
-const isServer = typeof window === 'undefined';
-
-// On the server, read the env var at runtime.
-// On the browser, use an empty string so requests go to the same origin,
-// then Next.js rewrites proxy them to the real backend.
-const baseURL = isServer
-  ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/$/, '')
-  : '';
+const baseURL = (
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  'http://localhost:3000'
+).replace(/\/$/, '');
 
 const apiClient = axios.create({
   baseURL,

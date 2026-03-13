@@ -5,15 +5,9 @@ import { Button } from '@/components/atoms';
 import { cn } from '@/lib/utils';
 import { useEffect } from 'react';
 import type { PrescriptionData } from '@/types/rxPrescription';
+import type { SaleCartItem } from '@/types/saleCheckout';
 
-export interface CartItem {
-  productId: string;
-  variantId?: string;
-  name: string;
-  price: number;
-  quantity: number;
-  imageUrl?: string;
-  type?: string;
+export interface CartItem extends SaleCartItem {
   isPrescription?: boolean;
   prescription?: PrescriptionData;
 }
@@ -22,8 +16,8 @@ interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   items: CartItem[];
-  onUpdateQuantity: (productId: string, variantId: string | undefined, quantity: number) => void;
-  onRemoveItem: (productId: string, variantId: string | undefined) => void;
+  onUpdateQuantity: (productId: string, variantId: string, quantity: number) => void;
+  onRemoveItem: (productId: string, variantId: string) => void;
   onClearCart: () => void;
   onCheckout: () => void;
   onEditPrescription?: (productId: string) => void;
@@ -143,18 +137,18 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           ) : (
             <div className="space-y-3">
               {items.map((item) => {
-                const key = `${item.productId}-${item.variantId || 'default'}`;
+                const key = `${item.productId}-${item.variantId}`;
                 return (
                   <div
                     key={key}
                     className="flex gap-3 rounded-lg border border-gray-200 bg-white p-3 transition-shadow hover:shadow-md"
                   >
                     {/* Product Image */}
-                    {item.imageUrl && (
+                    {item.image && (
                       <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md bg-gray-100">
                         <img
-                          src={item.imageUrl}
-                          alt={item.name}
+                          src={item.image}
+                          alt={item.productName}
                           className="h-full w-full object-cover"
                         />
                       </div>
@@ -166,11 +160,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1">
                             <h4 className="text-sm font-medium text-gray-900">
-                              {item.name}
+                              {item.productName}
                             </h4>
-                            {item.type && (
-                              <p className="mt-0.5 text-xs text-gray-500">{item.type}</p>
-                            )}
+                            <p className="mt-0.5 text-xs text-gray-500">
+                              {item.brand || '-'} • {item.productType || '-'}
+                            </p>
+                            <p className="mt-0.5 text-xs text-gray-500">
+                              {item.variantOptions.color || '-'} / {item.variantOptions.size || '-'}
+                            </p>
                           </div>
                           {item.isPrescription && (
                             <span className="flex-shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
@@ -234,6 +231,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                                 )
                               }
                               className="h-8 w-8 p-0"
+                              disabled={item.quantity >= item.stock}
                             >
                               <Plus className="h-3 w-3" />
                             </Button>
@@ -246,7 +244,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                         <button
                           onClick={() => onRemoveItem(item.productId, item.variantId)}
                           className="rounded-md p-1.5 text-red-600 transition-colors hover:bg-red-50"
-                          aria-label={`Xóa ${item.name}`}
+                          aria-label={`Xóa ${item.productName}`}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

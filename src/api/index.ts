@@ -5,6 +5,12 @@ export { default as uploadApi } from './uploads';
 export { default as userApi } from './users';
 export { default as orderApi } from './orders';
 export { default as checkoutApi } from './checkout';
+export {
+  getProducts,
+  createQuote,
+  createCheckout,
+  getOrderDetail,
+} from './saleCheckout';
 
 export type {
   Product,
@@ -32,3 +38,14 @@ export type {
   CheckoutRequest,
   CheckoutResponse,
 } from './checkout';
+export type {
+  SaleCartItem,
+  SaleProduct,
+  SaleProductVariant,
+  RealtimeOrderStatuses,
+  ShippingAddressForm,
+  SaleCheckoutPayload,
+  QuoteData,
+  CheckoutData,
+  OrderDetailData,
+} from '@/types/saleCheckout';

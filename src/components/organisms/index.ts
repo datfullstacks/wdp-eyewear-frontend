@@ -10,4 +10,7 @@ export { SalePOSCheckout, type CheckoutFormData } from './SalePOSCheckout';
 export { SaleHeader } from './SaleHeader';
 export { CartDrawer } from './CartDrawer';
 export { SaleCheckoutPage } from './SaleCheckoutPage';
+export { QuoteSummary } from './QuoteSummary';
+export { PaymentQrCard } from './PaymentQrCard';
+export { RealtimeStatusCard } from './RealtimeStatusCard';
 export { PrescriptionFormModal } from './PrescriptionFormModal';
