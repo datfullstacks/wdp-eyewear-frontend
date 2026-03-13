@@ -1,21 +1,25 @@
 import { Button } from '@/components/ui/button';
-
 import { TableCell, TableRow } from '@/components/ui/table';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { formatCurrency, formatDate } from '@/data/preorderData';
 import type { PreorderOrder } from '@/types/preorder';
 import {
-  MoreHorizontal,
+  CheckCircle2,
+  ChevronDown,
   Eye,
+  HandCoins,
   Link2,
   MessageSquare,
-  CheckCircle,
+  Package,
+  PackageCheck,
+  Truck,
   XCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -28,17 +32,52 @@ interface PreorderOrderRowProps {
   onLinkBatch: (order: PreorderOrder) => void;
   onContact: (order: PreorderOrder) => void;
   onCancel: (order: PreorderOrder) => void;
-  onProcess: (order: PreorderOrder) => void;
+  onMarkArrived: (order: PreorderOrder) => void;
+  onStockIn: (order: PreorderOrder) => void;
+  onMoveToPacking: (order: PreorderOrder) => void;
+  onCreateShipment: (order: PreorderOrder) => void;
+  onUpdateTracking: (order: PreorderOrder) => void;
+}
+
+function getStatusMeta(order: PreorderOrder) {
+  if (order.status === 'cancelled') {
+    return { label: 'Đã hủy', className: 'text-destructive' };
+  }
+
+  if (order.opsStatus === 'shipment_created') {
+    return { label: 'Đã có tracking', className: 'text-success' };
+  }
+
+  if (order.opsStatus === 'packing') {
+    return { label: 'Đang đóng gói', className: 'text-warning' };
+  }
+
+  if (order.opsStatus === 'stocked') {
+    return { label: 'Đã nhập kho', className: 'text-primary' };
+  }
+
+  if (order.opsStatus === 'arrived') {
+    return { label: 'Hàng đã về', className: 'text-success' };
+  }
+
+  if (order.status === 'partial_stock') {
+    return { label: 'Đủ một phần', className: 'text-primary' };
+  }
+
+  return { label: 'Chờ hàng', className: 'text-warning' };
 }
 
 export const PreorderOrderRow = ({
   order,
-
   onViewDetail,
   onLinkBatch,
   onContact,
   onCancel,
-  onProcess,
+  onMarkArrived,
+  onStockIn,
+  onMoveToPacking,
+  onCreateShipment,
+  onUpdateTracking,
 }: PreorderOrderRowProps) => {
   const statusTextClass: Record<string, string> = {
     success: 'text-success',
@@ -55,16 +94,23 @@ export const PreorderOrderRow = ({
         : order.paymentStatus === 'pending'
           ? statusTextClass.warning
           : statusTextClass.default;
-  const orderStatusTextClass =
-    order.status === 'ready'
-      ? statusTextClass.success
-      : order.status === 'waiting_stock'
-        ? statusTextClass.warning
-        : order.status === 'partial_stock'
-          ? statusTextClass.info
-          : order.status === 'cancelled'
-            ? statusTextClass.error
-            : statusTextClass.default;
+  const statusMeta = getStatusMeta(order);
+  const isCancelled = order.status === 'cancelled';
+  const canMarkArrived =
+    !isCancelled &&
+    (order.status === 'waiting_stock' || order.status === 'partial_stock') &&
+    order.opsStatus === 'waiting_arrival';
+  const canStockIn = !isCancelled && order.opsStatus === 'arrived';
+  const canMoveToPacking = !isCancelled && order.opsStatus === 'stocked';
+  const canCreateShipment =
+    !isCancelled &&
+    order.opsStatus === 'packing' &&
+    !String(order.trackingCode || '').trim();
+  const canUpdateTracking =
+    !isCancelled &&
+    (order.opsStatus === 'shipment_created' ||
+      Boolean(String(order.carrierId || '').trim()) ||
+      Boolean(String(order.trackingCode || '').trim()));
 
   return (
     <TableRow className="hover:bg-muted/30">
@@ -76,6 +122,7 @@ export const PreorderOrderRow = ({
           </span>
         </div>
       </TableCell>
+
       <TableCell>
         <div className="flex flex-col">
           <span className="text-foreground font-normal">
@@ -86,6 +133,7 @@ export const PreorderOrderRow = ({
           </span>
         </div>
       </TableCell>
+
       <TableCell>
         <div className="flex flex-col gap-1">
           {order.products.slice(0, 2).map((product, idx) => (
@@ -100,11 +148,13 @@ export const PreorderOrderRow = ({
           )}
         </div>
       </TableCell>
+
       <TableCell>
         <span className="text-foreground/90">
           {formatDate(order.expectedDate)}
         </span>
       </TableCell>
+
       <TableCell>
         <div className="flex flex-col gap-1">
           <span className={cn('text-sm font-normal', paymentTextClass)}>
@@ -124,51 +174,123 @@ export const PreorderOrderRow = ({
             )}
         </div>
       </TableCell>
+
       <TableCell>
-        <span className={cn('text-sm font-normal', orderStatusTextClass)}>
-          {order.status === 'waiting_stock'
-            ? 'Chờ hàng'
-            : order.status === 'partial_stock'
-              ? 'Đủ một phần'
-              : order.status === 'ready'
-                ? 'Sẵn sàng'
-                : 'Đã hủy'}
-        </span>
+        <div className="flex flex-col gap-1">
+          <span className={cn('text-sm font-normal', statusMeta.className)}>
+            {statusMeta.label}
+          </span>
+          {order.trackingCode && (
+            <span className="text-foreground/70 font-mono text-xs">
+              {order.trackingCode}
+            </span>
+          )}
+        </div>
       </TableCell>
+
       <TableCell className="text-right">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
-              variant="ghost"
-              size="icon"
-              className="text-foreground/80 hover:text-foreground h-8 w-8"
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              aria-label="Mở action chính"
             >
-              <MoreHorizontal className="h-4 w-4" />
+              Thao tác
+              <ChevronDown className="h-4 w-4 opacity-70" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="w-80">
+            <DropdownMenuLabel>Action chính</DropdownMenuLabel>
+
+            <DropdownMenuItem
+              onClick={() => onMarkArrived(order)}
+              className="gap-2"
+              disabled={!canMarkArrived}
+              title={
+                !canMarkArrived
+                  ? 'Chỉ dùng khi đơn còn đang chờ đủ hàng pre-order'
+                  : ''
+              }
+            >
+              <HandCoins className="h-4 w-4" />
+              Cập nhật hàng đã về
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              onClick={() => onStockIn(order)}
+              className="gap-2"
+              disabled={!canStockIn}
+              title={
+                !canStockIn ? 'Cần cập nhật hàng đã về trước khi nhập kho' : ''
+              }
+            >
+              <PackageCheck className="h-4 w-4" />
+              Nhập kho
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              onClick={() => onMoveToPacking(order)}
+              className="gap-2"
+              disabled={!canMoveToPacking}
+              title={
+                !canMoveToPacking
+                  ? 'Cần hoàn tất nhập kho trước khi chuyển sang đóng gói'
+                  : ''
+              }
+            >
+              <Package className="h-4 w-4" />
+              Chuyển sang đóng gói
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              onClick={() => onCreateShipment(order)}
+              className="gap-2"
+              disabled={!canCreateShipment}
+              title={
+                !canCreateShipment
+                  ? 'Cần chuyển sang đóng gói trước khi tạo vận đơn'
+                  : ''
+              }
+            >
+              <Truck className="h-4 w-4" />
+              Tạo vận đơn
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              onClick={() => onUpdateTracking(order)}
+              className="gap-2"
+              disabled={!canUpdateTracking}
+              title={
+                !canUpdateTracking
+                  ? 'Cần có vận đơn hoặc tracking trước khi cập nhật'
+                  : ''
+              }
+            >
+              <Truck className="h-4 w-4" />
+              Cập nhật tracking
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Tiện ích</DropdownMenuLabel>
+
             <DropdownMenuItem onClick={() => onViewDetail(order)}>
               <Eye className="mr-2 h-4 w-4" />
               Xem chi tiết
             </DropdownMenuItem>
+
             <DropdownMenuItem onClick={() => onLinkBatch(order)}>
               <Link2 className="mr-2 h-4 w-4" />
               Liên kết đợt hàng
             </DropdownMenuItem>
+
             <DropdownMenuItem onClick={() => onContact(order)}>
               <MessageSquare className="mr-2 h-4 w-4" />
               Liên hệ khách
             </DropdownMenuItem>
-            {order.status === 'ready' && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onProcess(order)}>
-                  <CheckCircle className="text-success mr-2 h-4 w-4" />
-                  Xử lý đơn
-                </DropdownMenuItem>
-              </>
-            )}
-            {order.status !== 'cancelled' && order.status !== 'ready' && (
+
+            {!isCancelled && (
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => onCancel(order)}>

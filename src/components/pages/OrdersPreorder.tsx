@@ -1,6 +1,20 @@
 'use client';
-import { useCallback, useEffect, useState } from 'react';
+
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Filter } from 'lucide-react';
+
+import { orderApi } from '@/api';
 import { SearchBar } from '@/components/molecules/SearchBar';
+import { Header } from '@/components/organisms/Header';
+import {
+  CancelModal,
+  LinkBatchModal,
+  PreorderContactModal,
+  PreorderDetailModal,
+  PreorderShipmentModal,
+  PreorderStatsGrid,
+  PreorderTable,
+} from '@/components/organisms/preorder';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,22 +26,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  PreorderStatsGrid,
-  PreorderTable,
-  PreorderDetailModal,
-  LinkBatchModal,
-  PreorderContactModal,
-  CancelModal,
-} from '@/components/organisms/preorder';
-import {
-  statusFilterOptions,
   priorityFilterOptions,
+  statusFilterOptions,
 } from '@/data/preorderData';
-import type { PreorderOrder } from '@/types/preorder';
-import { Filter } from 'lucide-react';
-import { Header } from '@/components/organisms/Header';
-import { orderApi } from '@/api';
 import { toPreorderOrder } from '@/lib/orderAdapters';
+import type { PreorderOrder } from '@/types/preorder';
 
 const OrdersPreorder = () => {
   const [orders, setOrders] = useState<PreorderOrder[]>([]);
@@ -49,6 +52,13 @@ const OrdersPreorder = () => {
   const [isCancelOpen, setIsCancelOpen] = useState(false);
   const [cancelOrder, setCancelOrder] = useState<PreorderOrder | null>(null);
   const [cancelReason, setCancelReason] = useState('');
+  const [shipmentOrder, setShipmentOrder] = useState<PreorderOrder | null>(
+    null
+  );
+  const [shipmentMode, setShipmentMode] = useState<'create' | 'update'>(
+    'create'
+  );
+  const [isShipmentOpen, setIsShipmentOpen] = useState(false);
 
   const loadPreorderOrders = useCallback(async () => {
     setIsLoading(true);
@@ -79,25 +89,52 @@ const OrdersPreorder = () => {
     void loadPreorderOrders();
   }, [loadPreorderOrders]);
 
-  const filteredOrders = orders.filter((order) => {
-    const matchesSearch =
-      order.orderCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.customerPhone.includes(searchQuery);
-    const matchesStatus =
-      statusFilter === 'all' || order.status === statusFilter;
-    const matchesPriority =
-      priorityFilter === 'all' || order.priority === priorityFilter;
-    return matchesSearch && matchesStatus && matchesPriority;
-  });
+  const patchOrder = useCallback(
+    (orderId: string, updater: (current: PreorderOrder) => PreorderOrder) => {
+      const updateCurrent = (current: PreorderOrder | null) =>
+        current && current.id === orderId ? updater(current) : current;
 
-  const stats = {
-    total: orders.length,
-    waitingStock: orders.filter((o) => o.status === 'waiting_stock').length,
-    partialStock: orders.filter((o) => o.status === 'partial_stock').length,
-    ready: orders.filter((o) => o.status === 'ready').length,
-    urgent: orders.filter((o) => o.priority === 'urgent').length,
-  };
+      setOrders((prev) =>
+        prev.map((order) => (order.id === orderId ? updater(order) : order))
+      );
+      setDetailOrder((prev) => updateCurrent(prev));
+      setLinkBatchOrder((prev) => updateCurrent(prev));
+      setContactOrder((prev) => updateCurrent(prev));
+      setCancelOrder((prev) => updateCurrent(prev));
+      setShipmentOrder((prev) => updateCurrent(prev));
+    },
+    []
+  );
+
+  const filteredOrders = useMemo(
+    () =>
+      orders.filter((order) => {
+        const matchesSearch =
+          order.orderCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          order.customerName
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          order.customerPhone.includes(searchQuery);
+        const matchesStatus =
+          statusFilter === 'all' || order.status === statusFilter;
+        const matchesPriority =
+          priorityFilter === 'all' || order.priority === priorityFilter;
+
+        return matchesSearch && matchesStatus && matchesPriority;
+      }),
+    [orders, priorityFilter, searchQuery, statusFilter]
+  );
+
+  const stats = useMemo(
+    () => ({
+      total: orders.length,
+      waitingStock: orders.filter((o) => o.status === 'waiting_stock').length,
+      partialStock: orders.filter((o) => o.status === 'partial_stock').length,
+      ready: orders.filter((o) => o.status === 'ready').length,
+      urgent: orders.filter((o) => o.priority === 'urgent').length,
+    }),
+    [orders]
+  );
 
   const handleSelectOrder = (orderId: string) => {
     setSelectedOrders((prev) =>
@@ -114,6 +151,52 @@ const OrdersPreorder = () => {
       setSelectedOrders(filteredOrders.map((o) => o.id));
     }
   };
+
+  const openShipmentModal = useCallback(
+    (order: PreorderOrder, mode: 'create' | 'update') => {
+      setShipmentOrder(order);
+      setShipmentMode(mode);
+      setIsShipmentOpen(true);
+    },
+    []
+  );
+
+  const handleMarkArrived = useCallback(
+    (order: PreorderOrder) => {
+      patchOrder(order.id, (current) => ({
+        ...current,
+        status: 'ready',
+        opsStatus: 'arrived',
+        products: current.products.map((product) => ({
+          ...product,
+          status: 'arrived',
+        })),
+      }));
+    },
+    [patchOrder]
+  );
+
+  const handleStockIn = useCallback(
+    (order: PreorderOrder) => {
+      patchOrder(order.id, (current) => ({
+        ...current,
+        status: 'ready',
+        opsStatus: 'stocked',
+      }));
+    },
+    [patchOrder]
+  );
+
+  const handleMoveToPacking = useCallback(
+    (order: PreorderOrder) => {
+      patchOrder(order.id, (current) => ({
+        ...current,
+        status: 'ready',
+        opsStatus: 'packing',
+      }));
+    },
+    [patchOrder]
+  );
 
   return (
     <>
@@ -197,10 +280,16 @@ const OrdersPreorder = () => {
             setCancelReason('');
             setIsCancelOpen(true);
           }}
-          onProcess={() => {}}
+          onMarkArrived={handleMarkArrived}
+          onStockIn={handleStockIn}
+          onMoveToPacking={handleMoveToPacking}
+          onCreateShipment={(order) => openShipmentModal(order, 'create')}
+          onUpdateTracking={(order) => openShipmentModal(order, 'update')}
         />
         {isLoading && (
-          <p className="text-foreground/70 text-sm">Đang tải dữ liệu pre-order...</p>
+          <p className="text-foreground/70 text-sm">
+            Đang tải dữ liệu pre-order...
+          </p>
         )}
         {!isLoading && errorMessage && (
           <p className="text-destructive text-sm">{errorMessage}</p>
@@ -237,16 +326,31 @@ const OrdersPreorder = () => {
           onCancelReasonChange={setCancelReason}
           onConfirm={() => {
             if (cancelOrder && cancelReason.trim()) {
-              setOrders((prev) =>
-                prev.map((o) =>
-                  o.id === cancelOrder.id
-                    ? { ...o, status: 'cancelled' as const }
-                    : o
-                )
-              );
-
+              patchOrder(cancelOrder.id, (current) => ({
+                ...current,
+                status: 'cancelled',
+              }));
               setIsCancelOpen(false);
             }
+          }}
+        />
+        <PreorderShipmentModal
+          order={shipmentOrder}
+          open={isShipmentOpen}
+          onOpenChange={setIsShipmentOpen}
+          mode={shipmentMode}
+          initialCarrierId={shipmentOrder?.carrierId || ''}
+          initialTrackingCode={shipmentOrder?.trackingCode || ''}
+          onSubmit={(carrierId, trackingCode) => {
+            if (!shipmentOrder) return;
+
+            patchOrder(shipmentOrder.id, (current) => ({
+              ...current,
+              status: 'ready',
+              opsStatus: 'shipment_created',
+              carrierId,
+              trackingCode,
+            }));
           }}
         />
       </div>

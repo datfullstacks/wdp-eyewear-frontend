@@ -16,7 +16,6 @@ import {
   FileSearch,
   FileText,
   Glasses,
-  LayoutDashboard,
   ListTodo,
   LogOut,
   MapPin,
@@ -54,7 +53,6 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = [
-  { icon: LayoutDashboard, label: 'Tổng quan', path: '/operation/dashboard-operation' },
   {
     icon: ShoppingCart,
     label: 'Đơn hàng',
@@ -321,7 +319,7 @@ export const OperationSidebar: React.FC = () => {
               <span className="font-display text-lg font-semibold text-gray-900">
                 Eyes Dream
               </span>
-              <div className="text-xs text-gray-500">Operation Dashboard</div>
+              <div className="text-xs text-gray-500">Operations</div>
             </div>
           </div>
         ) : (

@@ -4,3 +4,4 @@ export { PreorderDetailModal } from './PreorderDetailModal';
 export { LinkBatchModal } from './LinkBatchModal';
 export { PreorderContactModal } from './ContactModal';
 export { CancelModal } from './CancelModal';
+export { PreorderShipmentModal } from './PreorderShipmentModal';
