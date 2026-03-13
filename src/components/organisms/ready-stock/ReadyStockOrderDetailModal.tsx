@@ -1,0 +1,957 @@
+'use client';
+
+import type { OrderRecord } from '@/api/orders';
+import { StatusBadge } from '@/components/atoms/StatusBadge';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  createDefaultReadyStockOpsState,
+  createDefaultReadyStockItemState,
+  formatCurrencyVnd,
+  getReadyStockItemKey,
+  getReadyStockWarnings,
+  READY_STOCK_OPS_STATUS_LABEL,
+  summarizeItems,
+  toPaymentCode,
+  toInvoiceCode,
+} from '@/lib/readyStockOps';
+import { useAuthStore } from '@/stores/authStore';
+import { useReadyStockOpsStore } from '@/stores/readyStockOpsStore';
+import { carriers } from '@/types/fulfillment';
+import type {
+  ReadyStockHoldReason,
+  ReadyStockIssueType,
+  ReadyStockOpsStatus,
+} from '@/types/readyStockOps';
+import {
+  CheckCircle2,
+  ChevronDown,
+  ClipboardCopy,
+  PackageX,
+  ShieldAlert,
+  ShieldCheck,
+  Truck,
+} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+
+function formatDateTime(value?: string) {
+  if (!value) return '-';
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) return '-';
+  return dt.toLocaleString('vi-VN', { hour12: false });
+}
+
+function opsBadgeType(status: ReadyStockOpsStatus) {
+  switch (status) {
+    case 'shipped':
+      return 'success' as const;
+    case 'ready_to_ship':
+      return 'info' as const;
+    case 'picking':
+    case 'packed':
+      return 'warning' as const;
+    case 'blocked':
+      return 'error' as const;
+    default:
+      return 'default' as const;
+  }
+}
+
+function holdReasonLabel(reason: ReadyStockHoldReason | null) {
+  if (!reason) return '-';
+  if (reason === 'payment') return 'Thanh toán';
+  if (reason === 'address') return 'Địa chỉ';
+  if (reason === 'stock') return 'Thiếu/Lỗi hàng';
+  if (reason === 'manual') return 'Thủ công';
+  return 'Khác';
+}
+
+function issueTypeLabel(type: ReadyStockIssueType | null): string {
+  if (!type) return '-';
+  if (type === 'out_of_stock') return 'Thiếu hàng';
+  if (type === 'wrong_sku') return 'Sai SKU';
+  if (type === 'damaged_item') return 'Hàng lỗi';
+  if (type === 'address_issue') return 'Lỗi địa chỉ';
+  if (type === 'shipping_label_error') return 'Lỗi vận đơn';
+  return 'Khác';
+}
+
+function paymentBadge(order: OrderRecord, paymentFailed: boolean) {
+  if (paymentFailed) return { label: 'Thất bại', type: 'error' as const };
+  if (order.paymentStatus === 'paid')
+    return { label: 'Đã thanh toán', type: 'success' as const };
+  if (order.paymentStatus === 'partial')
+    return { label: 'Thanh toán 1 phần', type: 'info' as const };
+  if (order.paymentStatus === 'cod')
+    return { label: 'COD', type: 'default' as const };
+  return { label: 'Chờ thanh toán', type: 'warning' as const };
+}
+
+async function copyText(text: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    // ignore
+  }
+}
+
+function parseAddress(address: string) {
+  const parts = String(address || '')
+    .split(',')
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  const addressLine1 = parts[0] || String(address || '').trim();
+  const province = parts.length >= 1 ? parts[parts.length - 1]! : '';
+  const district = parts.length >= 2 ? parts[parts.length - 2]! : '';
+  const ward = parts.length >= 3 ? parts[parts.length - 3]! : '';
+
+  return {
+    addressLine1,
+    addressLine2: '',
+    ward,
+    district,
+    province,
+    country: 'VN',
+  };
+}
+
+export function ReadyStockOrderDetailModal({
+  open,
+  onOpenChange,
+  order,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  order: OrderRecord | null;
+}) {
+  const meName = useAuthStore((s) => s.user?.name) || 'Operations';
+
+  const ops = useReadyStockOpsStore((s) =>
+    order ? s.byOrderId[order.id] : undefined
+  );
+  const upsertOps = useReadyStockOpsStore((s) => s.upsert);
+  const setAssignee = useReadyStockOpsStore((s) => s.setAssignee);
+  const setStatus = useReadyStockOpsStore((s) => s.setStatus);
+  const setTracking = useReadyStockOpsStore((s) => s.setTracking);
+  const setHold = useReadyStockOpsStore((s) => s.setHold);
+  const clearHold = useReadyStockOpsStore((s) => s.clearHold);
+  const setItemState = useReadyStockOpsStore((s) => s.setItemState);
+  const toggleItemPicked = useReadyStockOpsStore((s) => s.toggleItemPicked);
+  const reportIssue = useReadyStockOpsStore((s) => s.reportIssue);
+
+  const resolvedOps = useMemo(() => {
+    if (!order) return null;
+    return ops ?? createDefaultReadyStockOpsState(order);
+  }, [ops, order]);
+
+  const [shipmentDraft, setShipmentDraft] = useState({
+    carrierId: '',
+    trackingCode: '',
+  });
+  const [holdDraft, setHoldDraft] = useState<{
+    reason: ReadyStockHoldReason;
+    note: string;
+  }>({
+    reason: 'manual',
+    note: '',
+  });
+
+  useEffect(() => {
+    if (!open) return;
+    if (!order) return;
+    if (!ops) {
+      upsertOps(order.id, createDefaultReadyStockOpsState(order));
+      return;
+    }
+    const missingItemStates: Record<
+      string,
+      ReturnType<typeof createDefaultReadyStockItemState>
+    > = {};
+    order.items.forEach((item, idx) => {
+      const key = getReadyStockItemKey(order.id, item, idx);
+      if (!ops.itemStates?.[key])
+        missingItemStates[key] = createDefaultReadyStockItemState(item);
+    });
+    if (Object.keys(missingItemStates).length > 0) {
+      upsertOps(order.id, {
+        itemStates: {
+          ...(ops.itemStates || {}),
+          ...missingItemStates,
+        },
+      });
+    }
+    setShipmentDraft({
+      carrierId: ops.carrierId || '',
+      trackingCode: ops.trackingCode || '',
+    });
+    setHoldDraft({
+      reason: ops.holdReason || 'manual',
+      note: ops.holdNote || '',
+    });
+  }, [open, order, ops, upsertOps]);
+
+  if (!order || !resolvedOps) return null;
+
+  const invoice = toInvoiceCode(order);
+  const paymentCode = toPaymentCode(order);
+  const summary = summarizeItems(order);
+  const warnings = getReadyStockWarnings(order, resolvedOps);
+
+  const addr = parseAddress(order.customerAddress);
+  const email =
+    (String(order.customerPhone || '').replace(/\D/g, '') ||
+      String(order.code || '').replace(/\s/g, '')) + '@example.com';
+
+  const allPicked = order.items.every((item, idx) => {
+    const key = getReadyStockItemKey(order.id, item, idx);
+    return Boolean(resolvedOps.itemStates?.[key]?.picked);
+  });
+
+  const canCreateShipment = Boolean(
+    shipmentDraft.carrierId && shipmentDraft.trackingCode.trim()
+  );
+  const canHandover =
+    resolvedOps.opsStatus === 'ready_to_ship' &&
+    Boolean(resolvedOps.trackingCode);
+
+  const payment = paymentBadge(order, resolvedOps.paymentFailed);
+
+  const isPreorder =
+    order.orderType === 'pre_order' || order.items.some((i) => i.preOrder);
+  const isPrescription = order.items.some(
+    (i) => i.hasPrescription || i.prescriptionMode !== 'none'
+  );
+  const readyReasons = [
+    { ok: true, text: 'Đã kiểm tra thông tin giao hàng' },
+    { ok: !isPreorder, text: 'Đơn không phải pre-order' },
+    { ok: !isPrescription, text: 'Đơn không phải prescription' },
+    { ok: !isPreorder && !isPrescription, text: 'Đủ điều kiện chuyển Ops' },
+  ];
+
+  function warningLabel(
+    key: ReturnType<typeof getReadyStockWarnings>[number]
+  ): string {
+    switch (key) {
+      case 'missing_address':
+        return 'Địa chỉ thiếu/không rõ';
+      case 'payment_pending':
+        return 'Chờ thanh toán';
+      case 'payment_failed':
+        return 'Thanh toán thất bại';
+      case 'special_note':
+        return 'Có ghi chú';
+      case 'item_issue':
+        return 'Có sản phẩm thiếu/lỗi';
+      case 'order_issue':
+        return 'Có lỗi/ngoại lệ';
+      case 'hold':
+        return 'Đang hold';
+      default:
+        return key;
+    }
+  }
+
+  const canStartPicking =
+    resolvedOps.opsStatus === 'pending_operations' ||
+    resolvedOps.opsStatus === 'awaiting_picking';
+  const canConfirmPicked = resolvedOps.opsStatus === 'picking';
+  const canConfirmPacked = resolvedOps.opsStatus === 'packed';
+  const canConfirmHandover = resolvedOps.opsStatus === 'ready_to_ship';
+  const hasAnyStatusAction =
+    canStartPicking || canConfirmPicked || canConfirmPacked || canConfirmHandover;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="text-foreground max-h-[85vh] w-[96vw] max-w-[980px] overflow-y-auto p-4 shadow-2xl">
+        <DialogHeader>
+          <DialogTitle>Chi tiết đơn có sẵn • {order.code}</DialogTitle>
+        </DialogHeader>
+
+        {/* Header */}
+        <div className="space-y-3 rounded-xl border border-border bg-muted/10 p-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-1">
+              <div className="text-foreground font-mono text-sm">
+                {paymentCode}
+              </div>
+              <div className="text-foreground font-mono text-sm">{invoice}</div>
+              <div className="flex flex-wrap items-center gap-2">
+                <StatusBadge status="info">Sales: Đã duyệt</StatusBadge>
+                <StatusBadge status={opsBadgeType(resolvedOps.opsStatus)}>
+                  Vận hành:{' '}
+                  {READY_STOCK_OPS_STATUS_LABEL[resolvedOps.opsStatus]}
+                </StatusBadge>
+                <StatusBadge status={payment.type}>
+                  Thanh toán: {payment.label}
+                </StatusBadge>
+                <StatusBadge status="default">Loại: Đơn có sẵn</StatusBadge>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {!resolvedOps.assignee && (
+                <Button
+                  onClick={() => setAssignee(order.id, meName)}
+                  title="Nhận đơn để bắt đầu xử lý"
+                >
+                  Nhận xử lý
+                </Button>
+              )}
+              {resolvedOps.assignee && resolvedOps.assignee !== meName && (
+                <Button
+                  variant="outline"
+                  onClick={() => setAssignee(order.id, meName)}
+                >
+                  Gán cho tôi
+                </Button>
+              )}
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="secondary" className="gap-2">
+                    Duyệt trạng thái
+                    <ChevronDown className="h-4 w-4 opacity-70" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-72">
+                  <DropdownMenuLabel>Chuyển bước</DropdownMenuLabel>
+
+                  {!hasAnyStatusAction && (
+                    <DropdownMenuItem disabled>
+                      Không có thao tác phù hợp với trạng thái hiện tại.
+                    </DropdownMenuItem>
+                  )}
+
+                  {canStartPicking && (
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setAssignee(order.id, resolvedOps.assignee || meName);
+                        setStatus(order.id, 'picking');
+                      }}
+                      className="gap-2"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      Bắt đầu lấy hàng
+                    </DropdownMenuItem>
+                  )}
+
+                  {canConfirmPicked && (
+                    <DropdownMenuItem
+                      disabled={!allPicked}
+                      onClick={() => setStatus(order.id, 'packed')}
+                      className="gap-2"
+                      title={!allPicked ? 'Cần pick đủ tất cả sản phẩm trước' : ''}
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      Xác nhận đã lấy đủ
+                    </DropdownMenuItem>
+                  )}
+
+                  {canConfirmPacked && (
+                    <DropdownMenuItem
+                      onClick={() => setStatus(order.id, 'ready_to_ship')}
+                      className="gap-2"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      Xác nhận đã đóng gói
+                    </DropdownMenuItem>
+                  )}
+
+                  {canConfirmHandover && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        disabled={!canHandover}
+                        onClick={() => setStatus(order.id, 'shipped')}
+                        className="gap-2"
+                        title={!canHandover ? 'Cần có tracking trước khi bàn giao' : ''}
+                      >
+                        <Truck className="h-4 w-4" />
+                        Bàn giao vận chuyển
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Button
+                variant={
+                  resolvedOps.opsStatus === 'blocked' ? 'secondary' : 'outline'
+                }
+                onClick={() => {
+                  const reason = resolvedOps.holdReason || 'manual';
+                  const note =
+                    String(resolvedOps.holdNote || '').trim() ||
+                    'Hold thủ công';
+                  setHoldDraft({ reason, note });
+                  setHold(order.id, reason, note);
+                }}
+              >
+                Đưa vào hold
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+            <div className="space-y-1">
+              <Label>Tổng tiền</Label>
+              <div className="text-foreground text-lg font-bold">
+                {formatCurrencyVnd(order.total)}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Ngày tạo</Label>
+              <div className="text-foreground text-sm">
+                {formatDateTime(order.createdAt)}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Sales duyệt</Label>
+              <div className="text-foreground text-sm">
+                {formatDateTime(resolvedOps.salesApprovedAt)}
+              </div>
+              <div className="text-foreground/90 text-xs">
+                Duyệt bởi: {resolvedOps.salesApprovedBy || '-'}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Phụ trách</Label>
+              <div className="text-foreground text-sm">
+                {resolvedOps.assignee || 'Chưa nhận'}
+              </div>
+            </div>
+          </div>
+
+          {warnings.length > 0 && (
+            <div className="border-destructive/20 bg-destructive/5 rounded-lg border p-3 text-sm">
+              <div className="text-destructive flex items-center gap-2 font-semibold">
+                <ShieldAlert className="h-4 w-4" />
+                Cảnh báo cần chú ý
+              </div>
+              <div className="text-foreground mt-2 text-sm">
+                {warnings.map((w) => (
+                  <div key={w}>- {warningLabel(w)}</div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3 lg:grid-flow-row-dense">
+          {/* Sales handoff */}
+          <div className="lg:order-2 lg:col-span-1">
+            <div className="rounded-xl border border-border p-4">
+              <div className="mb-3 text-foreground font-semibold">Thông tin bàn giao từ Sales</div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                <div className="space-y-1">
+                  <Label>Sales duyệt</Label>
+                  <div className="text-sm font-semibold">
+                    {resolvedOps.salesApprovedBy || 'Sales/Support'}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label>Thời gian duyệt</Label>
+                  <div className="text-sm font-semibold">
+                    {formatDateTime(resolvedOps.salesApprovedAt)}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label>Hàng đợi</Label>
+                  <div className="text-foreground text-sm">Đơn có sẵn</div>
+                </div>
+              </div>
+
+              {resolvedOps.salesHandoffNote && (
+                <div className="mt-3">
+                  <Label>Ghi chú bàn giao</Label>
+                  <div className="text-foreground text-sm whitespace-pre-wrap">
+                    {resolvedOps.salesHandoffNote}
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-3">
+                <Label>Checklist bàn giao</Label>
+                <div className="mt-2 grid grid-cols-1 gap-1 text-sm">
+                  {readyReasons.map((r) => (
+                    <div key={r.text} className="flex items-center gap-2">
+                      <ShieldCheck
+                        className={
+                          r.ok
+                            ? 'text-success h-4 w-4'
+                            : 'text-destructive h-4 w-4'
+                        }
+                      />
+                      <span
+                        className={
+                          r.ok ? 'text-foreground/90' : 'text-destructive'
+                        }
+                      >
+                        {r.text}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Recipient */}
+          <div className="lg:order-1 lg:col-span-2">
+            <div className="rounded-xl border border-border p-4">
+              <div className="mb-3 text-foreground font-semibold">Thông tin người nhận</div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="space-y-1">
+                <Label>Họ tên</Label>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-sm font-semibold">
+                    {order.customerName || '-'}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => copyText(order.customerName || '')}
+                  >
+                    <ClipboardCopy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label>Số điện thoại</Label>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-sm font-semibold">
+                    {order.customerPhone || '-'}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => copyText(order.customerPhone || '')}
+                  >
+                    <ClipboardCopy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label>Email (mẫu)</Label>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-sm font-semibold">{email}</div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => copyText(email)}
+                  >
+                    <ClipboardCopy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-1 sm:col-span-3">
+                <Label>Địa chỉ đầy đủ</Label>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="text-foreground text-sm whitespace-pre-wrap">
+                    {order.customerAddress || '-'}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => copyText(order.customerAddress || '')}
+                    >
+                      <ClipboardCopy className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        reportIssue(
+                          order.id,
+                          'address_issue',
+                          `Địa chỉ cần bổ sung/kiểm tra lại: ${order.customerAddress || '-'}`
+                        )
+                      }
+                    >
+                      Báo lỗi địa chỉ
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label>Địa chỉ dòng 1</Label>
+                <div className="text-sm font-semibold">
+                  {addr.addressLine1 || '-'}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label>Địa chỉ dòng 2</Label>
+                <div className="text-sm font-semibold">
+                  {addr.addressLine2 || '-'}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label>Phường/xã</Label>
+                <div className="text-sm font-semibold">{addr.ward || '-'}</div>
+              </div>
+              <div className="space-y-1">
+                <Label>Quận/huyện</Label>
+                <div className="text-sm font-semibold">
+                  {addr.district || '-'}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label>Tỉnh/thành</Label>
+                <div className="text-sm font-semibold">
+                  {addr.province || '-'}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label>Quốc gia</Label>
+                <div className="text-sm font-semibold">{addr.country}</div>
+              </div>
+
+              <div className="space-y-1 sm:col-span-3">
+                <Label>Ghi chú giao hàng</Label>
+                <div className="text-foreground text-sm whitespace-pre-wrap">
+                  {order.note || '-'}
+                </div>
+              </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Items */}
+          <div className="lg:order-3 lg:col-span-2">
+            <div className="rounded-xl border border-border p-4">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <div className="text-foreground font-semibold">Danh sách sản phẩm cần xử lý</div>
+                <div className="text-foreground/90 text-xs">
+                  {summary.totalItems} sản phẩm •{' '}
+                  {Object.entries(summary.byType)
+                    .map(([t, n]) => `${n} ${t}`)
+                    .join(', ')}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {order.items.map((item, idx) => {
+              const key = getReadyStockItemKey(order.id, item, idx);
+              const state = resolvedOps.itemStates?.[key];
+              const picked = Boolean(state?.picked);
+              const issueType = state?.issueType || null;
+              const location = state?.warehouseLocation || '';
+              const internalNote = state?.internalNote || '';
+              const issueNote = state?.issueNote || '';
+
+                  return (
+                    <div key={key} className="border-border rounded-lg border p-3">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="text-foreground truncate font-semibold">
+                          {item.name}
+                        </div>
+                        {picked ? (
+                          <StatusBadge status="success">Đã pick</StatusBadge>
+                        ) : (
+                          <StatusBadge status="warning">Chưa pick</StatusBadge>
+                        )}
+                        {issueType && (
+                          <StatusBadge status="error">
+                            Lỗi: {issueTypeLabel(issueType)}
+                          </StatusBadge>
+                        )}
+                      </div>
+                      <div className="text-foreground/90 text-xs">
+                        Loại: {item.type || 'other'} • Biến thể: {item.variant}{' '}
+                        • SL: {item.quantity}
+                      </div>
+                      <div className="text-foreground/90 text-xs">
+                        Đơn giá: {formatCurrencyVnd(item.unitPrice)} • Thành
+                        tiền: {formatCurrencyVnd(item.lineTotal)}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button
+                        variant={picked ? 'secondary' : 'outline'}
+                        size="sm"
+                        onClick={() => toggleItemPicked(order.id, key)}
+                      >
+                        {picked ? 'Bỏ pick' : 'Đánh dấu đã pick'}
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setItemState(order.id, key, {
+                            issueType: 'out_of_stock' as ReadyStockIssueType,
+                            issueNote: `Thiếu hàng: ${item.name}`,
+                          });
+                          setHold(
+                            order.id,
+                            'stock',
+                            `Thiếu hàng: ${item.name}`
+                          );
+                        }}
+                        className="gap-1"
+                      >
+                        <PackageX className="h-4 w-4" />
+                        Báo thiếu hàng
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setItemState(order.id, key, {
+                            issueType: 'damaged_item' as ReadyStockIssueType,
+                            issueNote: `Hàng lỗi: ${item.name}`,
+                          });
+                          setHold(
+                            order.id,
+                            'stock',
+                            `Hàng lỗi cần xử lý: ${item.name}`
+                          );
+                        }}
+                      >
+                        Báo hàng lỗi
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div className="space-y-1">
+                      <Label>Vị trí kho / kho xử lý (mẫu)</Label>
+                      <Input
+                        value={location}
+                        onChange={(e) =>
+                          setItemState(order.id, key, {
+                            warehouseLocation: e.target.value,
+                          })
+                        }
+                        placeholder="VD: KHO-HCM-FRAME-A1"
+                      />
+                    </div>
+                    <div className="space-y-1 sm:col-span-2">
+                      <Label>Ghi chú nội bộ item</Label>
+                      <Input
+                        value={internalNote}
+                        onChange={(e) =>
+                          setItemState(order.id, key, {
+                            internalNote: e.target.value,
+                          })
+                        }
+                        placeholder="Ghi chú cho Ops (không gửi khách)..."
+                      />
+                    </div>
+                    {issueType && (
+                      <div className="space-y-1 sm:col-span-3">
+                        <Label>Chi tiết lỗi</Label>
+                        <Textarea
+                          value={issueNote}
+                          onChange={(e) =>
+                            setItemState(order.id, key, {
+                              issueNote: e.target.value,
+                            })
+                          }
+                          rows={2}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-4 lg:order-4 lg:col-span-1">
+            <div className="rounded-xl border border-border p-4">
+              <div className="mb-3 text-foreground font-semibold">Vận đơn / Tracking</div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                <div className="space-y-1">
+                  <Label>Đơn vị VC</Label>
+                  <Select
+                    value={shipmentDraft.carrierId}
+                    onValueChange={(value) =>
+                      setShipmentDraft((prev) => ({
+                        ...prev,
+                        carrierId: value,
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn đơn vị" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {carriers.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1 sm:col-span-2 lg:col-span-1">
+                  <Label>Mã tracking</Label>
+                  <Input
+                    value={shipmentDraft.trackingCode}
+                    onChange={(e) =>
+                      setShipmentDraft((prev) => ({
+                        ...prev,
+                        trackingCode: e.target.value,
+                      }))
+                    }
+                    placeholder="VD: GHN123..."
+                  />
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    setTracking(
+                      order.id,
+                      shipmentDraft.carrierId,
+                      shipmentDraft.trackingCode.trim()
+                    )
+                  }
+                  disabled={!canCreateShipment}
+                >
+                  Lưu vận đơn
+                </Button>
+                {resolvedOps.trackingCode && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => copyText(resolvedOps.trackingCode)}
+                    className="gap-2"
+                  >
+                    <ClipboardCopy className="h-4 w-4" />
+                    Sao chép tracking
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-border p-4">
+              <div className="mb-3 text-foreground font-semibold">Hold</div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                <div className="space-y-1">
+                  <Label>Lý do</Label>
+                  <Select
+                    value={holdDraft.reason}
+                    onValueChange={(value) =>
+                      setHoldDraft((prev) => ({
+                        ...prev,
+                        reason: value as ReadyStockHoldReason,
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="manual">Thủ công</SelectItem>
+                      <SelectItem value="payment">Thanh toán</SelectItem>
+                      <SelectItem value="address">Địa chỉ</SelectItem>
+                      <SelectItem value="stock">Thiếu/Lỗi hàng</SelectItem>
+                      <SelectItem value="other">Khác</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1 sm:col-span-2 lg:col-span-1">
+                  <Label>Ghi chú hold</Label>
+                  <Input
+                    value={holdDraft.note}
+                    onChange={(e) =>
+                      setHoldDraft((prev) => ({
+                        ...prev,
+                        note: e.target.value,
+                      }))
+                    }
+                    placeholder="Nhập lý do hold..."
+                  />
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    setHold(order.id, holdDraft.reason, holdDraft.note)
+                  }
+                  disabled={!holdDraft.note.trim()}
+                >
+                  Lưu hold
+                </Button>
+                <Button variant="outline" onClick={() => clearHold(order.id)}>
+                  Gỡ hold
+                </Button>
+                <div className="text-foreground/90 text-xs">
+                  Hold hiện tại:{' '}
+                  {resolvedOps.opsStatus === 'blocked'
+                    ? holdReasonLabel(resolvedOps.holdReason)
+                    : 'Không'}
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-border p-4">
+              <div className="mb-3 text-foreground font-semibold">
+                Ghi chú nội bộ (Ops)
+              </div>
+              <Textarea
+                value={resolvedOps.internalNote || ''}
+                onChange={(e) =>
+                  upsertOps(order.id, { internalNote: e.target.value })
+                }
+                placeholder="Ghi chú vận hành, checklist, lưu ý đóng gói..."
+                rows={4}
+              />
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Đóng
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
