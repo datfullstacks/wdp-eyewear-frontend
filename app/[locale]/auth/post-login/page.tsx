@@ -24,7 +24,7 @@ export default async function PostLoginPage({
   }
 
   if (shouldRedirectToOperation) {
-    redirect('/operation/dashboard-operation');
+    redirect('/operation/orders/ready-stock');
   }
 
   if (role === 'customer') {

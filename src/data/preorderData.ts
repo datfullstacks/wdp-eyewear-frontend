@@ -26,6 +26,9 @@ export const mockPreorderOrders: PreorderOrder[] = [
     status: 'waiting_stock',
     notes: 'Khách cần gấp cho sinh nhật',
     priority: 'high',
+    opsStatus: 'waiting_arrival',
+    carrierId: '',
+    trackingCode: '',
   },
   {
     id: '2',
@@ -61,6 +64,9 @@ export const mockPreorderOrders: PreorderOrder[] = [
     status: 'partial_stock',
     notes: '',
     priority: 'normal',
+    opsStatus: 'waiting_arrival',
+    carrierId: '',
+    trackingCode: '',
   },
   {
     id: '3',
@@ -87,6 +93,9 @@ export const mockPreorderOrders: PreorderOrder[] = [
     status: 'waiting_stock',
     notes: 'VIP - Khách quen',
     priority: 'urgent',
+    opsStatus: 'waiting_arrival',
+    carrierId: '',
+    trackingCode: '',
   },
   {
     id: '4',
@@ -113,6 +122,9 @@ export const mockPreorderOrders: PreorderOrder[] = [
     status: 'waiting_stock',
     notes: '',
     priority: 'normal',
+    opsStatus: 'waiting_arrival',
+    carrierId: '',
+    trackingCode: '',
   },
   {
     id: '5',
@@ -148,6 +160,9 @@ export const mockPreorderOrders: PreorderOrder[] = [
     status: 'ready',
     notes: 'Đã đủ hàng, chờ liên hệ khách',
     priority: 'high',
+    opsStatus: 'stocked',
+    carrierId: '',
+    trackingCode: '',
   },
 ];
 

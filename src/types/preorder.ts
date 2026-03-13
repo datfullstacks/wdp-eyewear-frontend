@@ -8,6 +8,13 @@ export interface PreorderProduct {
   status: 'waiting' | 'in_transit' | 'arrived' | 'partial';
 }
 
+export type PreorderOpsStatus =
+  | 'waiting_arrival'
+  | 'arrived'
+  | 'stocked'
+  | 'packing'
+  | 'shipment_created';
+
 export interface PreorderOrder {
   id: string;
   orderCode: string;
@@ -23,6 +30,9 @@ export interface PreorderOrder {
   status: 'waiting_stock' | 'partial_stock' | 'ready' | 'cancelled';
   notes: string;
   priority: 'normal' | 'high' | 'urgent';
+  opsStatus: PreorderOpsStatus;
+  carrierId: string;
+  trackingCode: string;
 }
 
 export interface PreorderStats {

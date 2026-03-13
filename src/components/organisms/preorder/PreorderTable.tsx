@@ -20,7 +20,11 @@ interface PreorderTableProps {
   onLinkBatch: (order: PreorderOrder) => void;
   onContact: (order: PreorderOrder) => void;
   onCancel: (order: PreorderOrder) => void;
-  onProcess: (order: PreorderOrder) => void;
+  onMarkArrived: (order: PreorderOrder) => void;
+  onStockIn: (order: PreorderOrder) => void;
+  onMoveToPacking: (order: PreorderOrder) => void;
+  onCreateShipment: (order: PreorderOrder) => void;
+  onUpdateTracking: (order: PreorderOrder) => void;
 }
 
 export const PreorderTable = ({
@@ -28,12 +32,15 @@ export const PreorderTable = ({
   selectedOrders,
   showEmptyState = true,
   onSelectOrder,
-
   onViewDetail,
   onLinkBatch,
   onContact,
   onCancel,
-  onProcess,
+  onMarkArrived,
+  onStockIn,
+  onMoveToPacking,
+  onCreateShipment,
+  onUpdateTracking,
 }: PreorderTableProps) => (
   <div className="glass-card overflow-hidden rounded-xl">
     {selectedOrders.length > 0 && (
@@ -48,7 +55,7 @@ export const PreorderTable = ({
       </div>
     )}
     <div className="overflow-x-auto">
-      <Table className="text-sm font-normal">
+      <Table className="min-w-[980px] text-sm font-normal">
         <TableHeader>
           <TableRow className="bg-muted/50">
             <TableHead>Mã đơn</TableHead>
@@ -57,7 +64,7 @@ export const PreorderTable = ({
             <TableHead>Ngày dự kiến</TableHead>
             <TableHead>Thanh toán</TableHead>
             <TableHead>Trạng thái</TableHead>
-            <TableHead className="w-[60px]"></TableHead>
+            <TableHead className="w-[190px] text-right">Action chính</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -71,7 +78,11 @@ export const PreorderTable = ({
               onLinkBatch={onLinkBatch}
               onContact={onContact}
               onCancel={onCancel}
-              onProcess={onProcess}
+              onMarkArrived={onMarkArrived}
+              onStockIn={onStockIn}
+              onMoveToPacking={onMoveToPacking}
+              onCreateShipment={onCreateShipment}
+              onUpdateTracking={onUpdateTracking}
             />
           ))}
         </TableBody>
