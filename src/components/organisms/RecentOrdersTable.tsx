@@ -28,8 +28,11 @@ import {
 } from '@/lib/customerOrderStatus';
 import { toDashboardOrder } from '@/lib/orderAdapters';
 import { OrderDetailModal } from '@/components/organisms/orders/OrderDetailModal';
+import { Pagination } from '@/components/molecules/Pagination';
 
 type OrderStatus = 'pending' | 'processing' | 'completed' | 'cancelled';
+
+const ITEMS_PER_PAGE = 10;
 
 function orderTypeLabel(orderType: string): string {
   const normalized = String(orderType || '').trim().toLowerCase();
@@ -48,7 +51,7 @@ type RecentOrdersTableProps = {
 };
 
 export const RecentOrdersTable = ({
-  limit = 20,
+  limit = 100, // Fetch more to allow client-side filtering
   searchTerm = '',
   statusFilter = 'all',
   filter,
@@ -59,6 +62,7 @@ export const RecentOrdersTable = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [detailOrder, setDetailOrder] = useState<OrderRecord | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     let isMounted = true;
@@ -111,6 +115,19 @@ export const RecentOrdersTable = ({
       });
   }, [filter, orders, searchTerm, statusFilter]);
 
+  // Pagination
+  const totalPages = Math.ceil(visibleOrders.length / ITEMS_PER_PAGE);
+  const paginatedOrders = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return visibleOrders.slice(startIndex, endIndex);
+  }, [visibleOrders, currentPage]);
+
+  // Reset to page 1 when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+
   const handleOpenDetail = (order: OrderRecord) => {
     setDetailOrder(order);
     setDetailOpen(true);
@@ -158,7 +175,7 @@ export const RecentOrdersTable = ({
 
           {!isLoading &&
             !errorMessage &&
-            visibleOrders.map((order) => {
+            paginatedOrders.map((order) => {
               const dashboard = toDashboardOrder(order);
               const statusInfo = getCustomerOrderStatusMeta(order);
               const shippingInfo = getCustomerShippingStatusMeta(order);
@@ -241,6 +258,18 @@ export const RecentOrdersTable = ({
             })}
         </TableBody>
       </Table>
+
+      {!isLoading && !errorMessage && visibleOrders.length > 0 && (
+        <div className="border-t p-4">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            itemsPerPage={ITEMS_PER_PAGE}
+            totalItems={visibleOrders.length}
+          />
+        </div>
+      )}
 
       <OrderDetailModal
         open={detailOpen}

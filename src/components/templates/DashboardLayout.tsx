@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { cn } from '@/lib/utils';
+import { SidebarProvider, useSidebar } from '@/contexts/SidebarContext';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -17,13 +18,28 @@ const Sidebar = dynamic(
   }
 );
 
-export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+function DashboardLayoutContent({ children }: DashboardLayoutProps) {
+  const { collapsed } = useSidebar();
+
   return (
     <div className="bg-background min-h-screen">
       <Sidebar />
-      <main className={cn('ml-64 pl-8 transition-all duration-300')}>
+      <main 
+        className={cn(
+          'transition-all duration-300',
+          collapsed ? 'ml-20' : 'ml-72'
+        )}
+      >
         {children}
       </main>
     </div>
+  );
+}
+
+export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+  return (
+    <SidebarProvider>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </SidebarProvider>
   );
 };

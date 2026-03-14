@@ -32,15 +32,15 @@ type RoleCard = {
 const ROLE_CARDS: RoleCard[] = [
   {
     role: 'staff',
-    title: 'Staff',
-    description: 'Customer intake, follow-up, support, return/refund intake.',
+    title: 'Sales',
+    description: 'Store sales, order intake, follow-up and customer care.',
     icon: Briefcase,
     activeClassName: 'border-indigo-500 bg-indigo-50 shadow-sm',
   },
   {
     role: 'operation',
     title: 'Operation',
-    description: 'Fulfillment, inventory, shipping, prescription execution.',
+    description: 'Fulfillment, inventory, shipping and prescription execution.',
     icon: Settings2,
     activeClassName: 'border-blue-500 bg-blue-50 shadow-sm',
   },

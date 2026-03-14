@@ -1,6 +1,6 @@
 import { DashboardLayout } from '@/components/templates/DashboardLayout';
 
-export default function StaffLayout({
+export default function SaleLayout({
   children,
 }: {
   children: React.ReactNode;

@@ -5,6 +5,13 @@ export { default as uploadApi } from './uploads';
 export { default as userApi } from './users';
 export { default as orderApi } from './orders';
 export { default as preorderApi } from './preorders';
+export { default as checkoutApi } from './checkout';
+export {
+  getProducts,
+  createQuote,
+  createCheckout,
+  getOrderDetail,
+} from './saleCheckout';
 
 export type {
   Product,
@@ -31,3 +38,22 @@ export type {
   CreatePreorderBatchInput,
   ReceivePreorderBatchInput,
 } from './preorders';
+export type {
+  CheckoutItem,
+  ShippingAddress,
+  CheckoutQuoteRequest,
+  CheckoutQuoteResponse,
+  CheckoutRequest,
+  CheckoutResponse,
+} from './checkout';
+export type {
+  SaleCartItem,
+  SaleProduct,
+  SaleProductVariant,
+  RealtimeOrderStatuses,
+  ShippingAddressForm,
+  SaleCheckoutPayload,
+  QuoteData,
+  CheckoutData,
+  OrderDetailData,
+} from '@/types/saleCheckout';

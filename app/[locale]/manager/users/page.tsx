@@ -136,8 +136,8 @@ export default function UsersPage() {
         count: staffMembers.length,
         users: staffMembers,
         icon: Briefcase,
-        tabLabel: locale === 'vi' ? 'Staff' : 'Staff',
-        statLabel: locale === 'vi' ? 'Tong staff' : 'Total Staff',
+        tabLabel: locale === 'vi' ? 'Sales' : 'Sales',
+        statLabel: t('stats.totalStaff'),
         addLabel: t('addStaff'),
         activeClassName: 'border-indigo-500 text-indigo-600',
         inactiveClassName:
@@ -152,8 +152,8 @@ export default function UsersPage() {
         users: operationsMembers,
         icon: Settings2,
         tabLabel: locale === 'vi' ? 'Operation' : 'Operations',
-        statLabel: locale === 'vi' ? 'Tong operation' : 'Total Operations',
-        addLabel: locale === 'vi' ? 'Them operation moi' : 'Add New Operation',
+        statLabel: t('stats.totalOperations'),
+        addLabel: t('addOperation'),
         activeClassName: 'border-blue-500 text-blue-600',
         inactiveClassName:
           'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',

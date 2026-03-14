@@ -16,8 +16,8 @@ export default function DashboardHomePage() {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Staff */}
-        <CanAccess roles={['staff', 'manager', 'admin']}>
+        {/* Sales */}
+        <CanAccess roles={['sales', 'manager', 'admin']}>
           <div className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-lg border border-blue-200 hover:shadow-xl transition">
             <h2 className="text-sm font-semibold text-blue-700 uppercase tracking-wide mb-2">
               {t('stats.ordersToProcess')}

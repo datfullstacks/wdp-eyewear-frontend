@@ -36,6 +36,7 @@ import { orderApi } from '@/api';
 import { Button } from '@/components/atoms';
 import { computeOrderMenuCounts, type OrderMenuCounts } from '@/lib/orderWorkflow';
 import { cn } from '@/lib/utils';
+import { useSidebar } from '@/contexts/SidebarContext';
 
 type BadgeType = 'warning' | 'error' | 'info';
 
@@ -51,7 +52,8 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = [
-  { icon: LayoutDashboard, label: 'Tổng quan', path: '/staff/dashboard-staff' },
+  { icon: LayoutDashboard, label: 'Tổng quan', path: '/sale/dashboard' },
+  { icon: Warehouse, label: 'Sản phẩm', path: '/sale/products' },
   {
     icon: ShoppingCart,
     label: 'Đơn hàng',
@@ -59,20 +61,20 @@ const menuItems: MenuItem[] = [
       {
         icon: ClipboardList,
         label: 'Tất cả đơn hàng',
-        path: '/staff/orders',
+        path: '/sale/orders',
         exact: true,
       },
       {
         icon: Clock,
         label: 'Đơn cần xử lý',
-        path: '/staff/orders/pending',
+        path: '/sale/orders/pending',
         badgeKey: 'needsAction',
         badgeType: 'warning',
       },
       {
         icon: AlertTriangle,
         label: 'Đơn trễ / cảnh báo',
-        path: '/staff/orders/alerts',
+        path: '/sale/orders/alerts',
         badgeKey: 'alerts',
         badgeType: 'error',
       },
@@ -85,43 +87,36 @@ const menuItems: MenuItem[] = [
       {
         icon: RefreshCw,
         label: 'Đổi / trả / bảo hành',
-        path: '/staff/cases/returns',
+        path: '/sale/cases/returns',
         badge: '4',
         badgeType: 'warning',
       },
       {
         icon: MessageSquare,
         label: 'Khiếu nại & hỗ trợ',
-        path: '/staff/cases/complaints',
+        path: '/sale/cases/complaints',
       },
       {
         icon: CreditCard,
         label: 'Hoàn tiền / điều chỉnh',
-        path: '/staff/cases/refunds',
+        path: '/sale/cases/refunds',
       },
-    ],
-  },
-  {
-    icon: Warehouse,
-    label: 'Sản phẩm',
-    children: [
-      { icon: Search, label: 'Tra cứu sản phẩm', path: '/staff/products' },
     ],
   },
   {
     icon: Users,
     label: 'Khách hàng',
     children: [
-      { icon: Users, label: 'Danh sách khách hàng', path: '/staff/customers' },
+      { icon: Users, label: 'Danh sách khách hàng', path: '/sale/customers' },
       {
         icon: History,
         label: 'Lịch sử đơn & ghi chú',
-        path: '/staff/customers/history',
+        path: '/sale/customers/history',
       },
       {
         icon: FileHeart,
         label: 'Hồ sơ Prescription',
-        path: '/staff/customers/prescriptions',
+        path: '/sale/customers/prescriptions',
       },
     ],
   },
@@ -132,12 +127,12 @@ const menuItems: MenuItem[] = [
       {
         icon: TrendingUp,
         label: 'Báo cáo đơn theo trạng thái',
-        path: '/staff/reports/orders',
+        path: '/sale/reports/orders',
       },
       {
         icon: Percent,
         label: 'Vận chuyển / hoàn',
-        path: '/staff/reports/shipping',
+        path: '/sale/reports/shipping',
       },
     ],
   },
@@ -148,19 +143,19 @@ const menuItems: MenuItem[] = [
       {
         icon: Bell,
         label: 'Thông báo',
-        path: '/staff/settings/notifications',
+        path: '/sale/settings/notifications',
         badge: '2',
         badgeType: 'info',
       },
       {
         icon: ListTodo,
         label: 'Nhiệm vụ của tôi',
-        path: '/staff/settings/tasks',
+        path: '/sale/settings/tasks',
       },
       {
         icon: User,
         label: 'Cài đặt tài khoản',
-        path: '/staff/settings/account',
+        path: '/sale/settings/account',
       },
     ],
   },
@@ -198,7 +193,7 @@ function isActivePath(pathname: string, itemPath?: string, exact?: boolean) {
 }
 
 export const Sidebar: React.FC = () => {
-  const [collapsed, setCollapsed] = useState(false);
+  const { collapsed, toggleCollapsed } = useSidebar();
   const pathname = usePathname();
   const [orderCounts, setOrderCounts] = useState<OrderMenuCounts | null>(null);
 
@@ -289,7 +284,7 @@ export const Sidebar: React.FC = () => {
               <span className="font-display text-lg font-semibold text-gray-900">
                 Eyes Dream
               </span>
-              <div className="text-xs text-gray-500">Staff Dashboard</div>
+              <div className="text-xs text-gray-500">Sale Dashboard</div>
             </div>
           </div>
         ) : (
@@ -303,14 +298,14 @@ export const Sidebar: React.FC = () => {
         variant="ghost"
         size="sm"
         type="button"
-        onClick={() => setCollapsed((v) => !v)}
+        onClick={toggleCollapsed}
         className="absolute top-20 -right-3 h-6 w-6 rounded-full border border-gray-200 bg-gray-100 p-0 shadow-sm hover:bg-gray-200"
         aria-label={collapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
       >
         {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
       </Button>
 
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {resolvedMenuItems.map((item) => {
           if (!item.children) {
             const active = isActivePath(pathname, item.path, item.exact);
@@ -407,7 +402,7 @@ export const Sidebar: React.FC = () => {
           {!collapsed && (
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium text-gray-900">Nhân viên</p>
-              <p className="truncate text-xs text-gray-500">Sales Staff</p>
+              <p className="truncate text-xs text-gray-500">Sales Team</p>
             </div>
           )}
 
@@ -426,3 +421,4 @@ export const Sidebar: React.FC = () => {
     </aside>
   );
 };
+

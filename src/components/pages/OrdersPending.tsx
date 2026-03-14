@@ -2,9 +2,10 @@
 import { Header } from '@/components/organisms/Header';
 
 import { SearchBar } from '@/components/molecules/SearchBar';
+import { Pagination } from '@/components/molecules/Pagination';
 import { CheckCircle, Filter } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { PendingOrder } from '@/types/pending';
 import {
@@ -31,6 +32,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+
+const ITEMS_PER_PAGE = 10;
 
 function toLocalIsoDate(date: Date) {
   const year = date.getFullYear();
@@ -67,6 +70,7 @@ const OrdersPending = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [createdDateFilter, setCreatedDateFilter] = useState<string>('');
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [detailModal, setDetailModal] = useState<PendingOrder | null>(null);
   const [processModal, setProcessModal] = useState<PendingOrder | null>(null);
   const [rejectModal, setRejectModal] = useState<PendingOrder | null>(null);
@@ -113,8 +117,21 @@ const OrdersPending = () => {
     return matchesSearch && matchesDate;
   });
 
+  // Pagination
+  const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE);
+  const paginatedOrders = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return filteredOrders.slice(startIndex, endIndex);
+  }, [filteredOrders, currentPage]);
+
+  // Reset to page 1 when search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, createdDateFilter]);
+
   const visibleSelectedCount = selectedOrders.filter((id) =>
-    filteredOrders.some((order) => order.id === id)
+    paginatedOrders.some((order) => order.id === id)
   ).length;
   const selectedBlockedCount = filteredOrders.filter(
     (order) =>
@@ -122,7 +139,7 @@ const OrdersPending = () => {
   ).length;
 
   const handleSelectAll = (checked: boolean) => {
-    setSelectedOrders(checked ? filteredOrders.map((o) => o.id) : []);
+    setSelectedOrders(checked ? paginatedOrders.map((o) => o.id) : []);
   };
 
   const handleSelectOrder = (orderId: string, checked: boolean) => {
@@ -321,7 +338,7 @@ const OrdersPending = () => {
         )}
 
         <PendingOrderTable
-          orders={filteredOrders}
+          orders={paginatedOrders}
           selectedOrders={selectedOrders}
           showEmptyState={!isLoading && !errorMessage}
           onSelectAll={handleSelectAll}
@@ -330,6 +347,18 @@ const OrdersPending = () => {
           onProcess={setProcessModal}
           onReject={setRejectModal}
         />
+
+        {!isLoading && !errorMessage && filteredOrders.length > 0 && (
+          <div className="mt-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              itemsPerPage={ITEMS_PER_PAGE}
+              totalItems={filteredOrders.length}
+            />
+          </div>
+        )}
       </div>
 
       <PendingDetailModal

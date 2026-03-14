@@ -23,9 +23,8 @@ interface CanAccessProps {
 function matchesRole(expectedRoles: Role[], currentRole: string): boolean {
   const normalizedRole = toFrontendRole(currentRole);
   return expectedRoles.some((expectedRole) => {
-    if (expectedRole === 'operations') return normalizedRole === 'operation';
-    if (expectedRole === 'sales') return normalizedRole === 'staff';
-    return normalizedRole === expectedRole;
+    const normalizedExpectedRole = toFrontendRole(expectedRole);
+    return normalizedExpectedRole === normalizedRole;
   });
 }
 
