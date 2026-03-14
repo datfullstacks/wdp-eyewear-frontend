@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { SearchBar } from '@/components/molecules/SearchBar';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,6 +24,7 @@ import { DelayedOrder, ContactMethod, ResolveAction } from '@/types/delayed';
 import { Filter } from 'lucide-react';
 import { Header } from '@/components/organisms/Header';
 import { orderApi } from '@/api';
+import { useStatusRealtimeReload } from '@/hooks/useStatusRealtime';
 import { toDelayedOrdersFromApi } from '@/lib/orderWorkflow';
 
 export default function OrdersDelayed() {
@@ -63,6 +64,24 @@ export default function OrdersDelayed() {
       mounted = false;
     };
   }, []);
+
+  const loadOrders = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setErrorMessage(null);
+      const result = await orderApi.getAll({ page: 1, limit: 500 });
+      setOrders(toDelayedOrdersFromApi(result.orders));
+    } catch {
+      setErrorMessage('KhÃ´ng táº£i Ä‘Æ°á»£c danh sÃ¡ch cáº£nh bÃ¡o.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useStatusRealtimeReload({
+    domains: ['order'],
+    reload: loadOrders,
+  });
 
   const filteredOrders = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();

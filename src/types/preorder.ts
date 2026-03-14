@@ -12,11 +12,13 @@ export type PreorderOpsStatus =
   | 'waiting_arrival'
   | 'arrived'
   | 'stocked'
+  | 'ready_to_pack'
   | 'packing'
   | 'shipment_created';
 
 export interface PreorderOrder {
   id: string;
+  rawOrderStatus?: string;
   orderCode: string;
   customerName: string;
   customerPhone: string;
@@ -33,6 +35,9 @@ export interface PreorderOrder {
   opsStatus: PreorderOpsStatus;
   carrierId: string;
   trackingCode: string;
+  shipmentState?: string;
+  shipmentStatus?: string;
+  shipmentServiceName?: string;
 }
 
 export interface PreorderStats {

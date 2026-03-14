@@ -1,6 +1,18 @@
-import { ReactNode } from 'react';
+'use client';
 
-type Role = 'customer' | 'staff' | 'operations' | 'operation' | 'manager' | 'admin';
+import { type ReactNode, useEffect, useState } from 'react';
+import { getSession } from 'next-auth/react';
+
+import { toFrontendRole } from '@/lib/roles';
+
+type Role =
+  | 'customer'
+  | 'staff'
+  | 'sales'
+  | 'operation'
+  | 'operations'
+  | 'manager'
+  | 'admin';
 
 interface CanAccessProps {
   roles: Role[];
@@ -8,23 +20,57 @@ interface CanAccessProps {
   fallback?: ReactNode;
 }
 
-export function CanAccess({ roles, children, fallback = null }: CanAccessProps) {
-  // TODO: Get user role from session/auth
-  // const session = useSession();
-  // const userRole = session?.user?.role;
-  
-  // Mock for now
-  const userRole: Role = 'staff';
-  
-  const hasAccess = roles.includes(userRole);
-  
-  return hasAccess ? <>{children}</> : <>{fallback}</>;
+function matchesRole(expectedRoles: Role[], currentRole: string): boolean {
+  const normalizedRole = toFrontendRole(currentRole);
+  return expectedRoles.some((expectedRole) => {
+    if (expectedRole === 'operations') return normalizedRole === 'operation';
+    if (expectedRole === 'sales') return normalizedRole === 'staff';
+    return normalizedRole === expectedRole;
+  });
 }
 
-// Helper hook for imperative checks
+export function CanAccess({
+  roles,
+  children,
+  fallback = null,
+}: CanAccessProps) {
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    void getSession().then((session) => {
+      if (!mounted) return;
+      setUserRole(String(session?.user?.role || 'customer'));
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  if (!userRole) {
+    return <>{fallback}</>;
+  }
+
+  return matchesRole(roles, userRole) ? <>{children}</> : <>{fallback}</>;
+}
+
 export function useCanAccess() {
-  // TODO: Get from session
-  const userRole: Role = 'staff';
-  
-  return (roles: Role[]) => roles.includes(userRole);
+  const [userRole, setUserRole] = useState<string>('customer');
+
+  useEffect(() => {
+    let mounted = true;
+
+    void getSession().then((session) => {
+      if (!mounted) return;
+      setUserRole(String(session?.user?.role || 'customer'));
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  return (roles: Role[]) => matchesRole(roles, userRole);
 }

@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button';
-
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -32,6 +31,8 @@ interface ImportReceiveModalProps {
   receiveNotes: string;
   onReceiveNotesChange: (notes: string) => void;
   onConfirm: () => void;
+  isSubmitting?: boolean;
+  errorMessage?: string;
 }
 
 export const ImportReceiveModal = ({
@@ -43,31 +44,38 @@ export const ImportReceiveModal = ({
   receiveNotes,
   onReceiveNotesChange,
   onConfirm,
-}: ImportReceiveModalProps) => (
-  <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className="max-w-3xl">
-      <DialogHeader>
-        <DialogTitle>Xác nhận nhập kho - {batch?.batchCode}</DialogTitle>
-        <DialogDescription>
-          Nhập số lượng thực nhận cho từng sản phẩm
-        </DialogDescription>
-      </DialogHeader>
-      {batch && (
-        <div className="space-y-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Sản phẩm</TableHead>
-                <TableHead>Biến thể</TableHead>
-                <TableHead className="text-center">Còn chờ</TableHead>
-                <TableHead className="w-32">Số lượng nhận</TableHead>
-                <TableHead className="w-12">Đủ</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {batch.items
-                .filter((item) => item.pendingQty > 0)
-                .map((item) => (
+  isSubmitting = false,
+  errorMessage,
+}: ImportReceiveModalProps) => {
+  const receivableItems = batch?.items.filter((item) => item.pendingQty > 0) || [];
+  const totalReceiving = receivableItems.reduce(
+    (sum, item) => sum + Number(receiveQuantities[item.id] || 0),
+    0
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>Xac nhan nhap kho - {batch?.batchCode}</DialogTitle>
+          <DialogDescription>
+            Nhap so luong thuc nhan cho tung san pham trong batch nay.
+          </DialogDescription>
+        </DialogHeader>
+        {batch ? (
+          <div className="space-y-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>San pham</TableHead>
+                  <TableHead>Bien the</TableHead>
+                  <TableHead className="text-center">Con cho</TableHead>
+                  <TableHead className="w-32">So luong nhan</TableHead>
+                  <TableHead className="w-12">Du</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {receivableItems.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">
                       {item.productName}
@@ -82,16 +90,17 @@ export const ImportReceiveModal = ({
                         min={0}
                         max={item.pendingQty}
                         value={receiveQuantities[item.id] || 0}
-                        onChange={(e) =>
+                        onChange={(event) =>
                           onReceiveQuantitiesChange({
                             ...receiveQuantities,
                             [item.id]: Math.min(
-                              Number(e.target.value),
+                              Number(event.target.value || 0),
                               item.pendingQty
                             ),
                           })
                         }
                         className="w-24"
+                        disabled={isSubmitting}
                       />
                     </TableCell>
                     <TableCell>
@@ -103,32 +112,58 @@ export const ImportReceiveModal = ({
                             [item.id]: checked ? item.pendingQty : 0,
                           })
                         }
+                        disabled={isSubmitting}
                       />
                     </TableCell>
                   </TableRow>
                 ))}
-            </TableBody>
-          </Table>
+                {receivableItems.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      className="text-muted-foreground py-6 text-center"
+                    >
+                      Batch nay da duoc nhap kho day du.
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+              </TableBody>
+            </Table>
 
-          <div className="space-y-2">
-            <Label>Ghi chú nhập kho</Label>
-            <Textarea
-              placeholder="Nhập ghi chú về tình trạng hàng hóa, chứng từ..."
-              value={receiveNotes}
-              onChange={(e) => onReceiveNotesChange(e.target.value)}
-            />
+            <div className="space-y-2">
+              <Label>Ghi chu nhap kho</Label>
+              <Textarea
+                placeholder="Nhap ghi chu ve tinh trang hang hoa, chung tu..."
+                value={receiveNotes}
+                onChange={(event) => onReceiveNotesChange(event.target.value)}
+                disabled={isSubmitting}
+              />
+            </div>
+
+            {errorMessage ? (
+              <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+                {errorMessage}
+              </div>
+            ) : null}
           </div>
-        </div>
-      )}
-      <DialogFooter>
-        <Button variant="outline" onClick={() => onOpenChange(false)}>
-          Hủy
-        </Button>
-        <Button onClick={onConfirm}>
-          <CheckCircle2 className="mr-2 h-4 w-4" />
-          Xác nhận nhập kho
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-);
+        ) : null}
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+          >
+            Huy
+          </Button>
+          <Button
+            onClick={onConfirm}
+            disabled={isSubmitting || totalReceiving <= 0}
+          >
+            <CheckCircle2 className="mr-2 h-4 w-4" />
+            {isSubmitting ? 'Dang luu...' : 'Xac nhan nhap kho'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};

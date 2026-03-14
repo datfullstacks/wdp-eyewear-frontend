@@ -1,6 +1,17 @@
 'use client';
+
 import { useEffect, useMemo, useState } from 'react';
+import { Filter } from 'lucide-react';
+import inventoryApi from '@/api/inventory';
 import { SearchBar } from '@/components/molecules/SearchBar';
+import { Header } from '@/components/organisms/Header';
+import {
+  InventoryDetailModal,
+  InventoryEditModal,
+  InventoryHistoryModal,
+  InventoryStatsGrid,
+  InventoryTable,
+} from '@/components/organisms/inventory';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -11,23 +22,25 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Filter } from 'lucide-react';
-import { InventoryItem } from '@/types/inventory';
-import { mockHistoryEntries } from '@/data/inventoryData';
-import inventoryApi from '@/api/inventory';
 import {
-  InventoryTable,
-  InventoryDetailModal,
-  InventoryEditModal,
-  InventoryHistoryModal,
-  InventoryStatsGrid,
-} from '@/components/organisms/inventory';
-import { Header } from '@/components/organisms/Header';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { mockHistoryEntries } from '@/data/inventoryData';
+import { InventoryItem } from '@/types/inventory';
+
+const PAGE_SIZE_OPTIONS = [20, 50, 100] as const;
 
 const Inventory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] =
+    useState<(typeof PAGE_SIZE_OPTIONS)[number]>(20);
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +65,7 @@ const Inventory = () => {
           (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data
             ?.message ||
           (err as { message?: string })?.message ||
-          'Không thể tải tồn kho. Vui lòng thử lại.';
+          'Khong the tai ton kho. Vui long thu lai.';
         setError(message);
       } finally {
         if (isMounted) setIsLoading(false);
@@ -67,20 +80,22 @@ const Inventory = () => {
   }, []);
 
   const inventoryCategories = useMemo(() => {
-    const set = new Set(items.map((i) => i.category).filter(Boolean));
-    return Array.from(set).sort((a, b) => a.localeCompare(b));
+    const categories = new Set(items.map((item) => item.category).filter(Boolean));
+    return Array.from(categories).sort((a, b) => a.localeCompare(b));
   }, [items]);
 
   const filteredInventory = useMemo(() => {
     return items.filter((item) => {
+      const normalizedSearch = searchTerm.toLowerCase();
       const matchesSearch =
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.brand.toLowerCase().includes(searchTerm.toLowerCase());
+        item.name.toLowerCase().includes(normalizedSearch) ||
+        item.sku.toLowerCase().includes(normalizedSearch) ||
+        item.brand.toLowerCase().includes(normalizedSearch);
       const matchesStatus =
         statusFilter === 'all' || item.status === statusFilter;
       const matchesCategory =
         categoryFilter === 'all' || item.category === categoryFilter;
+
       return matchesSearch && matchesStatus && matchesCategory;
     });
   }, [items, searchTerm, statusFilter, categoryFilter]);
@@ -88,12 +103,35 @@ const Inventory = () => {
   const stats = useMemo(
     () => ({
       total: items.length,
-      inStock: items.filter((i) => i.status === 'in_stock').length,
-      lowStock: items.filter((i) => i.status === 'low_stock').length,
-      outOfStock: items.filter((i) => i.status === 'out_of_stock').length,
+      inStock: items.filter((item) => item.trackInventory !== false && item.status === 'in_stock')
+        .length,
+      lowStock: items.filter((item) => item.trackInventory !== false && item.status === 'low_stock')
+        .length,
+      outOfStock: items.filter(
+        (item) => item.trackInventory !== false && item.status === 'out_of_stock'
+      )
+        .length,
     }),
     [items]
   );
+
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(filteredInventory.length / pageSize)),
+    [filteredInventory.length, pageSize]
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, categoryFilter, pageSize]);
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(Math.max(1, page), totalPages));
+  }, [totalPages]);
+
+  const paginatedInventory = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredInventory.slice(start, start + pageSize);
+  }, [currentPage, filteredInventory, pageSize]);
 
   const handleViewDetail = (item: InventoryItem) => {
     setSelectedItem(item);
@@ -110,7 +148,20 @@ const Inventory = () => {
     setIsHistoryOpen(true);
   };
 
-  const handleUpdateStock = async (item: InventoryItem, newStock: number, reason: string) => {
+  const reloadItems = async () => {
+    const result = await inventoryApi.getStockItems({ page: 1, limit: 100 });
+    setItems(result);
+  };
+
+  const handleUpdateStock = async (
+    item: InventoryItem,
+    newStock: number,
+    reason: string
+  ) => {
+    if (item.trackInventory === false) {
+      throw new Error('San pham nay khong theo doi ton kho.');
+    }
+
     await inventoryApi.updateVariantStock({
       rowId: item.id,
       sku: item.sku,
@@ -118,85 +169,92 @@ const Inventory = () => {
       reason,
     });
 
-    const result = await inventoryApi.getStockItems({ page: 1, limit: 100 });
-    setItems(result);
+    await reloadItems();
   };
 
   return (
     <>
       <Header
-        title="Tồn kho & Tình trạng hàng"
-        subtitle="Quản lý và theo dõi tình trạng tồn kho sản phẩm"
+        title="Ton kho va tinh trang hang"
+        subtitle="Quan ly va theo doi ton kho san pham"
       />
+
       <div className="space-y-6 p-6">
-        {/* Stats */}
         <InventoryStatsGrid stats={stats} />
 
         {isLoading ? (
           <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-6 text-sm text-slate-600">
-            Đang tải tồn kho...
+            Dang tai ton kho...
           </div>
-        ) : error ? (
+        ) : null}
+
+        {error ? (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-600">
             {error}
           </div>
         ) : null}
 
-        {/* Filters */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
           <div className="w-full sm:max-w-[240px]">
             <SearchBar
-              placeholder="Tìm theo tên, SKU, thương hiệu..."
+              placeholder="Tim theo ten, SKU, thuong hieu..."
               value={searchTerm}
               onChange={setSearchTerm}
             />
           </div>
+
           <div className="flex justify-start">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
                   size="icon"
-                  aria-label="Bộ lọc"
+                  aria-label="Bo loc"
                   className="text-foreground/80 hover:text-foreground"
                 >
                   <Filter />
                 </Button>
               </DropdownMenuTrigger>
+
               <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuLabel>Trạng thái</DropdownMenuLabel>
+                <DropdownMenuLabel>Trang thai</DropdownMenuLabel>
                 <DropdownMenuRadioGroup
                   value={statusFilter}
                   onValueChange={setStatusFilter}
                 >
                   <DropdownMenuRadioItem value="all">
-                    Tất cả trạng thái
+                    Tat ca trang thai
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="in_stock">
-                    Còn hàng
+                    Con hang
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="low_stock">
-                    Sắp hết
+                    Sap het
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="out_of_stock">
-                    Hết hàng
+                    Het hang
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="overstock">
-                    Tồn nhiều
+                    Ton nhieu
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="not_tracked">
+                    Khong theo doi ton
                   </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
+
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel>Danh mục</DropdownMenuLabel>
+
+                <DropdownMenuLabel>Danh muc</DropdownMenuLabel>
                 <DropdownMenuRadioGroup
                   value={categoryFilter}
                   onValueChange={setCategoryFilter}
                 >
                   <DropdownMenuRadioItem value="all">
-                    Tất cả danh mục
+                    Tat ca danh muc
                   </DropdownMenuRadioItem>
-                  {inventoryCategories.map((cat) => (
-                    <DropdownMenuRadioItem key={cat} value={cat}>
-                      {cat}
+                  {inventoryCategories.map((category) => (
+                    <DropdownMenuRadioItem key={category} value={category}>
+                      {category}
                     </DropdownMenuRadioItem>
                   ))}
                 </DropdownMenuRadioGroup>
@@ -205,17 +263,65 @@ const Inventory = () => {
           </div>
         </div>
 
-        {/* Inventory Table */}
         {!isLoading && !error ? (
-          <InventoryTable
-            items={filteredInventory}
-            onViewDetail={handleViewDetail}
-            onEditStock={handleEditStock}
-            onViewHistory={handleViewHistory}
-          />
+          <>
+            <InventoryTable
+              items={paginatedInventory}
+              onViewDetail={handleViewDetail}
+              onEditStock={handleEditStock}
+              onViewHistory={handleViewHistory}
+            />
+
+            {filteredInventory.length > 0 && totalPages > 1 ? (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/70 bg-white/90 p-4 text-sm text-slate-700">
+                <p>
+                  Trang <span className="font-semibold">{currentPage}</span>/{totalPages}{' '}
+                  <span className="text-slate-500">
+                    ({filteredInventory.length} dong ton kho)
+                  </span>
+                </p>
+
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={String(pageSize)}
+                    onValueChange={(value) =>
+                      setPageSize(Number(value) as (typeof PAGE_SIZE_OPTIONS)[number])
+                    }
+                  >
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="20 / trang" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PAGE_SIZE_OPTIONS.map((option) => (
+                        <SelectItem key={option} value={String(option)}>
+                          {option} / trang
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                    disabled={currentPage <= 1}
+                  >
+                    Trang truoc
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                    disabled={currentPage >= totalPages}
+                  >
+                    Trang sau
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+          </>
         ) : null}
 
-        {/* Modals */}
         <InventoryDetailModal
           item={selectedItem}
           open={isDetailOpen}

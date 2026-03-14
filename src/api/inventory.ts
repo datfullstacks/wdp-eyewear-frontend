@@ -1,6 +1,8 @@
 import apiClient from './client';
 import type { InventoryItem, InventoryStatus } from '@/types/inventory';
 
+const PRODUCTS_MAX_LIMIT = 100;
+
 type BackendProductVariant = {
   sku?: string;
   stock?: number;
@@ -61,6 +63,34 @@ function extractProductsArray(payload: unknown): BackendProduct[] {
   throw new Error('Invalid products response shape.');
 }
 
+function extractProductsPayload(payload: unknown): {
+  rows: BackendProduct[];
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+} {
+  if (typeof payload === 'string') throw new Error('Invalid products response.');
+
+  if (!isRecord(payload)) throw new Error('Invalid products response.');
+
+  const pagination = isRecord(payload.pagination)
+    ? {
+        page: Number((payload.pagination as any).page || 1),
+        limit: Number((payload.pagination as any).limit || PRODUCTS_MAX_LIMIT),
+        total: Number((payload.pagination as any).total || 0),
+        totalPages: Number((payload.pagination as any).totalPages || 1),
+      }
+    : undefined;
+
+  return {
+    rows: extractProductsArray(payload),
+    pagination,
+  };
+}
+
 function toCategoryLabel(type?: string) {
   const key = String(type || '').toLowerCase();
   const map: Record<string, string> = {
@@ -85,7 +115,13 @@ function toVariantLabel(options?: Record<string, string>) {
   return color || size || '-';
 }
 
-function toStatus(stock: number, minStock: number, maxStock: number): InventoryStatus {
+function toStatus(
+  stock: number,
+  minStock: number,
+  maxStock: number,
+  trackInventory: boolean
+): InventoryStatus {
+  if (!trackInventory) return 'not_tracked';
   if (stock <= 0) return 'out_of_stock';
   if (minStock > 0 && stock < minStock) return 'low_stock';
   if (maxStock > 0 && stock > maxStock) return 'overstock';
@@ -97,6 +133,7 @@ function toInventoryRows(product: BackendProduct): InventoryItem[] {
   const name = product.name || '-';
   const brand = product.brand || '-';
   const category = toCategoryLabel(product.type);
+  const trackInventory = product.inventory?.track !== false;
   const minStock = typeof product.inventory?.threshold === 'number' ? product.inventory.threshold : 0;
   const maxStock = minStock > 0 ? minStock * 4 : 0;
   const lastUpdated = product.updatedAt || '-';
@@ -117,6 +154,7 @@ function toInventoryRows(product: BackendProduct): InventoryItem[] {
         brand,
         category,
         variant: '-',
+        trackInventory,
         stock,
         reserved: 0,
         available: stock,
@@ -124,7 +162,7 @@ function toInventoryRows(product: BackendProduct): InventoryItem[] {
         maxStock,
         location: defaultLocation,
         lastUpdated,
-        status: toStatus(stock, minStock, maxStock),
+        status: toStatus(stock, minStock, maxStock, trackInventory),
       },
     ];
   }
@@ -140,6 +178,7 @@ function toInventoryRows(product: BackendProduct): InventoryItem[] {
       brand,
       category,
       variant: toVariantLabel(variant.options),
+      trackInventory,
       stock,
       reserved: 0,
       available: stock,
@@ -147,7 +186,7 @@ function toInventoryRows(product: BackendProduct): InventoryItem[] {
       maxStock,
       location,
       lastUpdated,
-      status: toStatus(stock, minStock, maxStock),
+      status: toStatus(stock, minStock, maxStock, trackInventory),
     };
   });
 }
@@ -218,11 +257,36 @@ function sanitizeMediaForPut(media: unknown) {
 
 export const inventoryApi = {
   getStockItems: async (params?: { page?: number; limit?: number }): Promise<InventoryItem[]> => {
-    const response = await apiClient.get('/api/products', {
-      params: { page: params?.page ?? 1, limit: params?.limit ?? 100 },
-    });
-    const rows = extractProductsArray(response.data);
-    return rows.flatMap(toInventoryRows);
+    const requestedPage = Math.max(1, Number(params?.page || 1));
+    const requestedLimit = Math.max(1, Number(params?.limit || PRODUCTS_MAX_LIMIT));
+    const startProductOffset = (requestedPage - 1) * requestedLimit;
+
+    let backendPage = Math.floor(startProductOffset / PRODUCTS_MAX_LIMIT) + 1;
+    let backendOffset = startProductOffset % PRODUCTS_MAX_LIMIT;
+    let remaining = requestedLimit;
+    const collected: BackendProduct[] = [];
+    let totalPages = backendPage;
+
+    while (remaining > 0 && backendPage <= totalPages) {
+      const response = await apiClient.get('/api/products', {
+        params: { page: backendPage, limit: PRODUCTS_MAX_LIMIT },
+      });
+      const { rows, pagination } = extractProductsPayload(response.data);
+      totalPages = pagination?.totalPages ?? backendPage;
+
+      const pageRows =
+        backendOffset > 0 ? rows.slice(backendOffset) : rows;
+      const takeRows = pageRows.slice(0, remaining);
+      collected.push(...takeRows);
+
+      remaining -= takeRows.length;
+      backendPage += 1;
+      backendOffset = 0;
+
+      if (rows.length < PRODUCTS_MAX_LIMIT) break;
+    }
+
+    return collected.flatMap(toInventoryRows);
   },
 
   updateVariantStock: async (args: {
@@ -238,6 +302,9 @@ export const inventoryApi = {
 
     const productRes = await apiClient.get(`/api/products/${productId}`);
     const product = extractProduct(productRes.data);
+    if (product.inventory?.track === false) {
+      throw new Error('San pham nay khong theo doi ton kho.');
+    }
 
     const variants = sanitizeVariantsForPut(product.variants);
     const targetIndex = variants.findIndex((v: any) => String(v?.sku || '') === args.sku);
@@ -247,22 +314,7 @@ export const inventoryApi = {
 
     variants[targetIndex] = { ...variants[targetIndex], stock: args.stock };
 
-    const body: Record<string, unknown> = {
-      name: product.name,
-      type: product.type,
-      brand: product.brand,
-      description: product.description,
-      pricing: sanitizePricingForPut(product.pricing),
-      inventory: sanitizeInventoryForPut(product.inventory),
-      preOrder: product.preOrder,
-      specs: product.specs || {},
-      variants,
-      media: sanitizeMediaForPut(product.media),
-      servicesIncluded: product.servicesIncluded,
-      bundleIds: product.bundleIds,
-    };
-
-    await apiClient.put(`/api/products/${productId}`, body);
+    await apiClient.put(`/api/products/${productId}`, { variants });
   },
 };
 

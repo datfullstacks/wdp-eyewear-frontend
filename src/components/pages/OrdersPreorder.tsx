@@ -1,9 +1,14 @@
 'use client';
 
+import axios from 'axios';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Filter } from 'lucide-react';
 
 import { orderApi } from '@/api';
+import type {
+  OrderShippingInfo,
+  OrderShippingTestStatus,
+} from '@/api/orders';
 import { SearchBar } from '@/components/molecules/SearchBar';
 import { Header } from '@/components/organisms/Header';
 import {
@@ -29,8 +34,25 @@ import {
   priorityFilterOptions,
   statusFilterOptions,
 } from '@/data/preorderData';
+import { useStatusRealtimeReload } from '@/hooks/useStatusRealtime';
 import { toPreorderOrder } from '@/lib/orderAdapters';
+import { hasOperationHandoff } from '@/lib/orderWorkflow';
 import type { PreorderOrder } from '@/types/preorder';
+
+function extractApiErrorMessage(error: unknown, fallback: string) {
+  if (axios.isAxiosError(error)) {
+    const message = error.response?.data?.message;
+    if (typeof message === 'string' && message.trim()) {
+      return message.trim();
+    }
+  }
+
+  if (error instanceof Error && error.message.trim()) {
+    return error.message.trim();
+  }
+
+  return fallback;
+}
 
 const OrdersPreorder = () => {
   const [orders, setOrders] = useState<PreorderOrder[]>([]);
@@ -55,10 +77,16 @@ const OrdersPreorder = () => {
   const [shipmentOrder, setShipmentOrder] = useState<PreorderOrder | null>(
     null
   );
-  const [shipmentMode, setShipmentMode] = useState<'create' | 'update'>(
-    'create'
-  );
+  const [shipmentMode, setShipmentMode] = useState<'create' | 'sync'>('create');
   const [isShipmentOpen, setIsShipmentOpen] = useState(false);
+  const [shipmentInfo, setShipmentInfo] = useState<OrderShippingInfo | null>(
+    null
+  );
+  const [shipmentLoading, setShipmentLoading] = useState(false);
+  const [shipmentSubmitting, setShipmentSubmitting] = useState(false);
+  const [shipmentErrorMessage, setShipmentErrorMessage] = useState<
+    string | null
+  >(null);
 
   const loadPreorderOrders = useCallback(async () => {
     setIsLoading(true);
@@ -69,8 +97,9 @@ const OrdersPreorder = () => {
       const mapped = result.orders
         .filter(
           (order) =>
-            order.orderType === 'pre_order' ||
-            order.items.some((item) => item.preOrder)
+            (order.orderType === 'pre_order' ||
+              order.items.some((item) => item.preOrder)) &&
+            hasOperationHandoff(order)
         )
         .map(toPreorderOrder);
 
@@ -88,6 +117,11 @@ const OrdersPreorder = () => {
   useEffect(() => {
     void loadPreorderOrders();
   }, [loadPreorderOrders]);
+
+  useStatusRealtimeReload({
+    domains: ['order', 'shipping'],
+    reload: loadPreorderOrders,
+  });
 
   const patchOrder = useCallback(
     (orderId: string, updater: (current: PreorderOrder) => PreorderOrder) => {
@@ -153,49 +187,88 @@ const OrdersPreorder = () => {
   };
 
   const openShipmentModal = useCallback(
-    (order: PreorderOrder, mode: 'create' | 'update') => {
+    async (order: PreorderOrder, mode: 'create' | 'sync') => {
       setShipmentOrder(order);
       setShipmentMode(mode);
+      setShipmentInfo(null);
+      setShipmentErrorMessage(null);
       setIsShipmentOpen(true);
+      setShipmentLoading(true);
+
+      try {
+        const info = await orderApi.getShipping(order.id);
+        setShipmentInfo(info);
+      } catch {
+        setShipmentErrorMessage('Khong tai duoc thong tin GHN cho don nay.');
+      } finally {
+        setShipmentLoading(false);
+      }
     },
     []
   );
 
-  const handleMarkArrived = useCallback(
-    (order: PreorderOrder) => {
-      patchOrder(order.id, (current) => ({
-        ...current,
-        status: 'ready',
-        opsStatus: 'arrived',
-        products: current.products.map((product) => ({
-          ...product,
-          status: 'arrived',
-        })),
-      }));
+  const advanceShipmentTestStatus = useCallback(
+    async (status: OrderShippingTestStatus) => {
+      if (!shipmentOrder) return;
+
+      try {
+        setShipmentSubmitting(true);
+        setShipmentErrorMessage(null);
+        const result = await orderApi.updateShipmentTestStatus(
+          shipmentOrder.id,
+          status
+        );
+        setShipmentInfo(result);
+        await loadPreorderOrders();
+      } catch {
+        setShipmentErrorMessage('Khong the cap nhat trang thai GHN test.');
+      } finally {
+        setShipmentSubmitting(false);
+      }
     },
-    [patchOrder]
+    [loadPreorderOrders, shipmentOrder]
+  );
+
+  const handleMarkArrived = useCallback(
+    async (order: PreorderOrder) => {
+      try {
+        setErrorMessage(null);
+        await orderApi.updateOpsStage(order.id, 'arrived');
+        await loadPreorderOrders();
+      } catch {
+        setErrorMessage('Khong the cap nhat don pre-order.');
+      }
+    },
+    [loadPreorderOrders]
   );
 
   const handleStockIn = useCallback(
-    (order: PreorderOrder) => {
-      patchOrder(order.id, (current) => ({
-        ...current,
-        status: 'ready',
-        opsStatus: 'stocked',
-      }));
+    async (order: PreorderOrder) => {
+      try {
+        setErrorMessage(null);
+        await orderApi.updateOpsStage(order.id, 'stocked');
+        await loadPreorderOrders();
+      } catch {
+        setErrorMessage('Khong the cap nhat don pre-order.');
+      }
     },
-    [patchOrder]
+    [loadPreorderOrders]
   );
 
   const handleMoveToPacking = useCallback(
-    (order: PreorderOrder) => {
-      patchOrder(order.id, (current) => ({
-        ...current,
-        status: 'ready',
-        opsStatus: 'packing',
-      }));
+    async (order: PreorderOrder) => {
+      try {
+        setErrorMessage(null);
+        await orderApi.updateOpsStage(
+          order.id,
+          order.opsStatus === 'stocked' ? 'ready_to_pack' : 'packing'
+        );
+        await loadPreorderOrders();
+      } catch {
+        setErrorMessage('Khong the cap nhat don pre-order.');
+      }
     },
-    [patchOrder]
+    [loadPreorderOrders]
   );
 
   return (
@@ -283,8 +356,12 @@ const OrdersPreorder = () => {
           onMarkArrived={handleMarkArrived}
           onStockIn={handleStockIn}
           onMoveToPacking={handleMoveToPacking}
-          onCreateShipment={(order) => openShipmentModal(order, 'create')}
-          onUpdateTracking={(order) => openShipmentModal(order, 'update')}
+          onCreateShipment={(order) => {
+            void openShipmentModal(order, 'create');
+          }}
+          onUpdateTracking={(order) => {
+            void openShipmentModal(order, 'sync');
+          }}
         />
         {isLoading && (
           <p className="text-foreground/70 text-sm">
@@ -324,33 +401,70 @@ const OrdersPreorder = () => {
           onOpenChange={setIsCancelOpen}
           cancelReason={cancelReason}
           onCancelReasonChange={setCancelReason}
-          onConfirm={() => {
-            if (cancelOrder && cancelReason.trim()) {
+          onConfirm={async () => {
+            if (!cancelOrder || !cancelReason.trim()) return;
+
+            try {
+              setErrorMessage(null);
+              await orderApi.cancel(cancelOrder.id, {
+                reason: cancelReason.trim(),
+              });
               patchOrder(cancelOrder.id, (current) => ({
                 ...current,
+                rawOrderStatus: 'cancelled',
                 status: 'cancelled',
               }));
               setIsCancelOpen(false);
+            } catch {
+              setErrorMessage('Khong the huy don pre-order.');
             }
           }}
         />
         <PreorderShipmentModal
           order={shipmentOrder}
           open={isShipmentOpen}
-          onOpenChange={setIsShipmentOpen}
+          onOpenChange={(open) => {
+            setIsShipmentOpen(open);
+            if (!open) {
+              setShipmentOrder(null);
+              setShipmentInfo(null);
+              setShipmentErrorMessage(null);
+            }
+          }}
           mode={shipmentMode}
-          initialCarrierId={shipmentOrder?.carrierId || ''}
-          initialTrackingCode={shipmentOrder?.trackingCode || ''}
-          onSubmit={(carrierId, trackingCode) => {
+          shippingInfo={shipmentInfo}
+          isLoading={shipmentLoading}
+          isSubmitting={shipmentSubmitting}
+          errorMessage={shipmentErrorMessage}
+          onSubmit={async () => {
             if (!shipmentOrder) return;
 
-            patchOrder(shipmentOrder.id, (current) => ({
-              ...current,
-              status: 'ready',
-              opsStatus: 'shipment_created',
-              carrierId,
-              trackingCode,
-            }));
+            try {
+              setShipmentSubmitting(true);
+              setShipmentErrorMessage(null);
+              if (shipmentMode === 'create') {
+                await orderApi.createShipment(shipmentOrder.id);
+              } else {
+                await orderApi.syncShipment(shipmentOrder.id);
+              }
+              setIsShipmentOpen(false);
+              setShipmentOrder(null);
+              await loadPreorderOrders();
+            } catch (error) {
+              setShipmentErrorMessage(
+                extractApiErrorMessage(
+                  error,
+                  shipmentMode === 'create'
+                    ? 'Khong the tao van don GHN.'
+                    : 'Khong the dong bo GHN.'
+                )
+              );
+            } finally {
+              setShipmentSubmitting(false);
+            }
+          }}
+          onAdvanceStatus={(status) => {
+            void advanceShipmentTestStatus(status);
           }}
         />
       </div>

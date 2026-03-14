@@ -1,6 +1,12 @@
 'use client';
 
-import type { OrderRecord } from '@/api/orders';
+import axios from 'axios';
+import { orderApi } from '@/api';
+import type {
+  OrderOpsExecutionPatch,
+  OrderRecord,
+  OrderShippingInfo,
+} from '@/api/orders';
 import { StatusBadge } from '@/components/atoms/StatusBadge';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,10 +47,11 @@ import {
 } from '@/lib/readyStockOps';
 import { useAuthStore } from '@/stores/authStore';
 import { useReadyStockOpsStore } from '@/stores/readyStockOpsStore';
-import { carriers } from '@/types/fulfillment';
 import type {
   ReadyStockHoldReason,
+  ReadyStockItemOpsState,
   ReadyStockIssueType,
+  ReadyStockOrderOpsState,
   ReadyStockOpsStatus,
 } from '@/types/readyStockOps';
 import {
@@ -58,6 +65,21 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
+function extractApiErrorMessage(error: unknown, fallback: string) {
+  if (axios.isAxiosError(error)) {
+    const message = error.response?.data?.message;
+    if (typeof message === 'string' && message.trim()) {
+      return message.trim();
+    }
+  }
+
+  if (error instanceof Error && error.message.trim()) {
+    return error.message.trim();
+  }
+
+  return fallback;
+}
+
 function formatDateTime(value?: string) {
   if (!value) return '-';
   const dt = new Date(value);
@@ -67,14 +89,25 @@ function formatDateTime(value?: string) {
 
 function opsBadgeType(status: ReadyStockOpsStatus) {
   switch (status) {
-    case 'shipped':
+    case 'delivered':
+    case 'closed':
       return 'success' as const;
     case 'ready_to_ship':
+    case 'shipment_created':
+    case 'handover_to_carrier':
+    case 'in_transit':
       return 'info' as const;
     case 'picking':
-    case 'packed':
+    case 'packing':
+    case 'waiting_redelivery':
+    case 'return_pending':
+    case 'return_in_transit':
       return 'warning' as const;
-    case 'blocked':
+    case 'delivery_failed':
+    case 'waiting_customer_info':
+    case 'on_hold':
+    case 'exception_hold':
+    case 'returned':
       return 'error' as const;
     default:
       return 'default' as const;
@@ -144,10 +177,12 @@ export function ReadyStockOrderDetailModal({
   open,
   onOpenChange,
   order,
+  onReload,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   order: OrderRecord | null;
+  onReload: () => Promise<void> | void;
 }) {
   const meName = useAuthStore((s) => s.user?.name) || 'Operations';
 
@@ -161,7 +196,6 @@ export function ReadyStockOrderDetailModal({
   const setHold = useReadyStockOpsStore((s) => s.setHold);
   const clearHold = useReadyStockOpsStore((s) => s.clearHold);
   const setItemState = useReadyStockOpsStore((s) => s.setItemState);
-  const toggleItemPicked = useReadyStockOpsStore((s) => s.toggleItemPicked);
   const reportIssue = useReadyStockOpsStore((s) => s.reportIssue);
 
   const resolvedOps = useMemo(() => {
@@ -169,10 +203,11 @@ export function ReadyStockOrderDetailModal({
     return ops ?? createDefaultReadyStockOpsState(order);
   }, [ops, order]);
 
-  const [shipmentDraft, setShipmentDraft] = useState({
-    carrierId: '',
-    trackingCode: '',
-  });
+  const [shippingInfo, setShippingInfo] = useState<OrderShippingInfo | null>(null);
+  const [shippingLoading, setShippingLoading] = useState(false);
+  const [shippingSubmitting, setShippingSubmitting] = useState(false);
+  const [shippingError, setShippingError] = useState<string | null>(null);
+  const [itemSavingKey, setItemSavingKey] = useState<string | null>(null);
   const [holdDraft, setHoldDraft] = useState<{
     reason: ReadyStockHoldReason;
     note: string;
@@ -205,15 +240,38 @@ export function ReadyStockOrderDetailModal({
         },
       });
     }
-    setShipmentDraft({
-      carrierId: ops.carrierId || '',
-      trackingCode: ops.trackingCode || '',
-    });
     setHoldDraft({
       reason: ops.holdReason || 'manual',
       note: ops.holdNote || '',
     });
   }, [open, order, ops, upsertOps]);
+
+  useEffect(() => {
+    if (!open || !order) return;
+
+    let cancelled = false;
+    setShippingError(null);
+    setShippingLoading(true);
+
+    void orderApi
+      .getShipping(order.id)
+      .then((info) => {
+        if (cancelled) return;
+        setShippingInfo(info);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setShippingInfo(null);
+        setShippingError('Khong tai duoc thong tin GHN cho don nay.');
+      })
+      .finally(() => {
+        if (!cancelled) setShippingLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, order]);
 
   if (!order || !resolvedOps) return null;
 
@@ -232,14 +290,278 @@ export function ReadyStockOrderDetailModal({
     return Boolean(resolvedOps.itemStates?.[key]?.picked);
   });
 
-  const canCreateShipment = Boolean(
-    shipmentDraft.carrierId && shipmentDraft.trackingCode.trim()
-  );
+  const latestShipment =
+    shippingInfo?.shipment || (order.shipment ? { ...order.shipment } : null);
+  const trackingCode = String(
+    latestShipment?.orderCode ||
+      latestShipment?.trackingCode ||
+      resolvedOps.trackingCode ||
+      ''
+  ).trim();
+  const hasShipment = Boolean(trackingCode);
+  const canCreateShipment = Boolean(shippingInfo?.permissions.create_shipment);
+  const canSyncShipment = Boolean(shippingInfo?.permissions.sync_shipment);
   const canHandover =
-    resolvedOps.opsStatus === 'ready_to_ship' &&
-    Boolean(resolvedOps.trackingCode);
+    resolvedOps.opsStatus === 'shipment_created' &&
+    hasShipment;
 
   const payment = paymentBadge(order, resolvedOps.paymentFailed);
+
+  async function handleStartPicking() {
+    if (!order || !resolvedOps) return;
+    setShippingError(null);
+    try {
+      await orderApi.updateOpsStage(order.id, 'picking');
+      setAssignee(order.id, resolvedOps.assignee || meName);
+      setStatus(order.id, 'picking');
+      await onReload();
+    } catch {
+      setShippingError('Khong the nhan xu ly don hang.');
+    }
+  }
+
+  async function handleConfirmPickedStage() {
+    if (!order || !resolvedOps) return;
+    setShippingError(null);
+    try {
+      await orderApi.updateOpsStage(order.id, 'packing');
+      setAssignee(order.id, resolvedOps.assignee || meName);
+      setStatus(order.id, 'packing');
+      await onReload();
+    } catch {
+      setShippingError('Khong the xac nhan da lay du san pham.');
+    }
+  }
+
+  async function handleConfirmPackedStage() {
+    if (!order || !resolvedOps) return;
+    setShippingError(null);
+    try {
+      await orderApi.updateOpsStage(order.id, 'ready_to_ship');
+      setAssignee(order.id, resolvedOps.assignee || meName);
+      setStatus(order.id, 'ready_to_ship');
+      await onReload();
+    } catch {
+      setShippingError('Khong the xac nhan dong goi don hang.');
+    }
+  }
+
+  async function handleConfirmHandoverStage() {
+    if (!order || !resolvedOps) return;
+    setShippingError(null);
+    try {
+      await orderApi.updateOpsStage(order.id, 'handover_to_carrier');
+      setAssignee(order.id, resolvedOps.assignee || meName);
+      setStatus(order.id, 'handover_to_carrier');
+      await onReload();
+    } catch {
+      setShippingError('Khong the cap nhat da ban giao cho GHN.');
+    }
+  }
+
+  async function persistOpsExecutionPatch(
+    patch: OrderOpsExecutionPatch,
+    errorMessage = 'Khong the luu du lieu van hanh.'
+  ) {
+    if (!order) return null;
+    setShippingError(null);
+    try {
+      const updated = await orderApi.updateOpsExecution(order.id, patch);
+      upsertOps(order.id, createDefaultReadyStockOpsState(updated));
+      return updated;
+    } catch {
+      setShippingError(errorMessage);
+      return null;
+    }
+  }
+
+  async function handleAssignToMe() {
+    if (!order) return;
+    setAssignee(order.id, meName);
+    await persistOpsExecutionPatch(
+      { assignee: meName },
+      'Khong the gan don cho ban tren backend.'
+    );
+  }
+
+  async function handleTogglePicked(
+    itemKey: string,
+    nextPicked: boolean
+  ) {
+    const currentOps = resolvedOps;
+    if (!order || !currentOps) return;
+    setItemSavingKey(itemKey);
+    const updated = await persistOpsExecutionPatch(
+      {
+        itemStates: {
+          [itemKey]: {
+            picked: nextPicked,
+          },
+        },
+      },
+      'Khong the luu trang thai pick item.'
+    );
+
+    try {
+      if (!updated || !nextPicked || currentOps.opsStatus !== 'picking') {
+        return;
+      }
+
+      const nextAllPicked = order.items.every((item, idx) => {
+        const currentKey = getReadyStockItemKey(order.id, item, idx);
+        if (currentKey === itemKey) return nextPicked;
+        return Boolean(currentOps.itemStates?.[currentKey]?.picked);
+      });
+
+      if (!nextAllPicked) {
+        return;
+      }
+
+      await orderApi.updateOpsStage(order.id, 'packing');
+      setAssignee(order.id, currentOps.assignee || meName);
+      setStatus(order.id, 'packing');
+      await onReload();
+    } catch {
+      setShippingError('Da pick du item nhung khong the chuyen sang dong goi.');
+    } finally {
+      setItemSavingKey(null);
+    }
+  }
+
+  async function handleSaveItemPatch(
+    itemKey: string,
+    patch: Partial<ReadyStockItemOpsState>,
+    errorMessage = 'Khong the luu thong tin item.'
+  ) {
+    await persistOpsExecutionPatch(
+      {
+        itemStates: {
+          [itemKey]: patch,
+        },
+      },
+      errorMessage
+    );
+  }
+
+  async function handleReportItemIssue(
+    itemKey: string,
+    issueType: ReadyStockIssueType,
+    note: string
+  ) {
+    if (!order) return;
+    const holdStage =
+      issueType === 'address_issue' ? 'waiting_customer_info' : 'on_hold';
+
+    await persistOpsExecutionPatch(
+      {
+        holdReason: issueType === 'address_issue' ? 'address' : 'stock',
+        holdNote: note,
+        issueType,
+        issueNote: note,
+        itemStates: {
+          [itemKey]: {
+            issueType,
+            issueNote: note,
+          },
+        },
+      },
+      'Khong the luu loi item tren backend.'
+    );
+
+    try {
+      await orderApi.updateOpsStage(order.id, holdStage);
+      await onReload();
+    } catch {
+      setShippingError('Khong the chuyen don sang trang thai hold.');
+    }
+  }
+
+  async function handleSaveHold() {
+    if (!order) return;
+    const nextStage =
+      holdDraft.reason === 'address' ? 'waiting_customer_info' : 'on_hold';
+
+    setHold(order.id, holdDraft.reason, holdDraft.note);
+    await persistOpsExecutionPatch(
+      {
+        holdReason: holdDraft.reason,
+        holdNote: holdDraft.note,
+      },
+      'Khong the luu hold tren backend.'
+    );
+
+    try {
+      await orderApi.updateOpsStage(order.id, nextStage);
+      await onReload();
+    } catch {
+      setShippingError('Khong the cap nhat trang thai hold.');
+    }
+  }
+
+  async function handleClearHold() {
+    if (!order) return;
+    clearHold(order.id);
+    await persistOpsExecutionPatch(
+      {
+        holdReason: null,
+        holdNote: '',
+      },
+      'Khong the go hold tren backend.'
+    );
+
+    try {
+      await orderApi.updateOpsStage(order.id, 'pending_operations');
+      await onReload();
+    } catch {
+      setShippingError('Khong the dua don ve queue sau khi go hold.');
+    }
+  }
+
+  async function handleCreateShipment() {
+    if (!order) return;
+    setShippingSubmitting(true);
+    setShippingError(null);
+    try {
+      const result = await orderApi.createShipment(order.id);
+      setShippingInfo(result);
+      const nextTrackingCode = String(
+        result.shipment?.orderCode || result.shipment?.trackingCode || ''
+      ).trim();
+      if (nextTrackingCode) {
+        setTracking(order.id, result.shipment?.provider || 'ghn', nextTrackingCode);
+      }
+      await onReload();
+    } catch (error) {
+      setShippingError(
+        extractApiErrorMessage(error, 'Khong the tao van don GHN.')
+      );
+    } finally {
+      setShippingSubmitting(false);
+    }
+  }
+
+  async function handleSyncShipment() {
+    if (!order) return;
+    setShippingSubmitting(true);
+    setShippingError(null);
+    try {
+      const result = await orderApi.syncShipment(order.id);
+      setShippingInfo(result);
+      const nextTrackingCode = String(
+        result.shipment?.orderCode || result.shipment?.trackingCode || ''
+      ).trim();
+      if (nextTrackingCode) {
+        setTracking(order.id, result.shipment?.provider || 'ghn', nextTrackingCode);
+      }
+      await onReload();
+    } catch (error) {
+      setShippingError(
+        extractApiErrorMessage(error, 'Khong the dong bo GHN.')
+      );
+    } finally {
+      setShippingSubmitting(false);
+    }
+  }
 
   const isPreorder =
     order.orderType === 'pre_order' || order.items.some((i) => i.preOrder);
@@ -277,11 +599,10 @@ export function ReadyStockOrderDetailModal({
   }
 
   const canStartPicking =
-    resolvedOps.opsStatus === 'pending_operations' ||
-    resolvedOps.opsStatus === 'awaiting_picking';
+    resolvedOps.opsStatus === 'pending_operations';
   const canConfirmPicked = resolvedOps.opsStatus === 'picking';
-  const canConfirmPacked = resolvedOps.opsStatus === 'packed';
-  const canConfirmHandover = resolvedOps.opsStatus === 'ready_to_ship';
+  const canConfirmPacked = resolvedOps.opsStatus === 'packing';
+  const canConfirmHandover = resolvedOps.opsStatus === 'shipment_created';
   const hasAnyStatusAction =
     canStartPicking || canConfirmPicked || canConfirmPacked || canConfirmHandover;
 
@@ -316,7 +637,9 @@ export function ReadyStockOrderDetailModal({
             <div className="flex flex-wrap items-center gap-2">
               {!resolvedOps.assignee && (
                 <Button
-                  onClick={() => setAssignee(order.id, meName)}
+                  onClick={() => {
+                    void handleStartPicking();
+                  }}
                   title="Nhận đơn để bắt đầu xử lý"
                 >
                   Nhận xử lý
@@ -325,7 +648,9 @@ export function ReadyStockOrderDetailModal({
               {resolvedOps.assignee && resolvedOps.assignee !== meName && (
                 <Button
                   variant="outline"
-                  onClick={() => setAssignee(order.id, meName)}
+                  onClick={() => {
+                    void handleAssignToMe();
+                  }}
                 >
                   Gán cho tôi
                 </Button>
@@ -350,8 +675,7 @@ export function ReadyStockOrderDetailModal({
                   {canStartPicking && (
                     <DropdownMenuItem
                       onClick={() => {
-                        setAssignee(order.id, resolvedOps.assignee || meName);
-                        setStatus(order.id, 'picking');
+                        void handleStartPicking();
                       }}
                       className="gap-2"
                     >
@@ -363,7 +687,9 @@ export function ReadyStockOrderDetailModal({
                   {canConfirmPicked && (
                     <DropdownMenuItem
                       disabled={!allPicked}
-                      onClick={() => setStatus(order.id, 'packed')}
+                      onClick={() => {
+                        void handleConfirmPickedStage();
+                      }}
                       className="gap-2"
                       title={!allPicked ? 'Cần pick đủ tất cả sản phẩm trước' : ''}
                     >
@@ -374,7 +700,9 @@ export function ReadyStockOrderDetailModal({
 
                   {canConfirmPacked && (
                     <DropdownMenuItem
-                      onClick={() => setStatus(order.id, 'ready_to_ship')}
+                      onClick={() => {
+                        void handleConfirmPackedStage();
+                      }}
                       className="gap-2"
                     >
                       <CheckCircle2 className="h-4 w-4" />
@@ -387,7 +715,9 @@ export function ReadyStockOrderDetailModal({
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         disabled={!canHandover}
-                        onClick={() => setStatus(order.id, 'shipped')}
+                        onClick={() => {
+                          void handleConfirmHandoverStage();
+                        }}
                         className="gap-2"
                         title={!canHandover ? 'Cần có tracking trước khi bàn giao' : ''}
                       >
@@ -401,7 +731,11 @@ export function ReadyStockOrderDetailModal({
 
               <Button
                 variant={
-                  resolvedOps.opsStatus === 'blocked' ? 'secondary' : 'outline'
+                  ['waiting_customer_info', 'on_hold', 'exception_hold'].includes(
+                    resolvedOps.opsStatus
+                  )
+                    ? 'secondary'
+                    : 'outline'
                 }
                 onClick={() => {
                   const reason = resolvedOps.holdReason || 'manual';
@@ -707,9 +1041,16 @@ export function ReadyStockOrderDetailModal({
                       <Button
                         variant={picked ? 'secondary' : 'outline'}
                         size="sm"
-                        onClick={() => toggleItemPicked(order.id, key)}
+                        onClick={() => {
+                          void handleTogglePicked(key, !picked);
+                        }}
+                        disabled={itemSavingKey === key}
                       >
-                        {picked ? 'Bỏ pick' : 'Đánh dấu đã pick'}
+                        {itemSavingKey === key
+                          ? 'Dang luu...'
+                          : picked
+                            ? 'Bỏ pick'
+                            : 'Đánh dấu đã pick'}
                       </Button>
 
                       <Button
@@ -724,6 +1065,11 @@ export function ReadyStockOrderDetailModal({
                             order.id,
                             'stock',
                             `Thiếu hàng: ${item.name}`
+                          );
+                          void handleReportItemIssue(
+                            key,
+                            'out_of_stock',
+                            `Out of stock: ${item.name}`
                           );
                         }}
                         className="gap-1"
@@ -745,6 +1091,11 @@ export function ReadyStockOrderDetailModal({
                             'stock',
                             `Hàng lỗi cần xử lý: ${item.name}`
                           );
+                          void handleReportItemIssue(
+                            key,
+                            'damaged_item',
+                            `Damaged item: ${item.name}`
+                          );
                         }}
                       >
                         Báo hàng lỗi
@@ -762,6 +1113,13 @@ export function ReadyStockOrderDetailModal({
                             warehouseLocation: e.target.value,
                           })
                         }
+                        onBlur={() => {
+                          void handleSaveItemPatch(
+                            key,
+                            { warehouseLocation: location },
+                            'Khong the luu vi tri kho cua item.'
+                          );
+                        }}
                         placeholder="VD: KHO-HCM-FRAME-A1"
                       />
                     </div>
@@ -774,6 +1132,13 @@ export function ReadyStockOrderDetailModal({
                             internalNote: e.target.value,
                           })
                         }
+                        onBlur={() => {
+                          void handleSaveItemPatch(
+                            key,
+                            { internalNote },
+                            'Khong the luu ghi chu item.'
+                          );
+                        }}
                         placeholder="Ghi chú cho Ops (không gửi khách)..."
                       />
                     </div>
@@ -787,6 +1152,13 @@ export function ReadyStockOrderDetailModal({
                               issueNote: e.target.value,
                             })
                           }
+                          onBlur={() => {
+                            void handleSaveItemPatch(
+                              key,
+                              { issueNote },
+                              'Khong the luu chi tiet loi item.'
+                            );
+                          }}
                           rows={2}
                         />
                       </div>
@@ -802,67 +1174,61 @@ export function ReadyStockOrderDetailModal({
           {/* Sidebar */}
           <div className="space-y-4 lg:order-4 lg:col-span-1">
             <div className="rounded-xl border border-border p-4">
-              <div className="mb-3 text-foreground font-semibold">Vận đơn / Tracking</div>
+              <div className="mb-3 text-foreground font-semibold">Vận đơn GHN</div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-1">
                 <div className="space-y-1">
                   <Label>Đơn vị VC</Label>
-                  <Select
-                    value={shipmentDraft.carrierId}
-                    onValueChange={(value) =>
-                      setShipmentDraft((prev) => ({
-                        ...prev,
-                        carrierId: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn đơn vị" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {carriers.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="text-sm font-semibold">GHN - Giao Hàng Nhanh</div>
                 </div>
                 <div className="space-y-1 sm:col-span-2 lg:col-span-1">
-                  <Label>Mã tracking</Label>
-                  <Input
-                    value={shipmentDraft.trackingCode}
-                    onChange={(e) =>
-                      setShipmentDraft((prev) => ({
-                        ...prev,
-                        trackingCode: e.target.value,
-                      }))
-                    }
-                    placeholder="VD: GHN123..."
-                  />
+                  <Label>Mã vận đơn</Label>
+                  <div className="font-mono text-sm">{trackingCode || '-'}</div>
+                </div>
+                <div className="space-y-1">
+                  <Label>Trạng thái GHN</Label>
+                  <div className="text-sm font-semibold">
+                    {latestShipment?.latestStatus || latestShipment?.state || '-'}
+                  </div>
+                </div>
+                <div className="space-y-1 sm:col-span-2 lg:col-span-1">
+                  <Label>Dịch vụ</Label>
+                  <div className="text-sm font-semibold">
+                    {latestShipment?.serviceName || 'GHN'}
+                  </div>
                 </div>
               </div>
+              {shippingError && (
+                <div className="text-destructive mt-3 text-sm">{shippingError}</div>
+              )}
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <Button
                   variant="outline"
-                  onClick={() =>
-                    setTracking(
-                      order.id,
-                      shipmentDraft.carrierId,
-                      shipmentDraft.trackingCode.trim()
-                    )
-                  }
-                  disabled={!canCreateShipment}
+                  onClick={() => {
+                    void handleCreateShipment();
+                  }}
+                  disabled={shippingLoading || shippingSubmitting || !canCreateShipment}
                 >
-                  Lưu vận đơn
+                  {shippingSubmitting && !hasShipment
+                    ? 'Đang tạo...'
+                    : 'Tạo vận đơn GHN'}
                 </Button>
-                {resolvedOps.trackingCode && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    void handleSyncShipment();
+                  }}
+                  disabled={shippingLoading || shippingSubmitting || !canSyncShipment}
+                >
+                  {shippingSubmitting && hasShipment ? 'Đang đồng bộ...' : 'Đồng bộ GHN'}
+                </Button>
+                {trackingCode && (
                   <Button
                     variant="ghost"
-                    onClick={() => copyText(resolvedOps.trackingCode)}
+                    onClick={() => copyText(trackingCode)}
                     className="gap-2"
                   >
                     <ClipboardCopy className="h-4 w-4" />
-                    Sao chép tracking
+                    Sao chép mã
                   </Button>
                 )}
               </div>
@@ -911,19 +1277,26 @@ export function ReadyStockOrderDetailModal({
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <Button
                   variant="outline"
-                  onClick={() =>
-                    setHold(order.id, holdDraft.reason, holdDraft.note)
-                  }
+                  onClick={() => {
+                    void handleSaveHold();
+                  }}
                   disabled={!holdDraft.note.trim()}
                 >
                   Lưu hold
                 </Button>
-                <Button variant="outline" onClick={() => clearHold(order.id)}>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    void handleClearHold();
+                  }}
+                >
                   Gỡ hold
                 </Button>
                 <div className="text-foreground/90 text-xs">
                   Hold hiện tại:{' '}
-                  {resolvedOps.opsStatus === 'blocked'
+                  {['waiting_customer_info', 'on_hold', 'exception_hold'].includes(
+                    resolvedOps.opsStatus
+                  )
                     ? holdReasonLabel(resolvedOps.holdReason)
                     : 'Không'}
                 </div>
@@ -939,6 +1312,12 @@ export function ReadyStockOrderDetailModal({
                 onChange={(e) =>
                   upsertOps(order.id, { internalNote: e.target.value })
                 }
+                onBlur={() => {
+                  void persistOpsExecutionPatch(
+                    { internalNote: resolvedOps.internalNote || '' },
+                    'Khong the luu ghi chu van hanh.'
+                  );
+                }}
                 placeholder="Ghi chú vận hành, checklist, lưu ý đóng gói..."
                 rows={4}
               />

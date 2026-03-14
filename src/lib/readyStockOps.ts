@@ -7,43 +7,142 @@ import type {
 
 export const READY_STOCK_OPS_STATUS_LABEL: Record<ReadyStockOpsStatus, string> =
   {
-    pending_operations: 'Chờ nhận xử lý',
-    awaiting_picking: 'Chờ nhận xử lý',
-    picking: 'Đang lấy hàng',
-    packed: 'Đang đóng gói',
-    ready_to_ship: 'Chờ tạo vận đơn',
-    shipped: 'Đã bàn giao vận chuyển',
+    pending_operations: 'Cho nhan xu ly',
+    picking: 'Dang lay hang',
+    packing: 'Dang dong goi',
+    ready_to_ship: 'San sang tao van don',
+    shipment_created: 'Da tao van don',
+    handover_to_carrier: 'Da ban giao VC',
+    in_transit: 'Dang van chuyen',
+    delivery_failed: 'Giao that bai',
+    waiting_redelivery: 'Cho giao lai',
+    return_pending: 'Cho hoan hang',
+    return_in_transit: 'Dang hoan hang',
+    waiting_customer_info: 'Cho staff bo sung thong tin',
+    on_hold: 'Hold noi bo',
+    exception_hold: 'Ngoai le giao van',
+    delivered: 'Da giao',
+    closed: 'Da dong ho so',
+    returned: 'Hoan hang',
+    // Legacy UI aliases kept temporarily for persisted local state compatibility.
+    awaiting_picking: 'Cho nhan xu ly',
+    packed: 'Dang dong goi',
+    shipped: 'Da ban giao VC',
     blocked: 'Hold',
-    in_transit: 'Đang vận chuyển',
-    delivered: 'Đã giao',
-    delivery_failed: 'Giao thất bại',
-    returned: 'Hoàn hàng',
   };
 
 export function getReadyStockOpsStatusLabel(
   ops: Pick<ReadyStockOrderOpsState, 'opsStatus' | 'trackingCode'>
 ): string {
-  if (
-    ops.opsStatus === 'ready_to_ship' &&
-    String(ops.trackingCode || '').trim()
-  ) {
-    return 'Chá» bÃ n giao váº­n chuyá»ƒn';
-  }
-
   return READY_STOCK_OPS_STATUS_LABEL[ops.opsStatus];
 }
 
 export function inferReadyStockOpsStatus(
   order: OrderRecord
 ): ReadyStockOpsStatus {
+  const opsStage = String(order.opsStage || '')
+    .trim()
+    .toLowerCase();
+  const shipmentStatus = String(order.shipment?.latestStatus || '')
+    .trim()
+    .toLowerCase();
+  const shipmentState = String(order.shipment?.state || '')
+    .trim()
+    .toLowerCase();
+  const hasShipment = Boolean(
+    String(
+      order.shipment?.orderCode || order.shipment?.trackingCode || ''
+    ).trim()
+  );
   const raw = String(order.rawStatus || '')
     .trim()
     .toLowerCase();
-  if (order.status === 'cancelled') return 'blocked';
+
+  if (
+    [
+      'pending_operations',
+      'picking',
+      'packing',
+      'ready_to_ship',
+      'shipment_created',
+      'handover_to_carrier',
+      'in_transit',
+      'delivery_failed',
+      'waiting_redelivery',
+      'return_pending',
+      'return_in_transit',
+      'waiting_customer_info',
+      'on_hold',
+      'exception_hold',
+      'delivered',
+      'closed',
+      'returned',
+    ].includes(opsStage)
+  ) {
+    return opsStage as ReadyStockOpsStatus;
+  }
+
+  if (shipmentStatus === 'returned') return 'returned';
+  if (shipmentStatus === 'delivered') return 'delivered';
+  if (shipmentStatus === 'delivery_fail') return 'delivery_failed';
+  if (shipmentStatus === 'waiting_to_return') return 'waiting_redelivery';
+  if (shipmentStatus === 'return') return 'return_pending';
+
+  if (
+    ['return_transporting', 'return_sorting', 'returning'].includes(
+      shipmentStatus
+    )
+  ) {
+    return 'return_in_transit';
+  }
+
+  if (
+    [
+      'return_fail',
+      'exception',
+      'damage',
+      'lost',
+      'cancel',
+      'cancelled',
+    ].includes(shipmentStatus)
+  ) {
+    return 'exception_hold';
+  }
+
+  if (
+    [
+      'transporting',
+      'sorting',
+      'delivering',
+      'money_collect_delivering',
+    ].includes(shipmentStatus)
+  ) {
+    return 'in_transit';
+  }
+
+  if (
+    ['picking', 'money_collect_picking', 'picked', 'storing'].includes(
+      shipmentStatus
+    )
+  ) {
+    return 'handover_to_carrier';
+  }
+
+  if (shipmentStatus === 'ready_to_pick') return 'shipment_created';
+
+  if (shipmentState === 'returned') return 'returned';
+  if (shipmentState === 'delivered') return 'delivered';
+  if (shipmentState === 'failed') return 'delivery_failed';
+  if (shipmentState === 'returning') return 'return_in_transit';
+  if (shipmentState === 'in_transit') return 'in_transit';
+  if (shipmentState === 'created' || hasShipment) return 'shipment_created';
+
+  if (raw === 'cancelled') return 'exception_hold';
   if (raw === 'returned') return 'returned';
   if (raw === 'delivered') return 'delivered';
-  if (raw === 'shipped') return 'shipped';
+  if (raw === 'shipped') return 'handover_to_carrier';
   if (raw === 'processing') return 'picking';
+  if (raw === 'confirmed') return 'pending_operations';
   return 'pending_operations';
 }
 
@@ -100,37 +199,53 @@ export function createDefaultReadyStockItemState(
 export function createDefaultReadyStockOpsState(
   order: OrderRecord
 ): ReadyStockOrderOpsState {
+  const backendOps = order.opsExecution || {};
   const salesApprovedAt = inferSalesApprovedAt(order);
   const itemStates: Record<string, ReadyStockItemOpsState> = {};
 
   order.items.forEach((item, index) => {
-    itemStates[getReadyStockItemKey(order.id, item, index)] =
-      createDefaultReadyStockItemState(item);
+    const key = getReadyStockItemKey(order.id, item, index);
+    itemStates[key] = {
+      ...createDefaultReadyStockItemState(item),
+      ...(backendOps.itemStates?.[key] || {}),
+    };
   });
 
   return {
     opsStatus: inferReadyStockOpsStatus(order),
-    lastUpdatedAt: new Date().toISOString(),
-    assignee: '',
-    salesApprovedAt,
-    salesApprovedBy: 'Sales/Support',
+    lastUpdatedAt: backendOps.lastUpdatedAt || new Date().toISOString(),
+    assignee: backendOps.assignee || '',
+    salesApprovedAt: backendOps.salesApprovedAt || salesApprovedAt,
+    salesApprovedBy: backendOps.salesApprovedBy || 'Sales/Support',
     salesHandoffNote:
-      'Sales đã kiểm tra thông tin giao hàng, xác nhận đơn đủ điều kiện xử lý vận hành.\n' +
-      'Route vào queue Ready Stock vì: không phải pre-order, không phải prescription.',
-    internalNote: '',
-    holdReason: null,
-    holdNote: '',
-    paymentFailed: false,
+      backendOps.salesHandoffNote ||
+      'Sales da kiem tra thong tin giao hang, xac nhan don du dieu kien xu ly van hanh.\n' +
+        'Route vao queue Ready Stock vi: khong phai pre-order, khong phai prescription.',
+    internalNote: backendOps.internalNote || '',
+    holdReason: backendOps.holdReason || null,
+    holdNote: backendOps.holdNote || '',
+    paymentFailed: Boolean(backendOps.paymentFailed),
     checklist: {
-      skuQuantityChecked: false,
-      productConditionChecked: false,
-      addressChecked: false,
-      packageReady: false,
+      skuQuantityChecked: Boolean(backendOps.checklist?.skuQuantityChecked),
+      productConditionChecked: Boolean(
+        backendOps.checklist?.productConditionChecked
+      ),
+      addressChecked: Boolean(backendOps.checklist?.addressChecked),
+      packageReady: Boolean(backendOps.checklist?.packageReady),
     },
-    carrierId: '',
-    trackingCode: '',
-    issueType: null,
-    issueNote: '',
+    carrierId: String(
+      backendOps.carrierId || order.shipment?.provider || ''
+    )
+      .trim()
+      .toLowerCase(),
+    trackingCode: String(
+      backendOps.trackingCode ||
+        order.shipment?.orderCode ||
+        order.shipment?.trackingCode ||
+        ''
+    ).trim(),
+    issueType: backendOps.issueType || null,
+    issueNote: backendOps.issueNote || '',
     itemStates,
   };
 }
@@ -138,9 +253,10 @@ export function createDefaultReadyStockOpsState(
 export function getReadyStockSlaHours(order: OrderRecord): number {
   const note = String(order.note || '').toLowerCase();
   if (note.includes('gap')) return 8;
-  if (note.includes('vip') || note.includes('gấp')) return 8;
-  if (order.paymentStatus === 'pending' && order.paymentMethod !== 'cod')
+  if (note.includes('vip') || note.includes('gap')) return 8;
+  if (order.paymentStatus === 'pending' && order.paymentMethod !== 'cod') {
     return 24;
+  }
   return 24;
 }
 
@@ -228,8 +344,9 @@ export function getReadyStockWarnings(
   const address = String(order.customerAddress || '').trim();
   if (!address || address.length < 10) warnings.add('missing_address');
 
-  if (order.paymentStatus === 'pending' && order.paymentMethod !== 'cod')
+  if (order.paymentStatus === 'pending' && order.paymentMethod !== 'cod') {
     warnings.add('payment_pending');
+  }
   if (ops.paymentFailed) warnings.add('payment_failed');
 
   if (
@@ -246,7 +363,13 @@ export function getReadyStockWarnings(
   if (hasItemIssue) warnings.add('item_issue');
 
   if (ops.issueType) warnings.add('order_issue');
-  if (ops.opsStatus === 'blocked') warnings.add('hold');
+  if (
+    ['waiting_customer_info', 'on_hold', 'exception_hold', 'blocked'].includes(
+      ops.opsStatus
+    )
+  ) {
+    warnings.add('hold');
+  }
 
   return Array.from(warnings);
 }

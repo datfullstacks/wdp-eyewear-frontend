@@ -1,99 +1,191 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
+import { getSession } from 'next-auth/react';
+import {
+  AlertTriangle,
+  Briefcase,
+  Loader2,
+  Settings2,
+  Shield,
+  Users,
+} from 'lucide-react';
+
 import { Header } from '@/components/organisms/Header';
 import { StatCard } from '@/components/molecules/StatCard';
 import { UserTable, type UserTabRole } from '@/components/organisms/manager';
-import { userApi, type User } from '@/api';
-import { Shield, Briefcase, Users, AlertTriangle, Loader2 } from 'lucide-react';
+import { userApi, type User, toFrontendRole } from '@/api';
+import { getUserManagementBasePath, isAdminAreaPath } from '@/lib/userManagement';
+
+type ManagementTab = 'admins' | 'managers' | 'staff' | 'operations' | 'customers';
+
+type TabConfig = {
+  tab: ManagementTab;
+  role: string;
+  tableRole: UserTabRole;
+  count: number;
+  users: User[];
+  icon: typeof Shield;
+  tabLabel: string;
+  statLabel: string;
+  addLabel: string | null;
+  activeClassName: string;
+  inactiveClassName: string;
+  iconClassName: string;
+};
 
 export default function UsersPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const locale = useLocale();
   const t = useTranslations('manager.users');
-  const [activeTab, setActiveTab] = useState<'managers' | 'staff' | 'customers'>('managers');
+  const [viewerRole, setViewerRole] = useState('');
+  const [activeTab, setActiveTab] = useState<ManagementTab>(
+    isAdminAreaPath(pathname) ? 'admins' : 'managers'
+  );
+  const [admins, setAdmins] = useState<User[]>([]);
   const [managers, setManagers] = useState<User[]>([]);
   const [staffMembers, setStaffMembers] = useState<User[]>([]);
+  const [operationsMembers, setOperationsMembers] = useState<User[]>([]);
   const [customers, setCustomers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState('');
+  const userBasePath = getUserManagementBasePath(pathname);
+  const canManageAdmins = isAdminAreaPath(pathname) || viewerRole === 'admin';
+
+  useEffect(() => {
+    void getSession().then((session) => {
+      setViewerRole(toFrontendRole(String(session?.user?.role || '')));
+    });
+  }, []);
 
   const loadUsers = useCallback(async () => {
     setIsLoading(true);
     setApiError('');
     try {
-      const [mgrRes, staffRes, custRes] = await Promise.all([
+      const [adminRes, mgrRes, staffRes, opsRes, custRes] = await Promise.all([
+        canManageAdmins
+          ? userApi.getAll({ role: 'admin', limit: 100 })
+          : Promise.resolve({ users: [], total: 0, page: 1, pageSize: 100 }),
         userApi.getAll({ role: 'manager', limit: 100 }),
         userApi.getAll({ role: 'staff', limit: 100 }),
+        userApi.getAll({ role: 'operation', limit: 100 }),
         userApi.getAll({ role: 'customer', limit: 100 }),
       ]);
+
+      setAdmins(adminRes.users);
       setManagers(mgrRes.users);
       setStaffMembers(staffRes.users);
+      setOperationsMembers(opsRes.users);
       setCustomers(custRes.users);
     } catch (error) {
       setApiError(error instanceof Error ? error.message : t('loadFailed'));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [canManageAdmins, t]);
 
   useEffect(() => {
     void loadUsers();
   }, [loadUsers]);
 
-  const managerStats = [
-    {
-      title: t('stats.totalManagers'),
-      value: managers.length.toString(),
-      icon: Shield,
-      trend: { value: 0, isPositive: true },
-    },
-  ];
+  useEffect(() => {
+    if (!canManageAdmins && activeTab === 'admins') {
+      setActiveTab('managers');
+    }
+  }, [activeTab, canManageAdmins]);
 
-  const staffStats = [
-    {
-      title: t('stats.totalStaff'),
-      value: staffMembers.length.toString(),
-      icon: Briefcase,
-      trend: { value: 0, isPositive: true },
-    },
-  ];
+  const tabConfigs = useMemo<Record<ManagementTab, TabConfig>>(
+    () => ({
+      admins: {
+        tab: 'admins',
+        role: 'admin',
+        tableRole: 'admin',
+        count: admins.length,
+        users: admins,
+        icon: Shield,
+        tabLabel: locale === 'vi' ? 'Admin' : 'Admins',
+        statLabel: locale === 'vi' ? 'Tong admin' : 'Total Admins',
+        addLabel: locale === 'vi' ? 'Them admin moi' : 'Add New Admin',
+        activeClassName: 'border-red-500 text-red-600',
+        inactiveClassName:
+          'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+        iconClassName: activeTab === 'admins' ? 'text-red-600' : 'text-gray-500',
+      },
+      managers: {
+        tab: 'managers',
+        role: 'manager',
+        tableRole: 'manager',
+        count: managers.length,
+        users: managers,
+        icon: Shield,
+        tabLabel: locale === 'vi' ? 'Manager' : 'Managers',
+        statLabel: t('stats.totalManagers'),
+        addLabel: t('addManager'),
+        activeClassName: 'border-amber-500 text-amber-600',
+        inactiveClassName:
+          'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+        iconClassName: activeTab === 'managers' ? 'text-amber-600' : 'text-gray-500',
+      },
+      staff: {
+        tab: 'staff',
+        role: 'staff',
+        tableRole: 'staff',
+        count: staffMembers.length,
+        users: staffMembers,
+        icon: Briefcase,
+        tabLabel: locale === 'vi' ? 'Staff' : 'Staff',
+        statLabel: locale === 'vi' ? 'Tong staff' : 'Total Staff',
+        addLabel: t('addStaff'),
+        activeClassName: 'border-indigo-500 text-indigo-600',
+        inactiveClassName:
+          'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+        iconClassName: activeTab === 'staff' ? 'text-indigo-600' : 'text-gray-500',
+      },
+      operations: {
+        tab: 'operations',
+        role: 'operation',
+        tableRole: 'operation',
+        count: operationsMembers.length,
+        users: operationsMembers,
+        icon: Settings2,
+        tabLabel: locale === 'vi' ? 'Operation' : 'Operations',
+        statLabel: locale === 'vi' ? 'Tong operation' : 'Total Operations',
+        addLabel: locale === 'vi' ? 'Them operation moi' : 'Add New Operation',
+        activeClassName: 'border-blue-500 text-blue-600',
+        inactiveClassName:
+          'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+        iconClassName: activeTab === 'operations' ? 'text-blue-600' : 'text-gray-500',
+      },
+      customers: {
+        tab: 'customers',
+        role: 'customer',
+        tableRole: 'customer',
+        count: customers.length,
+        users: customers,
+        icon: Users,
+        tabLabel: locale === 'vi' ? 'Customer' : 'Customers',
+        statLabel: t('stats.totalCustomers'),
+        addLabel: null,
+        activeClassName: 'border-green-500 text-green-600',
+        inactiveClassName:
+          'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+        iconClassName: activeTab === 'customers' ? 'text-green-600' : 'text-gray-500',
+      },
+    }),
+    [activeTab, admins, customers, locale, managers, operationsMembers, staffMembers, t]
+  );
 
-  const customerStats = [
-    {
-      title: t('stats.totalCustomers'),
-      value: customers.length.toString(),
-      icon: Users,
-      trend: { value: 0, isPositive: true },
-    },
-  ];
-
-  const currentStats =
-    activeTab === 'managers'
-      ? managerStats
-      : activeTab === 'staff'
-        ? staffStats
-        : customerStats;
-
-  const currentData =
-    activeTab === 'managers'
-      ? managers
-      : activeTab === 'staff'
-        ? staffMembers
-        : customers;
-
-  const currentRole: UserTabRole =
-    activeTab === 'managers' ? 'manager' : activeTab === 'staff' ? 'staff' : 'customer';
-
-  const getAddButtonLabel = () => {
-    if (activeTab === 'managers') return t('addManager');
-    if (activeTab === 'staff') return t('addStaff');
-    return null;
-  };
+  const currentTab = tabConfigs[activeTab];
+  const visibleTabs = (canManageAdmins
+    ? ['admins', 'managers', 'staff', 'operations', 'customers']
+    : ['managers', 'staff', 'operations', 'customers']) as ManagementTab[];
+  const resolvedCurrentTab = currentTab || tabConfigs[visibleTabs[0]];
 
   const handleView = (user: User) => {
-    router.push(`/manager/users/${user.id}`);
+    router.push(`${userBasePath}/${user.id}`);
   };
 
   const handleDelete = async (user: User) => {
@@ -110,65 +202,40 @@ export default function UsersPage() {
     <>
       <Header
         title={t('title')}
-        subtitle={t('subtitle')}
-        showAddButton={activeTab !== 'customers'}
-        addButtonLabel={getAddButtonLabel() || ''}
-        onAdd={() => router.push('/manager/users/create')}
+        subtitle={
+          locale === 'vi'
+            ? 'Phan chia nguoi dung theo role dung workspace hien tai'
+            : 'Split users by role inside the current workspace'
+        }
+        showAddButton={Boolean(resolvedCurrentTab?.addLabel)}
+        addButtonLabel={resolvedCurrentTab?.addLabel || ''}
+        onAdd={() =>
+          router.push(`${userBasePath}/create?role=${resolvedCurrentTab?.role || 'staff'}`)
+        }
       />
 
       <div className="space-y-8 p-6">
-        {/* Tab Navigation */}
         <section className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
-            <button
-              onClick={() => setActiveTab('managers')}
-              className={`flex items-center border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
-                activeTab === 'managers'
-                  ? 'border-amber-500 text-amber-600'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-              }`}
-            >
-              <Shield
-                className={`mr-2 h-4 w-4 ${
-                  activeTab === 'managers' ? 'text-amber-600' : 'text-gray-500'
-                }`}
-              />
-              {t('tabs.managers')} ({managers.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('staff')}
-              className={`flex items-center border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
-                activeTab === 'staff'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-              }`}
-            >
-              <Briefcase
-                className={`mr-2 h-4 w-4 ${
-                  activeTab === 'staff' ? 'text-blue-600' : 'text-gray-500'
-                }`}
-              />
-              {t('tabs.staff')} ({staffMembers.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('customers')}
-              className={`flex items-center border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
-                activeTab === 'customers'
-                  ? 'border-green-500 text-green-600'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-              }`}
-            >
-              <Users
-                className={`mr-2 h-4 w-4 ${
-                  activeTab === 'customers' ? 'text-green-600' : 'text-gray-500'
-                }`}
-              />
-              {t('tabs.customers')} ({customers.length})
-            </button>
+          <nav className="-mb-px flex flex-wrap gap-x-8 gap-y-3">
+            {visibleTabs.map((tabKey) => {
+              const tab = tabConfigs[tabKey];
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tabKey}
+                  onClick={() => setActiveTab(tabKey)}
+                  className={`flex items-center border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
+                    activeTab === tabKey ? tab.activeClassName : tab.inactiveClassName
+                  }`}
+                >
+                  <Icon className={`mr-2 h-4 w-4 ${tab.iconClassName}`} />
+                  {tab.tabLabel} ({tab.count})
+                </button>
+              );
+            })}
           </nav>
         </section>
 
-        {/* Error Message */}
         {apiError && (
           <div className="flex items-center gap-2 rounded-md bg-red-50 p-4 text-red-700">
             <AlertTriangle className="h-5 w-5" />
@@ -176,26 +243,26 @@ export default function UsersPage() {
           </div>
         )}
 
-        {/* Stats */}
         <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {currentStats.map((stat, index) => (
-            <StatCard key={index} {...stat} />
-          ))}
+          <StatCard
+            title={resolvedCurrentTab.statLabel}
+            value={resolvedCurrentTab.count.toString()}
+            icon={resolvedCurrentTab.icon}
+            trend={{ value: 0, isPositive: true }}
+          />
         </section>
 
-        {/* Loading */}
         {isLoading && (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
           </div>
         )}
 
-        {/* Users Table */}
         {!isLoading && (
-          <section className="rounded-lg border border-gray-200 bg-white overflow-x-auto">
+          <section className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
             <UserTable
-              users={currentData}
-              role={currentRole}
+              users={resolvedCurrentTab.users}
+              role={resolvedCurrentTab.tableRole}
               onView={handleView}
               onDelete={activeTab !== 'customers' ? handleDelete : undefined}
               translations={{

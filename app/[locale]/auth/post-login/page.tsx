@@ -15,12 +15,17 @@ export default async function PostLoginPage({
   const safeCallbackUrl = callbackUrl?.startsWith('/') ? callbackUrl : '/';
 
   const role = (session.user.role ?? '').trim().toLowerCase();
+  const shouldRedirectToAdmin = role === 'admin';
   const shouldRedirectToStaff = role === 'sales' || role === 'staff';
   const shouldRedirectToOperation = role === 'operations' || role === 'operation';
-  const shouldRedirectToManager = role === 'admin' || role === 'manager';
+  const shouldRedirectToManager = role === 'manager';
+
+  if (shouldRedirectToAdmin) {
+    redirect('/admin/dashboard');
+  }
 
   if (shouldRedirectToManager) {
-    redirect('/manager');
+    redirect('/manager/dashboard');
   }
 
   if (shouldRedirectToOperation) {

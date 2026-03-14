@@ -32,7 +32,6 @@ import type {
 } from '@/types/readyStockOps';
 import {
   AlertTriangle,
-  CheckCircle2,
   ChevronDown,
   Eye,
   Hand,
@@ -44,34 +43,44 @@ import {
 
 function opsBadgeType(status: ReadyStockOpsStatus) {
   switch (status) {
-    case 'shipped':
+    case 'delivered':
+    case 'closed':
       return 'success' as const;
     case 'ready_to_ship':
+    case 'shipment_created':
+    case 'handover_to_carrier':
+    case 'in_transit':
       return 'info' as const;
     case 'picking':
-    case 'packed':
+    case 'packing':
+    case 'waiting_redelivery':
+    case 'return_pending':
+    case 'return_in_transit':
       return 'warning' as const;
-    case 'blocked':
+    case 'delivery_failed':
+    case 'waiting_customer_info':
+    case 'on_hold':
+    case 'exception_hold':
+    case 'returned':
       return 'error' as const;
     case 'pending_operations':
-    case 'awaiting_picking':
     default:
       return 'default' as const;
   }
 }
 
 function paymentBadge(order: OrderRecord, ops: ReadyStockOrderOpsState) {
-  if (ops.paymentFailed) return { label: 'Thất bại', type: 'error' as const };
+  if (ops.paymentFailed) return { label: 'That bai', type: 'error' as const };
   if (order.paymentStatus === 'paid') {
-    return { label: 'Đã thanh toán', type: 'success' as const };
+    return { label: 'Da thanh toan', type: 'success' as const };
   }
   if (order.paymentStatus === 'partial') {
-    return { label: 'Thanh toán 1 phần', type: 'info' as const };
+    return { label: 'Thanh toan 1 phan', type: 'info' as const };
   }
   if (order.paymentStatus === 'cod') {
     return { label: 'COD', type: 'default' as const };
   }
-  return { label: 'Chờ thanh toán', type: 'warning' as const };
+  return { label: 'Cho thanh toan', type: 'warning' as const };
 }
 
 function warningLabel(
@@ -79,22 +88,50 @@ function warningLabel(
 ): string {
   switch (key) {
     case 'missing_address':
-      return 'Địa chỉ thiếu/không rõ';
+      return 'Dia chi thieu/khong ro';
     case 'payment_pending':
-      return 'Chờ thanh toán';
+      return 'Cho thanh toan';
     case 'payment_failed':
-      return 'Thanh toán thất bại';
+      return 'Thanh toan that bai';
     case 'special_note':
-      return 'Có note đặc biệt';
+      return 'Co note dac biet';
     case 'item_issue':
-      return 'Có item thiếu/lỗi';
+      return 'Co item thieu/loi';
     case 'order_issue':
-      return 'Có lỗi/ngoại lệ';
+      return 'Co loi/ngoai le';
     case 'hold':
-      return 'Đang hold';
+      return 'Dang hold';
     default:
       return key;
   }
+}
+
+function nextActionHint(
+  status: ReadyStockOpsStatus,
+  allPicked: boolean,
+  hasShipment: boolean
+): string | null {
+  if (status === 'pending_operations') {
+    return 'Can nhan xu ly truoc khi xac nhan lay hang.';
+  }
+
+  if (status === 'picking' && !allPicked) {
+    return 'Vao chi tiet don va danh dau da lay du tat ca san pham truoc.';
+  }
+
+  if (status === 'packing') {
+    return 'Sau khi pick du, xac nhan da dong goi de mo buoc tao van don.';
+  }
+
+  if (status === 'ready_to_ship' && !hasShipment) {
+    return 'Can tao van don GHN truoc khi dong bo giao van.';
+  }
+
+  if (status === 'shipment_created') {
+    return 'Van don GHN da duoc tao. Ban giao kien va dong bo GHN khi co cap nhat.';
+  }
+
+  return null;
 }
 
 export function ReadyStockOrdersTable({
@@ -105,8 +142,7 @@ export function ReadyStockOrdersTable({
   onConfirmPicked,
   onPack,
   onCreateShipment,
-  onUpdateTracking,
-  onCompleteShipping,
+  onSyncShipment,
   onHold,
   currentUserName,
 }: {
@@ -117,8 +153,7 @@ export function ReadyStockOrdersTable({
   onConfirmPicked: (order: OrderRecord) => void;
   onPack: (order: OrderRecord) => void;
   onCreateShipment: (order: OrderRecord) => void;
-  onUpdateTracking: (order: OrderRecord) => void;
-  onCompleteShipping: (order: OrderRecord) => void;
+  onSyncShipment: (order: OrderRecord) => void;
   onHold: (order: OrderRecord) => void;
   currentUserName: string;
 }) {
@@ -126,11 +161,10 @@ export function ReadyStockOrdersTable({
     <div className="glass-card overflow-hidden rounded-xl">
       <div className="border-border flex items-center justify-between gap-2 border-b px-4 py-3">
         <div className="text-foreground/90 text-sm font-medium">
-          Danh sách đơn ({orders.length})
+          Danh sach don ({orders.length})
         </div>
         <div className="text-foreground/60 text-xs">
-          Tip: ưu tiên đơn chờ thanh toán + gần SLA, hoặc có cảnh báo/hold để xử
-          lý trước.
+          Uu tien don gan SLA hoac co canh bao de xu ly truoc.
         </div>
       </div>
 
@@ -139,23 +173,23 @@ export function ReadyStockOrdersTable({
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="w-[170px] whitespace-nowrap">
-                Mã đơn
+                Ma don
               </TableHead>
               <TableHead className="w-[220px] whitespace-nowrap">
-                Khách
+                Khach
               </TableHead>
-              <TableHead className="w-[140px] whitespace-nowrap">SĐT</TableHead>
+              <TableHead className="w-[140px] whitespace-nowrap">SDT</TableHead>
               <TableHead className="w-[120px] whitespace-nowrap">
-                Số lượng
+                So luong
               </TableHead>
-              <TableHead className="w-[280px]">SP chính</TableHead>
-              <TableHead className="whitespace-nowrap">Thanh toán</TableHead>
+              <TableHead className="w-[280px]">SP chinh</TableHead>
+              <TableHead className="whitespace-nowrap">Thanh toan</TableHead>
               <TableHead className="text-right whitespace-nowrap">
-                Tổng tiền
+                Tong tien
               </TableHead>
-              <TableHead className="whitespace-nowrap">Trạng thái</TableHead>
+              <TableHead className="whitespace-nowrap">Trang thai</TableHead>
               <TableHead className="w-[190px] text-right whitespace-nowrap">
-                Action chính
+                Action
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -166,35 +200,43 @@ export function ReadyStockOrdersTable({
               const summary = summarizeItems(order);
               const warnings = getReadyStockWarnings(order, ops);
               const hasWarnings = warnings.length > 0;
-              const isMine =
-                String(ops.assignee || '').trim() ===
-                String(currentUserName || '').trim();
               const allPicked = order.items.every((item, index) => {
                 const key = getReadyStockItemKey(order.id, item, index);
                 return Boolean(ops.itemStates?.[key]?.picked);
               });
-              const hasTracking = Boolean(
-                String(ops.trackingCode || '').trim()
+              const hasShipment = Boolean(
+                String(
+                  order.shipment?.orderCode ||
+                    order.shipment?.trackingCode ||
+                    ops.trackingCode ||
+                    ''
+                ).trim()
               );
-              const hasShipmentDraft =
-                Boolean(String(ops.carrierId || '').trim()) || hasTracking;
               const isClosed =
-                ops.opsStatus === 'shipped' ||
                 ops.opsStatus === 'delivered' ||
+                ops.opsStatus === 'closed' ||
                 ops.opsStatus === 'returned';
-              const canAccept = !isMine && !isClosed;
+              const canAccept = !isClosed && ops.opsStatus === 'pending_operations';
               const canConfirmPicked = ops.opsStatus === 'picking';
-              const canPack = ops.opsStatus === 'packed';
+              const canPack = ops.opsStatus === 'packing';
               const canCreateShipment =
-                ops.opsStatus === 'ready_to_ship' && !hasTracking;
-              const canUpdateTracking =
-                hasShipmentDraft &&
-                (ops.opsStatus === 'ready_to_ship' ||
-                  ops.opsStatus === 'shipped' ||
-                  ops.opsStatus === 'in_transit' ||
-                  ops.opsStatus === 'delivered');
-              const canCompleteShipping =
-                ops.opsStatus === 'ready_to_ship' && hasTracking;
+                ops.opsStatus === 'ready_to_ship' && !hasShipment;
+              const canSyncShipment =
+                hasShipment &&
+                [
+                  'shipment_created',
+                  'handover_to_carrier',
+                  'in_transit',
+                  'delivery_failed',
+                  'waiting_redelivery',
+                  'return_pending',
+                  'return_in_transit',
+                ].includes(ops.opsStatus);
+              const hint = nextActionHint(
+                ops.opsStatus,
+                allPicked,
+                hasShipment
+              );
 
               return (
                 <TableRow key={order.id} className="hover:bg-muted/30">
@@ -240,9 +282,21 @@ export function ReadyStockOrdersTable({
                   </TableCell>
 
                   <TableCell className="whitespace-nowrap">
-                    <StatusBadge status={opsBadgeType(ops.opsStatus)}>
-                      {READY_STOCK_OPS_STATUS_LABEL[ops.opsStatus]}
-                    </StatusBadge>
+                    <div className="space-y-1">
+                      <StatusBadge status={opsBadgeType(ops.opsStatus)}>
+                        {READY_STOCK_OPS_STATUS_LABEL[ops.opsStatus]}
+                      </StatusBadge>
+                      {order.shipment?.latestStatus && (
+                        <div className="text-foreground/70 text-xs">
+                          GHN: {order.shipment.latestStatus}
+                        </div>
+                      )}
+                      {order.shipment?.orderCode && (
+                        <div className="text-foreground/70 font-mono text-xs">
+                          {order.shipment.orderCode}
+                        </div>
+                      )}
+                    </div>
                   </TableCell>
 
                   <TableCell className="text-right whitespace-nowrap">
@@ -252,16 +306,16 @@ export function ReadyStockOrdersTable({
                           variant="outline"
                           size="sm"
                           className="gap-2"
-                          aria-label="Mở action chính"
+                          aria-label="Mo action"
                         >
-                          Thao tác
+                          Thao tac
                           <ChevronDown className="h-4 w-4 opacity-70" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-80">
                         <DropdownMenuLabel className="flex items-center gap-2">
                           <AlertTriangle className="text-warning h-4 w-4" />
-                          Cảnh báo
+                          Canh bao
                         </DropdownMenuLabel>
                         {hasWarnings ? (
                           warnings.map((w) => (
@@ -271,110 +325,85 @@ export function ReadyStockOrdersTable({
                           ))
                         ) : (
                           <DropdownMenuItem disabled>
-                            Không có cảnh báo
+                            Khong co canh bao
                           </DropdownMenuItem>
                         )}
 
                         <DropdownMenuSeparator />
-                        <DropdownMenuLabel>Action chính</DropdownMenuLabel>
+                        <DropdownMenuLabel>Action chinh</DropdownMenuLabel>
 
-                        <DropdownMenuItem
-                          onClick={() => onAccept(order)}
-                          className="gap-2"
-                          disabled={!canAccept}
-                          title={
-                            isMine
-                              ? 'Bạn đang phụ trách đơn này'
-                              : isClosed
-                                ? 'Đơn đã hoàn tất giao vận'
-                                : ''
-                          }
-                        >
-                          <Hand className="h-4 w-4" />
-                          Nhận xử lý
-                        </DropdownMenuItem>
+                        {canAccept && (
+                          <DropdownMenuItem
+                            onClick={() => onAccept(order)}
+                            className="gap-2"
+                          >
+                            <Hand className="h-4 w-4" />
+                            Nhan xu ly
+                          </DropdownMenuItem>
+                        )}
 
-                        <DropdownMenuItem
-                          onClick={() => onConfirmPicked(order)}
-                          className="gap-2"
-                          disabled={!canConfirmPicked || !allPicked}
-                          title={
-                            !canConfirmPicked
-                              ? 'Cần nhận xử lý trước khi xác nhận lấy hàng'
-                              : !allPicked
-                                ? 'Cần đánh dấu đã pick đủ sản phẩm trong chi tiết đơn'
-                                : ''
-                          }
-                        >
-                          <ShoppingBag className="h-4 w-4" />
-                          Xác nhận lấy hàng
-                        </DropdownMenuItem>
+                        {ops.opsStatus === 'picking' && (
+                          <DropdownMenuItem
+                            onClick={() => onConfirmPicked(order)}
+                            className="gap-2"
+                            disabled={!allPicked}
+                          >
+                            <ShoppingBag className="h-4 w-4" />
+                            Xac nhan da lay du
+                          </DropdownMenuItem>
+                        )}
 
-                        <DropdownMenuItem
-                          onClick={() => onPack(order)}
-                          className="gap-2"
-                          disabled={!canPack}
-                          title={
-                            !canPack
-                              ? 'Cần xác nhận lấy hàng trước khi chuyển sang đóng gói'
-                              : ''
-                          }
-                        >
-                          <Package className="h-4 w-4" />
-                          Đóng gói
-                        </DropdownMenuItem>
+                        {canPack && (
+                          <DropdownMenuItem
+                            onClick={() => onPack(order)}
+                            className="gap-2"
+                          >
+                            <Package className="h-4 w-4" />
+                            Xac nhan da dong goi
+                          </DropdownMenuItem>
+                        )}
 
-                        <DropdownMenuItem
-                          onClick={() => onCreateShipment(order)}
-                          className="gap-2"
-                          disabled={!canCreateShipment}
-                          title={
-                            !canCreateShipment
-                              ? 'Cần hoàn tất bước đóng gói trước khi tạo vận đơn'
-                              : ''
-                          }
-                        >
-                          <Truck className="h-4 w-4" />
-                          Tạo vận đơn
-                        </DropdownMenuItem>
+                        {canCreateShipment && (
+                          <DropdownMenuItem
+                            onClick={() => onCreateShipment(order)}
+                            className="gap-2"
+                          >
+                            <Truck className="h-4 w-4" />
+                            Tao van don GHN
+                          </DropdownMenuItem>
+                        )}
 
-                        <DropdownMenuItem
-                          onClick={() => onUpdateTracking(order)}
-                          className="gap-2"
-                          disabled={!canUpdateTracking}
-                          title={
-                            !canUpdateTracking
-                              ? 'Cần có vận đơn hoặc tracking trước khi cập nhật'
-                              : ''
-                          }
-                        >
-                          <Truck className="h-4 w-4" />
-                          Cập nhật tracking
-                        </DropdownMenuItem>
+                        {canSyncShipment && (
+                          <DropdownMenuItem
+                            onClick={() => onSyncShipment(order)}
+                            className="gap-2"
+                          >
+                            <Truck className="h-4 w-4" />
+                            Dong bo GHN
+                          </DropdownMenuItem>
+                        )}
 
-                        <DropdownMenuItem
-                          onClick={() => onCompleteShipping(order)}
-                          className="gap-2"
-                          disabled={!canCompleteShipping}
-                          title={
-                            !canCompleteShipping
-                              ? 'Cần có tracking trước khi hoàn tất giao vận'
-                              : ''
-                          }
-                        >
-                          <CheckCircle2 className="h-4 w-4" />
-                          Hoàn tất giao vận
-                        </DropdownMenuItem>
+                        {!canAccept &&
+                          ops.opsStatus !== 'picking' &&
+                          !canPack &&
+                          !canCreateShipment &&
+                          !canSyncShipment && (
+                            <DropdownMenuItem disabled>
+                              Khong co thao tac tiep theo o trang thai nay.
+                            </DropdownMenuItem>
+                          )}
+
+                        {hint && <DropdownMenuItem disabled>{hint}</DropdownMenuItem>}
 
                         <DropdownMenuSeparator />
-                        <DropdownMenuLabel>Tiện ích</DropdownMenuLabel>
+                        <DropdownMenuLabel>Tien ich</DropdownMenuLabel>
 
                         <DropdownMenuItem
                           onClick={() => onViewDetail(order)}
                           className="gap-2"
                         >
                           <Eye className="h-4 w-4" />
-                          Xem chi tiết
+                          Xem chi tiet
                         </DropdownMenuItem>
 
                         <DropdownMenuItem
@@ -382,7 +411,7 @@ export function ReadyStockOrdersTable({
                           className="gap-2"
                         >
                           <PauseCircle className="h-4 w-4" />
-                          Đưa vào hold
+                          Dua vao hold
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -397,7 +426,7 @@ export function ReadyStockOrdersTable({
                   colSpan={9}
                   className="text-foreground/70 py-10 text-center"
                 >
-                  Không có đơn phù hợp bộ lọc.
+                  Khong co don phu hop bo loc.
                 </TableCell>
               </TableRow>
             )}
