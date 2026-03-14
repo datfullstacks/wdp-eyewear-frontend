@@ -22,6 +22,10 @@ import {
   paymentStatusConfig,
   formatCurrency,
 } from '@/data/pendingData';
+import {
+  canApprovePendingOrder,
+  PENDING_ORDER_APPROVAL_MESSAGE,
+} from '@/lib/pendingOrders';
 
 interface PendingOrderRowProps {
   order: PendingOrder;
@@ -48,6 +52,7 @@ export const PendingOrderRow = ({
     default: 'text-muted-foreground',
   };
   const paymentColor = paymentStatusConfig[order.paymentStatus].color;
+  const canApprove = canApprovePendingOrder(order);
 
   return (
     <TableRow
@@ -88,14 +93,21 @@ export const PendingOrderRow = ({
         {formatCurrency(order.total)}
       </TableCell>
       <TableCell>
-        <span
-          className={cn(
-            'text-sm font-normal',
-            statusTextClass[paymentColor] ?? statusTextClass.default
+        <div className="space-y-1">
+          <span
+            className={cn(
+              'text-sm font-normal',
+              statusTextClass[paymentColor] ?? statusTextClass.default
+            )}
+          >
+            {paymentStatusConfig[order.paymentStatus].label}
+          </span>
+          {!canApprove && (
+            <p className="text-xs font-medium text-amber-700">
+              {PENDING_ORDER_APPROVAL_MESSAGE}
+            </p>
           )}
-        >
-          {paymentStatusConfig[order.paymentStatus].label}
-        </span>
+        </div>
       </TableCell>
       <TableCell className="text-foreground/90 text-sm">
         {order.createdAt}
@@ -116,7 +128,11 @@ export const PendingOrderRow = ({
               <Eye className="mr-2 h-4 w-4" />
               Xem chi tiết
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onProcess(order)}>
+            <DropdownMenuItem
+              disabled={!canApprove}
+              className={!canApprove ? 'text-amber-700 data-[disabled]:opacity-100' : ''}
+              onClick={() => onProcess(order)}
+            >
               <CheckCircle className="text-success mr-2 h-4 w-4" />
               Xác nhận xử lý
             </DropdownMenuItem>

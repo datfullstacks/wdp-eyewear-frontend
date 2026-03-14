@@ -1,22 +1,88 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
+import { useParams, usePathname, useRouter } from 'next/navigation';
+import { getSession } from 'next-auth/react';
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Briefcase,
+  Loader2,
+  Settings2,
+  Shield,
+} from 'lucide-react';
+
 import { Header } from '@/components/organisms/Header';
 import { UserForm, type UserFormData } from '@/components/organisms/manager';
 import { Card } from '@/components/ui/card';
-import { AlertTriangle, Loader2, ArrowLeft, Shield, Briefcase } from 'lucide-react';
 import { userApi, toFrontendRole } from '@/api';
+import { normalizeRole } from '@/lib/roles';
+import { getUserManagementBasePath, isAdminAreaPath } from '@/lib/userManagement';
 
-type EditRole = 'manager' | 'sales' | 'customer';
+type EditRole = 'admin' | 'manager' | 'staff' | 'operation' | 'customer';
+
+type RoleCard = {
+  role: Exclude<EditRole, 'customer'>;
+  title: string;
+  description: string;
+  icon: typeof Shield;
+  activeClassName: string;
+};
+
+const ROLE_CARDS: RoleCard[] = [
+  {
+    role: 'staff',
+    title: 'Sales',
+    description: 'Store sales, order intake, follow-up and customer care.',
+    icon: Briefcase,
+    activeClassName: 'border-indigo-500 bg-indigo-50 shadow-sm',
+  },
+  {
+    role: 'operation',
+    title: 'Operation',
+    description: 'Fulfillment, inventory, shipping and prescription execution.',
+    icon: Settings2,
+    activeClassName: 'border-blue-500 bg-blue-50 shadow-sm',
+  },
+  {
+    role: 'manager',
+    title: 'Manager',
+    description: 'Pricing, policies, approvals, KPI and business oversight.',
+    icon: Shield,
+    activeClassName: 'border-amber-500 bg-amber-50 shadow-sm',
+  },
+  {
+    role: 'admin',
+    title: 'System Admin',
+    description: 'Auth, permissions, security, integrations and platform control.',
+    icon: Shield,
+    activeClassName: 'border-red-500 bg-red-50 shadow-sm',
+  },
+];
+
+function resolveEditableRole(rawRole: string): EditRole {
+  const normalized = normalizeRole(rawRole);
+  if (
+    normalized === 'customer' ||
+    normalized === 'staff' ||
+    normalized === 'operation' ||
+    normalized === 'manager' ||
+    normalized === 'admin'
+  ) {
+    return normalized;
+  }
+  return 'customer';
+}
 
 export default function EditUserPage() {
   const router = useRouter();
   const params = useParams();
+  const pathname = usePathname();
   const userId = params.id as string;
+  const [viewerRole, setViewerRole] = useState('');
 
-  const [role, setRole] = useState<EditRole>('manager');
+  const [role, setRole] = useState<EditRole>('customer');
   const [formData, setFormData] = useState<UserFormData>({
     name: '',
     email: '',
@@ -29,14 +95,30 @@ export default function EditUserPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState('');
+  const userBasePath = getUserManagementBasePath(pathname);
+  const canManageAdmins = isAdminAreaPath(pathname) || viewerRole === 'admin';
+  const availableRoleCards = useMemo(
+    () =>
+      canManageAdmins
+        ? ROLE_CARDS
+        : ROLE_CARDS.filter((item) => item.role !== 'admin'),
+    [canManageAdmins]
+  );
+  const isLockedAdminRole = role === 'admin' && !canManageAdmins;
+
+  useEffect(() => {
+    void getSession().then((session) => {
+      setViewerRole(normalizeRole(session?.user?.role));
+    });
+  }, []);
 
   useEffect(() => {
     const loadUser = async () => {
       try {
         setIsLoading(true);
+        setApiError('');
         const user = await userApi.getById(userId);
-        const frontendRole = toFrontendRole(user.role) as EditRole;
-        setRole(frontendRole);
+        setRole(resolveEditableRole(toFrontendRole(user.role)));
         setFormData({
           name: user.name,
           email: user.email,
@@ -47,7 +129,9 @@ export default function EditUserPage() {
           password: '',
         });
       } catch (error) {
-        setApiError(error instanceof Error ? error.message : 'Failed to load user');
+        setApiError(
+          error instanceof Error ? error.message : 'Failed to load user'
+        );
       } finally {
         setIsLoading(false);
       }
@@ -58,9 +142,19 @@ export default function EditUserPage() {
     }
   }, [userId]);
 
+  const selectedRoleMeta = useMemo(
+    () => ROLE_CARDS.find((item) => item.role === role) || null,
+    [role]
+  );
+
   const handleSubmit = async () => {
+    if (isLockedAdminRole) {
+      setApiError('Only System Admin can edit admin accounts');
+      return;
+    }
+
     if (!formData.name || !formData.email) {
-      setApiError('Vui lòng điền đầy đủ các trường bắt buộc');
+      setApiError('Vui long dien day du cac truong bat buoc');
       return;
     }
 
@@ -68,15 +162,14 @@ export default function EditUserPage() {
     setApiError('');
 
     try {
-      // PUT /api/users/{id} with {name, email, role} as per API spec
       await userApi.update(userId, {
         name: formData.name,
         email: formData.email,
-        role: role === 'sales' ? 'sales' : role,
+        role,
       });
-      router.push('/manager/users');
+      router.push(userBasePath);
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Cập nhật thất bại');
+      setApiError(error instanceof Error ? error.message : 'Cap nhat that bai');
     } finally {
       setIsSubmitting(false);
     }
@@ -93,18 +186,17 @@ export default function EditUserPage() {
   return (
     <>
       <Header
-        title="Chỉnh sửa người dùng"
-        subtitle={`Cập nhật thông tin: ${formData.name}`}
+        title="Chinh sua nguoi dung"
+        subtitle={`Cap nhat thong tin: ${formData.name}`}
       />
 
       <div className="space-y-6 p-6">
-        {/* Back navigation */}
         <Link
-          href="/manager/users"
-          className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-amber-600 transition-colors"
+          href={userBasePath}
+          className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition-colors hover:text-amber-600"
         >
           <ArrowLeft className="h-4 w-4" />
-          Quay lại Quản lý người dùng
+          Quay lai Quan ly nguoi dung
         </Link>
 
         {apiError && (
@@ -114,53 +206,51 @@ export default function EditUserPage() {
           </div>
         )}
 
-        {/* Role Selection (editable) */}
-        {role !== 'customer' && (
+        {isLockedAdminRole && (
+          <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            Tai khoan admin chi duoc chinh sua trong khu /admin.
+          </div>
+        )}
+
+        {role !== 'customer' && !isLockedAdminRole && (
           <Card className="p-6">
-            <h3 className="mb-4 text-lg font-semibold text-gray-900">Vai trò</h3>
-            <div className="grid gap-4 md:grid-cols-2">
-              <button
-                type="button"
-                onClick={() => setRole('manager')}
-                className={`rounded-lg border-2 p-6 text-left transition-all ${
-                  role === 'manager'
-                    ? 'border-amber-500 bg-amber-50 shadow-sm'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <Shield className="mb-2 h-8 w-8 text-amber-600" />
-                <h4 className="mb-1 font-semibold text-gray-900">Manager</h4>
-                <p className="text-sm text-gray-600">
-                  Quản lý sản phẩm, giá, chính sách và báo cáo
-                </p>
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole('sales')}
-                className={`rounded-lg border-2 p-6 text-left transition-all ${
-                  role === 'sales'
-                    ? 'border-blue-500 bg-blue-50 shadow-sm'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <Briefcase className="mb-2 h-8 w-8 text-blue-600" />
-                <h4 className="mb-1 font-semibold text-gray-900">Sale (Sales Team)</h4>
-                <p className="text-sm text-gray-600">
-                  Bán hàng tại cửa hàng, xử lý đơn hàng và chăm sóc khách hàng
-                </p>
-              </button>
+            <h3 className="mb-4 text-lg font-semibold text-gray-900">Vai tro</h3>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {availableRoleCards.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.role}
+                    type="button"
+                    onClick={() => setRole(item.role)}
+                    className={`rounded-lg border-2 p-6 text-left transition-all ${
+                      role === item.role
+                        ? item.activeClassName
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <Icon className="mb-2 h-8 w-8 text-gray-900" />
+                    <h4 className="mb-1 font-semibold text-gray-900">{item.title}</h4>
+                    <p className="text-sm text-gray-600">{item.description}</p>
+                  </button>
+                );
+              })}
             </div>
           </Card>
         )}
 
         <Card className="p-6">
-          <h3 className="mb-4 text-lg font-semibold text-gray-900">Thông tin người dùng</h3>
+          <h3 className="mb-4 text-lg font-semibold text-gray-900">
+            {selectedRoleMeta
+              ? `Thong tin ${selectedRoleMeta.title}`
+              : 'Thong tin nguoi dung'}
+          </h3>
           <UserForm
             role={role}
             formData={formData}
             onChange={setFormData}
             onSubmit={handleSubmit}
-            onCancel={() => router.push('/manager/users')}
+            onCancel={() => router.push(userBasePath)}
             isSubmitting={isSubmitting}
           />
         </Card>

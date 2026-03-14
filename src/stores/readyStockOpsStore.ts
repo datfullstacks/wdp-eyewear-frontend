@@ -69,6 +69,12 @@ function holdReasonFromIssue(type: ReadyStockIssueType): ReadyStockHoldReason {
   return 'other';
 }
 
+function holdStatusFromIssue(type: ReadyStockIssueType): ReadyStockOpsStatus {
+  if (type === 'address_issue') return 'waiting_customer_info';
+  if (type === 'shipping_label_error') return 'exception_hold';
+  return 'on_hold';
+}
+
 export const useReadyStockOpsStore = create<ReadyStockOpsStoreState>()(
   persist(
     (set) => ({
@@ -80,7 +86,7 @@ export const useReadyStockOpsStore = create<ReadyStockOpsStoreState>()(
             [orderId]: {
               ...(state.byOrderId[orderId] || baseState()),
               ...patch,
-              lastUpdatedAt: nowIso(),
+              lastUpdatedAt: patch.lastUpdatedAt || nowIso(),
             },
           },
         })),
@@ -124,7 +130,7 @@ export const useReadyStockOpsStore = create<ReadyStockOpsStoreState>()(
             ...state.byOrderId,
             [orderId]: {
               ...(state.byOrderId[orderId] || baseState()),
-              opsStatus: 'blocked',
+              opsStatus: reason === 'address' ? 'waiting_customer_info' : 'on_hold',
               holdReason: reason,
               holdNote: note,
               lastUpdatedAt: nowIso(),
@@ -140,7 +146,9 @@ export const useReadyStockOpsStore = create<ReadyStockOpsStoreState>()(
               ...state.byOrderId,
               [orderId]: {
                 ...current,
-                opsStatus: current.opsStatus === 'blocked' ? 'pending_operations' : current.opsStatus,
+                opsStatus: ['on_hold', 'waiting_customer_info', 'exception_hold', 'blocked'].includes(current.opsStatus)
+                  ? 'pending_operations'
+                  : current.opsStatus,
                 holdReason: null,
                 holdNote: '',
                 lastUpdatedAt: nowIso(),
@@ -230,7 +238,7 @@ export const useReadyStockOpsStore = create<ReadyStockOpsStoreState>()(
             ...state.byOrderId,
             [orderId]: {
               ...(state.byOrderId[orderId] || baseState()),
-              opsStatus: 'blocked',
+              opsStatus: holdStatusFromIssue(type),
               holdReason: holdReasonFromIssue(type),
               holdNote: note,
               issueType: type,
@@ -249,7 +257,9 @@ export const useReadyStockOpsStore = create<ReadyStockOpsStoreState>()(
               [orderId]: {
                 ...current,
                 opsStatus:
-                  current.opsStatus === 'blocked' ? 'pending_operations' : current.opsStatus,
+                  ['on_hold', 'waiting_customer_info', 'exception_hold', 'blocked'].includes(current.opsStatus)
+                    ? 'pending_operations'
+                    : current.opsStatus,
                 holdReason: current.issueType ? null : current.holdReason,
                 holdNote: current.issueType ? '' : current.holdNote,
                 issueType: null,

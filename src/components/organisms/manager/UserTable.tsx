@@ -14,7 +14,12 @@ import { Eye, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { User } from '@/api/users';
 
-export type UserTabRole = 'manager' | 'sales' | 'customer';
+export type UserTabRole =
+  | 'admin'
+  | 'manager'
+  | 'staff'
+  | 'operation'
+  | 'customer';
 
 interface UserTableProps {
   users: User[];
@@ -42,7 +47,7 @@ function formatDate(dateStr?: string) {
 
 function roleBadge(role: string) {
   const map: Record<string, { label: string; cls: string }> = {
-    admin: { label: 'Admin', cls: 'bg-red-100 text-red-700' },
+    admin: { label: 'System Admin', cls: 'bg-red-100 text-red-700' },
     manager: { label: 'Manager', cls: 'bg-amber-100 text-amber-700' },
     operations: { label: 'Operations', cls: 'bg-blue-100 text-blue-700' },
     sales: { label: 'Sales', cls: 'bg-indigo-100 text-indigo-700' },

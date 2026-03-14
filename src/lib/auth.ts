@@ -4,7 +4,14 @@ import Google from 'next-auth/providers/google';
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
-const apiBaseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+const authSecret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+const apiBaseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000')
+  .replace(/\/$/, '')
+  .replace(/\/api$/, '');
+
+if (process.env.NODE_ENV === 'production' && !authSecret) {
+  console.error('[auth] Missing AUTH_SECRET or NEXTAUTH_SECRET in production');
+}
 
 type BackendEnvelope<T> = {
   success?: boolean;
@@ -46,8 +53,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   debug: process.env.NODE_ENV !== 'production',
   secret:
-    process.env.AUTH_SECRET ||
-    process.env.NEXTAUTH_SECRET ||
+    authSecret ||
     (process.env.NODE_ENV === 'production'
       ? undefined
       : 'dev-secret-change-me'),

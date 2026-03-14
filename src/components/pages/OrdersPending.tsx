@@ -4,7 +4,8 @@ import { Header } from '@/components/organisms/Header';
 import { SearchBar } from '@/components/molecules/SearchBar';
 import { Pagination } from '@/components/molecules/Pagination';
 import { CheckCircle, Filter } from 'lucide-react';
-import { useCallback, useEffect, useState, useMemo } from 'react';
+import axios from 'axios';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { PendingOrder } from '@/types/pending';
 import {
@@ -17,7 +18,12 @@ import {
 import { Button } from '@/components/atoms';
 import { orderApi } from '@/api';
 import { toPendingOrder } from '@/lib/orderAdapters';
+import { useStatusRealtimeReload } from '@/hooks/useStatusRealtime';
 import { needsActionOrder } from '@/lib/orderWorkflow';
+import {
+  canApprovePendingOrder,
+  PENDING_ORDER_APPROVAL_MESSAGE,
+} from '@/lib/pendingOrders';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +46,21 @@ function toIsoDateFromPendingCreatedAt(createdAt: string) {
   const match = /^(\d{2})-(\d{2})-(\d{4})/.exec(String(createdAt || '').trim());
   if (!match) return null;
   return `${match[3]}-${match[2]}-${match[1]}`;
+}
+
+function extractApiErrorMessage(error: unknown, fallback: string) {
+  if (axios.isAxiosError(error)) {
+    const message = error.response?.data?.message;
+    if (typeof message === 'string' && message.trim()) {
+      return message.trim();
+    }
+  }
+
+  if (error instanceof Error && error.message.trim()) {
+    return error.message.trim();
+  }
+
+  return fallback;
 }
 
 const OrdersPending = () => {
@@ -80,6 +101,11 @@ const OrdersPending = () => {
     void loadPendingOrders();
   }, [loadPendingOrders]);
 
+  useStatusRealtimeReload({
+    domains: ['order'],
+    reload: loadPendingOrders,
+  });
+
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -107,6 +133,10 @@ const OrdersPending = () => {
   const visibleSelectedCount = selectedOrders.filter((id) =>
     paginatedOrders.some((order) => order.id === id)
   ).length;
+  const selectedBlockedCount = filteredOrders.filter(
+    (order) =>
+      selectedOrders.includes(order.id) && !canApprovePendingOrder(order)
+  ).length;
 
   const handleSelectAll = (checked: boolean) => {
     setSelectedOrders(checked ? paginatedOrders.map((o) => o.id) : []);
@@ -126,11 +156,22 @@ const OrdersPending = () => {
       return;
     }
 
+    if (!canApprovePendingOrder(processModal)) {
+      setErrorMessage(PENDING_ORDER_APPROVAL_MESSAGE);
+      setProcessModal(null);
+      return;
+    }
+
     try {
       setIsSubmittingAction(true);
+      setErrorMessage(null);
       await orderApi.updateStatus(processModal.orderDbId, 'confirmed');
       await loadPendingOrders();
       setProcessModal(null);
+    } catch (error) {
+      setErrorMessage(
+        extractApiErrorMessage(error, 'Khong the duyet don hang nay.')
+      );
     } finally {
       setIsSubmittingAction(false);
     }
@@ -142,13 +183,18 @@ const OrdersPending = () => {
       return;
     }
 
-    try {paginat
+    try {
       setIsSubmittingAction(true);
+      setErrorMessage(null);
       await orderApi.cancel(rejectModal.orderDbId, {
         reason: reason || 'Đơn bị từ chối bởi nhân viên',
       });
       await loadPendingOrders();
       setRejectModal(null);
+    } catch (error) {
+      setErrorMessage(
+        extractApiErrorMessage(error, 'Khong the tu choi don hang nay.')
+      );
     } finally {
       setIsSubmittingAction(false);
     }
@@ -167,13 +213,23 @@ const OrdersPending = () => {
       return;
     }
 
+    if (selected.some((order) => !canApprovePendingOrder(order))) {
+      setErrorMessage(PENDING_ORDER_APPROVAL_MESSAGE);
+      return;
+    }
+
     try {
       setIsSubmittingAction(true);
+      setErrorMessage(null);
       await Promise.all(
         targetIds.map((id) => orderApi.updateStatus(id, 'confirmed'))
       );
       await loadPendingOrders();
       setSelectedOrders([]);
+    } catch (error) {
+      setErrorMessage(
+        extractApiErrorMessage(error, 'Khong the duyet mot hoac nhieu don hang.')
+      );
     } finally {
       setIsSubmittingAction(false);
     }
@@ -245,6 +301,11 @@ const OrdersPending = () => {
           <div className="flex flex-wrap items-center gap-2">
             {selectedOrders.length > 0 && (
               <>
+                {selectedBlockedCount > 0 && (
+                  <p className="text-sm font-medium text-amber-700">
+                    {selectedBlockedCount} don chua du dieu kien duyet
+                  </p>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
@@ -259,7 +320,7 @@ const OrdersPending = () => {
                   onClick={() => {
                     void handleBulkProcess();
                   }}
-                  disabled={isSubmittingAction}
+                  disabled={isSubmittingAction || selectedBlockedCount > 0}
                 >
                   <CheckCircle className="h-4 w-4" />
                   Xác nhận hàng loạt

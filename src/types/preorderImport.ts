@@ -1,5 +1,14 @@
+export type PreorderBatchStatus =
+  | 'pending'
+  | 'in_transit'
+  | 'partial'
+  | 'completed'
+  | 'delayed';
+
 export interface PreorderItem {
   id: string;
+  productId: string;
+  variantId: string;
   sku: string;
   productName: string;
   variant: string;
@@ -14,11 +23,12 @@ export interface PreorderBatch {
   supplier: string;
   orderDate: string;
   expectedDate: string;
-  status: 'pending' | 'in_transit' | 'partial' | 'completed' | 'delayed';
+  status: PreorderBatchStatus;
   totalItems: number;
   receivedItems: number;
   items: PreorderItem[];
   notes?: string;
+  createdByName?: string;
 }
 
 export interface PreorderImportStats {

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { Button } from '@/components/atoms';
+import { useMemo, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+
+import { Button } from '@/components/atoms';
 import type { UserTabRole } from './UserTable';
 
 export interface UserFormData {
@@ -22,8 +23,94 @@ interface UserFormProps {
   onSubmit: () => void;
   onCancel: () => void;
   isSubmitting?: boolean;
-  /** Show password field (used for create). Hidden by default (edit mode). */
   showPassword?: boolean;
+}
+
+type RoleOption = {
+  value: string;
+  label: string;
+};
+
+function getRoleFieldConfig(role: UserTabRole): {
+  label: string;
+  field: 'department' | 'position';
+  options: RoleOption[];
+} {
+  switch (role) {
+    case 'manager':
+      return {
+        label: 'Phong ban quan ly',
+        field: 'department',
+        options: [
+          { value: 'sales', label: 'Quan ly ban hang' },
+          { value: 'operations', label: 'Quan ly van hanh' },
+          { value: 'inventory', label: 'Quan ly kho' },
+          { value: 'marketing', label: 'Quan ly marketing' },
+        ],
+      };
+    case 'admin':
+      return {
+        label: 'Pham vi he thong',
+        field: 'department',
+        options: [
+          { value: 'identity', label: 'Auth / permission' },
+          { value: 'security', label: 'Security / audit' },
+          { value: 'integrations', label: 'Webhook / integration' },
+          { value: 'platform', label: 'Platform settings' },
+        ],
+      };
+    case 'operation':
+      return {
+        label: 'Vi tri van hanh',
+        field: 'position',
+        options: [
+          { value: 'warehouse-ops', label: 'Kho van' },
+          { value: 'lab-ops', label: 'Prescription / lab' },
+          { value: 'shipping-ops', label: 'Dieu phoi giao hang' },
+          { value: 'inventory-ops', label: 'Dieu phoi ton kho' },
+        ],
+      };
+    case 'staff':
+      return {
+        label: 'Vi tri staff',
+        field: 'position',
+        options: [
+          { value: 'sales-staff', label: 'Nhan vien ban hang' },
+          { value: 'customer-service', label: 'Cham soc khach hang' },
+          { value: 'order-intake', label: 'Tiep nhan don hang' },
+          { value: 'refund-intake', label: 'Tiep nhan doi tra / hoan tien' },
+        ],
+      };
+    default:
+      return {
+        label: 'Vi tri',
+        field: 'position',
+        options: [],
+      };
+  }
+}
+
+function getPermissionOptions(role: UserTabRole): RoleOption[] {
+  if (role === 'admin') {
+    return [
+      { value: 'auth', label: 'Auth / permission' },
+      { value: 'security', label: 'Security / audit' },
+      { value: 'integrations', label: 'Webhook / integration' },
+      { value: 'platform', label: 'Platform settings' },
+    ];
+  }
+
+  if (role === 'manager') {
+    return [
+      { value: 'products', label: 'Quan ly san pham' },
+      { value: 'pricing', label: 'Quan ly gia' },
+      { value: 'users', label: 'Quan ly nguoi dung' },
+      { value: 'policies', label: 'Quan ly chinh sach' },
+      { value: 'reports', label: 'Bao cao doanh thu' },
+    ];
+  }
+
+  return [];
 }
 
 export function UserForm({
@@ -36,11 +123,13 @@ export function UserForm({
   showPassword: showPasswordField = false,
 }: UserFormProps) {
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const roleField = useMemo(() => getRoleFieldConfig(role), [role]);
+  const permissionOptions = useMemo(() => getPermissionOptions(role), [role]);
 
   return (
     <form
-      onSubmit={(e) => {
-        e.preventDefault();
+      onSubmit={(event) => {
+        event.preventDefault();
         onSubmit();
       }}
       className="space-y-5"
@@ -48,14 +137,14 @@ export function UserForm({
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
           <label className="mb-1.5 block text-sm font-medium text-gray-900">
-            Họ và tên <span className="text-red-500">*</span>
+            Ho va ten <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={formData.name}
-            onChange={(e) => onChange({ ...formData, name: e.target.value })}
+            onChange={(event) => onChange({ ...formData, name: event.target.value })}
             className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 transition-colors focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
-            placeholder="Nhập họ và tên"
+            placeholder="Nhap ho va ten"
             required
           />
         </div>
@@ -66,7 +155,7 @@ export function UserForm({
           <input
             type="email"
             value={formData.email}
-            onChange={(e) => onChange({ ...formData, email: e.target.value })}
+            onChange={(event) => onChange({ ...formData, email: event.target.value })}
             className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 transition-colors focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
             placeholder="email@company.com"
             required
@@ -77,66 +166,49 @@ export function UserForm({
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
           <label className="mb-1.5 block text-sm font-medium text-gray-900">
-            Số điện thoại
+            So dien thoai
           </label>
           <input
             type="tel"
             value={formData.phone}
-            onChange={(e) => onChange({ ...formData, phone: e.target.value })}
+            onChange={(event) => onChange({ ...formData, phone: event.target.value })}
             className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 transition-colors focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
             placeholder="0901234567"
           />
         </div>
         <div>
           <label className="mb-1.5 block text-sm font-medium text-gray-900">
-            {role === 'manager' ? 'Phòng ban quản lý' : 'Vị trí công việc'}
+            {roleField.label}
           </label>
           <select
-            value={role === 'manager' ? formData.department : formData.position}
-            onChange={(e) =>
+            value={roleField.field === 'department' ? formData.department : formData.position}
+            onChange={(event) =>
               onChange({
                 ...formData,
-                ...(role === 'manager'
-                  ? { department: e.target.value }
-                  : { position: e.target.value }),
+                ...(roleField.field === 'department'
+                  ? { department: event.target.value }
+                  : { position: event.target.value }),
               })
             }
             className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 transition-colors focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
           >
-            {role === 'manager' ? (
-              <>
-                <option value="">Chọn phòng ban</option>
-                <option value="sales">Quản lý Bán hàng</option>
-                <option value="inventory">Quản lý Kho</option>
-                <option value="marketing">Quản lý Marketing</option>
-                <option value="operations">Quản lý Vận hành</option>
-              </>
-            ) : (
-              <>
-                <option value="">Chọn vị trí</option>
-                <option value="sales-staff">Nhân viên bán hàng</option>
-                <option value="warehouse-staff">Nhân viên kho</option>
-                <option value="customer-service">Chăm sóc khách hàng</option>
-                <option value="delivery-staff">Nhân viên giao hàng</option>
-              </>
-            )}
+            <option value="">Chon gia tri</option>
+            {roleField.options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </div>
       </div>
 
-      {role === 'manager' && (
+      {permissionOptions.length > 0 && (
         <div>
           <label className="mb-2 block text-sm font-medium text-gray-900">
-            Quyền hạn
+            {role === 'admin' ? 'Nang luc he thong' : 'Quyen han'}
           </label>
           <div className="space-y-2.5">
-            {[
-              { value: 'products', label: 'Quản lý sản phẩm' },
-              { value: 'pricing', label: 'Quản lý giá' },
-              { value: 'users', label: 'Quản lý người dùng' },
-              { value: 'policies', label: 'Quản lý chính sách' },
-              { value: 'reports', label: 'Báo cáo doanh thu' },
-            ].map((permission) => (
+            {permissionOptions.map((permission) => (
               <label
                 key={permission.value}
                 className="flex items-center gap-2.5 text-sm text-gray-700"
@@ -144,11 +216,11 @@ export function UserForm({
                 <input
                   type="checkbox"
                   checked={formData.permissions?.includes(permission.value)}
-                  onChange={(e) => {
-                    const updatedPermissions = e.target.checked
+                  onChange={(event) => {
+                    const updatedPermissions = event.target.checked
                       ? [...(formData.permissions || []), permission.value]
                       : (formData.permissions || []).filter(
-                          (p) => p !== permission.value
+                          (value) => value !== permission.value
                         );
                     onChange({ ...formData, permissions: updatedPermissions });
                   }}
@@ -164,22 +236,24 @@ export function UserForm({
       {showPasswordField && (
         <div>
           <label className="mb-1.5 block text-sm font-medium text-gray-900">
-            Mật khẩu <span className="text-red-500">*</span>
+            Mat khau <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <input
               type={passwordVisible ? 'text' : 'password'}
               value={formData.password || ''}
-              onChange={(e) => onChange({ ...formData, password: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 pr-10 text-gray-900 placeholder-gray-400 transition-colors focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none [&::-ms-reveal]:hidden [&::-ms-clear]:hidden"
-              placeholder="Nhập mật khẩu"
+              onChange={(event) =>
+                onChange({ ...formData, password: event.target.value })
+              }
+              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 pr-10 text-gray-900 placeholder-gray-400 transition-colors focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none [&::-ms-clear]:hidden [&::-ms-reveal]:hidden"
+              placeholder="Nhap mat khau"
               required
             />
             <button
               type="button"
-              onClick={() => setPasswordVisible((prev) => !prev)}
-              className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded-md p-1 text-gray-400 hover:text-gray-600 transition-colors"
-              aria-label={passwordVisible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+              onClick={() => setPasswordVisible((currentValue) => !currentValue)}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-400 transition-colors hover:text-gray-600"
+              aria-label={passwordVisible ? 'An mat khau' : 'Hien mat khau'}
             >
               {passwordVisible ? (
                 <EyeOff className="h-4 w-4" />
@@ -192,11 +266,16 @@ export function UserForm({
       )}
 
       <div className="flex justify-end gap-3 border-t border-gray-100 pt-5">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
-          Hủy
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isSubmitting}
+        >
+          Huy
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Đang lưu...' : 'Lưu'}
+          {isSubmitting ? 'Dang luu...' : 'Luu'}
         </Button>
       </div>
     </form>

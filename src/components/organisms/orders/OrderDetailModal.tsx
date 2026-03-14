@@ -8,6 +8,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  getCustomerOrderStatusMeta,
+  getCustomerShippingStatusMeta,
+} from '@/lib/customerOrderStatus';
 import { toPrescriptionOrder, toSupplementOrder } from '@/lib/orderAdapters';
 
 function formatCurrency(amount: number) {
@@ -31,43 +35,22 @@ function paymentBadgeType(status: OrderRecord['paymentStatus']) {
   }
 }
 
-function orderBadgeType(status: OrderRecord['status']) {
-  switch (status) {
-    case 'completed':
-      return 'success' as const;
-    case 'processing':
-      return 'warning' as const;
-    case 'cancelled':
-      return 'error' as const;
-    case 'pending':
-    default:
-      return 'info' as const;
-  }
-}
-
-const ORDER_STATUS_TEXT: Record<OrderRecord['status'], string> = {
-  pending: 'Cần xử lý',
-  processing: 'Đã xử lý',
-  completed: 'Hoàn thành',
-  cancelled: 'Đã hủy',
-};
-
 const PAYMENT_STATUS_TEXT: Record<OrderRecord['paymentStatus'], string> = {
-  paid: 'Đã thanh toán',
-  pending: 'Chưa thanh toán',
-  partial: 'Thanh toán một phần',
+  paid: 'Da thanh toan',
+  pending: 'Chua thanh toan',
+  partial: 'Thanh toan mot phan',
   cod: 'COD',
 };
 
 const ORDER_TYPE_TEXT: Record<string, string> = {
-  ready_stock: 'Hàng có sẵn',
-  pre_order: 'Đặt trước',
+  ready_stock: 'Hang co san',
+  pre_order: 'Dat truoc',
 };
 
 function orderTypeLabel(order: OrderRecord, hasRx: boolean) {
   const orderType = String(order.orderType || '').toLowerCase();
   if (orderType && ORDER_TYPE_TEXT[orderType]) return ORDER_TYPE_TEXT[orderType];
-  if (hasRx) return 'Làm theo đơn';
+  if (hasRx) return 'Lam theo don';
   return order.orderType || '-';
 }
 
@@ -97,60 +80,99 @@ export function OrderDetailModal({
   const rx = toPrescriptionOrder(order);
   const supplement = toSupplementOrder(order);
   const orderTypeText = orderTypeLabel(order, Boolean(rx || supplement));
+  const orderStatusMeta = getCustomerOrderStatusMeta(order);
+  const shippingStatusMeta = getCustomerShippingStatusMeta(order);
+  const trackingCode =
+    order.shipment?.orderCode || order.shipment?.trackingCode || '-';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[92vw] max-w-[640px] max-h-[72vh] overflow-y-auto p-4 text-foreground shadow-2xl">
         <DialogHeader>
-          <DialogTitle>Chi tiết đơn {order.code}</DialogTitle>
+          <DialogTitle>Chi tiet don {order.code}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-1">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
             <div className="space-y-1">
-              <Label>Trạng thái</Label>
-              <StatusBadge status={orderBadgeType(order.status)}>
-                {ORDER_STATUS_TEXT[order.status]}
+              <Label>Trang thai don</Label>
+              <StatusBadge status={orderStatusMeta.type}>
+                {orderStatusMeta.label}
               </StatusBadge>
             </div>
 
             <div className="space-y-1">
-              <Label>Thanh toán</Label>
+              <Label>Thanh toan</Label>
               <StatusBadge status={paymentBadgeType(order.paymentStatus)}>
                 {PAYMENT_STATUS_TEXT[order.paymentStatus]}
               </StatusBadge>
               <p className="text-foreground/60 text-xs">
-                Phương thức: {order.paymentMethod || '-'}
+                Phuong thuc: {order.paymentMethod || '-'}
               </p>
             </div>
 
             <div className="space-y-1">
-              <Label>Ngày tạo</Label>
+              <Label>Ngay tao</Label>
               <Value>{createdAtLabel}</Value>
               <p className="text-foreground/60 text-xs">
-                Loại đơn: {orderTypeText}
+                Loai don: {orderTypeText}
               </p>
+            </div>
+
+            <div className="space-y-1">
+              <Label>Van chuyen</Label>
+              {shippingStatusMeta ? (
+                <>
+                  <StatusBadge status={shippingStatusMeta.type}>
+                    {shippingStatusMeta.label}
+                  </StatusBadge>
+                  <p className="text-foreground/60 text-xs">
+                    Tracking: {trackingCode}
+                  </p>
+                </>
+              ) : (
+                <Value>Chua tao van don</Value>
+              )}
             </div>
           </div>
 
+          {(order.shipment?.latestStatus || order.shipment?.orderCode) && (
+            <div className="border-border bg-muted/20 rounded-lg border p-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="space-y-1">
+                  <Label>GHN status</Label>
+                  <Value>{order.shipment?.latestStatus || '-'}</Value>
+                </div>
+                <div className="space-y-1">
+                  <Label>Ma van don</Label>
+                  <Value>{trackingCode}</Value>
+                </div>
+                <div className="space-y-1">
+                  <Label>Dich vu</Label>
+                  <Value>{order.shipment?.serviceName || 'GHN'}</Value>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="border-border border-t pt-4">
-            <h4 className="text-foreground mb-3 font-semibold">Khách hàng</h4>
+            <h4 className="text-foreground mb-3 font-semibold">Khach hang</h4>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div className="space-y-1">
-                <Label>Tên</Label>
+                <Label>Ten</Label>
                 <Value>{order.customerName}</Value>
               </div>
               <div className="space-y-1">
-                <Label>SĐT</Label>
+                <Label>SDT</Label>
                 <Value>{order.customerPhone || '-'}</Value>
               </div>
               <div className="space-y-1 sm:col-span-3">
-                <Label>Địa chỉ</Label>
+                <Label>Dia chi</Label>
                 <Value>{order.customerAddress || '-'}</Value>
               </div>
               {order.note && (
                 <div className="space-y-1 sm:col-span-3">
-                  <Label>Ghi chú</Label>
+                  <Label>Ghi chu</Label>
                   <p className="text-foreground whitespace-pre-wrap text-sm">
                     {order.note}
                   </p>
@@ -160,7 +182,7 @@ export function OrderDetailModal({
           </div>
 
           <div className="border-border border-t pt-4">
-            <h4 className="text-foreground mb-3 font-semibold">Sản phẩm</h4>
+            <h4 className="text-foreground mb-3 font-semibold">San pham</h4>
             <div className="space-y-2">
               {order.items.map((item) => {
                 const isRx =
@@ -184,7 +206,7 @@ export function OrderDetailModal({
                         <div className="mt-1 flex flex-wrap gap-2">
                           {item.preOrder && (
                             <span className="bg-warning/10 text-warning rounded-full border border-warning/20 px-2 py-0.5 text-xs font-medium">
-                              Đặt trước
+                              Dat truoc
                             </span>
                           )}
                           {isRx && (
@@ -211,13 +233,13 @@ export function OrderDetailModal({
             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="sm:col-span-2" />
               <div className="text-right">
-                <p className="text-muted-foreground text-xs font-medium">Tổng tiền</p>
+                <p className="text-muted-foreground text-xs font-medium">Tong tien</p>
                 <p className="text-primary text-2xl font-extrabold leading-none">
                   {formatCurrency(order.total)}
                 </p>
                 {order.paidAmount > 0 && (
                   <p className="text-muted-foreground mt-1 text-xs">
-                    Đã trả: {formatCurrency(order.paidAmount)}
+                    Da tra: {formatCurrency(order.paidAmount)}
                   </p>
                 )}
               </div>
@@ -226,18 +248,18 @@ export function OrderDetailModal({
 
           {(rx || supplement) && (
             <div className="border-border border-t pt-4">
-              <h4 className="text-foreground mb-3 font-semibold">Toa kính</h4>
+              <h4 className="text-foreground mb-3 font-semibold">Toa kinh</h4>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 {rx && (
                   <div className="space-y-1">
-                    <Label>Trạng thái Rx</Label>
+                    <Label>Trang thai Rx</Label>
                     <Value>{rx.prescriptionStatus}</Value>
-                    <p className="text-foreground/60 text-xs">Nguồn: {rx.source}</p>
+                    <p className="text-foreground/60 text-xs">Nguon: {rx.source}</p>
                   </div>
                 )}
                 {supplement && (
                   <div className="space-y-1 sm:col-span-2">
-                    <Label>Cần bổ sung</Label>
+                    <Label>Can bo sung</Label>
                     <Value>{supplement.missingType}</Value>
                     {supplement.missingFields?.length > 0 && (
                       <p className="text-foreground/60 text-xs">
@@ -253,7 +275,7 @@ export function OrderDetailModal({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Đóng
+            Dong
           </Button>
         </DialogFooter>
       </DialogContent>

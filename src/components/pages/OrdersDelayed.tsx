@@ -1,5 +1,6 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { SearchBar } from '@/components/molecules/SearchBar';
 import { Pagination } from '@/components/molecules/Pagination';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ import { DelayedOrder, ContactMethod, ResolveAction } from '@/types/delayed';
 import { Filter } from 'lucide-react';
 import { Header } from '@/components/organisms/Header';
 import { orderApi } from '@/api';
+import { useStatusRealtimeReload } from '@/hooks/useStatusRealtime';
 import { toDelayedOrdersFromApi } from '@/lib/orderWorkflow';
 
 const ITEMS_PER_PAGE = 10;
@@ -44,68 +46,69 @@ export default function OrdersDelayed() {
   const [contactOrder, setContactOrder] = useState<DelayedOrder | null>(null);
   const [resolveOrder, setResolveOrder] = useState<DelayedOrder | null>(null);
 
-  useEffect(() => {
-    let mounted = true;
-
-    const load = async () => {
-      try {
-        setIsLoading(true);
-        setErrorMessage(null);
-        const result = await orderApi.getAll({ page: 1, limit: 500 });
-        const derived = toDelayedOrdersFromApi(result.orders);
-        if (mounted) setOrders(derived);
-      } catch {
-        if (mounted) setErrorMessage('Không tải được danh sách cảnh báo.');
-      } finally {
-        if (mounted) setIsLoading(false);
-      }
-    };
-
-    void load();
-
-    return () => {
-      mounted = false;
-    };
+  const loadOrders = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setErrorMessage(null);
+      const result = await orderApi.getAll({ page: 1, limit: 200 });
+      setOrders(toDelayedOrdersFromApi(result.orders));
+    } catch {
+      setErrorMessage('Khong tai duoc danh sach canh bao.');
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    void loadOrders();
+  }, [loadOrders]);
+
+  useStatusRealtimeReload({
+    domains: ['order'],
+    reload: loadOrders,
+  });
+
   const filteredOrders = useMemo(() => {
-    const q = searchTerm.trim().toLowerCase();
+    const query = searchTerm.trim().toLowerCase();
     return orders.filter((order) => {
       const matchesSearch =
-        !q ||
-        order.id.toLowerCase().includes(q) ||
-        order.customerName.toLowerCase().includes(q) ||
-        order.customerPhone.includes(q);
+        !query ||
+        order.id.toLowerCase().includes(query) ||
+        order.customerName.toLowerCase().includes(query) ||
+        order.customerPhone.includes(query);
       const matchesSeverity =
         severityFilter === 'all' || order.severity === severityFilter;
       const matchesType = typeFilter === 'all' || order.delayType === typeFilter;
       return matchesSearch && matchesSeverity && matchesType;
     });
+  }, [orders, searchTerm, severityFilter, typeFilter]);
 
-  // Pagination
-  const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / ITEMS_PER_PAGE));
   const paginatedOrders = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-    return filteredOrders.slice(startIndex, endIndex);
+    return filteredOrders.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [filteredOrders, currentPage]);
 
-  // Reset to page 1 when search or filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, severityFilter, typeFilter]);
-  }, [orders, searchTerm, severityFilter, typeFilter]);
+
+  useEffect(() => {
+    setSelectedOrders((prev) =>
+      prev.filter((id) => filteredOrders.some((order) => order.id === id))
+    );
+  }, [filteredOrders]);
 
   const stats = useMemo(
     () => ({
-      critical: orders.filter((o) => o.severity === 'critical').length,
-      high: orders.filter((o) => o.severity === 'high').length,
-      medium: orders.filter((o) => o.severity === 'medium').length,
-      slaBreached: orders.filter((o) => o.delayType === 'sla_breach').length,
-    }),paginatedOrders.length) {
-      setSelectedOrders([]);
-    } else {
-      setSelectedOrders(paginat
+      critical: orders.filter((order) => order.severity === 'critical').length,
+      high: orders.filter((order) => order.severity === 'high').length,
+      medium: orders.filter((order) => order.severity === 'medium').length,
+      slaBreached: orders.filter((order) => order.delayType === 'sla_breach').length,
+    }),
+    [orders]
+  );
+
   const toggleSelectOrder = (orderId: string) => {
     setSelectedOrders((prev) =>
       prev.includes(orderId)
@@ -115,15 +118,20 @@ export default function OrdersDelayed() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedOrders.length === filteredOrders.length) {
-      setSelectedOrders([]);
-    } else {
-      setSelectedOrders(filteredOrders.map((o) => o.id));
-    }
+    const currentPageIds = paginatedOrders.map((order) => order.id);
+    const allSelected = currentPageIds.every((id) => selectedOrders.includes(id));
+
+    setSelectedOrders((prev) => {
+      if (allSelected) {
+        return prev.filter((id) => !currentPageIds.includes(id));
+      }
+      return Array.from(new Set([...prev, ...currentPageIds]));
+    });
   };
 
   const handleEscalate = (orderId: string, note: string) => {
-    console.log('Escalating order:', orderId, 'Note:', note);
+    console.log('Escalating order:', orderId, note);
+    setEscalateOrder(null);
   };
 
   const handleContact = (
@@ -131,14 +139,8 @@ export default function OrdersDelayed() {
     method: ContactMethod,
     note: string
   ) => {
-    console.log(
-      'Contacting customer:',
-      orderId,
-      'Method:',
-      method,
-      'Note:',
-      note
-    );
+    console.log('Contacting customer:', orderId, method, note);
+    setContactOrder(null);
   };
 
   const handleResolve = (
@@ -146,24 +148,23 @@ export default function OrdersDelayed() {
     action: ResolveAction,
     note: string
   ) => {
-    console.log('Resolving order:', orderId, 'Action:', action, 'Note:', note);
+    console.log('Resolving order:', orderId, action, note);
+    setResolveOrder(null);
   };
 
   return (
     <>
       <Header
-        title="Đơn trễ & Cảnh báo"
-        subtitle="Quản lý và xử lý các đơn hàng vi phạm SLA hoặc cần can thiệp"
+        title="Don tre & Canh bao"
+        subtitle="Quan ly va xu ly cac don vi pham SLA hoac can can thiệp"
       />
       <div className="space-y-6 p-6">
-        {/* Stats */}
         <DelayedStatsGrid stats={stats} />
-        {/* Filters */}
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
           <div className="w-full sm:max-w-[240px]">
             <SearchBar
-              placeholder="Tìm theo mã đơn, tên KH, SĐT..."
+              placeholder="Tim theo ma don, ten KH, SDT..."
               value={searchTerm}
               onChange={setSearchTerm}
             />
@@ -174,43 +175,31 @@ export default function OrdersDelayed() {
                 <Button
                   variant="outline"
                   size="icon"
-                  aria-label="Bộ lọc"
+                  aria-label="Bo loc"
                   className="text-foreground/80 hover:text-foreground"
                 >
                   <Filter />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuLabel>Mức độ</DropdownMenuLabel>
+                <DropdownMenuLabel>Muc do</DropdownMenuLabel>
                 <DropdownMenuRadioGroup
                   value={severityFilter}
                   onValueChange={setSeverityFilter}
                 >
-                  <DropdownMenuRadioItem value="all">
-                    Tất cả mức độ
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="critical">
-                    Nghiêm trọng
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="high">
-                    Cao
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="medium">
-                    Trung bình
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="low">
-                    Thấp
-                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="all">Tat ca muc do</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="critical">Nghiem trong</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="high">Cao</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="medium">Trung binh</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="low">Thap</DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel>Loại cảnh báo</DropdownMenuLabel>
+                <DropdownMenuLabel>Loai canh bao</DropdownMenuLabel>
                 <DropdownMenuRadioGroup
                   value={typeFilter}
                   onValueChange={setTypeFilter}
                 >
-                  <DropdownMenuRadioItem value="all">
-                    Tất cả loại
-                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="all">Tat ca loai</DropdownMenuRadioItem>
                   {Object.entries(delayTypeLabels).map(([value, label]) => (
                     <DropdownMenuRadioItem key={value} value={value}>
                       {label}
@@ -220,7 +209,17 @@ export default function OrdersDelayed() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </d>
+        </div>
+
+        {isLoading && (
+          <p className="text-foreground/70 text-sm">Dang tai du lieu canh bao...</p>
+        )}
+        {!isLoading && errorMessage && (
+          <p className="text-destructive text-sm">{errorMessage}</p>
+        )}
+
+        {!isLoading && !errorMessage && (
+          <>
             <DelayedOrderTable
               orders={paginatedOrders}
               selectedOrders={selectedOrders}
@@ -243,23 +242,9 @@ export default function OrdersDelayed() {
                 />
               </div>
             )}
-          <<div className="text-destructive py-10 text-center">{errorMessage}</div>
+          </>
         )}
 
-        {!isLoading && !errorMessage && (
-          <DelayedOrderTable
-            orders={filteredOrders}
-            selectedOrders={selectedOrders}
-            onSelectOrder={toggleSelectOrder}
-            onSelectAll={toggleSelectAll}
-            onViewDetail={setDetailOrder}
-            onContact={setContactOrder}
-            onEscalate={setEscalateOrder}
-            onResolve={setResolveOrder}
-          />
-        )}
-
-        {/* Modals */}
         <DelayedDetailModal
           order={detailOrder}
           onClose={() => setDetailOrder(null)}

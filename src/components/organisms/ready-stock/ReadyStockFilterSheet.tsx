@@ -1,15 +1,27 @@
 'use client';
 
+import type { UiPaymentStatus } from '@/api/orders';
+import { READY_STOCK_OPS_STATUS_LABEL } from '@/lib/readyStockOps';
+import type { ReadyStockOpsStatus } from '@/types/readyStockOps';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import type { UiPaymentStatus } from '@/api/orders';
-import type { ReadyStockOpsStatus } from '@/types/readyStockOps';
-import { READY_STOCK_OPS_STATUS_LABEL } from '@/lib/readyStockOps';
+import {
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 
 export type ReadyStockPaymentFilter = 'all' | UiPaymentStatus | 'failed';
 
@@ -26,10 +38,21 @@ export type ReadyStockFilters = {
 const OPS_STATUS_OPTIONS: ReadyStockOpsStatus[] = [
   'pending_operations',
   'picking',
-  'packed',
+  'packing',
   'ready_to_ship',
-  'shipped',
-  'blocked',
+  'shipment_created',
+  'handover_to_carrier',
+  'in_transit',
+  'delivery_failed',
+  'waiting_redelivery',
+  'return_pending',
+  'return_in_transit',
+  'waiting_customer_info',
+  'on_hold',
+  'exception_hold',
+  'delivered',
+  'returned',
+  'closed',
 ];
 
 export function ReadyStockFilterSheet({
@@ -51,24 +74,28 @@ export function ReadyStockFilterSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-[92vw] max-w-[420px]">
         <SheetHeader>
-          <SheetTitle>Bộ lọc</SheetTitle>
+          <SheetTitle>Bo loc</SheetTitle>
         </SheetHeader>
 
         <div className="mt-4 space-y-5">
           <div className="space-y-2">
-            <div className="text-foreground text-sm font-semibold">Ngày Sales duyệt</div>
+            <div className="text-foreground text-sm font-semibold">
+              Ngay Sales duyet
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <Label htmlFor="sales-from">Từ</Label>
+                <Label htmlFor="sales-from">Tu</Label>
                 <Input
                   id="sales-from"
                   type="date"
                   value={filters.salesApprovedFrom}
-                  onChange={(e) => onChange({ salesApprovedFrom: e.target.value })}
+                  onChange={(e) =>
+                    onChange({ salesApprovedFrom: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="sales-to">Đến</Label>
+                <Label htmlFor="sales-to">Den</Label>
                 <Input
                   id="sales-to"
                   type="date"
@@ -82,39 +109,47 @@ export function ReadyStockFilterSheet({
           <Separator />
 
           <div className="space-y-2">
-            <div className="text-foreground text-sm font-semibold">Trạng thái thanh toán</div>
+            <div className="text-foreground text-sm font-semibold">
+              Trang thai thanh toan
+            </div>
             <Select
               value={filters.payment}
-              onValueChange={(value) => onChange({ payment: value as ReadyStockPaymentFilter })}
+              onValueChange={(value) =>
+                onChange({ payment: value as ReadyStockPaymentFilter })
+              }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Chọn trạng thái thanh toán" />
+                <SelectValue placeholder="Chon trang thai thanh toan" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tất cả</SelectItem>
-                <SelectItem value="paid">Đã thanh toán</SelectItem>
-                <SelectItem value="pending">Chờ thanh toán</SelectItem>
-                <SelectItem value="failed">Thất bại (mẫu)</SelectItem>
-                <SelectItem value="partial">Thanh toán 1 phần</SelectItem>
+                <SelectItem value="all">Tat ca</SelectItem>
+                <SelectItem value="paid">Da thanh toan</SelectItem>
+                <SelectItem value="pending">Cho thanh toan</SelectItem>
+                <SelectItem value="failed">That bai (mau)</SelectItem>
+                <SelectItem value="partial">Thanh toan 1 phan</SelectItem>
                 <SelectItem value="cod">COD</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <div className="text-foreground text-sm font-semibold">Trạng thái vận hành</div>
+            <div className="text-foreground text-sm font-semibold">
+              Trang thai van hanh
+            </div>
             <Select
               value={filters.opsStatus}
-              onValueChange={(value) => onChange({ opsStatus: value as ReadyStockFilters['opsStatus'] })}
+              onValueChange={(value) =>
+                onChange({ opsStatus: value as ReadyStockFilters['opsStatus'] })
+              }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Chọn trạng thái" />
+                <SelectValue placeholder="Chon trang thai" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tất cả</SelectItem>
-                {OPS_STATUS_OPTIONS.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {READY_STOCK_OPS_STATUS_LABEL[s]}
+                <SelectItem value="all">Tat ca</SelectItem>
+                {OPS_STATUS_OPTIONS.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {READY_STOCK_OPS_STATUS_LABEL[status]}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -122,15 +157,20 @@ export function ReadyStockFilterSheet({
           </div>
 
           <div className="space-y-2">
-            <div className="text-foreground text-sm font-semibold">Người phụ trách</div>
-            <Select value={filters.assignee} onValueChange={(value) => onChange({ assignee: value })}>
+            <div className="text-foreground text-sm font-semibold">
+              Nguoi phu trach
+            </div>
+            <Select
+              value={filters.assignee}
+              onValueChange={(value) => onChange({ assignee: value })}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Chọn người phụ trách" />
+                <SelectValue placeholder="Chon nguoi phu trach" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tất cả</SelectItem>
-                <SelectItem value="unassigned">Chưa nhận</SelectItem>
-                <SelectItem value="me">Tôi</SelectItem>
+                <SelectItem value="all">Tat ca</SelectItem>
+                <SelectItem value="unassigned">Chua nhan</SelectItem>
+                <SelectItem value="me">Toi</SelectItem>
                 {assigneeOptions.map((name) => (
                   <SelectItem key={name} value={name}>
                     {name}
@@ -143,29 +183,39 @@ export function ReadyStockFilterSheet({
           <Separator />
 
           <div className="space-y-3">
-            <div className="text-foreground text-sm font-semibold">Tùy chọn</div>
+            <div className="text-foreground text-sm font-semibold">
+              Tuy chon
+            </div>
             <label className="flex items-center gap-2 rounded-md border border-border bg-muted/20 p-2 text-sm">
               <Checkbox
                 checked={filters.hasNoteOnly}
-                onCheckedChange={() => onChange({ hasNoteOnly: !filters.hasNoteOnly })}
+                onCheckedChange={() =>
+                  onChange({ hasNoteOnly: !filters.hasNoteOnly })
+                }
               />
-              <span className="text-foreground/90">Chỉ hiện đơn có ghi chú</span>
+              <span className="text-foreground/90">
+                Chi hien don co ghi chu
+              </span>
             </label>
             <label className="flex items-center gap-2 rounded-md border border-border bg-muted/20 p-2 text-sm">
               <Checkbox
                 checked={filters.hasWarningOnly}
-                onCheckedChange={() => onChange({ hasWarningOnly: !filters.hasWarningOnly })}
+                onCheckedChange={() =>
+                  onChange({ hasWarningOnly: !filters.hasWarningOnly })
+                }
               />
-              <span className="text-foreground/90">Chỉ hiện đơn có cảnh báo</span>
+              <span className="text-foreground/90">
+                Chi hien don co canh bao
+              </span>
             </label>
           </div>
         </div>
 
         <SheetFooter className="mt-6">
           <Button variant="outline" onClick={onReset}>
-            Đặt lại
+            Dat lai
           </Button>
-          <Button onClick={() => onOpenChange(false)}>Áp dụng</Button>
+          <Button onClick={() => onOpenChange(false)}>Ap dung</Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>

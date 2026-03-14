@@ -152,6 +152,7 @@ const Customers = () => {
       createdAt: formatDate(user.createdAt),
       updatedAt: formatDate(user.updatedAt),
     }));
+  }, [filteredCustomers]);
 
   // Pagination
   const totalPages = Math.ceil(customerListItems.length / ITEMS_PER_PAGE);
@@ -165,7 +166,6 @@ const Customers = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, segmentFilter]);
-  }, [filteredCustomers]);
 
   const handleViewDetails = (id: string) => {
     setDetailUserId(id);

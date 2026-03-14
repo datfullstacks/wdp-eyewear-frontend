@@ -1,8 +1,15 @@
 'use client';
 
-import type { OrderRecord } from '@/api/orders';
 import { orderApi } from '@/api';
+import type { OrderOpsStage, OrderRecord } from '@/api/orders';
 import { StatusBadge } from '@/components/atoms/StatusBadge';
+import { READY_STOCK_OPS_STATUS_LABEL } from '@/lib/readyStockOps';
+import type {
+  ReadyStockChecklistKey,
+  ReadyStockOrderOpsState,
+  ReadyStockOpsStatus,
+} from '@/types/readyStockOps';
+import { carriers } from '@/types/fulfillment';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -14,40 +21,74 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { carriers } from '@/types/fulfillment';
-import type { ReadyStockChecklistKey, ReadyStockOrderOpsState, ReadyStockOpsStatus } from '@/types/readyStockOps';
-import { READY_STOCK_OPS_STATUS_LABEL } from '@/lib/readyStockOps';
 import { useEffect, useMemo, useState } from 'react';
 
 const OPS_STATUS_OPTIONS: ReadyStockOpsStatus[] = [
   'pending_operations',
-  'awaiting_picking',
   'picking',
-  'packed',
+  'packing',
   'ready_to_ship',
-  'shipped',
+  'shipment_created',
+  'handover_to_carrier',
   'in_transit',
-  'delivered',
   'delivery_failed',
+  'waiting_redelivery',
+  'return_pending',
+  'return_in_transit',
+  'waiting_customer_info',
+  'on_hold',
+  'exception_hold',
+  'delivered',
   'returned',
-  'blocked',
+  'closed',
 ];
 
-function backendStatusFromOps(ops: ReadyStockOpsStatus): string | null {
-  if (ops === 'delivered') return 'delivered';
-  if (ops === 'returned') return 'returned';
-  if (ops === 'shipped' || ops === 'in_transit') return 'shipped';
-  if (ops === 'blocked' || ops === 'delivery_failed') return null;
-  return 'processing';
+function toBackendOpsStage(status: ReadyStockOpsStatus): OrderOpsStage | null {
+  switch (status) {
+    case 'awaiting_picking':
+      return 'pending_operations';
+    case 'packed':
+      return 'packing';
+    case 'shipped':
+      return 'handover_to_carrier';
+    case 'blocked':
+      return 'on_hold';
+    case 'pending_operations':
+    case 'picking':
+    case 'packing':
+    case 'ready_to_ship':
+    case 'shipment_created':
+    case 'handover_to_carrier':
+    case 'in_transit':
+    case 'delivery_failed':
+    case 'waiting_redelivery':
+    case 'return_pending':
+    case 'return_in_transit':
+    case 'waiting_customer_info':
+    case 'on_hold':
+    case 'exception_hold':
+    case 'delivered':
+    case 'returned':
+    case 'closed':
+      return status;
+    default:
+      return null;
+  }
 }
 
 const CHECKLIST_LABELS: Record<ReadyStockChecklistKey, string> = {
-  skuQuantityChecked: 'Đã kiểm SKU + số lượng',
-  productConditionChecked: 'Đã kiểm tình trạng sản phẩm',
-  addressChecked: 'Đã kiểm địa chỉ giao',
-  packageReady: 'Đã đóng gói xong',
+  skuQuantityChecked: 'Da kiem SKU + so luong',
+  productConditionChecked: 'Da kiem tinh trang san pham',
+  addressChecked: 'Da kiem dia chi giao',
+  packageReady: 'Da dong goi xong',
 };
 
 export function ReadyStockOpsModal({
@@ -67,19 +108,17 @@ export function ReadyStockOpsModal({
 }) {
   const [savingBackend, setSavingBackend] = useState(false);
   const [backendError, setBackendError] = useState<string | null>(null);
-
   const [draft, setDraft] = useState<ReadyStockOrderOpsState | null>(ops);
 
   const canShow = Boolean(order && ops && draft);
 
   const carrierName = useMemo(() => {
-    const match = carriers.find((c) => c.id === (draft?.carrierId || ''));
+    const match = carriers.find((carrier) => carrier.id === (draft?.carrierId || ''));
     return match?.name || '';
   }, [draft?.carrierId]);
 
   useEffect(() => {
-    if (!open) return;
-    if (!ops) return;
+    if (!open || !ops) return;
     setDraft(ops);
     setBackendError(null);
   }, [open, ops]);
@@ -97,36 +136,34 @@ export function ReadyStockOpsModal({
     );
   };
 
+  const localPatch: Partial<ReadyStockOrderOpsState> = {
+    opsStatus: draft.opsStatus,
+    checklist: draft.checklist,
+    carrierId: draft.carrierId,
+    trackingCode: draft.trackingCode,
+  };
+
   const handleSaveLocal = () => {
     setBackendError(null);
-    onSave({
-      opsStatus: draft.opsStatus,
-      checklist: draft.checklist,
-      carrierId: draft.carrierId,
-      trackingCode: draft.trackingCode,
-    });
+    onSave(localPatch);
     onOpenChange(false);
   };
 
   const handleSaveAndSync = async () => {
-    const backendStatus = backendStatusFromOps(draft.opsStatus);
     setBackendError(null);
     setSavingBackend(true);
+
     try {
-      onSave({
-        opsStatus: draft.opsStatus,
-        checklist: draft.checklist,
-        carrierId: draft.carrierId,
-        trackingCode: draft.trackingCode,
-      });
-
-      if (backendStatus) {
-        await orderApi.updateStatus(order.id, backendStatus);
+      onSave(localPatch);
+      const backendStage = toBackendOpsStage(draft.opsStatus);
+      if (backendStage) {
+        await orderApi.updateOpsStage(order.id, backendStage);
       }
-
       onOpenChange(false);
     } catch {
-      setBackendError('Không cập nhật được trạng thái backend. Đã lưu local.');
+      setBackendError(
+        'Khong cap nhat duoc ops stage tren backend. Da luu local.'
+      );
     } finally {
       setSavingBackend(false);
     }
@@ -134,38 +171,44 @@ export function ReadyStockOpsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[92vw] max-w-[720px] max-h-[78vh] overflow-y-auto p-4 text-foreground shadow-2xl">
+      <DialogContent className="text-foreground w-[92vw] max-w-[720px] max-h-[78vh] overflow-y-auto p-4 shadow-2xl">
         <DialogHeader>
-          <DialogTitle>Vận hành đơn {order.code}</DialogTitle>
+          <DialogTitle>Van hanh don {order.code}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-1">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="space-y-1">
-              <Label>Loại đơn</Label>
+              <Label>Loai don</Label>
               <div className="text-sm font-semibold">Ready stock</div>
             </div>
             <div className="space-y-1">
-              <Label>Thanh toán</Label>
-              <StatusBadge status={order.paymentStatus === 'paid' ? 'success' : 'warning'}>
+              <Label>Thanh toan</Label>
+              <StatusBadge
+                status={order.paymentStatus === 'paid' ? 'success' : 'warning'}
+              >
                 {order.paymentStatus}
               </StatusBadge>
             </div>
             <div className="space-y-1">
-              <Label>Trạng thái vận hành</Label>
+              <Label>Trang thai van hanh</Label>
               <Select
                 value={draft.opsStatus}
                 onValueChange={(value) =>
-                  setDraft((prev) => (prev ? { ...prev, opsStatus: value as ReadyStockOpsStatus } : prev))
+                  setDraft((prev) =>
+                    prev
+                      ? { ...prev, opsStatus: value as ReadyStockOpsStatus }
+                      : prev
+                  )
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Chọn trạng thái" />
+                  <SelectValue placeholder="Chon trang thai" />
                 </SelectTrigger>
                 <SelectContent>
-                  {OPS_STATUS_OPTIONS.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {READY_STOCK_OPS_STATUS_LABEL[s]}
+                  {OPS_STATUS_OPTIONS.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {READY_STOCK_OPS_STATUS_LABEL[status]}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -178,60 +221,74 @@ export function ReadyStockOpsModal({
           <div className="space-y-2">
             <div className="text-foreground text-sm font-semibold">Checklist</div>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {(Object.keys(CHECKLIST_LABELS) as ReadyStockChecklistKey[]).map((key) => (
-                <label key={key} className="flex items-center gap-2 text-sm">
-                  <Checkbox
-                    checked={draft.checklist[key]}
-                    onCheckedChange={() => toggleChecklist(key)}
-                  />
-                  <span className="text-foreground/90">{CHECKLIST_LABELS[key]}</span>
-                </label>
-              ))}
+              {(Object.keys(CHECKLIST_LABELS) as ReadyStockChecklistKey[]).map(
+                (key) => (
+                  <label key={key} className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={draft.checklist[key]}
+                      onCheckedChange={() => toggleChecklist(key)}
+                    />
+                    <span className="text-foreground/90">
+                      {CHECKLIST_LABELS[key]}
+                    </span>
+                  </label>
+                )
+              )}
             </div>
           </div>
 
           <Separator />
 
           <div className="space-y-2">
-            <div className="text-foreground text-sm font-semibold">Vận đơn / Tracking</div>
+            <div className="text-foreground text-sm font-semibold">
+              Van don / Tracking
+            </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="space-y-1">
-                <Label>Đơn vị VC</Label>
+                <Label>Don vi VC</Label>
                 <Select
                   value={draft.carrierId || ''}
                   onValueChange={(value) =>
-                    setDraft((prev) => (prev ? { ...prev, carrierId: value } : prev))
+                    setDraft((prev) =>
+                      prev ? { ...prev, carrierId: value } : prev
+                    )
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Chọn đơn vị" />
+                    <SelectValue placeholder="Chon don vi" />
                   </SelectTrigger>
                   <SelectContent>
-                    {carriers.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
+                    {carriers.map((carrier) => (
+                      <SelectItem key={carrier.id} value={carrier.id}>
+                        {carrier.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 {carrierName && (
-                  <div className="text-foreground/60 text-xs">Đang chọn: {carrierName}</div>
+                  <div className="text-foreground/60 text-xs">
+                    Dang chon: {carrierName}
+                  </div>
                 )}
               </div>
               <div className="space-y-1 sm:col-span-2">
-                <Label>Mã tracking</Label>
+                <Label>Ma tracking</Label>
                 <Input
                   value={draft.trackingCode}
                   onChange={(e) =>
-                    setDraft((prev) => (prev ? { ...prev, trackingCode: e.target.value } : prev))
+                    setDraft((prev) =>
+                      prev ? { ...prev, trackingCode: e.target.value } : prev
+                    )
                   }
-                  placeholder="VD: GHN123..."
+                  placeholder="VD: LT3DY4..."
                 />
               </div>
             </div>
           </div>
 
-          {backendError && <div className="text-destructive text-sm">{backendError}</div>}
+          {backendError && (
+            <div className="text-destructive text-sm">{backendError}</div>
+          )}
         </div>
 
         <DialogFooter className="gap-2">
@@ -239,16 +296,15 @@ export function ReadyStockOpsModal({
             Reset local
           </Button>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Đóng
+            Dong
           </Button>
-          <Button onClick={handleSaveLocal}>Lưu</Button>
+          <Button onClick={handleSaveLocal}>Luu</Button>
           <Button
             variant="secondary"
             onClick={handleSaveAndSync}
             disabled={savingBackend}
-            title="Lưu local và cố gắng cập nhật trạng thái backend (nếu có endpoint hỗ trợ)"
           >
-            {savingBackend ? 'Đang cập nhật...' : 'Lưu + cập nhật backend'}
+            {savingBackend ? 'Dang cap nhat...' : 'Luu + cap nhat backend'}
           </Button>
         </DialogFooter>
       </DialogContent>

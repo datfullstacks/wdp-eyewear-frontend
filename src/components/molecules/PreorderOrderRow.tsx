@@ -11,7 +11,6 @@ import {
 import { formatCurrency, formatDate } from '@/data/preorderData';
 import type { PreorderOrder } from '@/types/preorder';
 import {
-  CheckCircle2,
   ChevronDown,
   Eye,
   HandCoins,
@@ -41,30 +40,34 @@ interface PreorderOrderRowProps {
 
 function getStatusMeta(order: PreorderOrder) {
   if (order.status === 'cancelled') {
-    return { label: 'Đã hủy', className: 'text-destructive' };
+    return { label: 'Da huy', className: 'text-destructive' };
   }
 
   if (order.opsStatus === 'shipment_created') {
-    return { label: 'Đã có tracking', className: 'text-success' };
+    return { label: 'Da co GHN', className: 'text-success' };
   }
 
   if (order.opsStatus === 'packing') {
-    return { label: 'Đang đóng gói', className: 'text-warning' };
+    return { label: 'Dang dong goi', className: 'text-warning' };
+  }
+
+  if (order.opsStatus === 'ready_to_pack') {
+    return { label: 'San sang dong goi', className: 'text-primary' };
   }
 
   if (order.opsStatus === 'stocked') {
-    return { label: 'Đã nhập kho', className: 'text-primary' };
+    return { label: 'Da nhap kho', className: 'text-primary' };
   }
 
   if (order.opsStatus === 'arrived') {
-    return { label: 'Hàng đã về', className: 'text-success' };
+    return { label: 'Hang da ve', className: 'text-success' };
   }
 
   if (order.status === 'partial_stock') {
-    return { label: 'Đủ một phần', className: 'text-primary' };
+    return { label: 'Du mot phan', className: 'text-primary' };
   }
 
-  return { label: 'Chờ hàng', className: 'text-warning' };
+  return { label: 'Cho hang', className: 'text-warning' };
 }
 
 export const PreorderOrderRow = ({
@@ -101,7 +104,9 @@ export const PreorderOrderRow = ({
     (order.status === 'waiting_stock' || order.status === 'partial_stock') &&
     order.opsStatus === 'waiting_arrival';
   const canStockIn = !isCancelled && order.opsStatus === 'arrived';
-  const canMoveToPacking = !isCancelled && order.opsStatus === 'stocked';
+  const canMoveToPacking =
+    !isCancelled &&
+    (order.opsStatus === 'stocked' || order.opsStatus === 'ready_to_pack');
   const canCreateShipment =
     !isCancelled &&
     order.opsStatus === 'packing' &&
@@ -143,7 +148,7 @@ export const PreorderOrderRow = ({
           ))}
           {order.products.length > 2 && (
             <span className="text-foreground/70 text-xs">
-              +{order.products.length - 2} sản phẩm khác
+              +{order.products.length - 2} san pham khac
             </span>
           )}
         </div>
@@ -159,17 +164,17 @@ export const PreorderOrderRow = ({
         <div className="flex flex-col gap-1">
           <span className={cn('text-sm font-normal', paymentTextClass)}>
             {order.paymentStatus === 'paid'
-              ? 'Đã TT'
+              ? 'Da TT'
               : order.paymentStatus === 'partial'
-                ? 'TT một phần'
+                ? 'TT mot phan'
                 : order.paymentStatus === 'pending'
-                  ? 'Chờ TT'
+                  ? 'Cho TT'
                   : 'COD'}
           </span>
           {order.depositAmount > 0 &&
             order.depositAmount < order.totalAmount && (
               <span className="text-foreground/70 text-xs">
-                Đặt cọc: {formatCurrency(order.depositAmount)}
+                Dat coc: {formatCurrency(order.depositAmount)}
               </span>
             )}
         </div>
@@ -185,6 +190,11 @@ export const PreorderOrderRow = ({
               {order.trackingCode}
             </span>
           )}
+          {order.shipmentStatus && (
+            <span className="text-foreground/70 text-xs">
+              GHN: {order.shipmentStatus}
+            </span>
+          )}
         </div>
       </TableCell>
 
@@ -195,99 +205,78 @@ export const PreorderOrderRow = ({
               variant="outline"
               size="sm"
               className="gap-2"
-              aria-label="Mở action chính"
+              aria-label="Mo action chinh"
             >
-              Thao tác
+              Thao tac
               <ChevronDown className="h-4 w-4 opacity-70" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">
-            <DropdownMenuLabel>Action chính</DropdownMenuLabel>
+            <DropdownMenuLabel>Action chinh</DropdownMenuLabel>
 
             <DropdownMenuItem
               onClick={() => onMarkArrived(order)}
               className="gap-2"
               disabled={!canMarkArrived}
-              title={
-                !canMarkArrived
-                  ? 'Chỉ dùng khi đơn còn đang chờ đủ hàng pre-order'
-                  : ''
-              }
             >
               <HandCoins className="h-4 w-4" />
-              Cập nhật hàng đã về
+              Cap nhat hang da ve
             </DropdownMenuItem>
 
             <DropdownMenuItem
               onClick={() => onStockIn(order)}
               className="gap-2"
               disabled={!canStockIn}
-              title={
-                !canStockIn ? 'Cần cập nhật hàng đã về trước khi nhập kho' : ''
-              }
             >
               <PackageCheck className="h-4 w-4" />
-              Nhập kho
+              Nhap kho
             </DropdownMenuItem>
 
             <DropdownMenuItem
               onClick={() => onMoveToPacking(order)}
               className="gap-2"
               disabled={!canMoveToPacking}
-              title={
-                !canMoveToPacking
-                  ? 'Cần hoàn tất nhập kho trước khi chuyển sang đóng gói'
-                  : ''
-              }
             >
               <Package className="h-4 w-4" />
-              Chuyển sang đóng gói
+              {order.opsStatus === 'stocked'
+                ? 'San sang dong goi'
+                : 'Chuyen sang dong goi'}
             </DropdownMenuItem>
 
             <DropdownMenuItem
               onClick={() => onCreateShipment(order)}
               className="gap-2"
               disabled={!canCreateShipment}
-              title={
-                !canCreateShipment
-                  ? 'Cần chuyển sang đóng gói trước khi tạo vận đơn'
-                  : ''
-              }
             >
               <Truck className="h-4 w-4" />
-              Tạo vận đơn
+              Tao van don GHN
             </DropdownMenuItem>
 
             <DropdownMenuItem
               onClick={() => onUpdateTracking(order)}
               className="gap-2"
               disabled={!canUpdateTracking}
-              title={
-                !canUpdateTracking
-                  ? 'Cần có vận đơn hoặc tracking trước khi cập nhật'
-                  : ''
-              }
             >
               <Truck className="h-4 w-4" />
-              Cập nhật tracking
+              Dong bo GHN
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
-            <DropdownMenuLabel>Tiện ích</DropdownMenuLabel>
+            <DropdownMenuLabel>Tien ich</DropdownMenuLabel>
 
             <DropdownMenuItem onClick={() => onViewDetail(order)}>
               <Eye className="mr-2 h-4 w-4" />
-              Xem chi tiết
+              Xem chi tiet
             </DropdownMenuItem>
 
             <DropdownMenuItem onClick={() => onLinkBatch(order)}>
               <Link2 className="mr-2 h-4 w-4" />
-              Liên kết đợt hàng
+              Lien ket dot hang
             </DropdownMenuItem>
 
             <DropdownMenuItem onClick={() => onContact(order)}>
               <MessageSquare className="mr-2 h-4 w-4" />
-              Liên hệ khách
+              Lien he khach
             </DropdownMenuItem>
 
             {!isCancelled && (
@@ -295,7 +284,7 @@ export const PreorderOrderRow = ({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => onCancel(order)}>
                   <XCircle className="text-destructive mr-2 h-4 w-4" />
-                  Hủy đơn
+                  Huy don
                 </DropdownMenuItem>
               </>
             )}

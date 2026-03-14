@@ -23,6 +23,47 @@ const RX_FINALIZED_ORDER_STATUSES = new Set([
   'delivered',
   'completed',
 ]);
+const RX_APPROVED_OPS_STAGES = new Set([
+  'waiting_lab',
+  'lens_processing',
+  'lens_fitting',
+  'qc_check',
+  'ready_to_pack',
+  'packing',
+  'ready_to_ship',
+  'shipment_created',
+  'handover_to_carrier',
+  'in_transit',
+  'delivery_failed',
+  'waiting_redelivery',
+  'return_pending',
+  'return_in_transit',
+  'exception_hold',
+  'delivered',
+  'closed',
+  'returned',
+]);
+
+const RX_WORKFLOW_STAGE_MAP = new Map([
+  ['waiting_lab', 'waiting_lab'],
+  ['lens_processing', 'lens_processing'],
+  ['lens_fitting', 'lens_fitting'],
+  ['qc_check', 'qc_check'],
+  ['ready_to_pack', 'ready_to_pack'],
+  ['packing', 'packing'],
+  ['ready_to_ship', 'ready_to_ship'],
+  ['shipment_created', 'shipment_created'],
+  ['handover_to_carrier', 'handover_to_carrier'],
+  ['in_transit', 'in_transit'],
+  ['delivery_failed', 'delivery_failed'],
+  ['waiting_redelivery', 'waiting_redelivery'],
+  ['return_pending', 'return_pending'],
+  ['return_in_transit', 'return_in_transit'],
+  ['exception_hold', 'exception_hold'],
+  ['returned', 'returned'],
+  ['delivered', 'delivered'],
+  ['closed', 'delivered'],
+]);
 
 function formatDate(dateValue?: string): string {
   if (!dateValue) return '-';
@@ -75,6 +116,12 @@ function mapPaymentStatus(status: OrderRecord['paymentStatus']): PaymentStatus {
   return 'pending';
 }
 
+function getRawOrderStatus(order: Pick<OrderRecord, 'rawStatus'>): string {
+  return String(order.rawStatus || '')
+    .trim()
+    .toLowerCase();
+}
+
 function estimateExpectedDate(dateValue?: string): string {
   const base = dateValue ? new Date(dateValue) : new Date();
   if (Number.isNaN(base.getTime()))
@@ -85,29 +132,76 @@ function estimateExpectedDate(dateValue?: string): string {
 }
 
 function mapPreorderStatus(order: OrderRecord): PreorderOrder['status'] {
-  if (order.status === 'cancelled') return 'cancelled';
-  if (order.status === 'processing' || order.status === 'completed')
+  const rawStatus = getRawOrderStatus(order);
+  if (rawStatus === 'cancelled') return 'cancelled';
+  if (
+    rawStatus === 'processing' ||
+    rawStatus === 'shipped' ||
+    rawStatus === 'delivered'
+  ) {
     return 'ready';
+  }
   return 'waiting_stock';
 }
 
 function mapPreorderProductStatus(
   order: OrderRecord
 ): PreorderProduct['status'] {
-  if (order.status === 'processing' || order.status === 'completed')
+  const rawStatus = getRawOrderStatus(order);
+  if (
+    rawStatus === 'processing' ||
+    rawStatus === 'shipped' ||
+    rawStatus === 'delivered'
+  ) {
     return 'arrived';
+  }
   return 'waiting';
 }
 
 function mapPreorderOpsStatus(order: OrderRecord): PreorderOrder['opsStatus'] {
-  const rawStatus = String(order.rawStatus || '')
+  const opsStage = String(order.opsStage || '')
     .trim()
     .toLowerCase();
+  const shipmentState = String(order.shipment?.state || '')
+    .trim()
+    .toLowerCase();
+  const hasShipment = Boolean(
+    String(
+      order.shipment?.orderCode || order.shipment?.trackingCode || ''
+    ).trim()
+  );
+  const rawStatus = getRawOrderStatus(order);
 
+  if (opsStage === 'waiting_arrival') return 'waiting_arrival';
+  if (opsStage === 'arrived') return 'arrived';
+  if (opsStage === 'stocked') return 'stocked';
+  if (opsStage === 'ready_to_pack') return 'ready_to_pack';
+  if (opsStage === 'packing') return 'packing';
+  if (
+    opsStage === 'shipment_created' ||
+    opsStage === 'handover_to_carrier' ||
+    opsStage === 'in_transit' ||
+    opsStage === 'delivery_failed' ||
+    opsStage === 'waiting_redelivery' ||
+    opsStage === 'return_pending' ||
+    opsStage === 'return_in_transit' ||
+    opsStage === 'exception_hold' ||
+    opsStage === 'returned' ||
+    opsStage === 'delivered' ||
+    opsStage === 'closed'
+  ) {
+    return 'shipment_created';
+  }
+
+  if (
+    shipmentState === 'created' ||
+    shipmentState === 'in_transit' ||
+    hasShipment
+  )
+    return 'shipment_created';
   if (rawStatus === 'shipped' || rawStatus === 'delivered')
     return 'shipment_created';
-  if (order.status === 'processing' || order.status === 'completed')
-    return 'stocked';
+  if (rawStatus === 'processing') return 'stocked';
   return 'waiting_arrival';
 }
 
@@ -230,12 +324,43 @@ function resolveRxStatus(
   if (itemStatuses.includes('missing')) return 'missing';
   if (itemStatuses.includes('incomplete')) return 'incomplete';
 
+  const opsStage = String(order.opsStage || '')
+    .trim()
+    .toLowerCase();
+  if (RX_APPROVED_OPS_STAGES.has(opsStage)) {
+    return 'approved';
+  }
+
   if (RX_FINALIZED_ORDER_STATUSES.has(order.rawStatus)) {
     return 'approved';
   }
 
   if (itemStatuses.includes('pending_review')) return 'pending_review';
   return 'approved';
+}
+
+function resolvePrescriptionWorkflowStage(
+  order: OrderRecord,
+  prescriptionStatus: PrescriptionOrder['prescriptionStatus']
+): PrescriptionOrder['workflowStage'] {
+  if (prescriptionStatus !== 'approved') {
+    return 'waiting_review';
+  }
+
+  const opsStage = String(order.opsStage || '')
+    .trim()
+    .toLowerCase();
+  const mapped = RX_WORKFLOW_STAGE_MAP.get(opsStage);
+  if (mapped) {
+    return mapped as PrescriptionOrder['workflowStage'];
+  }
+
+  const rawStatus = getRawOrderStatus(order);
+  if (rawStatus === 'shipped') return 'in_transit';
+  if (rawStatus === 'delivered' || rawStatus === 'completed') return 'delivered';
+  if (rawStatus === 'returned') return 'returned';
+  if (rawStatus === 'processing') return 'lens_processing';
+  return 'waiting_lab';
 }
 
 function resolveRxSource(rxItems: OrderItem[]): PrescriptionOrder['source'] {
@@ -343,6 +468,10 @@ export function toPrescriptionOrder(
 
   const createdDate = formatIsoDate(order.createdAt);
   const prescriptionStatus = resolveRxStatus(order, rxItems);
+  const workflowStage = resolvePrescriptionWorkflowStage(
+    order,
+    prescriptionStatus
+  );
   const source = resolveRxSource(rxItems);
   const itemForPrescription =
     rxItems.find((item) => item.prescriptionMode !== 'none') || rxItems[0];
@@ -352,6 +481,7 @@ export function toPrescriptionOrder(
     id: order.id,
     orderId: order.code,
     rawOrderStatus: order.rawStatus,
+    opsStage: order.opsStage,
     customer: order.customerName,
     phone: order.customerPhone || '-',
     email: '-',
@@ -369,6 +499,9 @@ export function toPrescriptionOrder(
     dueDate: plusDaysIso(createdDate, 3),
     notes: order.note || '',
     source,
+    workflowStage,
+    trackingCode: order.shipment?.trackingCode || undefined,
+    shipmentStatus: order.shipment?.latestStatus || undefined,
     rxItemIds,
     primaryRxItemId: rxItemIds[0],
   };
@@ -455,6 +588,7 @@ export function toPreorderOrder(order: OrderRecord): PreorderOrder {
 
   return {
     id: order.id,
+    rawOrderStatus: order.rawStatus,
     orderCode: order.code,
     customerName: order.customerName,
     customerPhone: order.customerPhone || '-',
@@ -471,7 +605,18 @@ export function toPreorderOrder(order: OrderRecord): PreorderOrder {
     notes: order.note || '',
     priority: inferPreorderPriority(order),
     opsStatus: mapPreorderOpsStatus(order),
-    carrierId: '',
-    trackingCode: '',
+    carrierId: String(order.shipment?.provider || '')
+      .trim()
+      .toLowerCase(),
+    trackingCode: String(
+      order.shipment?.orderCode || order.shipment?.trackingCode || ''
+    ).trim(),
+    shipmentState: String(order.shipment?.state || '')
+      .trim()
+      .toLowerCase(),
+    shipmentStatus: String(order.shipment?.latestStatus || '')
+      .trim()
+      .toLowerCase(),
+    shipmentServiceName: String(order.shipment?.serviceName || '').trim(),
   };
 }

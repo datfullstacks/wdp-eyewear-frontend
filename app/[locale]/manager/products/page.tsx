@@ -10,6 +10,7 @@ import { Button } from '@/components/atoms';
 import { Input } from '@/components/atoms/Input';
 import { Package, ShoppingCart, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { productApi, type Product } from '@/api';
+import { useStatusRealtimeReload } from '@/hooks/useStatusRealtime';
 
 type TabType = 'all' | 'active' | 'low-stock' | 'inactive';
 
@@ -42,6 +43,11 @@ export default function ProductsPage() {
   useEffect(() => {
     void loadProducts();
   }, [loadProducts]);
+
+  useStatusRealtimeReload({
+    domains: ['product'],
+    reload: loadProducts,
+  });
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch =

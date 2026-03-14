@@ -1,21 +1,23 @@
 import apiClient from './client';
+import {
+  toBackendRole as mapToBackendRole,
+  toFrontendRole as mapToFrontendRole,
+} from '@/lib/roles';
 
 /**
  * Backend roles: customer, sales, operations, manager, admin
- * Frontend uses 'sales' role consistently with backend
+ * Frontend mapping: staff -> sales, operation -> operations
  */
 export type UserRole = 'customer' | 'sales' | 'operations' | 'manager' | 'admin' | string;
 
 /** Map frontend display role to backend API role */
 export function toBackendRole(frontendRole: string): string {
-  // No mapping needed - frontend now uses 'sales' directly
-  return frontendRole;
+  return mapToBackendRole(frontendRole);
 }
 
 /** Map backend role to frontend display role */
 export function toFrontendRole(backendRole: string): string {
-  // No mapping needed - frontend now uses 'sales' directly
-  return backendRole;
+  return mapToFrontendRole(backendRole);
 }
 
 export interface User {
@@ -65,6 +67,13 @@ interface BackendEnvelope<T> {
 }
 
 interface BackendAddress {
+  line1?: string;
+  ward?: string;
+  wardCode?: string;
+  district?: string;
+  districtId?: number;
+  province?: string;
+  provinceId?: number;
   phone?: string;
   isDefault?: boolean;
 }
@@ -149,7 +158,7 @@ export const userApi = {
     role?: string;
     search?: string;
   }): Promise<UsersResponse> => {
-    // Map frontend role ("staff") to backend role ("operations")
+    // Map frontend business roles to backend API roles
     const apiParams = params ? { ...params } : undefined;
     if (apiParams?.role) {
       apiParams.role = toBackendRole(apiParams.role);

@@ -1,10 +1,15 @@
 import axios from 'axios';
 
-const baseURL = (
+const isServer = typeof window === 'undefined';
+const normalizedApiBaseUrl = (
   process.env.NEXT_PUBLIC_API_BASE_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
   'http://localhost:3000'
-).replace(/\/$/, '');
+)
+  .replace(/\/$/, '')
+  .replace(/\/api$/, '');
+
+const baseURL = isServer ? normalizedApiBaseUrl : '';
 
 const apiClient = axios.create({
   baseURL,

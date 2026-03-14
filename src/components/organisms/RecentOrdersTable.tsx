@@ -22,6 +22,10 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { orderApi } from '@/api';
 import type { OrderRecord } from '@/api/orders';
+import {
+  getCustomerOrderStatusMeta,
+  getCustomerShippingStatusMeta,
+} from '@/lib/customerOrderStatus';
 import { toDashboardOrder } from '@/lib/orderAdapters';
 import { OrderDetailModal } from '@/components/organisms/orders/OrderDetailModal';
 import { Pagination } from '@/components/molecules/Pagination';
@@ -32,20 +36,11 @@ const ITEMS_PER_PAGE = 10;
 
 function orderTypeLabel(orderType: string): string {
   const normalized = String(orderType || '').trim().toLowerCase();
-  if (normalized === 'ready_stock') return 'Hàng có sẵn';
-  if (normalized === 'pre_order' || normalized === 'preorder') return 'Đặt trước';
+  if (normalized === 'ready_stock') return 'Hang co san';
+  if (normalized === 'pre_order' || normalized === 'preorder')
+    return 'Dat truoc';
   return orderType || '-';
 }
-
-const statusMap: Record<
-  OrderStatus,
-  { label: string; type: 'warning' | 'info' | 'success' | 'error' }
-> = {
-  pending: { label: 'Cần xử lý', type: 'info' },
-  processing: { label: 'Đã xử lý', type: 'warning' },
-  completed: { label: 'Hoàn thành', type: 'success' },
-  cancelled: { label: 'Đã hủy', type: 'error' },
-};
 
 type RecentOrdersTableProps = {
   limit?: number;
@@ -60,7 +55,7 @@ export const RecentOrdersTable = ({
   searchTerm = '',
   statusFilter = 'all',
   filter,
-  emptyMessage = 'Chưa có đơn hàng nào.',
+  emptyMessage = 'Chua co don hang nao.',
 }: RecentOrdersTableProps) => {
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -82,7 +77,7 @@ export const RecentOrdersTable = ({
         const result = await orderApi.getAll({ page: 1, limit });
         if (isMounted) setOrders(result.orders);
       } catch {
-        if (isMounted) setErrorMessage('Không tải được đơn hàng gần đây.');
+        if (isMounted) setErrorMessage('Khong tai duoc don hang gan day.');
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -102,7 +97,9 @@ export const RecentOrdersTable = ({
     return orders
       .filter(predicate)
       .filter((order) =>
-        statusFilter === 'all' ? true : order.status === statusFilter
+        statusFilter === 'all'
+          ? true
+          : getCustomerOrderStatusMeta(order).category === statusFilter
       )
       .filter((order) => {
         if (!query) return true;
@@ -141,13 +138,13 @@ export const RecentOrdersTable = ({
       <Table className="text-sm font-normal">
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead className="w-[140px] whitespace-nowrap">Mã đơn</TableHead>
-            <TableHead>Khách hàng</TableHead>
-            <TableHead>Sản phẩm</TableHead>
-            <TableHead className="text-right">Tổng tiền</TableHead>
-            <TableHead className="text-center">Ngày</TableHead>
-            <TableHead className="whitespace-nowrap">Loại đơn</TableHead>
-            <TableHead>Trạng thái</TableHead>
+            <TableHead className="w-[140px] whitespace-nowrap">Ma don</TableHead>
+            <TableHead>Khach hang</TableHead>
+            <TableHead>San pham</TableHead>
+            <TableHead className="text-right">Tong tien</TableHead>
+            <TableHead className="text-center">Ngay</TableHead>
+            <TableHead className="whitespace-nowrap">Loai don</TableHead>
+            <TableHead>Trang thai</TableHead>
             <TableHead className="w-[60px]" />
           </TableRow>
         </TableHeader>
@@ -155,7 +152,7 @@ export const RecentOrdersTable = ({
           {isLoading && (
             <TableRow>
               <TableCell colSpan={8} className="text-foreground/70 py-10 text-center">
-                Đang tải đơn hàng...
+                Dang tai don hang...
               </TableCell>
             </TableRow>
           )}
@@ -180,7 +177,9 @@ export const RecentOrdersTable = ({
             !errorMessage &&
             paginatedOrders.map((order) => {
               const dashboard = toDashboardOrder(order);
-              const statusInfo = statusMap[dashboard.status];
+              const statusInfo = getCustomerOrderStatusMeta(order);
+              const shippingInfo = getCustomerShippingStatusMeta(order);
+
               return (
                 <TableRow key={order.id} className="hover:bg-muted/30">
                   <TableCell className="text-foreground font-mono text-sm font-normal whitespace-nowrap">
@@ -200,7 +199,7 @@ export const RecentOrdersTable = ({
                           {dashboard.customerName}
                         </p>
                         <p className="text-foreground/80 text-xs">
-                          {dashboard.products.length} sản phẩm
+                          {dashboard.products.length} san pham
                         </p>
                       </div>
                     </div>
@@ -223,7 +222,16 @@ export const RecentOrdersTable = ({
                     {orderTypeLabel(order.orderType)}
                   </TableCell>
                   <TableCell>
-                    <StatusBadge status={statusInfo.type}>{statusInfo.label}</StatusBadge>
+                    <div className="space-y-1">
+                      <StatusBadge status={statusInfo.type}>
+                        {statusInfo.label}
+                      </StatusBadge>
+                      {shippingInfo && (
+                        <p className="text-foreground/70 text-xs">
+                          VC: {shippingInfo.label}
+                        </p>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-1">
@@ -239,9 +247,8 @@ export const RecentOrdersTable = ({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleOpenDetail(order)}>
-                            Xem chi tiết
+                            Xem chi tiet
                           </DropdownMenuItem>
-                          <DropdownMenuItem>Cập nhật trạng thái</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>

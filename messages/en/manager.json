@@ -159,18 +159,24 @@
   },
   "users": {
     "title": "User Management",
-    "subtitle": "Manage Managers, Sales and Customers",
+    "subtitle": "Manage Sales, Operations, Managers, Admins and Customers",
+    "addAdmin": "Add New Admin",
     "addManager": "Add New Manager",
+    "addOperation": "Add New Operation",
     "addStaff": "Add New Sales Member",
     "addUser": "Add New User",
     "searchPlaceholder": "Search by name or email...",
     "tabs": {
+      "admins": "Admin Management",
       "managers": "Manager Management",
+      "operations": "Operation Management",
       "staff": "Sales Management",
       "customers": "Customer Care"
     },
     "stats": {
+      "totalAdmins": "Total Admins",
       "totalManagers": "Total Managers",
+      "totalOperations": "Total Operations",
       "totalStaff": "Total Sales (Sales Team)",
       "totalCustomers": "Total Customers",
       "staff": "Sales Members",
