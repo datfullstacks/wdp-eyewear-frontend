@@ -25,7 +25,7 @@ Manager Dashboard là hệ thống quản lý dành riêng cho vai trò Manager 
 
 ### 3. **Quản Lý Người Dùng** (`/dashboard/manager/users`)
 
-- Quản lý tài khoản nhân viên (Staff, Operations, Manager, Admin)
+- Quản lý tài khoản nhân viên (Sales, Operations, Manager, Admin)
 - Phân quyền và quản lý vai trò
 - Theo dõi hoạt động đăng nhập
 - Tạo/sửa/xóa/vô hiệu hóa tài khoản
@@ -125,7 +125,7 @@ src/lib/mock-data/
 
 **Users:**
 
-- 7 người dùng với 4 vai trò (staff, operations, manager, admin)
+- 7 người dùng với 4 vai trò (sales, operations, manager, admin)
 - Trạng thái: active, inactive, suspended
 - Lịch sử đăng nhập
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Header } from '@/components/organisms/Header';
@@ -21,12 +21,13 @@ import {
 import { userApi, type User } from '@/api';
 import { AlertTriangle, ArrowLeft, Edit, Loader2, User as UserIcon, Shield, Trash2, X, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getUserManagementBasePath, isAdminAreaPath } from '@/lib/userManagement';
 
 function roleBadge(role: string) {
   const map: Record<string, { label: string; cls: string }> = {
-    admin: { label: 'Admin', cls: 'bg-red-100 text-red-700' },
+    admin: { label: 'System Admin', cls: 'bg-red-100 text-red-700' },
     manager: { label: 'Manager', cls: 'bg-amber-100 text-amber-700' },
-    operations: { label: 'Operations (Staff)', cls: 'bg-blue-100 text-blue-700' },
+    operations: { label: 'Operations', cls: 'bg-blue-100 text-blue-700' },
     sales: { label: 'Sales', cls: 'bg-indigo-100 text-indigo-700' },
     customer: { label: 'Customer', cls: 'bg-green-100 text-green-700' },
   };
@@ -50,9 +51,11 @@ function formatDate(dateStr?: string) {
 export default function UserDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const pathname = usePathname();
   const userId = params.id as string;
   const t = useTranslations('manager.users');
   const tDetail = useTranslations('manager.users.detail');
+  const userBasePath = getUserManagementBasePath(pathname);
 
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -60,6 +63,7 @@ export default function UserDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const canManageAdmins = isAdminAreaPath(pathname);
 
   // Edit form state
   const [editName, setEditName] = useState('');
@@ -89,6 +93,11 @@ export default function UserDetailPage() {
   }, [userId, loadUser]);
 
   const handleStartEdit = () => {
+    if (user?.role === 'admin' && !canManageAdmins) {
+      setApiError('Only System Admin can edit admin accounts');
+      return;
+    }
+
     if (user) {
       setEditName(user.name);
       setEditEmail(user.email);
@@ -133,9 +142,14 @@ export default function UserDetailPage() {
   };
 
   const handleDelete = async () => {
+    if (user?.role === 'admin' && !canManageAdmins) {
+      setApiError('Only System Admin can delete admin accounts');
+      return;
+    }
+
     try {
       await userApi.remove(userId);
-      router.push('/manager/users');
+      router.push(userBasePath);
     } catch (error) {
       setApiError(error instanceof Error ? error.message : t('deleteFailed'));
     }
@@ -156,7 +170,7 @@ export default function UserDetailPage() {
           <AlertTriangle className="mx-auto h-12 w-12 text-red-600" />
           <h2 className="mt-4 text-xl font-semibold">{tDetail('notFound')}</h2>
           {apiError && <p className="mt-2 text-sm text-red-600">{apiError}</p>}
-          <Button onClick={() => router.push('/manager/users')} className="mt-4">
+          <Button onClick={() => router.push(userBasePath)} className="mt-4">
             {tDetail('backToList')}
           </Button>
         </div>
@@ -175,7 +189,7 @@ export default function UserDetailPage() {
         {/* Top Actions Bar */}
         <div className="flex items-center justify-between">
           <Link
-            href="/manager/users"
+            href={userBasePath}
             className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-amber-600 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -185,23 +199,27 @@ export default function UserDetailPage() {
           <div className="flex items-center gap-2">
             {!isEditing ? (
               <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsDeleteDialogOpen(true)}
-                  className="text-sm text-red-600 border-red-200 hover:bg-red-50"
-                >
-                  <Trash2 className="mr-1 h-4 w-4" />
-                  {tDetail('delete')}
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleStartEdit}
-                  className="bg-amber-400 text-slate-900 hover:bg-amber-500"
-                >
-                  <Edit className="mr-1 h-4 w-4" />
-                  {tDetail('edit')}
-                </Button>
+                {!(user.role === 'admin' && !canManageAdmins) && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsDeleteDialogOpen(true)}
+                      className="text-sm text-red-600 border-red-200 hover:bg-red-50"
+                    >
+                      <Trash2 className="mr-1 h-4 w-4" />
+                      {tDetail('delete')}
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={handleStartEdit}
+                      className="bg-amber-400 text-slate-900 hover:bg-amber-500"
+                    >
+                      <Edit className="mr-1 h-4 w-4" />
+                      {tDetail('edit')}
+                    </Button>
+                  </>
+                )}
               </>
             ) : (
               <>

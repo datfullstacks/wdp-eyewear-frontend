@@ -26,7 +26,9 @@ import {
   UploadImageModal,
 } from '@/components/organisms/prescription';
 import { orderApi } from '@/api';
+import { useStatusRealtimeReload } from '@/hooks/useStatusRealtime';
 import { toSupplementOrder } from '@/lib/orderAdapters';
+import { canOperationHandlePrescription } from '@/lib/orderWorkflow';
 
 const typeOptions = [
   { value: 'no_prescription', label: 'Chưa có Rx' },
@@ -67,6 +69,7 @@ export default function OrdersPrescriptionSupplement() {
     try {
       const result = await orderApi.getAll({ page: 1, limit: 200 });
       const mapped = result.orders
+        .filter(canOperationHandlePrescription)
         .map(toSupplementOrder)
         .filter((value): value is SupplementOrder => value !== null);
 
@@ -84,6 +87,11 @@ export default function OrdersPrescriptionSupplement() {
   useEffect(() => {
     void loadOrders();
   }, [loadOrders]);
+
+  useStatusRealtimeReload({
+    domains: ['order'],
+    reload: loadOrders,
+  });
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =

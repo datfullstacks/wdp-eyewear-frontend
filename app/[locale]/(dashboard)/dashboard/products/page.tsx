@@ -1,5 +1,5 @@
 export default function ProductsManagementPage() {
   // Manager: Full CRUD
-  // Staff: Read only
+  // Sales: Read only
   return <div>Products Management</div>;
 }

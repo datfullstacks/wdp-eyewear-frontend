@@ -8,6 +8,10 @@ import {
 import { CheckCircle } from 'lucide-react';
 import { PendingOrder } from '@/types/pending';
 import { formatCurrency } from '@/data/pendingData';
+import {
+  canApprovePendingOrder,
+  PENDING_ORDER_APPROVAL_MESSAGE,
+} from '@/lib/pendingOrders';
 
 interface ProcessModalProps {
   order: PendingOrder | null;
@@ -21,6 +25,7 @@ export const ProcessModal = ({
   onConfirm,
 }: ProcessModalProps) => {
   if (!order) return null;
+  const canApprove = canApprovePendingOrder(order);
 
   return (
     <Dialog open={!!order} onOpenChange={onClose}>
@@ -39,11 +44,14 @@ export const ProcessModal = ({
               {order.products.length} sản phẩm - {formatCurrency(order.total)}
             </p>
           </div>
+          {!canApprove && (
+            <p className="text-sm text-amber-700">{PENDING_ORDER_APPROVAL_MESSAGE}</p>
+          )}
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={onClose}>
               Hủy
             </Button>
-            <Button onClick={onConfirm}>
+            <Button disabled={!canApprove} onClick={onConfirm}>
               <CheckCircle className="mr-2 h-4 w-4" />
               Xác nhận
             </Button>

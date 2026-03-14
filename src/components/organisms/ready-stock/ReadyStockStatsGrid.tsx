@@ -1,7 +1,17 @@
 import type { OrderRecord } from '@/api/orders';
 import { StatCard } from '@/components/molecules/StatCard';
-import { Hand, Package, PackageCheck, Truck, PauseCircle, ClipboardList } from 'lucide-react';
-import type { ReadyStockOrderOpsState, ReadyStockOpsStatus } from '@/types/readyStockOps';
+import {
+  ClipboardList,
+  Hand,
+  Package,
+  PackageCheck,
+  PauseCircle,
+  Truck,
+} from 'lucide-react';
+import type {
+  ReadyStockOrderOpsState,
+  ReadyStockOpsStatus,
+} from '@/types/readyStockOps';
 
 type Stats = {
   awaitingAccept: number;
@@ -12,7 +22,10 @@ type Stats = {
   hold: number;
 };
 
-function isIn(orderOps: ReadyStockOrderOpsState, statuses: ReadyStockOpsStatus[]) {
+function isIn(
+  orderOps: ReadyStockOrderOpsState,
+  statuses: ReadyStockOpsStatus[]
+) {
   return statuses.includes(orderOps.opsStatus);
 }
 
@@ -26,12 +39,17 @@ export function ReadyStockStatsGrid({
   const stats: Stats = orders.reduce<Stats>(
     (acc, order) => {
       const ops = resolveOps(order);
-      if (isIn(ops, ['pending_operations', 'awaiting_picking'])) acc.awaitingAccept += 1;
+
+      if (isIn(ops, ['pending_operations'])) acc.awaitingAccept += 1;
       if (isIn(ops, ['picking'])) acc.picking += 1;
-      if (isIn(ops, ['packed'])) acc.packing += 1;
+      if (isIn(ops, ['packing'])) acc.packing += 1;
       if (isIn(ops, ['ready_to_ship'])) acc.awaitingShipment += 1;
-      if (isIn(ops, ['shipped'])) acc.handedOver += 1;
-      if (isIn(ops, ['blocked'])) acc.hold += 1;
+      if (isIn(ops, ['shipment_created', 'handover_to_carrier', 'in_transit'])) {
+        acc.handedOver += 1;
+      }
+      if (isIn(ops, ['waiting_customer_info', 'on_hold', 'exception_hold'])) {
+        acc.hold += 1;
+      }
 
       return acc;
     },
@@ -48,7 +66,7 @@ export function ReadyStockStatsGrid({
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
       <StatCard
-        title="Chờ nhận xử lý"
+        title="Cho nhan xu ly"
         value={stats.awaitingAccept.toString()}
         icon={Hand}
         className="p-3"
@@ -58,7 +76,7 @@ export function ReadyStockStatsGrid({
         inline
       />
       <StatCard
-        title="Đang lấy hàng"
+        title="Dang lay hang"
         value={stats.picking.toString()}
         icon={ClipboardList}
         iconColor="text-primary"
@@ -69,7 +87,7 @@ export function ReadyStockStatsGrid({
         inline
       />
       <StatCard
-        title="Đang đóng gói"
+        title="Dang dong goi"
         value={stats.packing.toString()}
         icon={Package}
         iconColor="text-warning"
@@ -80,7 +98,7 @@ export function ReadyStockStatsGrid({
         inline
       />
       <StatCard
-        title="Chờ tạo vận đơn"
+        title="Cho tao van don"
         value={stats.awaitingShipment.toString()}
         icon={Truck}
         iconColor="text-success"
@@ -91,7 +109,7 @@ export function ReadyStockStatsGrid({
         inline
       />
       <StatCard
-        title="Đã bàn giao VC"
+        title="Da vao luong GHN"
         value={stats.handedOver.toString()}
         icon={PackageCheck}
         iconColor="text-success"
@@ -102,7 +120,7 @@ export function ReadyStockStatsGrid({
         inline
       />
       <StatCard
-        title="Đang hold"
+        title="Dang hold"
         value={stats.hold.toString()}
         icon={PauseCircle}
         iconColor="text-destructive"

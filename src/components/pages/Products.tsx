@@ -28,6 +28,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type CategoryFilter = {
   label: string;
@@ -54,11 +61,14 @@ const typeLabels: Record<string, string> = {
   other: 'Khác',
 };
 
+const PAGE_SIZE_OPTIONS = [20, 50, 100] as const;
+
 const Products = () => {
-  const PAGE_SIZE = 8;
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] =
+    useState<(typeof PAGE_SIZE_OPTIONS)[number]>(20);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -128,12 +138,12 @@ const Products = () => {
   }, [activeCategory, products, searchTerm]);
 
   const totalPages = useMemo(() => {
-    return Math.ceil(filteredProducts.length / PAGE_SIZE);
-  }, [PAGE_SIZE, filteredProducts.length]);
+    return Math.ceil(filteredProducts.length / pageSize);
+  }, [filteredProducts.length, pageSize]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [activeCategory, searchTerm]);
+  }, [activeCategory, pageSize, searchTerm]);
 
   useEffect(() => {
     if (totalPages <= 0) return;
@@ -142,9 +152,9 @@ const Products = () => {
 
   const paginatedProducts = useMemo(() => {
     if (filteredProducts.length === 0) return [];
-    const start = (currentPage - 1) * PAGE_SIZE;
-    return filteredProducts.slice(start, start + PAGE_SIZE);
-  }, [PAGE_SIZE, currentPage, filteredProducts]);
+    const start = (currentPage - 1) * pageSize;
+    return filteredProducts.slice(start, start + pageSize);
+  }, [currentPage, filteredProducts, pageSize]);
 
   const gridItems: ProductCardItem[] = useMemo(
     () =>
@@ -256,6 +266,23 @@ const Products = () => {
                 </p>
 
                 <div className="flex items-center gap-2">
+                  <Select
+                    value={String(pageSize)}
+                    onValueChange={(value) =>
+                      setPageSize(Number(value) as (typeof PAGE_SIZE_OPTIONS)[number])
+                    }
+                  >
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="20 / trang" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PAGE_SIZE_OPTIONS.map((option) => (
+                        <SelectItem key={option} value={String(option)}>
+                          {option} / trang
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <Button
                     variant="outline"
                     size="sm"

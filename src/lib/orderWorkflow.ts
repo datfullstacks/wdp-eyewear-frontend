@@ -20,11 +20,36 @@ export const DEFAULT_ORDER_ALERT_THRESHOLDS = {
   processingSlaDays: 5,
 } as const;
 
+const OPERATION_HANDOFF_RAW_STATUSES = new Set([
+  'confirmed',
+  'processing',
+  'shipped',
+  'delivered',
+]);
+
+const OPERATION_PRESCRIPTION_RAW_STATUSES = new Set([
+  'confirmed',
+  'processing',
+  'shipped',
+]);
+
 function toTimestamp(dateValue?: string): number | null {
   if (!dateValue) return null;
   const ts = new Date(dateValue).getTime();
   if (Number.isNaN(ts)) return null;
   return ts;
+}
+
+function normalizeRawOrderStatus(
+  order: Pick<OrderRecord, 'rawStatus'> | string | null | undefined
+): string {
+  if (typeof order === 'string') {
+    return order.trim().toLowerCase();
+  }
+
+  return String(order?.rawStatus || '')
+    .trim()
+    .toLowerCase();
 }
 
 export function getOrderAgeHours(order: Pick<OrderRecord, 'createdAt'>): number {
@@ -52,31 +77,42 @@ export function needsPrescriptionSupplement(order: OrderRecord): boolean {
   return toSupplementOrder(order) !== null;
 }
 
+export function hasOperationHandoff(order: Pick<OrderRecord, 'rawStatus'>): boolean {
+  return OPERATION_HANDOFF_RAW_STATUSES.has(normalizeRawOrderStatus(order));
+}
+
+export function canOperationHandlePrescription(order: OrderRecord): boolean {
+  if (!isPrescriptionOrder(order)) return false;
+  return OPERATION_PRESCRIPTION_RAW_STATUSES.has(normalizeRawOrderStatus(order));
+}
+
 export function isReadyStockOrder(order: OrderRecord): boolean {
   const orderType = String(order.orderType || '').toLowerCase();
   if (orderType !== 'ready_stock') return false;
   if (isPreorderOrder(order)) return false;
   if (isPrescriptionOrder(order)) return false;
-  if (order.status === 'cancelled') return false;
+  if (!hasOperationHandoff(order)) return false;
+  if (normalizeRawOrderStatus(order) === 'cancelled') return false;
   return true;
 }
 
 export function isProcessingPrescriptionOrder(order: OrderRecord): boolean {
+  if (!canOperationHandlePrescription(order)) return false;
+
   const rx = toPrescriptionOrder(order);
   if (!rx) return false;
   if (rx.prescriptionStatus !== 'approved') return false;
 
-  const raw = String(order.rawStatus || '').toLowerCase();
-  return raw === 'confirmed' || raw === 'processing';
+  return normalizeRawOrderStatus(order) === 'processing';
 }
 
 export function needsActionOrder(order: OrderRecord): boolean {
-  const raw = String(order.rawStatus || '').toLowerCase();
-  if (order.status === 'cancelled') return false;
+  const raw = normalizeRawOrderStatus(order);
+  if (raw === 'cancelled') return false;
 
   if (raw === 'returned') return true;
 
-  if (order.status === 'pending') return true;
+  if (raw === 'pending') return true;
 
   if (order.paymentStatus === 'pending' && order.paymentMethod !== 'cod') return true;
 
@@ -92,13 +128,14 @@ export function getOrderAlertTypes(
   order: OrderRecord,
   thresholds: typeof DEFAULT_ORDER_ALERT_THRESHOLDS = DEFAULT_ORDER_ALERT_THRESHOLDS
 ): DelayType[] {
-  if (order.status === 'cancelled') return [];
+  const raw = normalizeRawOrderStatus(order);
+  if (raw === 'cancelled') return [];
 
   const alerts = new Set<DelayType>();
   const ageHours = getOrderAgeHours(order);
   const ageDays = ageHours / 24;
 
-  if (order.status === 'pending' && ageHours > thresholds.confirmationDeadlineHours) {
+  if (raw === 'pending' && ageHours > thresholds.confirmationDeadlineHours) {
     alerts.add('pending_too_long');
   }
 
@@ -260,9 +297,11 @@ export function computeOrderMenuCounts(orders: OrderRecord[]): OrderMenuCounts {
   for (const order of orders) {
     if (needsActionOrder(order)) counts.needsAction += 1;
     if (isReadyStockOrder(order)) counts.readyStock += 1;
-    if (isPreorderOrder(order)) counts.preorder += 1;
-    if (isPrescriptionOrder(order)) counts.prescription += 1;
-    if (needsPrescriptionSupplement(order)) counts.prescriptionNeeded += 1;
+    if (isPreorderOrder(order) && hasOperationHandoff(order)) counts.preorder += 1;
+    if (canOperationHandlePrescription(order)) counts.prescription += 1;
+    if (canOperationHandlePrescription(order) && needsPrescriptionSupplement(order)) {
+      counts.prescriptionNeeded += 1;
+    }
     if (isProcessingPrescriptionOrder(order)) counts.processing += 1;
     if (getOrderAlertTypes(order).length > 0) counts.alerts += 1;
   }

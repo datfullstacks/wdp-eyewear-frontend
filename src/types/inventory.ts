@@ -2,7 +2,8 @@ export type InventoryStatus =
   | 'in_stock'
   | 'low_stock'
   | 'out_of_stock'
-  | 'overstock';
+  | 'overstock'
+  | 'not_tracked';
 
 export type AdjustmentReason =
   | 'adjust'
@@ -18,6 +19,7 @@ export interface InventoryItem {
   brand: string;
   category: string;
   variant: string;
+  trackInventory?: boolean;
   stock: number;
   reserved: number;
   available: number;

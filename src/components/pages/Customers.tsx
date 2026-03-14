@@ -4,6 +4,7 @@ import userApi, { User } from '@/api/users';
 import { CustomerApiResponseModal } from '@/components/molecules/CustomerApiResponseModal';
 import { SearchBar } from '@/components/molecules/SearchBar';
 import { StatCard } from '@/components/molecules/StatCard';
+import { Pagination } from '@/components/molecules/Pagination';
 import { CustomerList } from '@/components/organisms/CustomerList';
 import { Header } from '@/components/organisms/Header';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,8 @@ import { Clock, Filter, Phone, UserPlus, Users } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 type SegmentFilter = 'all' | 'has_phone' | 'no_phone' | 'google' | 'credentials';
+
+const ITEMS_PER_PAGE = 10;
 
 function formatDate(value?: string) {
   if (!value) return '-';
@@ -43,6 +46,7 @@ const Customers = () => {
   const [error, setError] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailUserId, setDetailUserId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const stats = useMemo(() => {
     const total = customers.length;
@@ -150,6 +154,19 @@ const Customers = () => {
     }));
   }, [filteredCustomers]);
 
+  // Pagination
+  const totalPages = Math.ceil(customerListItems.length / ITEMS_PER_PAGE);
+  const paginatedCustomers = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return customerListItems.slice(startIndex, endIndex);
+  }, [customerListItems, currentPage]);
+
+  // Reset to page 1 when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, segmentFilter]);
+
   const handleViewDetails = (id: string) => {
     setDetailUserId(id);
     setDetailOpen(true);
@@ -256,7 +273,17 @@ const Customers = () => {
             {error}
           </div>
         ) : (
-          <CustomerList customers={customerListItems} onViewDetails={handleViewDetails} />
+          <>
+            <CustomerList customers={paginatedCustomers} onViewDetails={handleViewDetails} />
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              itemsPerPage={ITEMS_PER_PAGE}
+              totalItems={customerListItems.length}
+              className="mt-4"
+            />
+          </>
         )}
       </div>
 

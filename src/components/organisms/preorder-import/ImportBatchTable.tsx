@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-
 import {
   Table,
   TableBody,
@@ -15,7 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Eye, PackageCheck, FileText, MoreHorizontal } from 'lucide-react';
+import { Eye, PackageCheck, MoreHorizontal } from 'lucide-react';
 import { getStatusConfig } from '@/data/preorderImportData';
 import type { PreorderBatch } from '@/types/preorderImport';
 
@@ -34,22 +33,33 @@ export const ImportBatchTable = ({
     <Table className="text-sm font-normal">
       <TableHeader>
         <TableRow className="bg-muted/50">
-          <TableHead>Mã đợt</TableHead>
-          <TableHead>Nhà cung cấp</TableHead>
-          <TableHead>Ngày đặt</TableHead>
-          <TableHead>Ngày dự kiến</TableHead>
-          <TableHead>Tiến độ</TableHead>
-          <TableHead>Trạng thái</TableHead>
+          <TableHead>Ma dot</TableHead>
+          <TableHead>Nha cung cap</TableHead>
+          <TableHead>Ngay dat</TableHead>
+          <TableHead>Ngay du kien</TableHead>
+          <TableHead>Tien do</TableHead>
+          <TableHead>Trang thai</TableHead>
           <TableHead className="w-[60px]"></TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
+        {batches.length === 0 ? (
+          <TableRow>
+            <TableCell
+              colSpan={7}
+              className="text-muted-foreground py-10 text-center"
+            >
+              Chua co dot hang nao phu hop bo loc hien tai.
+            </TableCell>
+          </TableRow>
+        ) : null}
         {batches.map((batch) => {
           const statusConfig = getStatusConfig(batch.status);
           const StatusIcon = statusConfig.icon;
-          const progress = Math.round(
-            (batch.receivedItems / batch.totalItems) * 100
-          );
+          const progress =
+            batch.totalItems > 0
+              ? Math.round((batch.receivedItems / batch.totalItems) * 100)
+              : 0;
 
           return (
             <TableRow key={batch.id} className="hover:bg-muted/30">
@@ -98,18 +108,14 @@ export const ImportBatchTable = ({
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => onViewDetail(batch)}>
                       <Eye className="mr-2 h-4 w-4" />
-                      Xem chi tiết
+                      Xem chi tiet
                     </DropdownMenuItem>
-                    {batch.status !== 'completed' && (
+                    {batch.status !== 'completed' ? (
                       <DropdownMenuItem onClick={() => onReceive(batch)}>
                         <PackageCheck className="mr-2 h-4 w-4" />
-                        Xác nhận nhập kho
+                        Xac nhan nhap kho
                       </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem>
-                      <FileText className="mr-2 h-4 w-4" />
-                      Xem chứng từ
-                    </DropdownMenuItem>
+                    ) : null}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>

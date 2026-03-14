@@ -16,6 +16,10 @@ import {
 } from 'lucide-react';
 import { PendingOrder } from '@/types/pending';
 import { paymentStatusConfig, formatCurrency } from '@/data/pendingData';
+import {
+  canApprovePendingOrder,
+  PENDING_ORDER_APPROVAL_MESSAGE,
+} from '@/lib/pendingOrders';
 
 interface PendingDetailModalProps {
   order: PendingOrder | null;
@@ -31,6 +35,7 @@ export const PendingDetailModal = ({
   onReject,
 }: PendingDetailModalProps) => {
   if (!order) return null;
+  const canApprove = canApprovePendingOrder(order);
 
   return (
     <Dialog open={!!order} onOpenChange={onClose}>
@@ -164,6 +169,11 @@ export const PendingDetailModal = ({
         </div>
 
         <div className="bg-background shrink-0 px-5 pb-5 sm:px-6 sm:pb-6">
+          {!canApprove && (
+            <p className="mb-3 text-sm text-amber-700">
+              {PENDING_ORDER_APPROVAL_MESSAGE}
+            </p>
+          )}
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button
               variant="outline"
@@ -179,6 +189,7 @@ export const PendingDetailModal = ({
 
             <Button
               className="bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-950 shadow-lg shadow-yellow-500/25 hover:from-yellow-500 hover:to-amber-600 sm:flex-1"
+              disabled={!canApprove}
               onClick={() => {
                 onClose();
                 onProcess(order);

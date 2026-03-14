@@ -5,7 +5,7 @@ export {
   type ProductVariant,
   type LensOption,
 } from './products';
-export { mockUsers, mockRolePermissions, type StaffPermission } from './users';
+export { mockUsers, mockRolePermissions, type SalesPermission } from './users';
 export {
   mockPolicies,
   mockPromotions,

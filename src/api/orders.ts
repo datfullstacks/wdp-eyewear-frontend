@@ -1,8 +1,62 @@
 import apiClient from './client';
+import type {
+  ReadyStockChecklistKey,
+  ReadyStockItemOpsState,
+  ReadyStockIssueType,
+  ReadyStockOrderOpsState,
+  ReadyStockOpsStatus,
+} from '@/types/readyStockOps';
 
-export type UiOrderStatus = 'pending' | 'processing' | 'completed' | 'cancelled';
+export type UiOrderStatus =
+  | 'pending'
+  | 'processing'
+  | 'completed'
+  | 'cancelled';
 export type UiPaymentStatus = 'paid' | 'pending' | 'partial' | 'cod';
 export type PrescriptionMode = 'none' | 'manual' | 'upload';
+export type OrderShippingAction =
+  | 'view_tracking'
+  | 'create_shipment'
+  | 'sync_shipment'
+  | 'update_test_status'
+  | 'print_label'
+  | 'cancel_shipment'
+  | 'return_shipment'
+  | 'delivery_again';
+export type OrderShippingTestStatus =
+  | 'ready_to_pick'
+  | 'picking'
+  | 'transporting'
+  | 'delivered'
+  | 'returned';
+export type OrderOpsStage =
+  | 'none'
+  | 'pending_operations'
+  | 'picking'
+  | 'waiting_customer_info'
+  | 'on_hold'
+  | 'waiting_arrival'
+  | 'arrived'
+  | 'stocked'
+  | 'ready_to_pack'
+  | 'waiting_lab'
+  | 'lens_processing'
+  | 'lens_fitting'
+  | 'qc_check'
+  | 'packing'
+  | 'ready_to_ship'
+  | 'shipment_created'
+  | 'handover_to_carrier'
+  | 'in_transit'
+  | 'delivery_failed'
+  | 'waiting_redelivery'
+  | 'return_pending'
+  | 'return_in_transit'
+  | 'exception_hold'
+  | 'delivered'
+  | 'closed'
+  | 'returned'
+  | 'cancelled';
 
 interface BackendEnvelope<T> {
   success?: boolean;
@@ -20,8 +74,65 @@ interface BackendShippingAddress {
   fullName?: string;
   phone?: string;
   line1?: string;
+  line2?: string;
+  ward?: string;
+  wardCode?: string;
   district?: string;
+  districtId?: number;
   province?: string;
+  provinceId?: number;
+}
+
+interface BackendShipment {
+  provider?: string;
+  state?: string;
+  orderCode?: string;
+  clientOrderCode?: string;
+  shopId?: number;
+  serviceId?: number;
+  serviceTypeId?: number;
+  serviceName?: string;
+  latestStatus?: string;
+  latestFailCode?: string;
+  latestFailReason?: string;
+  labelToken?: string;
+  leadtime?: string;
+  shippingFee?: number;
+  codAmount?: number;
+  trackingCode?: string;
+  trackingUrl?: string;
+  lastAction?: string;
+  lastActionAt?: string;
+  lastSyncedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  latestSnapshot?: unknown;
+}
+
+interface BackendOpsExecutionItemState {
+  picked?: boolean;
+  warehouseLocation?: string;
+  issueType?: string | null;
+  issueNote?: string;
+  internalNote?: string;
+}
+
+interface BackendOpsExecution {
+  lastUpdatedAt?: string;
+  assignee?: string;
+  salesApprovedAt?: string;
+  salesApprovedBy?: string;
+  salesHandoffNote?: string;
+  internalNote?: string;
+  holdReason?: string | null;
+  holdNote?: string;
+  paymentFailed?: boolean;
+  checklist?: Partial<Record<ReadyStockChecklistKey, boolean>>;
+  carrierId?: string;
+  trackingCode?: string;
+  issueType?: string | null;
+  issueNote?: string;
+  itemStates?: Record<string, BackendOpsExecutionItemState>;
 }
 
 interface BackendItemCustomization {
@@ -75,9 +186,25 @@ interface BackendOrder {
   paymentStatus?: string;
   orderType?: string;
   status?: string;
+  opsStage?: string;
   note?: string;
   createdAt?: string;
   shippingAddress?: BackendShippingAddress;
+  shipment?: BackendShipment | null;
+  opsExecution?: BackendOpsExecution | null;
+}
+
+interface BackendShippingInfo {
+  orderId?: string;
+  orderStatus?: string;
+  opsStage?: string;
+  shippingMethod?: string;
+  shipment?: BackendShipment | null;
+  currentRole?: string;
+  permissions?: Record<string, boolean>;
+  roleMatrix?: Record<string, string[]>;
+  testMode?: boolean;
+  testStatusOptions?: string[];
 }
 
 export interface OrderItem {
@@ -113,11 +240,68 @@ export interface OrderItem {
   } | null;
 }
 
+export interface OrderShipment {
+  provider: string;
+  state: string;
+  orderCode: string;
+  clientOrderCode: string;
+  shopId: number | null;
+  serviceId: number | null;
+  serviceTypeId: number | null;
+  serviceName: string;
+  latestStatus: string;
+  latestFailCode: string;
+  latestFailReason: string;
+  labelToken: string;
+  leadtime?: string;
+  shippingFee: number;
+  codAmount: number;
+  trackingCode: string;
+  trackingUrl: string;
+  lastAction: string;
+  lastActionAt?: string;
+  lastSyncedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  latestSnapshot?: unknown;
+}
+
+export interface OrderShippingInfo {
+  orderId: string;
+  orderStatus: string;
+  opsStage?: OrderOpsStage;
+  shippingMethod: string;
+  shipment: OrderShipment | null;
+  currentRole: string;
+  permissions: Partial<Record<OrderShippingAction, boolean>>;
+  roleMatrix: Record<string, string[]>;
+  testMode: boolean;
+  testStatusOptions: OrderShippingTestStatus[];
+}
+
+export interface OrderOpsExecutionPatch {
+  assignee?: string;
+  salesApprovedAt?: string;
+  salesApprovedBy?: string;
+  salesHandoffNote?: string;
+  internalNote?: string;
+  holdReason?: ReadyStockOrderOpsState['holdReason'];
+  holdNote?: string;
+  paymentFailed?: boolean;
+  checklist?: Partial<Record<ReadyStockChecklistKey, boolean>>;
+  carrierId?: string;
+  trackingCode?: string;
+  issueType?: ReadyStockIssueType | null;
+  issueNote?: string;
+  itemStates?: Record<string, Partial<ReadyStockItemOpsState>>;
+}
+
 export interface OrderRecord {
   id: string;
   code: string;
   status: UiOrderStatus;
   rawStatus: string;
+  opsStage?: OrderOpsStage;
   paymentStatus: UiPaymentStatus;
   paymentMethod: string;
   orderType: string;
@@ -131,6 +315,8 @@ export interface OrderRecord {
   paidAmount: number;
   note: string;
   createdAt?: string;
+  shipment?: OrderShipment | null;
+  opsExecution?: Partial<ReadyStockOrderOpsState> | null;
 }
 
 export interface OrdersResponse {
@@ -145,24 +331,207 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function mapOrderStatus(rawStatus?: string): UiOrderStatus {
-  const normalized = String(rawStatus || '').trim().toLowerCase();
+  const normalized = String(rawStatus || '')
+    .trim()
+    .toLowerCase();
 
   if (normalized === 'delivered') return 'completed';
-  if (normalized === 'cancelled' || normalized === 'returned') return 'cancelled';
-  if (normalized === 'confirmed' || normalized === 'processing' || normalized === 'shipped') {
+  if (normalized === 'cancelled' || normalized === 'returned')
+    return 'cancelled';
+  if (
+    normalized === 'confirmed' ||
+    normalized === 'processing' ||
+    normalized === 'shipped'
+  ) {
     return 'processing';
   }
   return 'pending';
 }
 
-function mapPaymentStatus(rawStatus?: string, paymentMethod?: string): UiPaymentStatus {
-  const normalizedMethod = String(paymentMethod || '').trim().toLowerCase();
+function mapPaymentStatus(
+  rawStatus?: string,
+  paymentMethod?: string
+): UiPaymentStatus {
+  const normalizedMethod = String(paymentMethod || '')
+    .trim()
+    .toLowerCase();
   if (normalizedMethod === 'cod') return 'cod';
 
-  const normalized = String(rawStatus || '').trim().toLowerCase();
+  const normalized = String(rawStatus || '')
+    .trim()
+    .toLowerCase();
   if (normalized === 'paid') return 'paid';
   if (normalized === 'partial') return 'partial';
   return 'pending';
+}
+
+function mapShipment(raw?: BackendShipment | null): OrderShipment | null {
+  if (!raw || !isRecord(raw)) return null;
+
+  return {
+    provider: String(raw.provider || '')
+      .trim()
+      .toLowerCase(),
+    state: String(raw.state || '')
+      .trim()
+      .toLowerCase(),
+    orderCode: String(raw.orderCode || '').trim(),
+    clientOrderCode: String(raw.clientOrderCode || '').trim(),
+    shopId: Number.isFinite(Number(raw.shopId)) ? Number(raw.shopId) : null,
+    serviceId: Number.isFinite(Number(raw.serviceId))
+      ? Number(raw.serviceId)
+      : null,
+    serviceTypeId: Number.isFinite(Number(raw.serviceTypeId))
+      ? Number(raw.serviceTypeId)
+      : null,
+    serviceName: String(raw.serviceName || '').trim(),
+    latestStatus: String(raw.latestStatus || '')
+      .trim()
+      .toLowerCase(),
+    latestFailCode: String(raw.latestFailCode || '').trim(),
+    latestFailReason: String(raw.latestFailReason || '').trim(),
+    labelToken: String(raw.labelToken || '').trim(),
+    leadtime: String(raw.leadtime || '').trim() || undefined,
+    shippingFee: Number(raw.shippingFee || 0),
+    codAmount: Number(raw.codAmount || 0),
+    trackingCode:
+      String(raw.trackingCode || '').trim() ||
+      String(raw.orderCode || '').trim(),
+    trackingUrl: String(raw.trackingUrl || '').trim(),
+    lastAction: String(raw.lastAction || '').trim(),
+    lastActionAt: String(raw.lastActionAt || '').trim() || undefined,
+    lastSyncedAt: String(raw.lastSyncedAt || '').trim() || undefined,
+    createdAt: String(raw.createdAt || '').trim() || undefined,
+    updatedAt: String(raw.updatedAt || '').trim() || undefined,
+    latestSnapshot: raw.latestSnapshot,
+  };
+}
+
+function mapOpsExecutionItemState(
+  raw?: BackendOpsExecutionItemState
+): ReadyStockItemOpsState {
+  return {
+    picked: Boolean(raw?.picked),
+    warehouseLocation: String(raw?.warehouseLocation || '').trim(),
+    issueType: (String(raw?.issueType || '').trim().toLowerCase() ||
+      null) as ReadyStockIssueType | null,
+    issueNote: String(raw?.issueNote || '').trim(),
+    internalNote: String(raw?.internalNote || '').trim(),
+  };
+}
+
+function mapOpsExecution(
+  raw?: BackendOpsExecution | null
+): Partial<ReadyStockOrderOpsState> | null {
+  if (!raw || !isRecord(raw)) return null;
+
+  const itemStates = isRecord(raw.itemStates)
+    ? Object.fromEntries(
+        Object.entries(raw.itemStates).map(([key, value]) => [
+          key,
+          mapOpsExecutionItemState(value as BackendOpsExecutionItemState),
+        ])
+      )
+    : {};
+
+  const checklist = isRecord(raw.checklist)
+    ? {
+        skuQuantityChecked: Boolean(raw.checklist.skuQuantityChecked),
+        productConditionChecked: Boolean(raw.checklist.productConditionChecked),
+        addressChecked: Boolean(raw.checklist.addressChecked),
+        packageReady: Boolean(raw.checklist.packageReady),
+      }
+    : undefined;
+
+  return {
+    lastUpdatedAt:
+      typeof raw.lastUpdatedAt === 'string' ? raw.lastUpdatedAt : undefined,
+    assignee: String(raw.assignee || '').trim(),
+    salesApprovedAt:
+      typeof raw.salesApprovedAt === 'string' ? raw.salesApprovedAt : undefined,
+    salesApprovedBy: String(raw.salesApprovedBy || '').trim(),
+    salesHandoffNote: String(raw.salesHandoffNote || '').trim(),
+    internalNote: String(raw.internalNote || '').trim(),
+    holdReason: (String(raw.holdReason || '').trim().toLowerCase() ||
+      null) as ReadyStockOrderOpsState['holdReason'],
+    holdNote: String(raw.holdNote || '').trim(),
+    paymentFailed: Boolean(raw.paymentFailed),
+    checklist,
+    carrierId: String(raw.carrierId || '').trim().toLowerCase(),
+    trackingCode: String(raw.trackingCode || '').trim(),
+    issueType: (String(raw.issueType || '').trim().toLowerCase() ||
+      null) as ReadyStockIssueType | null,
+    issueNote: String(raw.issueNote || '').trim(),
+    itemStates,
+  };
+}
+
+function mapOpsStage(rawStage?: string): OrderOpsStage | undefined {
+  const normalized = String(rawStage || '')
+    .trim()
+    .toLowerCase();
+
+  if (!normalized) return undefined;
+
+  const knownStages: OrderOpsStage[] = [
+    'none',
+    'pending_operations',
+    'picking',
+    'waiting_customer_info',
+    'on_hold',
+    'waiting_arrival',
+    'arrived',
+    'stocked',
+    'ready_to_pack',
+    'waiting_lab',
+    'lens_processing',
+    'lens_fitting',
+    'qc_check',
+    'packing',
+    'ready_to_ship',
+    'shipment_created',
+    'handover_to_carrier',
+    'in_transit',
+    'delivery_failed',
+    'waiting_redelivery',
+    'return_pending',
+    'return_in_transit',
+    'exception_hold',
+    'delivered',
+    'closed',
+    'returned',
+    'cancelled',
+  ];
+
+  return knownStages.includes(normalized as OrderOpsStage)
+    ? (normalized as OrderOpsStage)
+    : undefined;
+}
+
+function mapShippingPermissions(
+  value: unknown
+): Partial<Record<OrderShippingAction, boolean>> {
+  if (!isRecord(value)) return {};
+
+  const output: Partial<Record<OrderShippingAction, boolean>> = {};
+  const keys: OrderShippingAction[] = [
+    'view_tracking',
+    'create_shipment',
+    'sync_shipment',
+    'update_test_status',
+    'print_label',
+    'cancel_shipment',
+    'return_shipment',
+    'delivery_again',
+  ];
+
+  for (const key of keys) {
+    if (typeof value[key] === 'boolean') {
+      output[key] = value[key] as boolean;
+    }
+  }
+
+  return output;
 }
 
 function toVariantLabel(item?: BackendOrderItem): string {
@@ -173,7 +542,12 @@ function toVariantLabel(item?: BackendOrderItem): string {
 }
 
 function toAddressLabel(address?: BackendShippingAddress): string {
-  const parts = [address?.line1, address?.district, address?.province]
+  const parts = [
+    address?.line1,
+    address?.ward,
+    address?.district,
+    address?.province,
+  ]
     .map((value) => String(value || '').trim())
     .filter(Boolean);
   return parts.join(', ');
@@ -186,21 +560,26 @@ function mapOrderItem(raw: BackendOrderItem): OrderItem {
   const normalizedMode: PrescriptionMode =
     mode === 'manual' || mode === 'upload' ? mode : 'none';
   const prescriptionPayload = raw?.customization?.prescription;
-  const rightEye: NonNullable<BackendItemCustomization['prescription']>['rightEye'] =
-    prescriptionPayload?.rightEye || {};
-  const leftEye: NonNullable<BackendItemCustomization['prescription']>['leftEye'] =
-    prescriptionPayload?.leftEye || {};
+  const rightEye: NonNullable<
+    BackendItemCustomization['prescription']
+  >['rightEye'] = prescriptionPayload?.rightEye || {};
+  const leftEye: NonNullable<
+    BackendItemCustomization['prescription']
+  >['leftEye'] = prescriptionPayload?.leftEye || {};
   const attachmentUrls = Array.isArray(prescriptionPayload?.attachmentUrls)
     ? prescriptionPayload?.attachmentUrls
         .map((url) => String(url || '').trim())
         .filter(Boolean)
     : [];
-  const hasPrescription = normalizedMode === 'manual' || normalizedMode === 'upload';
+  const hasPrescription =
+    normalizedMode === 'manual' || normalizedMode === 'upload';
 
   return {
     id: String(raw?._id || '').trim(),
     name: String(raw?.name || '').trim() || 'Sản phẩm',
-    type: String(raw?.type || '').trim().toLowerCase(),
+    type: String(raw?.type || '')
+      .trim()
+      .toLowerCase(),
     quantity: Number(raw?.quantity || 0),
     unitPrice: Number(raw?.unitPrice || 0),
     lineTotal: Number(raw?.lineTotal || 0),
@@ -244,11 +623,20 @@ function mapBackendOrder(raw: BackendOrder): OrderRecord {
     id,
     code,
     status: mapOrderStatus(raw.status),
-    rawStatus: String(raw.status || '').trim().toLowerCase() || 'pending',
+    rawStatus:
+      String(raw.status || '')
+        .trim()
+        .toLowerCase() || 'pending',
+    opsStage: mapOpsStage(raw.opsStage),
     paymentStatus: mapPaymentStatus(raw.paymentStatus, raw.paymentMethod),
-    paymentMethod: String(raw.paymentMethod || '').trim().toLowerCase(),
-    orderType: String(raw.orderType || '').trim().toLowerCase(),
-    customerName: String(raw.shippingAddress?.fullName || '').trim() || 'Khách hàng',
+    paymentMethod: String(raw.paymentMethod || '')
+      .trim()
+      .toLowerCase(),
+    orderType: String(raw.orderType || '')
+      .trim()
+      .toLowerCase(),
+    customerName:
+      String(raw.shippingAddress?.fullName || '').trim() || 'Khách hàng',
     customerPhone: String(raw.shippingAddress?.phone || '').trim(),
     customerAddress: toAddressLabel(raw.shippingAddress),
     items,
@@ -258,12 +646,15 @@ function mapBackendOrder(raw: BackendOrder): OrderRecord {
     paidAmount: Number(raw.paidAmount || 0),
     note: String(raw.note || '').trim(),
     createdAt: raw.createdAt,
+    shipment: mapShipment(raw.shipment),
+    opsExecution: mapOpsExecution(raw.opsExecution),
   };
 }
 
-function extractOrdersPayload(
-  payload: unknown
-): { rows: BackendOrder[]; pagination?: BackendEnvelope<unknown>['pagination'] } {
+function extractOrdersPayload(payload: unknown): {
+  rows: BackendOrder[];
+  pagination?: BackendEnvelope<unknown>['pagination'];
+} {
   if (typeof payload === 'string') {
     throw new Error('Invalid orders response (received string).');
   }
@@ -278,7 +669,9 @@ function extractOrdersPayload(
 
   const pagination =
     (payload.pagination as BackendEnvelope<unknown>['pagination']) ||
-    (isRecord(payload.data) ? ((payload.data as any).pagination as any) : undefined);
+    (isRecord(payload.data)
+      ? ((payload.data as any).pagination as any)
+      : undefined);
 
   const dataField = payload.data;
   if (Array.isArray(dataField)) {
@@ -315,11 +708,94 @@ function extractOrderPayload(payload: unknown): BackendOrder {
     return (payload as any).order as BackendOrder;
   }
 
-  if (typeof (payload as any)._id === 'string' || typeof (payload as any).id === 'string') {
+  if (
+    typeof (payload as any)._id === 'string' ||
+    typeof (payload as any).id === 'string'
+  ) {
     return payload as BackendOrder;
   }
 
   throw new Error('Invalid order response shape.');
+}
+
+function extractShippingPayload(payload: unknown): BackendShippingInfo {
+  if (typeof payload === 'string') {
+    throw new Error('Invalid shipping response (received string).');
+  }
+
+  if (!isRecord(payload)) {
+    throw new Error('Invalid shipping response.');
+  }
+
+  if (isRecord(payload.data)) {
+    return payload.data as BackendShippingInfo;
+  }
+
+  if (isRecord((payload as any).shipping)) {
+    return (payload as any).shipping as BackendShippingInfo;
+  }
+
+  if (isRecord(payload)) {
+    return payload as BackendShippingInfo;
+  }
+
+  throw new Error('Invalid shipping response shape.');
+}
+
+function mapShippingInfo(raw: BackendShippingInfo): OrderShippingInfo {
+  const roleMatrix = isRecord(raw.roleMatrix)
+    ? Object.fromEntries(
+        Object.entries(raw.roleMatrix).map(([role, actions]) => [
+          String(role || '')
+            .trim()
+            .toLowerCase(),
+          Array.isArray(actions)
+            ? actions
+                .map((action) =>
+                  String(action || '')
+                    .trim()
+                    .toLowerCase()
+                )
+                .filter(Boolean)
+            : [],
+        ])
+      )
+    : {};
+
+  return {
+    orderId: String(raw.orderId || '').trim(),
+    orderStatus: String(raw.orderStatus || '')
+      .trim()
+      .toLowerCase(),
+    opsStage: mapOpsStage(raw.opsStage),
+    shippingMethod: String(raw.shippingMethod || '')
+      .trim()
+      .toLowerCase(),
+    shipment: mapShipment(raw.shipment),
+    currentRole: String(raw.currentRole || '')
+      .trim()
+      .toLowerCase(),
+    permissions: mapShippingPermissions(raw.permissions),
+    roleMatrix,
+    testMode: Boolean(raw.testMode),
+    testStatusOptions: Array.isArray(raw.testStatusOptions)
+      ? raw.testStatusOptions
+          .map((status) =>
+            String(status || '')
+              .trim()
+              .toLowerCase()
+          )
+          .filter((status): status is OrderShippingTestStatus =>
+            [
+              'ready_to_pick',
+              'picking',
+              'transporting',
+              'delivered',
+              'returned',
+            ].includes(status)
+          )
+      : [],
+  };
 }
 
 export const orderApi = {
@@ -328,6 +804,7 @@ export const orderApi = {
     limit?: number;
     status?: string;
     paymentStatus?: string;
+    opsStage?: string;
     refundStatus?: string;
     userId?: string;
   }): Promise<OrdersResponse> => {
@@ -348,8 +825,75 @@ export const orderApi = {
     return mapBackendOrder(raw);
   },
 
+  getShipping: async (id: string): Promise<OrderShippingInfo> => {
+    const response = await apiClient.get(`/api/orders/${id}/shipping`);
+    return mapShippingInfo(extractShippingPayload(response.data));
+  },
+
+  createShipment: async (id: string): Promise<OrderShippingInfo> => {
+    const response = await apiClient.post(`/api/orders/${id}/shipping/create`);
+    return mapShippingInfo(extractShippingPayload(response.data));
+  },
+
+  syncShipment: async (id: string): Promise<OrderShippingInfo> => {
+    const response = await apiClient.post(`/api/orders/${id}/shipping/sync`);
+    return mapShippingInfo(extractShippingPayload(response.data));
+  },
+
+  updateShipmentTestStatus: async (
+    id: string,
+    status: OrderShippingTestStatus
+  ): Promise<OrderShippingInfo> => {
+    const response = await apiClient.post(`/api/orders/${id}/shipping/test-status`, {
+      status,
+    });
+    return mapShippingInfo(extractShippingPayload(response.data));
+  },
+
+  printShipmentLabel: async (id: string): Promise<OrderShippingInfo> => {
+    const response = await apiClient.post(
+      `/api/orders/${id}/shipping/print-label`
+    );
+    return mapShippingInfo(extractShippingPayload(response.data));
+  },
+
+  cancelShipment: async (id: string): Promise<OrderShippingInfo> => {
+    const response = await apiClient.post(`/api/orders/${id}/shipping/cancel`);
+    return mapShippingInfo(extractShippingPayload(response.data));
+  },
+
+  returnShipment: async (id: string): Promise<OrderShippingInfo> => {
+    const response = await apiClient.post(`/api/orders/${id}/shipping/return`);
+    return mapShippingInfo(extractShippingPayload(response.data));
+  },
+
+  requestDeliveryAgain: async (id: string): Promise<OrderShippingInfo> => {
+    const response = await apiClient.post(
+      `/api/orders/${id}/shipping/delivery-again`
+    );
+    return mapShippingInfo(extractShippingPayload(response.data));
+  },
+
   updateStatus: async (id: string, status: string): Promise<void> => {
     await apiClient.put(`/api/orders/${id}/status`, { status });
+  },
+
+  updateOpsStage: async (
+    id: string,
+    opsStage: OrderOpsStage
+  ): Promise<OrderRecord> => {
+    const response = await apiClient.put(`/api/orders/${id}/ops-stage`, {
+      opsStage,
+    });
+    return mapBackendOrder(extractOrderPayload(response.data));
+  },
+
+  updateOpsExecution: async (
+    id: string,
+    payload: OrderOpsExecutionPatch
+  ): Promise<OrderRecord> => {
+    const response = await apiClient.put(`/api/orders/${id}/ops-execution`, payload);
+    return mapBackendOrder(extractOrderPayload(response.data));
   },
 
   cancel: async (

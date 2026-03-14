@@ -1,13 +1,26 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
+
 import { routing } from '@/i18n/routing';
+import {
+  canAccessAdminArea,
+  canAccessManagerArea,
+  canAccessOperationArea,
+  canAccessStaffArea,
+} from '@/lib/roles';
 
 // In next-intl v4, localeDetection & localeCookie are part of the routing config
 const intlMiddleware = createMiddleware(routing);
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  const roleRestrictedAreas = [
+    { prefix: '/staff', canAccess: canAccessStaffArea },
+    { prefix: '/operation', canAccess: canAccessOperationArea },
+    { prefix: '/manager', canAccess: canAccessManagerArea },
+    { prefix: '/admin', canAccess: canAccessAdminArea },
+  ];
 
   // Skip API routes — handled by Next.js API routes or rewrites in next.config.js
   if (pathname.startsWith('/api/')) {
@@ -26,6 +39,27 @@ export async function proxy(request: NextRequest) {
     const session = await auth();
     if (!session) {
       return NextResponse.redirect(new URL('/login', request.url));
+    }
+  }
+
+  const matchedRoleArea = roleRestrictedAreas.find(
+    ({ prefix }) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+
+  if (matchedRoleArea) {
+    const { auth } = await import('@/lib/auth');
+    const session = await auth();
+
+    if (!session) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('callbackUrl', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    if (!matchedRoleArea.canAccess(session.user?.role)) {
+      const redirectUrl = new URL('/auth/post-login', request.url);
+      redirectUrl.searchParams.set('callbackUrl', pathname);
+      return NextResponse.redirect(redirectUrl);
     }
   }
 

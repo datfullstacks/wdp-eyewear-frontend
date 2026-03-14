@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
+import type {
+  OrderShippingInfo,
+  OrderShippingTestStatus,
+} from '@/api/orders';
 import type { PreorderOrder } from '@/types/preorder';
-import { carriers } from '@/types/fulfillment';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -12,103 +13,174 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+
+function formatDateTime(value?: string) {
+  if (!value) return '-';
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) return '-';
+  return dt.toLocaleString('vi-VN', { hour12: false });
+}
+
+const TEST_STATUS_LABEL: Record<OrderShippingTestStatus, string> = {
+  ready_to_pick: 'Cho lay hang',
+  picking: 'Shipper dang lay',
+  transporting: 'Dang giao',
+  delivered: 'Da giao',
+  returned: 'Hoan hang',
+};
 
 export function PreorderShipmentModal({
   open,
   onOpenChange,
   order,
   mode,
-  initialCarrierId,
-  initialTrackingCode,
+  shippingInfo,
+  isLoading,
+  isSubmitting,
+  errorMessage,
   onSubmit,
+  onAdvanceStatus,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   order: PreorderOrder | null;
-  mode: 'create' | 'update';
-  initialCarrierId: string;
-  initialTrackingCode: string;
-  onSubmit: (carrierId: string, trackingCode: string) => void;
+  mode: 'create' | 'sync';
+  shippingInfo: OrderShippingInfo | null;
+  isLoading: boolean;
+  isSubmitting: boolean;
+  errorMessage: string | null;
+  onSubmit: () => void;
+  onAdvanceStatus: (status: OrderShippingTestStatus) => void;
 }) {
-  const [carrierId, setCarrierId] = useState('');
-  const [trackingCode, setTrackingCode] = useState('');
-
-  useEffect(() => {
-    if (!open) return;
-
-    setCarrierId(initialCarrierId || '');
-    setTrackingCode(initialTrackingCode || '');
-  }, [initialCarrierId, initialTrackingCode, open]);
-
   if (!order) return null;
 
-  const isUpdate = mode === 'update';
-  const canSubmit = Boolean(carrierId && trackingCode.trim());
+  const isCreate = mode === 'create';
+  const shipment = shippingInfo?.shipment;
+  const canSubmit = isCreate
+    ? Boolean(shippingInfo?.permissions.create_shipment)
+    : Boolean(shippingInfo?.permissions.sync_shipment);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="text-foreground w-[92vw] max-w-[560px] p-4 shadow-2xl">
         <DialogHeader>
           <DialogTitle>
-            {isUpdate ? 'Cập nhật tracking' : 'Tạo vận đơn'} • {order.orderCode}
+            {isCreate ? 'Tao van don GHN' : 'Dong bo GHN'} • {order.orderCode}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="space-y-1">
-            <Label>Đơn vị vận chuyển</Label>
-            <Select value={carrierId} onValueChange={setCarrierId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn đơn vị vận chuyển" />
-              </SelectTrigger>
-              <SelectContent>
-                {carriers.map((carrier) => (
-                  <SelectItem key={carrier.id} value={carrier.id}>
-                    {carrier.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1">
-            <Label>Mã tracking</Label>
-            <Input
-              value={trackingCode}
-              onChange={(e) => setTrackingCode(e.target.value)}
-              placeholder="VD: GHN123456789"
-            />
-          </div>
-
-          {isUpdate && initialTrackingCode && (
-            <div className="text-foreground/70 text-xs">
-              Tracking hiện tại:{' '}
-              <span className="font-mono">{initialTrackingCode}</span>
+          <div className="border-border bg-muted/10 rounded-lg border p-3 text-sm">
+            <div className="font-medium">
+              {isCreate
+                ? 'Pre-order da san sang dong goi, co the tao van don GHN.'
+                : 'Dong bo lai GHN de cap nhat trang thai shipment va tracking.'}
             </div>
+            <div className="text-foreground/70 mt-1">
+              Carrier hien tai: GHN - Giao Hang Nhanh
+            </div>
+          </div>
+
+          {isLoading ? (
+            <div className="text-foreground/70 text-sm">
+              Dang tai thong tin GHN...
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <Label>Trang thai order</Label>
+                  <div className="text-sm font-semibold">
+                    {shippingInfo?.orderStatus || order.rawOrderStatus || '-'}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label>Shipping method</Label>
+                  <div className="text-sm font-semibold">
+                    {shippingInfo?.shippingMethod || '-'}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label>Ma van don GHN</Label>
+                  <div className="font-mono text-sm">
+                    {shipment?.orderCode || shipment?.trackingCode || '-'}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label>Trang thai GHN</Label>
+                  <div className="text-sm font-semibold">
+                    {shipment?.latestStatus || shipment?.state || '-'}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label>Dich vu</Label>
+                  <div className="text-sm font-semibold">
+                    {shipment?.serviceName || 'GHN'}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label>Leadtime</Label>
+                  <div className="text-sm font-semibold">
+                    {formatDateTime(shipment?.leadtime)}
+                  </div>
+                </div>
+              </div>
+
+              {shipment?.latestFailReason && (
+                <div className="border-destructive/20 bg-destructive/5 rounded-lg border p-3 text-sm">
+                  <div className="text-destructive font-medium">
+                    Ly do loi GHN
+                  </div>
+                  <div className="mt-1">{shipment.latestFailReason}</div>
+                </div>
+              )}
+
+              {shippingInfo?.testMode &&
+                Boolean(shippingInfo.permissions.update_test_status) &&
+                shippingInfo.testStatusOptions.length > 0 && (
+                  <div className="border-border bg-muted/10 rounded-lg border p-3 text-sm">
+                    <div className="font-medium">
+                      Cap nhat trang thai GHN theo thu tu (test mode)
+                    </div>
+                    <div className="text-foreground/70 mt-1">
+                      Chi cho phep chuyen sang buoc tiep theo hop le.
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {shippingInfo.testStatusOptions.map((status) => (
+                        <Button
+                          key={status}
+                          variant="outline"
+                          onClick={() => onAdvanceStatus(status)}
+                          disabled={isLoading || isSubmitting}
+                        >
+                          {TEST_STATUS_LABEL[status]}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+            </>
+          )}
+
+          {errorMessage && (
+            <div className="text-destructive text-sm">{errorMessage}</div>
           )}
         </div>
 
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Đóng
+            Dong
           </Button>
           <Button
-            onClick={() => {
-              onSubmit(carrierId, trackingCode.trim());
-              onOpenChange(false);
-            }}
-            disabled={!canSubmit}
+            onClick={onSubmit}
+            disabled={!canSubmit || isLoading || isSubmitting}
           >
-            {isUpdate ? 'Lưu tracking' : 'Lưu vận đơn'}
+            {isSubmitting
+              ? 'Dang xu ly...'
+              : isCreate
+                ? 'Tao van don GHN'
+                : 'Dong bo GHN'}
           </Button>
         </DialogFooter>
       </DialogContent>

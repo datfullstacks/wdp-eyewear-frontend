@@ -1,10 +1,15 @@
 'use client';
 
+import axios from 'axios';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Filter } from 'lucide-react';
 
 import { orderApi } from '@/api';
-import type { OrderRecord } from '@/api/orders';
+import type {
+  OrderRecord,
+  OrderShippingInfo,
+  OrderShippingTestStatus,
+} from '@/api/orders';
 import { Header } from '@/components/organisms/Header';
 import { SearchBar } from '@/components/molecules/SearchBar';
 import {
@@ -19,6 +24,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { mockReadyStockOrders } from '@/data/readyStockMock';
 import { isReadyStockOrder } from '@/lib/orderWorkflow';
+import { useStatusRealtimeReload } from '@/hooks/useStatusRealtime';
 import {
   createDefaultReadyStockOpsState,
   getReadyStockWarnings,
@@ -45,6 +51,21 @@ const DEFAULT_FILTERS: ReadyStockFilters = {
   hasWarningOnly: false,
 };
 
+function extractApiErrorMessage(error: unknown, fallback: string) {
+  if (axios.isAxiosError(error)) {
+    const message = error.response?.data?.message;
+    if (typeof message === 'string' && message.trim()) {
+      return message.trim();
+    }
+  }
+
+  if (error instanceof Error && error.message.trim()) {
+    return error.message.trim();
+  }
+
+  return fallback;
+}
+
 export default function OrdersReadyStock() {
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -70,9 +91,15 @@ export default function OrdersReadyStock() {
   const [holdOpen, setHoldOpen] = useState(false);
   const [shipmentOrder, setShipmentOrder] = useState<OrderRecord | null>(null);
   const [shipmentOpen, setShipmentOpen] = useState(false);
-  const [shipmentMode, setShipmentMode] = useState<'create' | 'update'>(
-    'create'
+  const [shipmentMode, setShipmentMode] = useState<'create' | 'sync'>('create');
+  const [shipmentInfo, setShipmentInfo] = useState<OrderShippingInfo | null>(
+    null
   );
+  const [shipmentErrorMessage, setShipmentErrorMessage] = useState<
+    string | null
+  >(null);
+  const [shipmentLoading, setShipmentLoading] = useState(false);
+  const [shipmentSubmitting, setShipmentSubmitting] = useState(false);
 
   const resolveOps = useCallback(
     (order: OrderRecord) =>
@@ -110,6 +137,18 @@ export default function OrdersReadyStock() {
   useEffect(() => {
     void loadOrders();
   }, [loadOrders]);
+
+  useEffect(() => {
+    for (const order of orders) {
+      const next = createDefaultReadyStockOpsState(order);
+      upsertOps(order.id, next);
+    }
+  }, [orders, upsertOps]);
+
+  useStatusRealtimeReload({
+    domains: ['order', 'shipping'],
+    reload: loadOrders,
+  });
 
   const assigneeOptions = useMemo(() => {
     const names = new Set<string>();
@@ -214,54 +253,142 @@ export default function OrdersReadyStock() {
   );
 
   const openShipmentModal = useCallback(
-    (order: OrderRecord, mode: 'create' | 'update') => {
+    async (order: OrderRecord, mode: 'create' | 'sync') => {
       ensureOps(order);
       setShipmentOrder(order);
       setShipmentMode(mode);
+      setShipmentInfo(null);
+      setShipmentErrorMessage(null);
       setShipmentOpen(true);
+      setShipmentLoading(true);
+
+      try {
+        const info = await orderApi.getShipping(order.id);
+        setShipmentInfo(info);
+      } catch {
+        setShipmentErrorMessage('Khong tai duoc thong tin GHN cho don nay.');
+      } finally {
+        setShipmentLoading(false);
+      }
     },
     [ensureOps]
   );
 
   const acceptOrder = useCallback(
-    (order: OrderRecord) => {
-      const current = ensureOps(order);
-      setAssignee(order.id, meName);
-
-      if (
-        current.opsStatus === 'pending_operations' ||
-        current.opsStatus === 'awaiting_picking'
-      ) {
+    async (order: OrderRecord) => {
+      try {
+        setErrorMessage(null);
+        await orderApi.updateOpsStage(order.id, 'picking');
+        setAssignee(order.id, meName);
         setStatus(order.id, 'picking');
+
+        await loadOrders();
+      } catch {
+        setErrorMessage('Khong the nhan xu ly don hang.');
       }
     },
-    [ensureOps, meName, setAssignee, setStatus]
+    [loadOrders, meName, setAssignee, setStatus]
   );
 
   const confirmPickedOrder = useCallback(
-    (order: OrderRecord) => {
+    async (order: OrderRecord) => {
       const current = ensureOps(order);
-      setAssignee(order.id, current.assignee || meName);
-      setStatus(order.id, 'packed');
+      try {
+        setErrorMessage(null);
+        await orderApi.updateOpsStage(order.id, 'packing');
+        setAssignee(order.id, current.assignee || meName);
+        setStatus(order.id, 'packing');
+        await loadOrders();
+      } catch {
+        setErrorMessage('Khong the xac nhan da lay du san pham.');
+      }
     },
-    [ensureOps, meName, setAssignee, setStatus]
+    [ensureOps, loadOrders, meName, setAssignee, setStatus]
   );
 
   const packOrder = useCallback(
-    (order: OrderRecord) => {
+    async (order: OrderRecord) => {
       const current = ensureOps(order);
-      setAssignee(order.id, current.assignee || meName);
-      setStatus(order.id, 'ready_to_ship');
+      try {
+        setErrorMessage(null);
+        await orderApi.updateOpsStage(order.id, 'ready_to_ship');
+        setAssignee(order.id, current.assignee || meName);
+        setStatus(order.id, 'ready_to_ship');
+        await loadOrders();
+      } catch {
+        setErrorMessage('Khong the xac nhan dong goi don hang.');
+      }
     },
-    [ensureOps, meName, setAssignee, setStatus]
+    [ensureOps, loadOrders, meName, setAssignee, setStatus]
   );
 
-  const completeShipping = useCallback(
-    (order: OrderRecord) => {
-      ensureOps(order);
-      setStatus(order.id, 'shipped');
+  const submitShipmentAction = useCallback(async () => {
+    if (!shipmentOrder) return;
+
+    setShipmentSubmitting(true);
+    setShipmentErrorMessage(null);
+
+    try {
+      const result =
+        shipmentMode === 'create'
+          ? await orderApi.createShipment(shipmentOrder.id)
+          : await orderApi.syncShipment(shipmentOrder.id);
+
+      const trackingCode =
+        result.shipment?.orderCode || result.shipment?.trackingCode || '';
+      const carrierId = result.shipment?.provider || 'ghn';
+
+      if (trackingCode) {
+        setTracking(shipmentOrder.id, carrierId, trackingCode);
+      }
+
+      setShipmentInfo(result);
+      setShipmentOpen(false);
+      setShipmentOrder(null);
+      await loadOrders();
+    } catch (error) {
+      setShipmentErrorMessage(
+        extractApiErrorMessage(
+          error,
+          shipmentMode === 'create'
+            ? 'Khong the tao van don GHN.'
+            : 'Khong the dong bo GHN.'
+        )
+      );
+    } finally {
+      setShipmentSubmitting(false);
+    }
+  }, [loadOrders, setTracking, shipmentMode, shipmentOrder]);
+
+  const advanceShipmentTestStatus = useCallback(
+    async (status: OrderShippingTestStatus) => {
+      if (!shipmentOrder) return;
+
+      setShipmentSubmitting(true);
+      setShipmentErrorMessage(null);
+
+      try {
+        const result = await orderApi.updateShipmentTestStatus(
+          shipmentOrder.id,
+          status
+        );
+        const trackingCode =
+          result.shipment?.orderCode || result.shipment?.trackingCode || '';
+        const carrierId = result.shipment?.provider || 'ghn';
+
+        if (trackingCode) {
+          setTracking(shipmentOrder.id, carrierId, trackingCode);
+        }
+
+        setShipmentInfo(result);
+        await loadOrders();
+      } catch {
+        setShipmentErrorMessage('Khong the cap nhat trang thai GHN test.');
+      } finally {
+        setShipmentSubmitting(false);
+      }
     },
-    [ensureOps, setStatus]
+    [loadOrders, setTracking, shipmentOrder]
   );
 
   return (
@@ -313,8 +440,9 @@ export default function OrdersReadyStock() {
           onConfirmPicked={confirmPickedOrder}
           onPack={packOrder}
           onCreateShipment={(order) => openShipmentModal(order, 'create')}
-          onUpdateTracking={(order) => openShipmentModal(order, 'update')}
-          onCompleteShipping={completeShipping}
+          onSyncShipment={(order) => {
+            void openShipmentModal(order, 'sync');
+          }}
           onHold={openHold}
           currentUserName={meName}
         />
@@ -336,6 +464,7 @@ export default function OrdersReadyStock() {
           if (!open) setDetailOrder(null);
         }}
         order={detailOrder}
+        onReload={loadOrders}
       />
 
       <ReadyStockHoldModal
@@ -347,13 +476,34 @@ export default function OrdersReadyStock() {
         order={holdOrder}
         initialReason={holdOrder ? resolveOps(holdOrder).holdReason : null}
         initialNote={holdOrder ? resolveOps(holdOrder).holdNote : ''}
-        onSubmit={(reason, note) => {
+        onSubmit={async (reason, note) => {
           if (!holdOrder) return;
           setHold(holdOrder.id, reason, note);
+          try {
+            const nextStage = reason === 'address' ? 'waiting_customer_info' : 'on_hold';
+            await orderApi.updateOpsExecution(holdOrder.id, {
+              holdReason: reason,
+              holdNote: note,
+            });
+            await orderApi.updateOpsStage(holdOrder.id, nextStage);
+            await loadOrders();
+          } catch {
+            setErrorMessage('Khong the luu hold tren backend.');
+          }
         }}
-        onClear={() => {
+        onClear={async () => {
           if (!holdOrder) return;
           clearHold(holdOrder.id);
+          try {
+            await orderApi.updateOpsExecution(holdOrder.id, {
+              holdReason: null,
+              holdNote: '',
+            });
+            await orderApi.updateOpsStage(holdOrder.id, 'pending_operations');
+            await loadOrders();
+          } catch {
+            setErrorMessage('Khong the go hold tren backend.');
+          }
         }}
       />
 
@@ -361,25 +511,23 @@ export default function OrdersReadyStock() {
         open={shipmentOpen}
         onOpenChange={(open) => {
           setShipmentOpen(open);
-          if (!open) setShipmentOrder(null);
+          if (!open) {
+            setShipmentOrder(null);
+            setShipmentInfo(null);
+            setShipmentErrorMessage(null);
+          }
         }}
         order={shipmentOrder}
         mode={shipmentMode}
-        initialCarrierId={
-          shipmentOrder ? resolveOps(shipmentOrder).carrierId : ''
-        }
-        initialTrackingCode={
-          shipmentOrder ? resolveOps(shipmentOrder).trackingCode : ''
-        }
-        onSubmit={(carrierId, trackingCode) => {
-          if (!shipmentOrder) return;
-
-          const current = ensureOps(shipmentOrder);
-          setTracking(shipmentOrder.id, carrierId, trackingCode);
-
-          if (current.opsStatus === 'packed') {
-            setStatus(shipmentOrder.id, 'ready_to_ship');
-          }
+        shippingInfo={shipmentInfo}
+        isLoading={shipmentLoading}
+        isSubmitting={shipmentSubmitting}
+        errorMessage={shipmentErrorMessage}
+        onSubmit={() => {
+          void submitShipmentAction();
+        }}
+        onAdvanceStatus={(status) => {
+          void advanceShipmentTestStatus(status);
         }}
       />
     </>

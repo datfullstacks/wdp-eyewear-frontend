@@ -1,14 +1,25 @@
 export type ReadyStockOpsStatus =
   | 'pending_operations'
-  | 'awaiting_picking'
   | 'picking'
-  | 'packed'
+  | 'packing'
   | 'ready_to_ship'
-  | 'shipped'
+  | 'shipment_created'
+  | 'handover_to_carrier'
   | 'in_transit'
-  | 'delivered'
   | 'delivery_failed'
+  | 'waiting_redelivery'
+  | 'return_pending'
+  | 'return_in_transit'
+  | 'waiting_customer_info'
+  | 'on_hold'
+  | 'exception_hold'
+  | 'delivered'
+  | 'closed'
   | 'returned'
+  // Legacy UI aliases kept temporarily for persisted local state compatibility.
+  | 'awaiting_picking'
+  | 'packed'
+  | 'shipped'
   | 'blocked';
 
 export type ReadyStockIssueType =

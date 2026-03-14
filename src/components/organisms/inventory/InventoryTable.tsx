@@ -1,3 +1,12 @@
+import { Button } from '@/components/ui/button';
+import { InventoryStatusBadge } from '@/components/atoms/InventoryStatusBadge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -6,18 +15,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { InventoryStatusBadge } from '@/components/atoms/InventoryStatusBadge';
-
 import { InventoryItem } from '@/types/inventory';
-import { MoreHorizontal, Eye, Edit, History } from 'lucide-react';
+import { Edit, Eye, History, MoreHorizontal } from 'lucide-react';
 
 interface InventoryTableProps {
   items: InventoryItem[];
@@ -37,12 +36,12 @@ export const InventoryTable = ({
       <Table className="text-sm font-normal">
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead>Sản phẩm</TableHead>
-            <TableHead>Thương hiệu</TableHead>
-            <TableHead>Biến thể</TableHead>
-            <TableHead className="text-center">Tồn kho</TableHead>
-            <TableHead>Vị trí</TableHead>
-            <TableHead>Trạng thái</TableHead>
+            <TableHead>San pham</TableHead>
+            <TableHead>Thuong hieu</TableHead>
+            <TableHead>Bien the</TableHead>
+            <TableHead className="text-center">Ton kho</TableHead>
+            <TableHead>Vi tri</TableHead>
+            <TableHead>Trang thai</TableHead>
             <TableHead className="w-[60px]"></TableHead>
           </TableRow>
         </TableHeader>
@@ -52,9 +51,7 @@ export const InventoryTable = ({
               <TableCell>
                 <div>
                   <p className="text-foreground font-normal">{item.name}</p>
-                  <p className="text-foreground/80 text-sm">
-                    {item.category}
-                  </p>
+                  <p className="text-foreground/80 text-sm">{item.category}</p>
                 </div>
               </TableCell>
               <TableCell className="text-foreground/90 text-sm">
@@ -64,11 +61,13 @@ export const InventoryTable = ({
                 {item.variant}
               </TableCell>
               <TableCell className="text-center">
-                <div className="flex items-center justify-center gap-1">
-                  <span className="text-foreground font-normal">
-                    {item.stock}
+                {item.trackInventory !== false ? (
+                  <span className="text-foreground font-normal">{item.stock}</span>
+                ) : (
+                  <span className="text-foreground/70 text-xs font-medium uppercase tracking-wide">
+                    Khong theo doi
                   </span>
-                </div>
+                )}
               </TableCell>
               <TableCell className="text-foreground/90 text-sm">
                 {item.location}
@@ -90,16 +89,21 @@ export const InventoryTable = ({
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => onViewDetail(item)}>
                       <Eye className="mr-2 h-4 w-4" />
-                      Xem chi tiết
+                      Xem chi tiet
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onEditStock(item)}>
+                    <DropdownMenuItem
+                      onClick={() => onEditStock(item)}
+                      disabled={item.trackInventory === false}
+                    >
                       <Edit className="mr-2 h-4 w-4" />
-                      Cập nhật tồn kho
+                      {item.trackInventory !== false
+                        ? 'Cap nhat ton kho'
+                        : 'Khong theo doi ton'}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => onViewHistory(item)}>
                       <History className="mr-2 h-4 w-4" />
-                      Lịch sử xuất nhập
+                      Lich su xuat nhap
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

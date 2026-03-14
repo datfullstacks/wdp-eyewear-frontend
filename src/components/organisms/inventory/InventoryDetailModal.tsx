@@ -1,3 +1,7 @@
+import { useCallback } from 'react';
+import { Copy } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -5,11 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { InventoryItem } from '@/types/inventory';
-import { cn } from '@/lib/utils';
-import { Copy } from 'lucide-react';
-import { useCallback } from 'react';
 
 function formatDateTime(value?: string) {
   if (!value) return '-';
@@ -17,19 +17,7 @@ function formatDateTime(value?: string) {
   const trimmed = value.trim();
   if (!trimmed) return '-';
 
-  let date: Date | null = null;
-
-  if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(trimmed)) {
-    date = new Date(trimmed.replace(' ', 'T'));
-  } else if (/^\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}/.test(trimmed)) {
-    const [d, t] = trimmed.split(/\s+/);
-    const [day, month, year] = d.split('/').map(Number);
-    const [hour, minute] = t.split(':').map(Number);
-    date = new Date(year, month - 1, day, hour, minute);
-  } else {
-    date = new Date(trimmed);
-  }
-
+  const date = new Date(trimmed);
   if (Number.isNaN(date.getTime())) return value;
 
   return new Intl.DateTimeFormat('vi-VN', {
@@ -47,17 +35,21 @@ function stockTone(status: InventoryItem['status']) {
     low_stock: 'border-amber-200 bg-amber-50',
     out_of_stock: 'border-rose-200 bg-rose-50',
     overstock: 'border-sky-200 bg-sky-50',
+    not_tracked: 'border-slate-200 bg-slate-50',
   };
+
   return map[status] || 'border-slate-200 bg-slate-50';
 }
 
 function toStatusLabel(status: InventoryItem['status']) {
   const map: Record<InventoryItem['status'], string> = {
-    in_stock: 'Còn hàng',
-    low_stock: 'Sắp hết',
-    out_of_stock: 'Hết hàng',
-    overstock: 'Tồn nhiều',
+    in_stock: 'Con hang',
+    low_stock: 'Sap het',
+    out_of_stock: 'Het hang',
+    overstock: 'Ton nhieu',
+    not_tracked: 'Khong theo doi ton',
   };
+
   return map[status] || status;
 }
 
@@ -81,15 +73,16 @@ export const InventoryDetailModal = ({
   open,
   onOpenChange,
 }: InventoryDetailModalProps) => {
-  if (!item) return null;
-
   const handleCopySku = useCallback(async () => {
+    if (!item?.sku) return;
     try {
-      await navigator.clipboard.writeText(item.sku || '');
+      await navigator.clipboard.writeText(item.sku);
     } catch {
       // noop
     }
-  }, [item.sku]);
+  }, [item?.sku]);
+
+  if (!item) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -97,7 +90,7 @@ export const InventoryDetailModal = ({
         <DialogHeader className="border-b border-slate-200/70 p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <DialogTitle>Chi tiết tồn kho</DialogTitle>
+              <DialogTitle>Chi tiet ton kho</DialogTitle>
               <DialogDescription className="text-foreground/90 mt-1 flex items-center gap-2">
                 <span className="font-mono text-sm">{item.sku}</span>
                 <Button
@@ -110,34 +103,45 @@ export const InventoryDetailModal = ({
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
-                </DialogDescription>
-              </div>
+              </DialogDescription>
             </div>
-          </DialogHeader>
+          </div>
+        </DialogHeader>
 
         <div className="space-y-4 p-4">
           <div className="rounded-xl border border-slate-200/70 bg-slate-50 p-3">
             <div className="grid grid-cols-2 gap-3">
-              <InfoItem label="Sản phẩm" value={item.name} />
-              <InfoItem label="Thương hiệu" value={item.brand} />
-              <InfoItem label="Danh mục" value={item.category} />
-              <InfoItem label="Biến thể" value={item.variant} />
+              <InfoItem label="San pham" value={item.name} />
+              <InfoItem label="Thuong hieu" value={item.brand} />
+              <InfoItem label="Danh muc" value={item.category} />
+              <InfoItem label="Bien the" value={item.variant} />
             </div>
           </div>
 
           <div className={cn('rounded-xl border p-3', stockTone(item.status))}>
             <p className="text-foreground/80 text-sm font-semibold">
-              Thông tin tồn kho
+              Thong tin ton kho
             </p>
             <div className="mt-2 flex items-end justify-between gap-3">
               <div>
-                <p className="text-foreground text-3xl font-bold">
-                  {item.stock}
-                </p>
-                <p className="text-foreground/70 text-xs">Tồn kho hiện tại</p>
+                {item.trackInventory !== false ? (
+                  <>
+                    <p className="text-foreground text-3xl font-bold">{item.stock}</p>
+                    <p className="text-foreground/70 text-xs">Ton kho hien tai</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-foreground text-lg font-bold">
+                      Khong theo doi ton
+                    </p>
+                    <p className="text-foreground/70 text-xs">
+                      San pham nay khong tru ton tu dong
+                    </p>
+                  </>
+                )}
               </div>
               <div className="text-right">
-                <p className="text-foreground/70 text-xs">Cập nhật lần cuối</p>
+                <p className="text-foreground/70 text-xs">Cap nhat lan cuoi</p>
                 <p className="text-foreground font-semibold">
                   {formatDateTime(item.lastUpdated)}
                 </p>
@@ -146,10 +150,16 @@ export const InventoryDetailModal = ({
           </div>
 
           <div className="grid grid-cols-2 gap-3 rounded-xl border border-slate-200/70 bg-white/80 p-3">
-            <InfoItem label="Tồn tối thiểu" value={String(item.minStock)} />
-            <InfoItem label="Tồn tối đa" value={String(item.maxStock)} />
-            <InfoItem label="Vị trí kho" value={item.location} />
-            <InfoItem label="Trạng thái" value={toStatusLabel(item.status)} />
+            <InfoItem
+              label="Ton toi thieu"
+              value={item.trackInventory !== false ? String(item.minStock) : '-'}
+            />
+            <InfoItem
+              label="Ton toi da"
+              value={item.trackInventory !== false ? String(item.maxStock) : '-'}
+            />
+            <InfoItem label="Vi tri kho" value={item.location} />
+            <InfoItem label="Trang thai" value={toStatusLabel(item.status)} />
           </div>
         </div>
       </DialogContent>
