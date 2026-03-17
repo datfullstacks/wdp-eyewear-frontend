@@ -41,7 +41,9 @@ export const SalePOSDashboard: React.FC = () => {
   const [selectedVariantByProduct, setSelectedVariantByProduct] = useState<
     Record<string, string>
   >({});
-  const [quantityByProduct, setQuantityByProduct] = useState<Record<string, number>>({});
+  const [quantityByProduct, setQuantityByProduct] = useState<
+    Record<string, number>
+  >({});
 
   const cartItems = useSaleCartStore((state) => state.items);
   const addToCart = useSaleCartStore((state) => state.addToCart);
@@ -107,7 +109,12 @@ export const SalePOSDashboard: React.FC = () => {
     if (!keyword) return products;
 
     return products.filter((product) => {
-      const text = [product.name, product.brand, product.type, product.description]
+      const text = [
+        product.name,
+        product.brand,
+        product.type,
+        product.description,
+      ]
         .filter(Boolean)
         .join(' ')
         .toLowerCase();
@@ -116,7 +123,10 @@ export const SalePOSDashboard: React.FC = () => {
     });
   }, [products, searchTerm]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)
+  );
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
@@ -134,7 +144,9 @@ export const SalePOSDashboard: React.FC = () => {
     const variant = product.variants.find((item) => item._id === variantId);
 
     if (!variant) {
-      setActionError(`Bạn cần chọn variant cho sản phẩm "${product.name}" trước khi thêm giỏ hàng.`);
+      setActionError(
+        `Bạn cần chọn variant cho sản phẩm "${product.name}" trước khi thêm giỏ hàng.`
+      );
       return;
     }
 
@@ -163,19 +175,20 @@ export const SalePOSDashboard: React.FC = () => {
   return (
     <>
       <div className="flex h-screen flex-col bg-gray-50">
-        <SaleHeader cartItemCount={itemCount} onCartClick={() => setIsCartOpen(true)} />
+        <SaleHeader
+          cartItemCount={itemCount}
+          onCartClick={() => setIsCartOpen(true)}
+        />
 
         <div className="border-b border-gray-200 bg-white p-6">
-          <SearchBar
-            placeholder="Tìm sản phẩm theo tên / brand / type..."
-            value={searchTerm}
-            onChange={setSearchTerm}
-            className="h-11 max-w-none"
-          />
-
-          <p className="mt-3 text-sm text-gray-600">
-            Tìm thấy <strong>{filteredProducts.length}</strong> sản phẩm
-          </p>
+          <div className="w-full max-w-[420px]">
+            <SearchBar
+              placeholder="Tìm sản phẩm theo tên / brand / type..."
+              value={searchTerm}
+              onChange={setSearchTerm}
+              className="h-11"
+            />
+          </div>
 
           {actionError && (
             <div className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -200,9 +213,12 @@ export const SalePOSDashboard: React.FC = () => {
             <>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                 {paginatedProducts.map((product) => {
-                  const selectedVariantId = selectedVariantByProduct[product._id] || '';
+                  const selectedVariantId =
+                    selectedVariantByProduct[product._id] || '';
                   const selectedVariant =
-                    product.variants.find((variant) => variant._id === selectedVariantId) || null;
+                    product.variants.find(
+                      (variant) => variant._id === selectedVariantId
+                    ) || null;
                   const selectedStock = Number(selectedVariant?.stock || 0);
                   const selectedPrice = Number(
                     selectedVariant?.price ??
@@ -210,7 +226,10 @@ export const SalePOSDashboard: React.FC = () => {
                       product.pricing?.basePrice ??
                       0
                   );
-                  const qty = Math.max(1, Number(quantityByProduct[product._id] || 1));
+                  const qty = Math.max(
+                    1,
+                    Number(quantityByProduct[product._id] || 1)
+                  );
                   const option = mapProductToOption(product);
 
                   return (
@@ -228,8 +247,11 @@ export const SalePOSDashboard: React.FC = () => {
                           <p className="line-clamp-2 text-sm font-semibold text-gray-900">
                             {product.name}
                           </p>
-                          <p className="mt-1 text-xs text-gray-600">
-                            {product.brand || '-'} • {typeLabels[product.type || ''] || product.type || '-'}
+                          <p className="mt-1 text-sm text-gray-700">
+                            {product.brand || '-'} •{' '}
+                            {typeLabels[product.type || ''] ||
+                              product.type ||
+                              '-'}
                           </p>
                           <p className="mt-1 text-sm font-semibold text-blue-700">
                             {selectedPrice.toLocaleString('vi-VN')} ₫
@@ -238,7 +260,9 @@ export const SalePOSDashboard: React.FC = () => {
                       </div>
 
                       <div className="mt-3">
-                        <label className="mb-1 block text-xs font-medium text-gray-700">Variant</label>
+                        <label className="mb-2 block text-sm font-semibold text-gray-900">
+                          Biến thể
+                        </label>
                         <select
                           value={selectedVariantId}
                           onChange={(event) =>
@@ -247,18 +271,24 @@ export const SalePOSDashboard: React.FC = () => {
                               [product._id]: event.target.value,
                             }))
                           }
-                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 shadow-sm outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-100"
                         >
                           <option value="">-- Chọn variant --</option>
                           {product.variants.map((variant) => {
                             const color = variant.options?.color || '-';
                             const size = variant.options?.size || '-';
                             const stock = Number(variant.stock || 0);
-                            const price = Number(variant.price || 0).toLocaleString('vi-VN');
+                            const price = Number(
+                              variant.price || 0
+                            ).toLocaleString('vi-VN');
 
                             return (
-                              <option key={variant._id} value={variant._id} disabled={stock <= 0}>
-                                {color}/{size} • {price} ₫ • stock: {stock}
+                              <option
+                                key={variant._id}
+                                value={variant._id}
+                                disabled={stock <= 0}
+                              >
+                                {color}/{size} • {price} ₫ • Tồn kho: {stock}
                               </option>
                             );
                           })}
@@ -267,27 +297,35 @@ export const SalePOSDashboard: React.FC = () => {
 
                       <div className="mt-3 flex items-center justify-between gap-3">
                         <div>
-                          <label className="mb-1 block text-xs font-medium text-gray-700">Số lượng</label>
+                          <label className="mb-2 block text-sm font-semibold text-gray-900">
+                            Số lượng
+                          </label>
                           <input
                             type="number"
                             min={1}
                             max={Math.max(1, selectedStock || 1)}
                             value={qty}
                             onChange={(event) => {
-                              const next = Math.max(1, Number(event.target.value || 1));
+                              const next = Math.max(
+                                1,
+                                Number(event.target.value || 1)
+                              );
                               setQuantityByProduct((prev) => ({
                                 ...prev,
                                 [product._id]: next,
                               }));
                             }}
-                            className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                            className="w-28 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-100"
                           />
                         </div>
 
-                        <div className="text-right text-xs text-gray-600">
-                          <p>Stock: {selectedStock || 0}</p>
-                          <p>
-                            Thành tiền: {(selectedPrice * qty).toLocaleString('vi-VN')} ₫
+                        <div className="rounded-lg bg-slate-50 px-3 py-2 text-right text-sm text-gray-800">
+                          <p className="font-medium">
+                            Tồn kho: {selectedStock || 0}
+                          </p>
+                          <p className="mt-1 font-medium">
+                            Thành tiền:{' '}
+                            {(selectedPrice * qty).toLocaleString('vi-VN')} ₫
                           </p>
                         </div>
                       </div>
@@ -334,4 +372,3 @@ export const SalePOSDashboard: React.FC = () => {
     </>
   );
 };
-
