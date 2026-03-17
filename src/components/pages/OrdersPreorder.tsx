@@ -13,8 +13,6 @@ import { SearchBar } from '@/components/molecules/SearchBar';
 import { Header } from '@/components/organisms/Header';
 import {
   CancelModal,
-  LinkBatchModal,
-  PreorderContactModal,
   PreorderDetailModal,
   PreorderShipmentModal,
   PreorderStatsGrid,
@@ -64,13 +62,6 @@ const OrdersPreorder = () => {
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [detailOrder, setDetailOrder] = useState<PreorderOrder | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [isLinkBatchOpen, setIsLinkBatchOpen] = useState(false);
-  const [linkBatchOrder, setLinkBatchOrder] = useState<PreorderOrder | null>(
-    null
-  );
-  const [isContactOpen, setIsContactOpen] = useState(false);
-  const [contactOrder, setContactOrder] = useState<PreorderOrder | null>(null);
-  const [contactNote, setContactNote] = useState('');
   const [isCancelOpen, setIsCancelOpen] = useState(false);
   const [cancelOrder, setCancelOrder] = useState<PreorderOrder | null>(null);
   const [cancelReason, setCancelReason] = useState('');
@@ -132,8 +123,6 @@ const OrdersPreorder = () => {
         prev.map((order) => (order.id === orderId ? updater(order) : order))
       );
       setDetailOrder((prev) => updateCurrent(prev));
-      setLinkBatchOrder((prev) => updateCurrent(prev));
-      setContactOrder((prev) => updateCurrent(prev));
       setCancelOrder((prev) => updateCurrent(prev));
       setShipmentOrder((prev) => updateCurrent(prev));
     },
@@ -339,15 +328,6 @@ const OrdersPreorder = () => {
             setDetailOrder(order);
             setIsDetailOpen(true);
           }}
-          onLinkBatch={(order) => {
-            setLinkBatchOrder(order);
-            setIsLinkBatchOpen(true);
-          }}
-          onContact={(order) => {
-            setContactOrder(order);
-            setContactNote('');
-            setIsContactOpen(true);
-          }}
           onCancel={(order) => {
             setCancelOrder(order);
             setCancelReason('');
@@ -376,24 +356,6 @@ const OrdersPreorder = () => {
           order={detailOrder}
           open={isDetailOpen}
           onOpenChange={setIsDetailOpen}
-        />
-        <LinkBatchModal
-          order={linkBatchOrder}
-          open={isLinkBatchOpen}
-          onOpenChange={setIsLinkBatchOpen}
-          onConfirm={() => {
-            setIsLinkBatchOpen(false);
-          }}
-        />
-        <PreorderContactModal
-          order={contactOrder}
-          open={isContactOpen}
-          onOpenChange={setIsContactOpen}
-          contactNote={contactNote}
-          onContactNoteChange={setContactNote}
-          onConfirm={() => {
-            setIsContactOpen(false);
-          }}
         />
         <CancelModal
           order={cancelOrder}

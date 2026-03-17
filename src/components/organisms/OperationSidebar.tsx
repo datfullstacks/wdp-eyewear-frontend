@@ -4,8 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  AlertTriangle,
-  BarChart3,
   Bell,
   CheckSquare,
   ChevronDown,
@@ -21,12 +19,10 @@ import {
   MapPin,
   Package,
   PackageCheck,
-  Percent,
   Printer,
   Search,
   Settings,
   ShoppingCart,
-  TrendingUp,
   Truck,
   User,
   Warehouse,
@@ -156,22 +152,6 @@ const menuItems: MenuItem[] = [
     ],
   },
   {
-    icon: BarChart3,
-    label: 'Báo cáo',
-    children: [
-      {
-        icon: TrendingUp,
-        label: 'Báo cáo đơn theo trạng thái',
-        path: '/operation/reports/orders',
-      },
-      {
-        icon: Percent,
-        label: 'Vận chuyển / hoàn',
-        path: '/operation/reports/shipping',
-      },
-    ],
-  },
-  {
     icon: Settings,
     label: 'Thiết lập cá nhân',
     children: [
@@ -253,9 +233,16 @@ export const OperationSidebar: React.FC = () => {
   }, []);
 
   const resolvedMenuItems = useMemo(() => {
-    if (!orderCounts) return menuItems;
+    const visibleMenuItems = menuItems.filter(
+      (item) =>
+        !item.children?.every((child) =>
+          child.path?.startsWith('/operation/shipping')
+        )
+    );
 
-    return menuItems.map((item) => {
+    if (!orderCounts) return visibleMenuItems;
+
+    return visibleMenuItems.map((item) => {
       if (!item.children) return item;
 
       return {
@@ -284,7 +271,7 @@ export const OperationSidebar: React.FC = () => {
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const obj: Record<string, boolean> = {};
-    for (const item of menuItems) {
+    for (const item of resolvedMenuItems) {
       if (item.children) obj[item.label] = defaultOpenMap.get(item.label) ?? false;
     }
     return obj;

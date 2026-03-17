@@ -28,11 +28,11 @@ export function getCustomerOrderStatusMeta(
   const shipmentStatus = normalize(order.shipment?.latestStatus);
 
   if (rawStatus === 'cancelled') {
-    return { category: 'cancelled', label: 'Da huy don', type: 'error' };
+    return { category: 'cancelled', label: 'Đã hủy đơn', type: 'error' };
   }
 
   if (rawStatus === 'returned') {
-    return { category: 'cancelled', label: 'Da hoan hang', type: 'error' };
+    return { category: 'cancelled', label: 'Đã hoàn hàng', type: 'error' };
   }
 
   if (
@@ -40,48 +40,71 @@ export function getCustomerOrderStatusMeta(
     opsStage === 'delivered' ||
     opsStage === 'closed'
   ) {
-    return { category: 'completed', label: 'Da giao thanh cong', type: 'success' };
+    return {
+      category: 'completed',
+      label: 'Đã giao thành công',
+      type: 'success',
+    };
   }
 
   if (opsStage === 'return_in_transit') {
-    return { category: 'processing', label: 'Dang hoan hang', type: 'warning' };
+    return { category: 'processing', label: 'Đang hoàn hàng', type: 'warning' };
   }
 
   if (opsStage === 'return_pending') {
-    return { category: 'processing', label: 'Dang cho hoan hang', type: 'warning' };
+    return {
+      category: 'processing',
+      label: 'Đang chờ hoàn hàng',
+      type: 'warning',
+    };
   }
 
   if (opsStage === 'waiting_redelivery') {
-    return { category: 'processing', label: 'Cho giao lai / hoan hang', type: 'warning' };
+    return {
+      category: 'processing',
+      label: 'Chờ giao lại / hoàn hàng',
+      type: 'warning',
+    };
   }
 
   if (opsStage === 'delivery_failed' || shipmentStatus === 'delivery_fail') {
-    return { category: 'processing', label: 'Giao that bai', type: 'error' };
+    return { category: 'processing', label: 'Giao thất bại', type: 'error' };
   }
 
   if (opsStage === 'picking') {
-    return { category: 'processing', label: 'Ops dang lay hang', type: 'warning' };
+    return {
+      category: 'processing',
+      label: 'Ops đang lấy hàng',
+      type: 'warning',
+    };
   }
 
   if (opsStage === 'packing') {
-    return { category: 'processing', label: 'Ops dang dong goi', type: 'warning' };
+    return {
+      category: 'processing',
+      label: 'Ops đang đóng gói',
+      type: 'warning',
+    };
   }
 
   if (opsStage === 'ready_to_ship') {
     return {
       category: 'processing',
-      label: 'San sang tao van don',
+      label: 'Sẵn sàng tạo vận đơn',
       type: 'info',
     };
   }
 
   if (
     opsStage === 'in_transit' ||
-    ['transporting', 'sorting', 'delivering', 'money_collect_delivering'].includes(
-      shipmentStatus
-    )
+    [
+      'transporting',
+      'sorting',
+      'delivering',
+      'money_collect_delivering',
+    ].includes(shipmentStatus)
   ) {
-    return { category: 'processing', label: 'Dang van chuyen', type: 'info' };
+    return { category: 'processing', label: 'Đang vận chuyển', type: 'info' };
   }
 
   if (
@@ -90,19 +113,23 @@ export function getCustomerOrderStatusMeta(
       shipmentStatus
     )
   ) {
-    return { category: 'processing', label: 'GHN dang nhan hang', type: 'info' };
+    return {
+      category: 'processing',
+      label: 'GHN đang nhận hàng',
+      type: 'info',
+    };
   }
 
   if (opsStage === 'shipment_created' || shipmentStatus === 'ready_to_pick') {
-    return { category: 'processing', label: 'Da tao van don', type: 'info' };
+    return { category: 'processing', label: 'Đã tạo vận đơn', type: 'info' };
   }
 
   if (opsStage === 'packing' || rawStatus === 'processing') {
-    return { category: 'processing', label: 'Dang xu ly don', type: 'warning' };
+    return { category: 'processing', label: 'Đang xử lý đơn', type: 'warning' };
   }
 
   if (rawStatus === 'confirmed') {
-    return { category: 'processing', label: 'Da xac nhan don', type: 'info' };
+    return { category: 'processing', label: 'Đã xác nhận đơn', type: 'info' };
   }
 
   if (
@@ -112,12 +139,12 @@ export function getCustomerOrderStatusMeta(
   ) {
     return {
       category: 'processing',
-      label: 'Don dang can xu ly bo sung',
+      label: 'Đơn đang cần xử lý bổ sung',
       type: 'warning',
     };
   }
 
-  return { category: 'pending', label: 'Cho xac nhan', type: 'info' };
+  return { category: 'pending', label: 'Chờ xác nhận', type: 'info' };
 }
 
 export function getCustomerShippingStatusMeta(
@@ -140,11 +167,15 @@ export function getCustomerShippingStatusMeta(
   }
 
   if (shipmentStatus === 'delivered') {
-    return { label: 'Da giao hang', type: 'success', rawStatus: shipmentStatus };
+    return {
+      label: 'Đã giao hàng',
+      type: 'success',
+      rawStatus: shipmentStatus,
+    };
   }
 
   if (shipmentStatus === 'returned') {
-    return { label: 'Da hoan hang', type: 'error', rawStatus: shipmentStatus };
+    return { label: 'Đã hoàn hàng', type: 'error', rawStatus: shipmentStatus };
   }
 
   if (
@@ -154,7 +185,11 @@ export function getCustomerShippingStatusMeta(
     opsStage === 'return_pending' ||
     opsStage === 'return_in_transit'
   ) {
-    return { label: 'Dang hoan hang', type: 'warning', rawStatus: shipmentStatus };
+    return {
+      label: 'Đang hoàn hàng',
+      type: 'warning',
+      rawStatus: shipmentStatus,
+    };
   }
 
   if (
@@ -162,23 +197,30 @@ export function getCustomerShippingStatusMeta(
     opsStage === 'waiting_redelivery'
   ) {
     return {
-      label: 'Cho giao lai / hoan hang',
+      label: 'Chờ giao lại / hoàn hàng',
       type: 'warning',
       rawStatus: shipmentStatus,
     };
   }
 
   if (shipmentStatus === 'delivery_fail' || opsStage === 'delivery_failed') {
-    return { label: 'Giao that bai', type: 'error', rawStatus: shipmentStatus };
+    return { label: 'Giao thất bại', type: 'error', rawStatus: shipmentStatus };
   }
 
   if (
-    ['transporting', 'sorting', 'delivering', 'money_collect_delivering'].includes(
-      shipmentStatus
-    ) ||
+    [
+      'transporting',
+      'sorting',
+      'delivering',
+      'money_collect_delivering',
+    ].includes(shipmentStatus) ||
     opsStage === 'in_transit'
   ) {
-    return { label: 'Dang van chuyen', type: 'info', rawStatus: shipmentStatus };
+    return {
+      label: 'Đang vận chuyển',
+      type: 'info',
+      rawStatus: shipmentStatus,
+    };
   }
 
   if (
@@ -187,7 +229,11 @@ export function getCustomerShippingStatusMeta(
     ) ||
     opsStage === 'handover_to_carrier'
   ) {
-    return { label: 'GHN dang nhan hang', type: 'info', rawStatus: shipmentStatus };
+    return {
+      label: 'GHN đang nhận hàng',
+      type: 'info',
+      rawStatus: shipmentStatus,
+    };
   }
 
   if (
@@ -195,32 +241,37 @@ export function getCustomerShippingStatusMeta(
     opsStage === 'shipment_created' ||
     shipmentCode
   ) {
-    return { label: 'Da tao van don', type: 'info', rawStatus: shipmentStatus };
+    return { label: 'Đã tạo vận đơn', type: 'info', rawStatus: shipmentStatus };
   }
 
   if (opsStage === 'ready_to_ship') {
     return {
-      label: 'San sang tao van don',
+      label: 'Sẵn sàng tạo vận đơn',
       type: 'info',
       rawStatus: shipmentStatus,
     };
   }
 
   if (
-    ['return_fail', 'exception', 'damage', 'lost', 'cancel', 'cancelled'].includes(
-      shipmentStatus
-    ) ||
+    [
+      'return_fail',
+      'exception',
+      'damage',
+      'lost',
+      'cancel',
+      'cancelled',
+    ].includes(shipmentStatus) ||
     opsStage === 'exception_hold'
   ) {
     return {
-      label: 'Van don can xu ly thu cong',
+      label: 'Vận đon cần xử lý thủ công',
       type: 'error',
       rawStatus: shipmentStatus,
     };
   }
 
   return {
-    label: 'Dang xu ly van chuyen',
+    label: 'Đang xử lý vận chuyển',
     type: 'default',
     rawStatus: shipmentStatus,
   };

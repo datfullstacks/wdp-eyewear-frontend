@@ -5,7 +5,7 @@ export { ReadyStockIssueModal } from './ReadyStockIssueModal';
 export { ReadyStockFilterSheet } from './ReadyStockFilterSheet';
 export type {
   ReadyStockFilters,
-  ReadyStockPaymentFilter,
+  ReadyStockShipmentFilter,
 } from './ReadyStockFilterSheet';
 export { ReadyStockHoldModal } from './ReadyStockHoldModal';
 export { ReadyStockPickListModal } from './ReadyStockPickListModal';

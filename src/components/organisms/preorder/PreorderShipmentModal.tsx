@@ -1,9 +1,6 @@
 'use client';
 
-import type {
-  OrderShippingInfo,
-  OrderShippingTestStatus,
-} from '@/api/orders';
+import type { OrderShippingInfo, OrderShippingTestStatus } from '@/api/orders';
 import type { PreorderOrder } from '@/types/preorder';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,11 +20,11 @@ function formatDateTime(value?: string) {
 }
 
 const TEST_STATUS_LABEL: Record<OrderShippingTestStatus, string> = {
-  ready_to_pick: 'Cho lay hang',
-  picking: 'Shipper dang lay',
-  transporting: 'Dang giao',
-  delivered: 'Da giao',
-  returned: 'Hoan hang',
+  ready_to_pick: 'Chờ lấy hàng',
+  picking: 'Shipper đang lấy',
+  transporting: 'Đang giao',
+  delivered: 'Đã giao',
+  returned: 'Hoàn hàng',
 };
 
 export function PreorderShipmentModal({
@@ -66,7 +63,7 @@ export function PreorderShipmentModal({
       <DialogContent className="text-foreground w-[92vw] max-w-[560px] p-4 shadow-2xl">
         <DialogHeader>
           <DialogTitle>
-            {isCreate ? 'Tao van don GHN' : 'Dong bo GHN'} • {order.orderCode}
+            {isCreate ? 'Tạo vận đơn GHN' : 'Đồng bộ GHN'} • {order.orderCode}
           </DialogTitle>
         </DialogHeader>
 
@@ -74,23 +71,23 @@ export function PreorderShipmentModal({
           <div className="border-border bg-muted/10 rounded-lg border p-3 text-sm">
             <div className="font-medium">
               {isCreate
-                ? 'Pre-order da san sang dong goi, co the tao van don GHN.'
-                : 'Dong bo lai GHN de cap nhat trang thai shipment va tracking.'}
+                ? 'Pre-order đã sẵn sàng đóng gói, có thể tạo vận đơn GHN.'
+                : 'Đồng bộ lại GHN để cập nhật trạng thái shipment và tracking.'}
             </div>
             <div className="text-foreground/70 mt-1">
-              Carrier hien tai: GHN - Giao Hang Nhanh
+              Carrier hiện tại: GHN - Giao Hàng Nhanh
             </div>
           </div>
 
           {isLoading ? (
             <div className="text-foreground/70 text-sm">
-              Dang tai thong tin GHN...
+              Đang tải thông tin GHN...
             </div>
           ) : (
             <>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
-                  <Label>Trang thai order</Label>
+                  <Label>Trạng thái order</Label>
                   <div className="text-sm font-semibold">
                     {shippingInfo?.orderStatus || order.rawOrderStatus || '-'}
                   </div>
@@ -102,19 +99,19 @@ export function PreorderShipmentModal({
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <Label>Ma van don GHN</Label>
+                  <Label>Mã vận đơn GHN</Label>
                   <div className="font-mono text-sm">
                     {shipment?.orderCode || shipment?.trackingCode || '-'}
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <Label>Trang thai GHN</Label>
+                  <Label>Trạng thái GHN</Label>
                   <div className="text-sm font-semibold">
                     {shipment?.latestStatus || shipment?.state || '-'}
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <Label>Dich vu</Label>
+                  <Label>Dịch vụ</Label>
                   <div className="text-sm font-semibold">
                     {shipment?.serviceName || 'GHN'}
                   </div>
@@ -130,7 +127,7 @@ export function PreorderShipmentModal({
               {shipment?.latestFailReason && (
                 <div className="border-destructive/20 bg-destructive/5 rounded-lg border p-3 text-sm">
                   <div className="text-destructive font-medium">
-                    Ly do loi GHN
+                    Lý do lỗi GHN
                   </div>
                   <div className="mt-1">{shipment.latestFailReason}</div>
                 </div>
@@ -141,10 +138,10 @@ export function PreorderShipmentModal({
                 shippingInfo.testStatusOptions.length > 0 && (
                   <div className="border-border bg-muted/10 rounded-lg border p-3 text-sm">
                     <div className="font-medium">
-                      Cap nhat trang thai GHN theo thu tu (test mode)
+                      Cập nhật trạng thái GHN theo thứ tự (test mode)
                     </div>
                     <div className="text-foreground/70 mt-1">
-                      Chi cho phep chuyen sang buoc tiep theo hop le.
+                      Chỉ cho phép chuyển sang bước tiếp theo hợp lệ.
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {shippingInfo.testStatusOptions.map((status) => (
@@ -170,17 +167,17 @@ export function PreorderShipmentModal({
 
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Dong
+            Đóng
           </Button>
           <Button
             onClick={onSubmit}
             disabled={!canSubmit || isLoading || isSubmitting}
           >
             {isSubmitting
-              ? 'Dang xu ly...'
+              ? 'Đang xử lý...'
               : isCreate
-                ? 'Tao van don GHN'
-                : 'Dong bo GHN'}
+                ? 'Tạo vận đơn GHN'
+                : 'Đồng bộ GHN'}
           </Button>
         </DialogFooter>
       </DialogContent>
