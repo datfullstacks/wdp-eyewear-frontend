@@ -10,3 +10,6 @@ export { DiscountForm, type DiscountFormData } from './DiscountForm';
 export { DiscountTable } from './DiscountTable';
 export { PolicyForm, type PolicyFormData } from './PolicyForm';
 export { PolicyTable } from './PolicyTable';
+export { ManagerProductCreatePage } from './ManagerProductCreatePage';
+export { ManagerProductEditorPage } from './ManagerProductEditorPage';
+export { ManagerProductsPage } from './ManagerProductsPage';
