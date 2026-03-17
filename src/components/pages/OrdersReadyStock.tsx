@@ -41,15 +41,36 @@ function dateOnly(value: string): string {
   return dt.toISOString().slice(0, 10);
 }
 
+function isPaidReadyStockOrder(order: OrderRecord): boolean {
+  return isReadyStockOrder(order) && order.paymentStatus === 'paid';
+}
+
 const DEFAULT_FILTERS: ReadyStockFilters = {
   salesApprovedFrom: '',
   salesApprovedTo: '',
-  payment: 'all',
+  shipment: 'all',
   opsStatus: 'all',
   assignee: 'all',
   hasNoteOnly: false,
-  hasWarningOnly: false,
+  hasIssueOnly: false,
 };
+
+const ACTIVE_SHIPMENT_STATUSES = new Set([
+  'shipment_created',
+  'handover_to_carrier',
+  'in_transit',
+]);
+
+const DELIVERED_SHIPMENT_STATUSES = new Set(['delivered', 'closed']);
+
+const SHIPMENT_ISSUE_STATUSES = new Set([
+  'delivery_failed',
+  'waiting_redelivery',
+  'return_pending',
+  'return_in_transit',
+  'returned',
+  'exception_hold',
+]);
 
 function extractApiErrorMessage(error: unknown, fallback: string) {
   if (axios.isAxiosError(error)) {
@@ -122,10 +143,10 @@ export default function OrdersReadyStock() {
     setErrorMessage(null);
     try {
       const result = await orderApi.getAll({ page: 1, limit: 200 });
-      const ready = result.orders.filter(isReadyStockOrder);
+      const ready = result.orders.filter(isPaidReadyStockOrder);
       setOrders(ready);
     } catch {
-      setOrders(mockReadyStockOrders);
+      setOrders(mockReadyStockOrders.filter(isPaidReadyStockOrder));
       setErrorMessage(
         'Không tải được danh sách đơn từ API. Đang hiển thị dữ liệu mẫu.'
       );
@@ -164,7 +185,7 @@ export default function OrdersReadyStock() {
     const query = searchTerm.trim().toLowerCase();
 
     return orders
-      .filter(isReadyStockOrder)
+      .filter(isPaidReadyStockOrder)
       .filter((order) => {
         if (!query) return true;
         const haystack = [
@@ -192,12 +213,37 @@ export default function OrdersReadyStock() {
         if (filters.salesApprovedTo && approvedDate > filters.salesApprovedTo)
           return false;
 
-        if (filters.payment !== 'all') {
-          if (filters.payment === 'failed') {
-            if (!ops.paymentFailed) return false;
-          } else if (order.paymentStatus !== filters.payment) {
-            return false;
-          }
+        const trackingCode = String(
+          order.shipment?.orderCode ||
+            order.shipment?.trackingCode ||
+            ops.trackingCode ||
+            ''
+        ).trim();
+        const hasShipment = Boolean(trackingCode);
+
+        if (filters.shipment === 'without_tracking' && hasShipment) {
+          return false;
+        }
+        if (filters.shipment === 'with_tracking' && !hasShipment) {
+          return false;
+        }
+        if (
+          filters.shipment === 'in_delivery' &&
+          !ACTIVE_SHIPMENT_STATUSES.has(ops.opsStatus)
+        ) {
+          return false;
+        }
+        if (
+          filters.shipment === 'delivered' &&
+          !DELIVERED_SHIPMENT_STATUSES.has(ops.opsStatus)
+        ) {
+          return false;
+        }
+        if (
+          filters.shipment === 'issue' &&
+          !SHIPMENT_ISSUE_STATUSES.has(ops.opsStatus)
+        ) {
+          return false;
         }
 
         if (filters.opsStatus !== 'all' && ops.opsStatus !== filters.opsStatus)
@@ -216,7 +262,15 @@ export default function OrdersReadyStock() {
         }
 
         const warnings = getReadyStockWarnings(order, ops);
-        const hasWarning = warnings.length > 0;
+        const hasIssue =
+          warnings.some((warning) => warning !== 'special_note') ||
+          Boolean(String(ops.issueType || '').trim()) ||
+          Boolean(String(ops.issueNote || '').trim()) ||
+          Object.values(ops.itemStates || {}).some(
+            (state) =>
+              Boolean(String(state.issueType || '').trim()) ||
+              Boolean(String(state.issueNote || '').trim())
+          );
         const hasNote =
           Boolean(String(order.note || '').trim()) ||
           Boolean(String(ops.salesHandoffNote || '').trim()) ||
@@ -227,7 +281,7 @@ export default function OrdersReadyStock() {
             Boolean(String(s.internalNote || '').trim())
           );
 
-        if (filters.hasWarningOnly && !hasWarning) return false;
+        if (filters.hasIssueOnly && !hasIssue) return false;
         if (filters.hasNoteOnly && !hasNote) return false;
 
         return true;
@@ -266,7 +320,7 @@ export default function OrdersReadyStock() {
         const info = await orderApi.getShipping(order.id);
         setShipmentInfo(info);
       } catch {
-        setShipmentErrorMessage('Khong tai duoc thong tin GHN cho don nay.');
+        setShipmentErrorMessage('Không tải được thông tin GHN cho đơn này.');
       } finally {
         setShipmentLoading(false);
       }
@@ -284,7 +338,7 @@ export default function OrdersReadyStock() {
 
         await loadOrders();
       } catch {
-        setErrorMessage('Khong the nhan xu ly don hang.');
+        setErrorMessage('Không thể nhận xử lý đơn hàng.');
       }
     },
     [loadOrders, meName, setAssignee, setStatus]
@@ -300,7 +354,7 @@ export default function OrdersReadyStock() {
         setStatus(order.id, 'packing');
         await loadOrders();
       } catch {
-        setErrorMessage('Khong the xac nhan da lay du san pham.');
+        setErrorMessage('Không thể xác nhận đã lấy đủ sản phẩm.');
       }
     },
     [ensureOps, loadOrders, meName, setAssignee, setStatus]
@@ -316,7 +370,7 @@ export default function OrdersReadyStock() {
         setStatus(order.id, 'ready_to_ship');
         await loadOrders();
       } catch {
-        setErrorMessage('Khong the xac nhan dong goi don hang.');
+        setErrorMessage('Không thể xác nhận đóng gói đơn hàng.');
       }
     },
     [ensureOps, loadOrders, meName, setAssignee, setStatus]
@@ -351,8 +405,8 @@ export default function OrdersReadyStock() {
         extractApiErrorMessage(
           error,
           shipmentMode === 'create'
-            ? 'Khong the tao van don GHN.'
-            : 'Khong the dong bo GHN.'
+            ? 'Không thể tạo vận đơn GHN.'
+            : 'Không thể đồng bộ GHN.'
         )
       );
     } finally {
@@ -383,7 +437,7 @@ export default function OrdersReadyStock() {
         setShipmentInfo(result);
         await loadOrders();
       } catch {
-        setShipmentErrorMessage('Khong the cap nhat trang thai GHN test.');
+        setShipmentErrorMessage('Không thể cập nhật trạng thái GHN test.');
       } finally {
         setShipmentSubmitting(false);
       }
@@ -393,10 +447,7 @@ export default function OrdersReadyStock() {
 
   return (
     <>
-      <Header
-        title="Đơn có sẵn (Ready stock)"
-        subtitle="Nhận đơn → lấy hàng → đóng gói → tạo vận đơn → bàn giao vận chuyển → ghi chú lỗi/hold"
-      />
+      <Header title="Đơn có sẵn (Ready stock)" subtitle="" />
 
       <div className="space-y-6 p-6">
         <ReadyStockStatsGrid orders={orders} resolveOps={resolveOps} />
@@ -412,7 +463,7 @@ export default function OrdersReadyStock() {
             </div>
             <Button
               variant="outline"
-              className="gap-2"
+              className="gap-2 border-slate-300 bg-white text-slate-900 shadow-sm hover:border-slate-400 hover:bg-slate-50 hover:text-slate-950"
               onClick={() => setFilterOpen(true)}
               aria-label="Mở bộ lọc"
             >
@@ -422,7 +473,12 @@ export default function OrdersReadyStock() {
           </div>
 
           <div className="flex items-center justify-end gap-2">
-            <Button variant="outline" onClick={loadOrders} disabled={isLoading}>
+            <Button
+              variant="outline"
+              className="border-slate-300 bg-white text-slate-900 shadow-sm hover:border-slate-400 hover:bg-slate-50 hover:text-slate-950"
+              onClick={loadOrders}
+              disabled={isLoading}
+            >
               {isLoading ? 'Đang tải...' : 'Tải lại'}
             </Button>
           </div>
@@ -480,7 +536,8 @@ export default function OrdersReadyStock() {
           if (!holdOrder) return;
           setHold(holdOrder.id, reason, note);
           try {
-            const nextStage = reason === 'address' ? 'waiting_customer_info' : 'on_hold';
+            const nextStage =
+              reason === 'address' ? 'waiting_customer_info' : 'on_hold';
             await orderApi.updateOpsExecution(holdOrder.id, {
               holdReason: reason,
               holdNote: note,
@@ -488,7 +545,7 @@ export default function OrdersReadyStock() {
             await orderApi.updateOpsStage(holdOrder.id, nextStage);
             await loadOrders();
           } catch {
-            setErrorMessage('Khong the luu hold tren backend.');
+            setErrorMessage('Không thể lưu hold trên backend.');
           }
         }}
         onClear={async () => {
@@ -502,7 +559,7 @@ export default function OrdersReadyStock() {
             await orderApi.updateOpsStage(holdOrder.id, 'pending_operations');
             await loadOrders();
           } catch {
-            setErrorMessage('Khong the go hold tren backend.');
+            setErrorMessage('Không thể gỡ hold trên backend.');
           }
         }}
       />

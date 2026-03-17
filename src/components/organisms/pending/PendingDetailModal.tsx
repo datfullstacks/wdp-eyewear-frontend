@@ -40,15 +40,7 @@ export const PendingDetailModal = ({
   return (
     <Dialog open={!!order} onOpenChange={onClose}>
       <DialogContent className="flex max-h-[80vh] w-[92vw] max-w-md flex-col overflow-hidden border-0 p-0 shadow-2xl [&>button.absolute]:bg-slate-950/10 [&>button.absolute]:text-slate-950/80 [&>button.absolute]:hover:bg-slate-950/15 [&>button.absolute]:hover:text-slate-950">
-        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-500 px-5 py-3 sm:px-6 sm:py-4">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.55),transparent_60%)]"
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/0 to-black/25"
-          />
+        <div className="relative shrink-0 overflow-hidden border-b border-yellow-500/40 bg-yellow-400 px-5 py-3 sm:px-6 sm:py-4">
           <DialogHeader className="space-y-1">
             <DialogTitle className="text-slate-950">
               <span className="text-xs font-semibold tracking-[0.25em] text-slate-950/60">

@@ -58,7 +58,10 @@ export const PreorderProductStatusBadge = ({
   switch (status) {
     case 'waiting':
       return (
-        <Badge variant="outline" className="text-muted-foreground">
+        <Badge
+          variant="outline"
+          className="border-border bg-background text-foreground"
+        >
           Chờ hàng
         </Badge>
       );

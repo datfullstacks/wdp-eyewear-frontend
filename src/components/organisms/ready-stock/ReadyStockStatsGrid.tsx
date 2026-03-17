@@ -66,7 +66,7 @@ export function ReadyStockStatsGrid({
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
       <StatCard
-        title="Cho nhan xu ly"
+        title={'Ch\u1edd nh\u1eadn x\u1eed l\u00fd'}
         value={stats.awaitingAccept.toString()}
         icon={Hand}
         className="p-3"
@@ -76,7 +76,7 @@ export function ReadyStockStatsGrid({
         inline
       />
       <StatCard
-        title="Dang lay hang"
+        title={'\u0110ang l\u1ea5y h\u00e0ng'}
         value={stats.picking.toString()}
         icon={ClipboardList}
         iconColor="text-primary"
@@ -87,7 +87,7 @@ export function ReadyStockStatsGrid({
         inline
       />
       <StatCard
-        title="Dang dong goi"
+        title={'\u0110ang \u0111\u00f3ng g\u00f3i'}
         value={stats.packing.toString()}
         icon={Package}
         iconColor="text-warning"
@@ -98,7 +98,7 @@ export function ReadyStockStatsGrid({
         inline
       />
       <StatCard
-        title="Cho tao van don"
+        title={'Ch\u1edd t\u1ea1o v\u1eadn \u0111\u01a1n'}
         value={stats.awaitingShipment.toString()}
         icon={Truck}
         iconColor="text-success"
@@ -109,7 +109,7 @@ export function ReadyStockStatsGrid({
         inline
       />
       <StatCard
-        title="Da vao luong GHN"
+        title={'\u0110\u00e3 v\u00e0o lu\u1ed3ng GHN'}
         value={stats.handedOver.toString()}
         icon={PackageCheck}
         iconColor="text-success"
@@ -120,7 +120,7 @@ export function ReadyStockStatsGrid({
         inline
       />
       <StatCard
-        title="Dang hold"
+        title={'\u0110ang hold'}
         value={stats.hold.toString()}
         icon={PauseCircle}
         iconColor="text-destructive"

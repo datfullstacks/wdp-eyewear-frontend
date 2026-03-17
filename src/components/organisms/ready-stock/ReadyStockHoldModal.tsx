@@ -10,16 +10,22 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import type { ReadyStockHoldReason } from '@/types/readyStockOps';
 import { useEffect, useState } from 'react';
 
 const HOLD_REASON_LABEL: Record<ReadyStockHoldReason, string> = {
-  payment: 'Hold do thanh toán',
-  address: 'Hold do địa chỉ',
-  stock: 'Hold do thiếu hàng/lỗi hàng',
-  manual: 'Hold thủ công',
+  payment: 'Tạm dừng do thanh toán',
+  address: 'Tạm dừng do địa chỉ',
+  stock: 'Tạm dừng do thiếu hàng/lỗi hàng',
+  manual: 'Tạm dừng thủ công',
   other: 'Khác',
 };
 
@@ -53,34 +59,41 @@ export function ReadyStockHoldModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[92vw] max-w-[640px] p-4 text-foreground shadow-2xl">
+      <DialogContent className="text-foreground w-[92vw] max-w-[640px] p-4 shadow-2xl">
         <DialogHeader>
-          <DialogTitle>Hold đơn {order.code}</DialogTitle>
+          <DialogTitle>Tạm dừng đơn {order.code}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3">
           <div className="space-y-1">
-            <Label>Lý do hold</Label>
-            <Select value={reason} onValueChange={(value) => setReason(value as ReadyStockHoldReason)}>
+            <Label>Lý do tạm dừng</Label>
+            <Select
+              value={reason}
+              onValueChange={(value) =>
+                setReason(value as ReadyStockHoldReason)
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Chọn lý do" />
               </SelectTrigger>
               <SelectContent>
-                {(Object.keys(HOLD_REASON_LABEL) as ReadyStockHoldReason[]).map((k) => (
-                  <SelectItem key={k} value={k}>
-                    {HOLD_REASON_LABEL[k]}
-                  </SelectItem>
-                ))}
+                {(Object.keys(HOLD_REASON_LABEL) as ReadyStockHoldReason[]).map(
+                  (k) => (
+                    <SelectItem key={k} value={k}>
+                      {HOLD_REASON_LABEL[k]}
+                    </SelectItem>
+                  )
+                )}
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-1">
-            <Label>Ghi chú hold</Label>
+            <Label>Ghi chú tạm dừng</Label>
             <Textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Mô tả lý do hold + việc cần Sales/Support hỗ trợ (nếu có)..."
+              placeholder="Mô tả lý do tạm dừng + việc cần Sales/Support hỗ trợ (nếu có)..."
               rows={4}
             />
           </div>
@@ -88,7 +101,7 @@ export function ReadyStockHoldModal({
 
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onClear}>
-            Gỡ hold
+            Gỡ tạm dừng
           </Button>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Đóng
@@ -100,11 +113,10 @@ export function ReadyStockHoldModal({
             }}
             disabled={!note.trim()}
           >
-            Lưu hold
+            Lưu tạm dừng
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
-
