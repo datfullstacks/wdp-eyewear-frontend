@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -59,47 +59,15 @@ const shippingFields: Array<{
   placeholder: string;
   fullWidth?: boolean;
 }> = [
-  {
-    field: 'fullName',
-    label: 'H\u1ecd v\u00e0 t\u00ean',
-    placeholder: 'Nguy\u1ec5n V\u0103n A',
-  },
-  {
-    field: 'phone',
-    label: 'S\u1ed1 \u0111i\u1ec7n tho\u1ea1i',
-    placeholder: '0901 234 567',
-  },
-  {
-    field: 'email',
-    label: '\u0110\u1ecba ch\u1ec9 email',
-    placeholder: 'example@mail.com',
-  },
-  {
-    field: 'line1',
-    label: '\u0110\u1ecba ch\u1ec9 1',
-    placeholder: 'S\u1ed1 nh\u00e0, t\u00ean \u0111\u01b0\u1eddng',
-  },
-  {
-    field: 'line2',
-    label: '\u0110\u1ecba ch\u1ec9 2',
-    placeholder: 'T\u00f2a nh\u00e0, t\u1ea7ng',
-  },
-  {
-    field: 'ward',
-    label: 'Ph\u01b0\u1eddng / X\u00e3',
-    placeholder: 'Ph\u01b0\u1eddng / X\u00e3',
-  },
-  {
-    field: 'district',
-    label: 'Qu\u1eadn / Huy\u1ec7n',
-    placeholder: 'Qu\u1eadn / Huy\u1ec7n',
-  },
-  {
-    field: 'province',
-    label: 'T\u1ec9nh / Th\u00e0nh',
-    placeholder: 'T\u1ec9nh / Th\u00e0nh',
-  },
-  { field: 'country', label: 'Qu\u1ed1c gia', placeholder: 'VN', fullWidth: true },
+  { field: 'fullName', label: 'FULLNAME', placeholder: 'Nguyen Van A' },
+  { field: 'phone', label: 'PHONE', placeholder: '0901 234 567' },
+  { field: 'email', label: 'EMAIL', placeholder: 'example@mail.com' },
+  { field: 'line1', label: 'LINE1', placeholder: 'So nha, ten duong' },
+  { field: 'line2', label: 'LINE2', placeholder: 'Toa nha, tang' },
+  { field: 'ward', label: 'WARD', placeholder: 'Phuong / Xa' },
+  { field: 'district', label: 'DISTRICT', placeholder: 'Quan / Huyen' },
+  { field: 'province', label: 'PROVINCE', placeholder: 'Tinh / Thanh' },
+  { field: 'country', label: 'COUNTRY', placeholder: 'VN', fullWidth: true },
 ];
 
 const inputClassName =
@@ -109,7 +77,7 @@ const panelTitleClassName =
   'text-sm font-black uppercase tracking-[0.08em] text-[#201600]';
 
 const metaLabelClassName =
-  'mb-2 block text-[11px] font-black tracking-[0.04em] text-[#7b641f]';
+  'mb-2 block text-[11px] font-black uppercase tracking-[0.12em] text-[#7b641f]';
 
 type SummaryData = {
   subtotal: number;
@@ -120,12 +88,6 @@ type SummaryData = {
 
 function formatMoney(value?: number): string {
   return Number(value || 0).toLocaleString('vi-VN');
-}
-
-const DONG_SYMBOL = '\u20ab';
-
-function getShippingFieldLabel(field: keyof ShippingAddressForm): string {
-  return shippingFields.find((item) => item.field === field)?.label ?? field;
 }
 
 function formatStatusValue(value?: string): string {
@@ -199,12 +161,11 @@ function EmptyCheckoutState() {
   return (
     <div className="rounded-[28px] border border-[#ead9a3] bg-white p-8 shadow-[0_28px_60px_-40px_rgba(120,82,0,0.18)]">
       <h2 className="text-lg font-black tracking-[0.08em] text-[#201600] uppercase">
-        {'Gi\u1ecf h\u00e0ng \u0111ang tr\u1ed1ng'}
+        Giỏ hàng đang trống
       </h2>
       <p className="mt-3 max-w-xl text-sm leading-6 text-[#6f5830]">
-        {
-          'H\u00e3y ch\u1ecdn s\u1ea3n ph\u1ea9m v\u00e0 bi\u1ebfn th\u1ec3 \u1edf trang s\u1ea3n ph\u1ea9m r\u1ed3i quay l\u1ea1i \u0111\u00e2y \u0111\u1ec3 t\u00ednh ti\u1ec1n v\u00e0 t\u1ea1o \u0111\u01a1n.'
-        }
+        Hãy chọn sản phẩm và biến thể ở trang sản phẩm rồi quay lai đây để tính
+        tiền và tạo đơn.
       </p>
     </div>
   );
@@ -233,39 +194,39 @@ function CartItemCard({ item }: { item: SaleCartItem }) {
                 {item.productName}
               </p>
               <p className="mt-1 text-sm text-[#6e5a33]">
-                {item.brand || '-'} {'\u2022'} {item.productType || '-'}
+                {item.brand || '-'} • {item.productType || '-'}
               </p>
             </div>
 
             <div className="text-left sm:text-right">
               <p className="text-xs font-semibold tracking-[0.08em] text-[#927138] uppercase">
-                {'\u0110\u01a1n gi\u00e1'}
+                Đơn giá
               </p>
               <p className="mt-1 text-lg font-black text-[#d08b00]">
-                {formatMoney(item.price)} {DONG_SYMBOL}
+                {formatMoney(item.price)} ₫
               </p>
             </div>
           </div>
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <span className="rounded-full border border-[#e8cf89] bg-white px-3 py-1 text-xs font-bold text-[#6d5000]">
-              {'Bi\u1ebfn th\u1ec3'}: {item.variantOptions.color || '-'} /{' '}
+              Biến thể: {item.variantOptions.color || '-'} /{' '}
               {item.variantOptions.size || '-'}
             </span>
             <span className="rounded-full border border-[#e8cf89] bg-white px-3 py-1 text-xs font-bold text-[#6d5000]">
-              {'S\u1ed1 l\u01b0\u1ee3ng'}: {item.quantity}
+              Qty: {item.quantity}
             </span>
             <span className="rounded-full border border-[#e8cf89] bg-white px-3 py-1 text-xs font-bold text-[#6d5000]">
-              {'T\u1ed3n kho'}: {item.stock}
+              Tồn kho: {item.stock}
             </span>
           </div>
 
           <div className="mt-4 flex items-center justify-between border-t border-dashed border-[#ecd690] pt-3">
             <span className="text-sm font-semibold text-[#7c6330]">
-              {'Th\u00e0nh ti\u1ec1n'}
+              Thành tiền
             </span>
             <span className="text-lg font-black text-[#201600]">
-              {formatMoney(item.price * item.quantity)} {DONG_SYMBOL}
+              {formatMoney(item.price * item.quantity)} ₫
             </span>
           </div>
         </div>
@@ -313,7 +274,7 @@ function LeftCheckoutPanel({
             className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3.5 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            {'Quay l\u1ea1i s\u1ea3n ph\u1ea9m'}
+            Quay lai trang
           </button>
         </div>
 
@@ -324,19 +285,17 @@ function LeftCheckoutPanel({
             </div>
             <div>
               <h2 className={panelTitleClassName}>
-                {'Danh s\u00e1ch s\u1ea3n ph\u1ea9m t\u1eeb gi\u1ecf h\u00e0ng'}
+                Danh sách sản phẩm từ giỏ hàng
               </h2>
               <p className="mt-1 text-xs font-medium text-[#876e2f]">
-                {
-                  'Ch\u1ecdn b\u00e1o gi\u00e1 \u0111\u1ec3 kh\u00f3a t\u1ed5ng ti\u1ec1n tr\u01b0\u1edbc khi thanh to\u00e1n.'
-                }
+                Chọn báo giá để khóa tổng tiền trước khi thanh toán.
               </p>
             </div>
           </div>
 
           <div className="rounded-2xl border border-[#e5c86d] bg-white px-3 py-2 text-right">
             <div className="text-[11px] font-black tracking-[0.1em] text-[#7b641f] uppercase">
-              {'S\u1ea3n ph\u1ea9m'}
+              Sản phẩm
             </div>
             <div className="mt-1 text-lg font-black text-[#201600]">
               {cartItems.length}
@@ -355,10 +314,10 @@ function LeftCheckoutPanel({
 
         <div className="flex items-center justify-between border-t border-[#f1e8d1] pt-4">
           <span className="text-sm font-bold tracking-[0.08em] text-[#7c6330] uppercase">
-            {'T\u1ea1m t\u00ednh'}
+            Tổng thanh toán tạm tính
           </span>
           <span className="text-[28px] leading-none font-black text-[#201600]">
-            {formatMoney(subtotal)} {DONG_SYMBOL}
+            {formatMoney(subtotal)} ₫
           </span>
         </div>
       </div>
@@ -370,13 +329,10 @@ function LeftCheckoutPanel({
               <MapPin className="h-5 w-5" />
             </div>
             <div>
-              <h2 className={panelTitleClassName}>
-                {'\u0110\u1ecba ch\u1ec9 giao h\u00e0ng'}
-              </h2>
+              <h2 className={panelTitleClassName}>Địa chỉ giao hàng</h2>
               <p className="mt-1 text-xs font-medium text-[#876e2f]">
-                {
-                  'B\u1eaft bu\u1ed9c nh\u1eadp: h\u1ecd v\u00e0 t\u00ean, s\u1ed1 \u0111i\u1ec7n tho\u1ea1i, email, \u0111\u1ecba ch\u1ec9 d\u00f2ng 1, ph\u01b0\u1eddng/x\u00e3, qu\u1eadn/huy\u1ec7n, t\u1ec9nh/th\u00e0nh ph\u1ed1, qu\u1ed1c gia.'
-                }
+                *Bắt buộc nhập:*`` họ và tên, số điện thoại, email, địa chỉ dòng
+                1, phường/xã, quận/huyện, tỉnh/thành phố, quốc gia.
               </p>
             </div>
           </div>
@@ -406,22 +362,22 @@ function LeftCheckoutPanel({
         </div>
 
         <div className="mt-4">
-          <label className={metaLabelClassName}>{'Ghi ch\u00fa'}</label>
+          <label className={metaLabelClassName}>Ghi chú</label>
           <textarea
             value={shippingForm.note}
             onChange={(event) => onShippingChange('note', event.target.value)}
             rows={4}
-            placeholder={'Ghi ch\u00fa \u0111\u01a1n h\u00e0ng (t\u00f9y ch\u1ecdn)...'}
+            placeholder="Ghi chú đơn hàng (tùy chọn)..."
             className="w-full rounded-xl border border-[#e6c873] bg-white px-3 py-3 text-sm font-medium text-[#201600] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition outline-none placeholder:text-[#887243] focus:border-[#cc9600] focus:ring-4 focus:ring-[#f7bf00]/20"
           />
         </div>
 
         <div className="mt-4">
-          <label className={metaLabelClassName}>{'M\u00e3 gi\u1ea3m gi\u00e1'}</label>
+          <label className={metaLabelClassName}>Mã Voucher</label>
           <input
             disabled
             value=""
-            placeholder={'Ch\u01b0a h\u1ed7 tr\u1ee3 backend'}
+            placeholder="Chua ho tro backend"
             className="h-11 w-full cursor-not-allowed rounded-xl border border-[#ebe5d8] bg-[#faf8f3] px-3 text-sm font-medium text-[#8d7649]"
           />
         </div>
@@ -443,12 +399,12 @@ function LeftCheckoutPanel({
             {isQuoting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                {'\u0110ang t\u00ednh...'}
+                Đang tính...
               </>
             ) : (
               <>
                 <Calculator className="h-5 w-5 text-[#d48200]" />
-                {'T\u00ednh ti\u1ec1n'}
+                Tính tiền
               </>
             )}
           </ActionButton>
@@ -462,12 +418,12 @@ function LeftCheckoutPanel({
             {isCheckingOut ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                {'\u0110ang t\u1ea1o \u0111\u01a1n...'}
+                Đang tạo đơn...
               </>
             ) : (
               <>
                 <CreditCard className="h-5 w-5 text-[#0b5c2e]" />
-                {'Thanh to\u00e1n'}
+                Thanh toán
               </>
             )}
           </ActionButton>
@@ -478,7 +434,7 @@ function LeftCheckoutPanel({
             className="border border-[#d8bc67] bg-white text-[#3e2a00] hover:-translate-y-0.5 hover:bg-[#fff9e8]"
           >
             <Trash2 className="h-5 w-5 text-[#9a3a27]" />
-            {'X\u00f3a gi\u1ecf h\u00e0ng'}
+            Xóa giỏ hàng
           </ActionButton>
         </div>
       </div>
@@ -516,12 +472,11 @@ function RealtimePanel({
           </div>
           <div>
             <h2 className="text-sm font-black tracking-[0.12em] text-[#201600] uppercase">
-              {'Tr\u1ea1ng th\u00e1i th\u1eddi gian th\u1ef1c'}
+              Trạng thái thời gian thực
             </h2>
             <p className="mt-1 text-xs font-medium text-[#876e2f]">
-              {
-                'Theo d\u00f5i thanh to\u00e1n, \u0111\u01a1n h\u00e0ng v\u00e0 h\u00f3a \u0111\u01a1n sau khi ho\u00e0n t\u1ea5t \u0111\u1eb7t h\u00e0ng.'
-              }
+              Theo dõi thanh toán, đơn hàng và hóa đơn sau khi hoàn tất đặt
+              hàng/thanh toán.
             </p>
           </div>
         </div>
@@ -530,9 +485,9 @@ function RealtimePanel({
       <div className="space-y-4 px-5 py-5">
         {(
           [
-            ['Tr\u1ea1ng th\u00e1i thanh to\u00e1n', statuses.paymentStatus],
-            ['Tr\u1ea1ng th\u00e1i \u0111\u01a1n h\u00e0ng', statuses.orderStatus],
-            ['Tr\u1ea1ng th\u00e1i h\u00f3a \u0111\u01a1n', statuses.invoiceStatus],
+            ['Payment Status', statuses.paymentStatus],
+            ['Order Status', statuses.orderStatus],
+            ['Invoice Status', statuses.invoiceStatus],
           ] as const
         ).map(([label, value]) => (
           <div
@@ -559,7 +514,7 @@ function RealtimePanel({
             className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-[#d4c3a0] bg-white px-4 text-sm font-black text-[#22170a] transition hover:-translate-y-0.5 hover:bg-[#fff9e8] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <RefreshCcw className="h-4 w-4" />
-            {'\u0110\u1ed3ng b\u1ed9 l\u1ea1i tr\u1ea1ng th\u00e1i'}
+            Đồng bộ lại trạng thái
           </button>
           <button
             type="button"
@@ -567,17 +522,17 @@ function RealtimePanel({
             disabled={!isPolling}
             className="inline-flex h-12 items-center justify-center rounded-2xl border border-[#d4c3a0] bg-white px-4 text-sm font-black text-[#22170a] transition hover:-translate-y-0.5 hover:bg-[#fff9e8] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {'D\u1eebng \u0111\u1ed3ng b\u1ed9'}
+            Dừng đồng bộ
           </button>
         </div>
 
         <p className="text-xs font-medium text-[#8b7860]">
-          {'Ki\u1ec3m tra tr\u1ea1ng th\u00e1i m\u1ed7i 3 gi\u00e2y, t\u1ed1i \u0111a trong 10 ph\u00fat'}
+          Kiểm tra trạng thái mỗi 3 giây, tối đa trong 10 phút
         </p>
 
         {isPolling && (
           <p className="rounded-2xl border border-[#ebd690] bg-[#fff8db] px-3 py-2 text-sm font-medium text-[#7b5f00]">
-            {'\u0110ang \u0111\u1ed3ng b\u1ed9 tr\u1ea1ng th\u00e1i \u0111\u01a1n h\u00e0ng...'}
+            Đang đồng bộ trạng thái đơn hàng...
           </p>
         )}
         {pollingError && (
@@ -587,9 +542,8 @@ function RealtimePanel({
         )}
         {pollingTimedOut && (
           <p className="rounded-2xl border border-[#ebd690] bg-[#fff8db] px-3 py-2 text-sm font-medium text-[#7b5f00]">
-            {
-              '\u0110\u00e3 h\u1ebft th\u1eddi gian ki\u1ec3m tra t\u1ef1 \u0111\u1ed9ng. B\u1ea5m "Ki\u1ec3m tra l\u1ea1i" \u0111\u1ec3 c\u1eadp nh\u1eadt tr\u1ea1ng th\u00e1i m\u1edbi nh\u1ea5t.'
-            }
+            Đã hết thời gian kiểm tra tự động. Bấm “Kiểm tra lại” để cập nhật
+            trạng thái mới nhất.
           </p>
         )}
       </div>
@@ -612,34 +566,32 @@ function SummaryPanel({
         </div>
         <div>
           <h2 className="text-sm font-black tracking-[0.12em] text-[#201600] uppercase">
-            {'T\u00f3m t\u1eaft \u0111\u01a1n h\u00e0ng'}
+            Tóm tắt đơn hàng
           </h2>
           <p className="mt-1 text-xs font-medium text-[#876e2f]">
-            {'T\u1ed5ng k\u1ebft t\u1eeb gi\u1ecf h\u00e0ng v\u00e0 b\u00e1o gi\u00e1 hi\u1ec7n t\u1ea1i.'}
+            Tổng kết từ giỏ hàng va quote hiện tại.
           </p>
         </div>
       </div>
 
       <div className="mt-5 space-y-3">
         <div className="flex items-center justify-between border-b border-[#f1e8d1] pb-3 text-sm font-semibold text-[#4c3400]">
-          <span>{'T\u1ea1m t\u00ednh'}</span>
-          <span>
-            {formatMoney(summary.subtotal)} {DONG_SYMBOL}
-          </span>
+          <span>Tổng thanh toán</span>
+          <span>{formatMoney(summary.subtotal)} ₫</span>
         </div>
         <div className="flex items-center justify-between border-b border-[#f1e8d1] pb-3 text-sm font-semibold text-[#4c3400]">
-          <span>{'Ph\u00ed v\u1eadn chuy\u1ec3n'}</span>
+          <span>Phí ship</span>
           <span>
             {summary.shippingFee > 0
-              ? `${formatMoney(summary.shippingFee)} ${DONG_SYMBOL}`
-              : 'Mi\u1ec5n ph\u00ed'}
+              ? `${formatMoney(summary.shippingFee)} ₫`
+              : 'Miễn phí'}
           </span>
         </div>
         <div className="flex items-center justify-between border-b border-[#f1e8d1] pb-3 text-sm font-semibold text-[#4c3400]">
-          <span>{'Gi\u1ea3m gi\u00e1'}</span>
+          <span>Voucher</span>
           <span>
             {summary.discountAmount > 0
-              ? `- ${formatMoney(summary.discountAmount)} ${DONG_SYMBOL}`
+              ? `- ${formatMoney(summary.discountAmount)} ₫`
               : '-'}
           </span>
         </div>
@@ -648,16 +600,16 @@ function SummaryPanel({
       <div className="mt-5 flex items-end justify-between gap-4">
         <div>
           <p className="text-sm font-black tracking-[0.12em] text-[#4c3400] uppercase">
-            {'T\u1ed5ng c\u1ed9ng'}
+            Tổng cộng
           </p>
           <p className="mt-1 text-xs font-medium text-[#876e2f]">
             {quoteResult
-              ? '\u0110\u00e3 c\u1eadp nh\u1eadt theo b\u00e1o gi\u00e1'
-              : 'T\u1ea1m t\u00ednh theo gi\u1ecf h\u00e0ng hi\u1ec7n t\u1ea1i'}
+              ? 'Đã cập nhật theo quote'
+              : 'Tạm tính theo cart hiện tại'}
           </p>
         </div>
         <div className="text-right text-[34px] leading-none font-black text-[#d08b00]">
-          {formatMoney(summary.total)} {DONG_SYMBOL}
+          {formatMoney(summary.total)} ₫
         </div>
       </div>
     </div>
@@ -679,10 +631,10 @@ function PaymentPanel({
         </div>
         <div>
           <h2 className="text-sm font-black tracking-[0.12em] text-[#201600] uppercase">
-            {'Th\u00f4ng tin thanh to\u00e1n'}
+            Thông tin thanh toán
           </h2>
           <p className="mt-1 text-xs font-medium text-[#78633d]">
-            {'M\u00e3 \u0111\u01a1n h\u00e0ng'}: {checkoutResult.orderId || '-'}
+            Order ID: {checkoutResult.orderId || '-'}
           </p>
         </div>
       </div>
@@ -690,7 +642,7 @@ function PaymentPanel({
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border border-[#efe2be] bg-white p-3 text-sm">
           <div className="text-[11px] font-black tracking-[0.12em] text-[#866d36] uppercase">
-            {'M\u00e3 giao d\u1ecbch'}
+            Mã giao dịch
           </div>
           <div className="mt-2 font-semibold text-[#201600]">
             {checkoutResult.payment?.paymentCode || '-'}
@@ -698,7 +650,7 @@ function PaymentPanel({
         </div>
         <div className="rounded-2xl border border-[#efe2be] bg-white p-3 text-sm">
           <div className="text-[11px] font-black tracking-[0.12em] text-[#866d36] uppercase">
-            {'Ng\u00e2n h\u00e0ng'}
+            Ngân hàng
           </div>
           <div className="mt-2 font-semibold text-[#201600]">
             {checkoutResult.payment?.bankName || '-'}
@@ -706,7 +658,7 @@ function PaymentPanel({
         </div>
         <div className="rounded-2xl border border-[#efe2be] bg-white p-3 text-sm">
           <div className="text-[11px] font-black tracking-[0.12em] text-[#866d36] uppercase">
-            {'S\u1ed1 t\u00e0i kho\u1ea3n'}
+            Tài khoản
           </div>
           <div className="mt-2 font-semibold text-[#201600]">
             {checkoutResult.payment?.bankAccountNumber || '-'}
@@ -714,7 +666,7 @@ function PaymentPanel({
         </div>
         <div className="rounded-2xl border border-[#efe2be] bg-white p-3 text-sm">
           <div className="text-[11px] font-black tracking-[0.12em] text-[#866d36] uppercase">
-            {'N\u1ed9i dung chuy\u1ec3n kho\u1ea3n'}
+            Nội dung
           </div>
           <div className="mt-2 font-semibold text-[#201600]">
             {checkoutResult.payment?.content || '-'}
@@ -725,12 +677,12 @@ function PaymentPanel({
       {checkoutResult.payment?.qrUrl && (
         <div className="mt-4 rounded-[24px] border border-[#efe2be] bg-white p-4">
           <p className="text-[11px] font-black tracking-[0.12em] text-[#866d36] uppercase">
-            {'M\u00e3 QR thanh to\u00e1n'}
+            QR thanh toán
           </p>
           <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-center">
             <img
               src={checkoutResult.payment.qrUrl}
-              alt={'M\u00e3 QR thanh to\u00e1n'}
+              alt="Payment QR"
               className="h-40 w-40 rounded-2xl border border-[#ecd690] bg-white object-contain p-2"
             />
             <a
@@ -739,7 +691,7 @@ function PaymentPanel({
               rel="noreferrer"
               className="inline-flex h-11 items-center justify-center rounded-2xl border border-[#d6b454] bg-white px-4 text-sm font-black text-[#201600] transition hover:-translate-y-0.5 hover:bg-[#fff9e8]"
             >
-              {'M\u1edf m\u00e3 QR'}
+              Mở QR URL
             </a>
           </div>
         </div>
@@ -797,11 +749,11 @@ export const SaleCheckoutPage: React.FC = () => {
   };
 
   const validateCheckoutInput = (): string => {
-    if (cartItems.length === 0) return 'Gi\u1ecf h\u00e0ng \u0111ang tr\u1ed1ng.';
+    if (cartItems.length === 0) return 'Giỏ hàng đang trống.';
 
     const invalidQtyItem = cartItems.find((item) => item.quantity < 1);
     if (invalidQtyItem) {
-      return `S\u1ed1 l\u01b0\u1ee3ng kh\u00f4ng h\u1ee3p l\u1ec7 \u1edf s\u1ea3n ph\u1ea9m: ${invalidQtyItem.productName}`;
+      return `Số lượng không hợp lệ ở sản phẩm: ${invalidQtyItem.productName}`;
     }
 
     const missingField = REQUIRED_SHIPPING_FIELDS.find(
@@ -809,7 +761,7 @@ export const SaleCheckoutPage: React.FC = () => {
     );
 
     if (missingField) {
-      return `Thi\u1ebfu th\u00f4ng tin giao h\u00e0ng b\u1eaft bu\u1ed9c: ${getShippingFieldLabel(missingField)}`;
+      return `Thiếu thông tin giao hàng bắt buộc: ${missingField}`;
     }
 
     return '';
@@ -817,13 +769,13 @@ export const SaleCheckoutPage: React.FC = () => {
 
   const fillSwaggerSampleShipping = () => {
     setShippingForm({
-      fullName: 'Nguy\u1ec5n V\u0103n A',
+      fullName: 'Nguyen Van A',
       phone: '0901234567',
       email: 'example@mail.com',
-      line1: 'S\u1ed1 1 Nguy\u1ec5n Hu\u1ec7',
-      line2: 'T\u1ea7ng 5',
-      ward: 'B\u1ebfn Ngh\u00e9',
-      district: 'Qu\u1eadn 1',
+      line1: 'So 1 Nguyen Hue',
+      line2: 'Tang 5',
+      ward: 'Ben Nghe',
+      district: 'Quan 1',
       province: 'TP HCM',
       country: 'VN',
       note: '',
@@ -856,7 +808,7 @@ export const SaleCheckoutPage: React.FC = () => {
           }
         )?.response?.data?.message ||
         (error as { message?: string })?.message ||
-        'T\u00ednh ti\u1ec1n th\u1ea5t b\u1ea1i.';
+        'Tính tiền thất bại.';
       setQuoteError(message);
       setQuoteResult(null);
     } finally {
@@ -870,9 +822,7 @@ export const SaleCheckoutPage: React.FC = () => {
     if (validationError) return;
 
     if (!quoteResult) {
-      setCheckoutError(
-        'B\u1ea1n c\u1ea7n b\u1ea5m "T\u00ednh ti\u1ec1n" tr\u01b0\u1edbc khi thanh to\u00e1n.'
-      );
+      setCheckoutError('Bạn cần bấm "Tính tiền" trước khi thanh toán.');
       return;
     }
 
@@ -899,7 +849,7 @@ export const SaleCheckoutPage: React.FC = () => {
           }
         )?.response?.data?.message ||
         (error as { message?: string })?.message ||
-        'T\u1ea1o \u0111\u01a1n thanh to\u00e1n th\u1ea5t b\u1ea1i.';
+        'Tạo đơn thanh toán thất bại.';
       setCheckoutError(message);
     } finally {
       setIsCheckingOut(false);
@@ -924,10 +874,8 @@ export const SaleCheckoutPage: React.FC = () => {
   return (
     <>
       <Header
-        title={'Thanh to\u00e1n b\u00e1n h\u00e0ng'}
-        subtitle={
-          'Lu\u1ed3ng: gi\u1ecf h\u00e0ng \u2192 b\u00e1o gi\u00e1 \u2192 thanh to\u00e1n \u2192 theo d\u00f5i tr\u1ea1ng th\u00e1i'
-        }
+        title="Sale Checkout"
+        subtitle="Flow: cart items → quote → checkout → poll payment status"
       />
 
       <div className="min-h-[calc(100vh-4rem)] bg-[#fffdfa]">

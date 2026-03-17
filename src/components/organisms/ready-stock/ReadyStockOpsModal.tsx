@@ -85,10 +85,10 @@ function toBackendOpsStage(status: ReadyStockOpsStatus): OrderOpsStage | null {
 }
 
 const CHECKLIST_LABELS: Record<ReadyStockChecklistKey, string> = {
-  skuQuantityChecked: 'Da kiem SKU + so luong',
-  productConditionChecked: 'Da kiem tinh trang san pham',
-  addressChecked: 'Da kiem dia chi giao',
-  packageReady: 'Da dong goi xong',
+  skuQuantityChecked: 'Đã kiểm SKU + số lượng',
+  productConditionChecked: 'Đã kiểm tình trạng sản phẩm',
+  addressChecked: 'Đã kiểm địa chỉ giao',
+  packageReady: 'Đã đóng gói xong',
 };
 
 export function ReadyStockOpsModal({
@@ -162,7 +162,7 @@ export function ReadyStockOpsModal({
       onOpenChange(false);
     } catch {
       setBackendError(
-        'Khong cap nhat duoc ops stage tren backend. Da luu local.'
+        'Không cập nhật được ops stage trên backend. Đã lưu local.'
       );
     } finally {
       setSavingBackend(false);
@@ -173,17 +173,17 @@ export function ReadyStockOpsModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="text-foreground w-[92vw] max-w-[720px] max-h-[78vh] overflow-y-auto p-4 shadow-2xl">
         <DialogHeader>
-          <DialogTitle>Van hanh don {order.code}</DialogTitle>
+          <DialogTitle>Vận hành đơn {order.code}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-1">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="space-y-1">
-              <Label>Loai don</Label>
+              <Label>Loại đơn</Label>
               <div className="text-sm font-semibold">Ready stock</div>
             </div>
             <div className="space-y-1">
-              <Label>Thanh toan</Label>
+              <Label>Thanh toán</Label>
               <StatusBadge
                 status={order.paymentStatus === 'paid' ? 'success' : 'warning'}
               >
@@ -191,7 +191,7 @@ export function ReadyStockOpsModal({
               </StatusBadge>
             </div>
             <div className="space-y-1">
-              <Label>Trang thai van hanh</Label>
+              <Label>Trạng thái vận hành</Label>
               <Select
                 value={draft.opsStatus}
                 onValueChange={(value) =>
@@ -241,11 +241,11 @@ export function ReadyStockOpsModal({
 
           <div className="space-y-2">
             <div className="text-foreground text-sm font-semibold">
-              Van don / Tracking
+              Vận đơn / Tracking
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="space-y-1">
-                <Label>Don vi VC</Label>
+                <Label>Đơn vị VC</Label>
                 <Select
                   value={draft.carrierId || ''}
                   onValueChange={(value) =>
@@ -255,7 +255,7 @@ export function ReadyStockOpsModal({
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Chon don vi" />
+                    <SelectValue placeholder="Chọn đơn vị" />
                   </SelectTrigger>
                   <SelectContent>
                     {carriers.map((carrier) => (
@@ -267,12 +267,12 @@ export function ReadyStockOpsModal({
                 </Select>
                 {carrierName && (
                   <div className="text-foreground/60 text-xs">
-                    Dang chon: {carrierName}
+                    Đang chọn: {carrierName}
                   </div>
                 )}
               </div>
               <div className="space-y-1 sm:col-span-2">
-                <Label>Ma tracking</Label>
+                <Label>Mã tracking</Label>
                 <Input
                   value={draft.trackingCode}
                   onChange={(e) =>
@@ -296,15 +296,15 @@ export function ReadyStockOpsModal({
             Reset local
           </Button>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Dong
+            Đóng
           </Button>
-          <Button onClick={handleSaveLocal}>Luu</Button>
+          <Button onClick={handleSaveLocal}>Lưu</Button>
           <Button
             variant="secondary"
             onClick={handleSaveAndSync}
             disabled={savingBackend}
           >
-            {savingBackend ? 'Dang cap nhat...' : 'Luu + cap nhat backend'}
+            {savingBackend ? 'Đang cập nhật...' : 'Lưu + cập nhật backend'}
           </Button>
         </DialogFooter>
       </DialogContent>

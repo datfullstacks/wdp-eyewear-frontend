@@ -46,15 +46,15 @@ const statusTextClass: Record<string, string> = {
 
 function getRxStatusLabel(order: PrescriptionOrder) {
   if (order.prescriptionStatus === 'missing') {
-    return { label: 'Thieu Rx', className: statusTextClass.error };
+    return { label: 'Thiếu Rx', className: statusTextClass.error };
   }
   if (order.prescriptionStatus === 'incomplete') {
-    return { label: 'Chua day du', className: statusTextClass.warning };
+    return { label: 'Chưa đầy đủ', className: statusTextClass.warning };
   }
   if (order.prescriptionStatus === 'pending_review') {
-    return { label: 'Cho duyet', className: statusTextClass.info };
+    return { label: 'Chờ duyêt', className: statusTextClass.info };
   }
-  return { label: 'Da duyet', className: statusTextClass.success };
+  return { label: 'Đã duyêt', className: statusTextClass.success };
 }
 
 function getWorkflowMeta(order: PrescriptionOrder) {
@@ -62,39 +62,39 @@ function getWorkflowMeta(order: PrescriptionOrder) {
     case 'waiting_review':
       return { label: 'Cho review Rx', className: statusTextClass.warning };
     case 'waiting_lab':
-      return { label: 'Cho vao gia cong', className: statusTextClass.info };
+      return { label: 'Cho vào gia công', className: statusTextClass.info };
     case 'lens_processing':
-      return { label: 'Dang cat mai trong', className: statusTextClass.warning };
+      return { label: 'Đang cắt mai tròng', className: statusTextClass.warning };
     case 'lens_fitting':
-      return { label: 'Dang lap trong vao gong', className: statusTextClass.warning };
+      return { label: 'Đang lắp tròng vào gọng', className: statusTextClass.warning };
     case 'qc_check':
-      return { label: 'Dang QC sau gia cong', className: statusTextClass.info };
+      return { label: 'Đang QC sau gia công', className: statusTextClass.info };
     case 'ready_to_pack':
-      return { label: 'San sang dong goi', className: statusTextClass.success };
+      return { label: 'Sẵn sàng đóng gói', className: statusTextClass.success };
     case 'packing':
-      return { label: 'Dang dong goi', className: statusTextClass.warning };
+      return { label: 'Đang đóng gói', className: statusTextClass.warning };
     case 'ready_to_ship':
-      return { label: 'Cho tao van don', className: statusTextClass.info };
+      return { label: 'Chờ tạo vận đơn', className: statusTextClass.info };
     case 'shipment_created':
-      return { label: 'Da tao van don GHN', className: statusTextClass.info };
+      return { label: 'Đã tạo vận đơn GHN', className: statusTextClass.info };
     case 'handover_to_carrier':
-      return { label: 'Da ban giao van chuyen', className: statusTextClass.info };
+      return { label: 'Đã bàn giao vận chuyển', className: statusTextClass.info };
     case 'in_transit':
-      return { label: 'Dang van chuyen', className: statusTextClass.info };
+      return { label: 'Đang vận chuyển', className: statusTextClass.info };
     case 'delivery_failed':
-      return { label: 'Giao that bai', className: statusTextClass.error };
+      return { label: 'Giao thất bại', className: statusTextClass.error };
     case 'waiting_redelivery':
-      return { label: 'Cho giao lai', className: statusTextClass.warning };
+      return { label: 'Chờ giao lại', className: statusTextClass.warning };
     case 'return_pending':
-      return { label: 'Cho hoan hang', className: statusTextClass.warning };
+      return { label: 'Chờ hoàn hàng', className: statusTextClass.warning };
     case 'return_in_transit':
-      return { label: 'Dang hoan hang', className: statusTextClass.warning };
+      return { label: 'Đang hoàn hàng', className: statusTextClass.warning };
     case 'exception_hold':
-      return { label: 'Dang hold ngoai le', className: statusTextClass.error };
+      return { label: 'Đang hold ngoại lệ', className: statusTextClass.error };
     case 'delivered':
-      return { label: 'Da giao', className: statusTextClass.success };
+      return { label: 'Đã giao', className: statusTextClass.success };
     case 'returned':
-      return { label: 'Da hoan hang', className: statusTextClass.error };
+      return { label: 'Đã hoàn hàng', className: statusTextClass.error };
     default:
       return { label: '-', className: statusTextClass.default };
   }
@@ -103,17 +103,17 @@ function getWorkflowMeta(order: PrescriptionOrder) {
 function getAdvanceActionLabel(order: PrescriptionOrder): string | null {
   switch (order.workflowStage) {
     case 'waiting_lab':
-      return 'Bat dau gia cong';
+      return 'Bắt đầu gia công';
     case 'lens_processing':
-      return 'Chuyen sang lap trong';
+      return 'Chuyển sang lắp tròng';
     case 'lens_fitting':
-      return 'Chuyen sang QC';
+      return 'Chuyển sang QC';
     case 'qc_check':
-      return 'Dat QC - san sang dong goi';
+      return 'Đạt QC - sẵn sàng đóng gói';
     case 'ready_to_pack':
-      return 'Chuyen sang dong goi';
+      return 'Chuyển sang đóng gói';
     case 'packing':
-      return 'San sang tao van don';
+      return 'Sẵn sàng tạo vận đơn';
     default:
       return null;
   }
@@ -151,11 +151,11 @@ export const RxOrderTable = ({
       <Table className="text-sm font-normal">
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead>Ma don</TableHead>
-            <TableHead>Khach hang</TableHead>
-            <TableHead>San pham</TableHead>
-            <TableHead>Trang thai Rx</TableHead>
-            <TableHead>Tien do xu ly</TableHead>
+            <TableHead>Mã đơn</TableHead>
+            <TableHead>Khách hàng</TableHead>
+            <TableHead>Sản phẩm</TableHead>
+            <TableHead>Trạng thái Rx</TableHead>
+            <TableHead>Tiến độ xử lý</TableHead>
             <TableHead>GHN</TableHead>
             <TableHead className="w-[60px]"></TableHead>
           </TableRow>
@@ -237,11 +237,11 @@ export const RxOrderTable = ({
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => onInputPrescription(order)}>
                             <FileText className="mr-2 h-4 w-4" />
-                            Nhap Rx
+                            Nhập Rx
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onContact(order)}>
                             <Phone className="mr-2 h-4 w-4" />
-                            Lien he khach
+                            Liên hệ khách
                           </DropdownMenuItem>
                         </>
                       )}
@@ -251,7 +251,7 @@ export const RxOrderTable = ({
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => onApprove(order)}>
                             <CheckCircle2 className="mr-2 h-4 w-4 text-success" />
-                            Duyet va vao gia cong
+                            Duyệt và vào gia công
                           </DropdownMenuItem>
                         </>
                       )}
@@ -271,7 +271,7 @@ export const RxOrderTable = ({
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => onCreateShipment(order)}>
                             <Truck className="mr-2 h-4 w-4" />
-                            Tao van don GHN
+                            Tạo vận đơn GHN
                           </DropdownMenuItem>
                         </>
                       )}
@@ -281,7 +281,7 @@ export const RxOrderTable = ({
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => onSyncShipment(order)}>
                             <Truck className="mr-2 h-4 w-4" />
-                            Dong bo GHN
+                            Đồng bọi GHN
                           </DropdownMenuItem>
                         </>
                       )}
@@ -295,7 +295,7 @@ export const RxOrderTable = ({
           {orders.length === 0 && (
             <TableRow>
               <TableCell colSpan={7} className="text-muted-foreground py-8 text-center">
-                Khong co don hang nao
+                Không có đơn hàng nào
               </TableCell>
             </TableRow>
           )}

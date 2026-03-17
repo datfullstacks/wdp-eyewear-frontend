@@ -7,27 +7,27 @@ import type {
 
 export const READY_STOCK_OPS_STATUS_LABEL: Record<ReadyStockOpsStatus, string> =
   {
-    pending_operations: 'Ch\u1edd nh\u1eadn x\u1eed l\u00fd',
-    picking: '\u0110ang l\u1ea5y h\u00e0ng',
-    packing: '\u0110ang \u0111\u00f3ng g\u00f3i',
-    ready_to_ship: 'S\u1eb5n s\u00e0ng t\u1ea1o v\u1eadn \u0111\u01a1n',
-    shipment_created: '\u0110\u00e3 t\u1ea1o v\u1eadn \u0111\u01a1n',
-    handover_to_carrier: '\u0110\u00e3 b\u00e0n giao VC',
-    in_transit: '\u0110ang v\u1eadn chuy\u1ec3n',
-    delivery_failed: 'Giao th\u1ea5t b\u1ea1i',
-    waiting_redelivery: 'Ch\u1edd giao l\u1ea1i',
-    return_pending: 'Ch\u1edd ho\u00e0n h\u00e0ng',
-    return_in_transit: '\u0110ang ho\u00e0n h\u00e0ng',
-    waiting_customer_info: 'Ch\u1edd staff b\u1ed5 sung th\u00f4ng tin',
-    on_hold: 'Hold n\u1ed9i b\u1ed9',
-    exception_hold: 'Ngo\u1ea1i l\u1ec7 giao v\u1eadn',
-    delivered: '\u0110\u00e3 giao',
-    closed: '\u0110\u00e3 \u0111\u00f3ng h\u1ed3 s\u01a1',
-    returned: 'Ho\u00e0n h\u00e0ng',
+    pending_operations: 'Chờ nhận xử lý',
+    picking: 'Đang lấy hàng',
+    packing: 'Đang đóng gói',
+    ready_to_ship: 'Sẵn sàng tạo vận đơn',
+    shipment_created: 'Đã tạo vận đơn',
+    handover_to_carrier: 'Đã bàn giao VC',
+    in_transit: 'Đang vận chuyển',
+    delivery_failed: 'Giao thất bại',
+    waiting_redelivery: 'Chờ giao lại',
+    return_pending: 'Chờ hoàn hàng',
+    return_in_transit: 'Đang hoàn hàng',
+    waiting_customer_info: 'Cho staff bỏ sung thông tin',
+    on_hold: 'Hold nội bộ',
+    exception_hold: 'Ngoại lệ giao vận',
+    delivered: 'Đã giao',
+    closed: 'Đã đóng hồ sơ',
+    returned: 'Hoàn hàng',
     // Legacy UI aliases kept temporarily for persisted local state compatibility.
-    awaiting_picking: 'Ch\u1edd nh\u1eadn x\u1eed l\u00fd',
-    packed: '\u0110ang \u0111\u00f3ng g\u00f3i',
-    shipped: '\u0110\u00e3 b\u00e0n giao VC',
+    awaiting_picking: 'Chờ nhận xử lý',
+    packed: 'Đang đóng gói',
+    shipped: 'Đã bàn giao VC',
     blocked: 'Hold',
   };
 
@@ -219,7 +219,7 @@ export function createDefaultReadyStockOpsState(
     salesApprovedBy: backendOps.salesApprovedBy || 'Sales/Support',
     salesHandoffNote:
       backendOps.salesHandoffNote ||
-      'Sales da kiem tra thong tin giao hang, xac nhan don du dieu kien xu ly van hanh.\n' +
+      'Sales đã kiểm tra thông tin giao hang, xac nhan don du dieu kien xu ly van hanh.\n' +
         'Route vao queue Ready Stock vi: khong phai pre-order, khong phai prescription.',
     internalNote: backendOps.internalNote || '',
     holdReason: backendOps.holdReason || null,
@@ -233,9 +233,7 @@ export function createDefaultReadyStockOpsState(
       addressChecked: Boolean(backendOps.checklist?.addressChecked),
       packageReady: Boolean(backendOps.checklist?.packageReady),
     },
-    carrierId: String(
-      backendOps.carrierId || order.shipment?.provider || ''
-    )
+    carrierId: String(backendOps.carrierId || order.shipment?.provider || '')
       .trim()
       .toLowerCase(),
     trackingCode: String(

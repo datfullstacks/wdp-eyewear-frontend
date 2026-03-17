@@ -28,8 +28,8 @@ interface PreorderOrderRowProps {
   isSelected: boolean;
   onSelect: (id: string) => void;
   onViewDetail: (order: PreorderOrder) => void;
-  onLinkBatch: (order: PreorderOrder) => void;
-  onContact: (order: PreorderOrder) => void;
+  onLinkBatch?: (order: PreorderOrder) => void;
+  onContact?: (order: PreorderOrder) => void;
   onCancel: (order: PreorderOrder) => void;
   onMarkArrived: (order: PreorderOrder) => void;
   onStockIn: (order: PreorderOrder) => void;
@@ -89,6 +89,7 @@ export const PreorderOrderRow = ({
     info: 'text-primary',
     default: 'text-foreground/80',
   };
+
   const paymentTextClass =
     order.paymentStatus === 'paid'
       ? statusTextClass.success
@@ -97,6 +98,7 @@ export const PreorderOrderRow = ({
         : order.paymentStatus === 'pending'
           ? statusTextClass.warning
           : statusTextClass.default;
+
   const statusMeta = getStatusMeta(order);
   const isCancelled = order.status === 'cancelled';
   const canMarkArrived =
@@ -148,7 +150,7 @@ export const PreorderOrderRow = ({
           ))}
           {order.products.length > 2 && (
             <span className="text-foreground/70 text-xs">
-              +{order.products.length - 2} san pham khac
+              +{order.products.length - 2} sản phẩm khác
             </span>
           )}
         </div>
@@ -269,15 +271,19 @@ export const PreorderOrderRow = ({
               Xem chi tiết
             </DropdownMenuItem>
 
-            <DropdownMenuItem onClick={() => onLinkBatch(order)}>
-              <Link2 className="mr-2 h-4 w-4" />
-              Liên kết đợt hàng
-            </DropdownMenuItem>
+            {onLinkBatch && (
+              <DropdownMenuItem onClick={() => onLinkBatch(order)}>
+                <Link2 className="mr-2 h-4 w-4" />
+                Liên kết đợt hàng
+              </DropdownMenuItem>
+            )}
 
-            <DropdownMenuItem onClick={() => onContact(order)}>
-              <MessageSquare className="mr-2 h-4 w-4" />
-              Liên hệ khách
-            </DropdownMenuItem>
+            {onContact && (
+              <DropdownMenuItem onClick={() => onContact(order)}>
+                <MessageSquare className="mr-2 h-4 w-4" />
+                Liên hệ khách
+              </DropdownMenuItem>
+            )}
 
             {!isCancelled && (
               <>

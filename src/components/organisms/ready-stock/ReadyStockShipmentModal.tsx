@@ -108,7 +108,7 @@ export function ReadyStockShipmentModal({
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <Label>Trang thai GHN</Label>
+                  <Label>Trạng thái GHN</Label>
                   <div className="text-sm font-semibold">
                     {shipment?.latestStatus || shipment?.state || '-'}
                   </div>
@@ -120,7 +120,7 @@ export function ReadyStockShipmentModal({
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <Label>Leadtime</Label>
+                  <Label>Thời gian dự kiến</Label>
                   <div className="text-sm font-semibold">
                     {formatDateTime(shipment?.leadtime)}
                   </div>

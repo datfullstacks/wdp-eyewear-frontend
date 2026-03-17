@@ -48,11 +48,13 @@ function isPaidReadyStockOrder(order: OrderRecord): boolean {
 const DEFAULT_FILTERS: ReadyStockFilters = {
   salesApprovedFrom: '',
   salesApprovedTo: '',
+  payment: 'all',
   shipment: 'all',
   opsStatus: 'all',
   assignee: 'all',
   hasNoteOnly: false,
   hasIssueOnly: false,
+  hasWarningOnly: false,
 };
 
 const ACTIVE_SHIPMENT_STATUSES = new Set([

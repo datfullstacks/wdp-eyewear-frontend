@@ -5,9 +5,10 @@ export { ReadyStockIssueModal } from './ReadyStockIssueModal';
 export { ReadyStockFilterSheet } from './ReadyStockFilterSheet';
 export type {
   ReadyStockFilters,
-  ReadyStockShipmentFilter,
+  ReadyStockPaymentFilter,
 } from './ReadyStockFilterSheet';
 export { ReadyStockHoldModal } from './ReadyStockHoldModal';
 export { ReadyStockPickListModal } from './ReadyStockPickListModal';
 export { ReadyStockOrderDetailModal } from './ReadyStockOrderDetailModal';
 export { ReadyStockShipmentModal } from './ReadyStockShipmentModal';
+

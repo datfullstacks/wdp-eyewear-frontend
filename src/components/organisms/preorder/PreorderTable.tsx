@@ -1,3 +1,5 @@
+import { PreorderOrderRow } from '@/components/molecules/PreorderOrderRow';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -5,10 +7,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { PreorderOrderRow } from '@/components/molecules/PreorderOrderRow';
-import { MessageSquare, Package } from 'lucide-react';
 import type { PreorderOrder } from '@/types/preorder';
+import { MessageSquare, Package } from 'lucide-react';
 
 interface PreorderTableProps {
   orders: PreorderOrder[];
@@ -17,6 +17,8 @@ interface PreorderTableProps {
   onSelectOrder: (id: string) => void;
   onSelectAll: () => void;
   onViewDetail: (order: PreorderOrder) => void;
+  onLinkBatch?: (order: PreorderOrder) => void;
+  onContact?: (order: PreorderOrder) => void;
   onCancel: (order: PreorderOrder) => void;
   onMarkArrived: (order: PreorderOrder) => void;
   onStockIn: (order: PreorderOrder) => void;
@@ -31,6 +33,8 @@ export const PreorderTable = ({
   showEmptyState = true,
   onSelectOrder,
   onViewDetail,
+  onLinkBatch,
+  onContact,
   onCancel,
   onMarkArrived,
   onStockIn,
@@ -73,6 +77,8 @@ export const PreorderTable = ({
               isSelected={selectedOrders.includes(order.id)}
               onSelect={onSelectOrder}
               onViewDetail={onViewDetail}
+              onLinkBatch={onLinkBatch}
+              onContact={onContact}
               onCancel={onCancel}
               onMarkArrived={onMarkArrived}
               onStockIn={onStockIn}
