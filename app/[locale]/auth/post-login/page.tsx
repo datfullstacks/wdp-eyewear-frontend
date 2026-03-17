@@ -15,16 +15,22 @@ export default async function PostLoginPage({
   const safeCallbackUrl = callbackUrl?.startsWith('/') ? callbackUrl : '/';
 
   const role = (session.user.role ?? '').trim().toLowerCase();
-  const shouldRedirectToStaff = role === 'sales' || role === 'operations';
+  const shouldRedirectToSale = role === 'sales';
+  const shouldRedirectToOperation =
+    role === 'operations' || role === 'operation';
   const shouldRedirectToManager = role === 'admin' || role === 'manager';
 
   if (shouldRedirectToManager) {
     redirect('/manager');
   }
 
+  if (shouldRedirectToOperation) {
+    redirect('/operation/orders/ready-stock');
+  }
+
   if (role === 'customer') {
     redirect('/');
   }
 
-  redirect(shouldRedirectToStaff ? '/staff/dashboard-staff' : safeCallbackUrl);
+  redirect(shouldRedirectToSale ? '/sale/products' : safeCallbackUrl);
 }

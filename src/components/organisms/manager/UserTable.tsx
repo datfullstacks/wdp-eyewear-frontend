@@ -14,7 +14,7 @@ import { Eye, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { User } from '@/api/users';
 
-export type UserTabRole = 'manager' | 'staff' | 'customer';
+export type UserTabRole = 'manager' | 'sales' | 'customer';
 
 interface UserTableProps {
   users: User[];
@@ -50,7 +50,9 @@ function roleBadge(role: string) {
   };
   const info = map[role] || { label: role, cls: 'bg-gray-100 text-gray-700' };
   return (
-    <span className={cn('rounded-full px-2 py-1 text-xs font-medium', info.cls)}>
+    <span
+      className={cn('rounded-full px-2 py-1 text-xs font-medium', info.cls)}
+    >
       {info.label}
     </span>
   );
@@ -80,7 +82,9 @@ export function UserTable({
           <TableHead>{translations?.phone || 'Số điện thoại'}</TableHead>
           <TableHead>{translations?.loginVia || 'Đăng nhập qua'}</TableHead>
           <TableHead>{translations?.createdAt || 'Ngày tạo'}</TableHead>
-          <TableHead className="text-center">{translations?.actions || 'Hành động'}</TableHead>
+          <TableHead className="text-center">
+            {translations?.actions || 'Hành động'}
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -96,9 +100,7 @@ export function UserTable({
               </div>
             </TableCell>
             <TableCell>{roleBadge(user.role)}</TableCell>
-            <TableCell className="text-gray-600">
-              {user.phone || '—'}
-            </TableCell>
+            <TableCell className="text-gray-600">{user.phone || '—'}</TableCell>
             <TableCell className="text-gray-600">
               {user.provider || 'local'}
             </TableCell>

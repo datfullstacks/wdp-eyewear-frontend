@@ -2,19 +2,25 @@ import apiClient from './client';
 
 /**
  * Backend roles: customer, sales, operations, manager, admin
- * Frontend mapping: "staff" UI tab → backend "operations" role
+ * Frontend uses 'sales' role consistently with backend
  */
-export type UserRole = 'customer' | 'sales' | 'operations' | 'manager' | 'admin' | string;
+export type UserRole =
+  | 'customer'
+  | 'sales'
+  | 'operations'
+  | 'manager'
+  | 'admin'
+  | string;
 
 /** Map frontend display role to backend API role */
 export function toBackendRole(frontendRole: string): string {
-  if (frontendRole === 'staff') return 'operations';
+  // No mapping needed - frontend now uses 'sales' directly
   return frontendRole;
 }
 
 /** Map backend role to frontend display role */
 export function toFrontendRole(backendRole: string): string {
-  if (backendRole === 'operations') return 'staff';
+  // No mapping needed - frontend now uses 'sales' directly
   return backendRole;
 }
 
@@ -86,9 +92,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-function extractUsersPayload(
-  payload: unknown
-): { rows: BackendUser[]; pagination?: BackendEnvelope<unknown>['pagination'] } {
+function extractUsersPayload(payload: unknown): {
+  rows: BackendUser[];
+  pagination?: BackendEnvelope<unknown>['pagination'];
+} {
   if (typeof payload === 'string') {
     throw new Error('Invalid users response (received string).');
   }
@@ -103,7 +110,9 @@ function extractUsersPayload(
 
   const pagination =
     (payload.pagination as BackendEnvelope<unknown>['pagination']) ||
-    (isRecord(payload.data) ? ((payload.data as any).pagination as any) : undefined);
+    (isRecord(payload.data)
+      ? ((payload.data as any).pagination as any)
+      : undefined);
 
   const dataField = payload.data;
   if (Array.isArray(dataField)) {
@@ -168,9 +177,10 @@ export const userApi = {
   getById: async (id: string): Promise<User> => {
     const response = await apiClient.get(`/api/users/${id}`);
     const payload = response.data;
-    const raw = isRecord(payload) && isRecord((payload as any).data)
-      ? (payload as any).data as BackendUser
-      : payload as BackendUser;
+    const raw =
+      isRecord(payload) && isRecord((payload as any).data)
+        ? ((payload as any).data as BackendUser)
+        : (payload as BackendUser);
     return mapBackendUser(raw);
   },
 
@@ -183,9 +193,10 @@ export const userApi = {
       ...(input.phone ? { phone: input.phone } : {}),
     };
     const { data } = await apiClient.post('/api/users', body);
-    const raw = isRecord(data) && isRecord((data as any).data)
-      ? (data as any).data as BackendUser
-      : data as BackendUser;
+    const raw =
+      isRecord(data) && isRecord((data as any).data)
+        ? ((data as any).data as BackendUser)
+        : (data as BackendUser);
     return mapBackendUser(raw);
   },
 
@@ -196,9 +207,10 @@ export const userApi = {
     if (input.phone) body.phone = input.phone;
     if (input.role) body.role = toBackendRole(input.role);
     const { data } = await apiClient.put(`/api/users/${id}`, body);
-    const raw = isRecord(data) && isRecord((data as any).data)
-      ? (data as any).data as BackendUser
-      : data as BackendUser;
+    const raw =
+      isRecord(data) && isRecord((data as any).data)
+        ? ((data as any).data as BackendUser)
+        : (data as BackendUser);
     return mapBackendUser(raw);
   },
 
@@ -208,4 +220,3 @@ export const userApi = {
 };
 
 export default userApi;
-

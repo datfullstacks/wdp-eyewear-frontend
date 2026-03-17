@@ -159,21 +159,21 @@
   },
   "users": {
     "title": "Quản Lý Nhân Sự",
-    "subtitle": "Quản lý Manager, Staff và Customer",
+    "subtitle": "Quản lý Manager, Sales và Customer",
     "addManager": "Thêm Manager mới",
-    "addStaff": "Thêm Staff mới",
+    "addStaff": "Thêm Nhân viên Sales mới",
     "addUser": "Thêm Người Dùng Mới",
     "searchPlaceholder": "Tìm kiếm theo tên hoặc email...",
     "tabs": {
       "managers": "Quản lý Manager",
-      "staff": "Quản lý Staff",
+      "staff": "Quản lý Sales",
       "customers": "Chăm sóc Customer"
     },
     "stats": {
       "totalManagers": "Tổng Manager",
-      "totalStaff": "Tổng Staff (Operations)",
+      "totalStaff": "Tổng Sales (Bán hàng)",
       "totalCustomers": "Tổng khách hàng",
-      "staff": "Nhân Viên",
+      "staff": "Nhân Viên Sales",
       "operations": "Vận Hành",
       "managers": "Quản Lý",
       "admins": "Quản Trị Viên"
@@ -336,121 +336,9 @@
     }
   },
   "revenueNew": {
-    "title": "Báo Cáo Doanh Thu Chi Tiết",
-    "subtitle": "Phân tích chuyên sâu doanh thu và xu hướng kinh doanh",
-    "sections": {
-      "timeAnalytics": "Phân Tích Theo Thời Gian",
-      "productAnalytics": "Phân Tích Sản Phẩm",
-      "customerInsights": "Thông Tin Khách Hàng",
-      "channelPerformance": "Hiệu Suất Kênh Bán",
-      "qualityMetrics": "Chỉ Số Chất Lượng"
-    },
-    "hourlyPattern": {
-      "title": "Mẫu Bán Hàng Theo Giờ",
-      "description": "Doanh thu trung bình theo từng giờ trong ngày",
-      "peakHours": "Giờ Cao Điểm",
-      "offPeak": "Giờ Vắng",
-      "hour": "Giờ"
-    },
-    "dayOfWeek": {
-      "title": "Hiệu Suất Theo Ngày Trong Tuần",
-      "description": "So sánh doanh thu và đơn hàng giữa các ngày",
-      "avgRevenue": "Doanh thu TB",
-      "orders": "Đơn hàng"
-    },
-    "frameStyles": {
-      "title": "Phong Cách Gọng Kính",
-      "description": "Phân tích doanh thu theo kiểu dáng",
-      "style": "Phong cách",
-      "revenue": "Doanh thu",
-      "units": "Số lượng",
-      "marketShare": "Thị phần"
-    },
-    "lensTypes": {
-      "title": "Loại Tròng Kính",
-      "description": "Phân tích theo loại tròng",
-      "type": "Loại",
-      "avgPrice": "Giá TB"
-    },
-    "colorPreference": {
-      "title": "Màu Sắc Ưa Thích",
-      "description": "Top màu sắc bán chạy nhất"
-    },
-    "ageDemo": {
-      "title": "Phân Khúc Độ Tuổi",
-      "description": "Doanh thu theo nhóm tuổi khách hàng",
-      "ageGroup": "Nhóm tuổi",
-      "customers": "Khách hàng"
-    },
-    "prescription": {
-      "title": "Phân Tích Đơn Thuốc",
-      "description": "So sánh kính có toa và không toa",
-      "withRx": "Có đơn thuốc",
-      "withoutRx": "Không đơn thuốc",
-      "avgValue": "Giá trị TB"
-    },
-    "customerSegments": {
-      "title": "Phân Khúc Khách Hàng",
-      "description": "Phân tích theo loại khách hàng",
-      "segment": "Phân khúc",
-      "value": "Giá trị",
-      "count": "Số lượng"
-    },
-    "customerLTV": {
-      "title": "Giá Trị Trọn Đời Khách Hàng",
-      "description": "Phân tích theo giá trị trọn đời",
-      "lifetime": "Vòng đời",
-      "potential": "Tiềm năng"
-    },
-    "channelStats": {
-      "title": "Thống Kê Kênh Bán",
-      "description": "So sánh hiệu suất online vs cửa hàng",
-      "online": "Online",
-      "store": "Cửa hàng",
-      "conversionRate": "Tỷ lệ chuyển đổi",
-      "avgOrderValue": "Giá trị đơn TB"
-    },
-    "conversionFunnel": {
-      "title": "Phễu Chuyển Đổi",
-      "description": "Theo dõi hành trình khách hàng",
-      "stage": "Giai đoạn",
-      "visitors": "Khách",
-      "dropRate": "Tỷ lệ rời",
-      "conversionRate": "Tỷ lệ chuyển đổi"
-    },
-    "returnAnalytics": {
-      "title": "Phân Tích Trả Hàng & Hoàn Tiền",
-      "description": "Thống kê trả hàng theo lý do",
-      "reason": "Lý do",
-      "cases": "Trường hợp",
-      "rate": "Tỷ lệ",
-      "avgRefund": "Hoàn tiền TB"
-    },
-    "seasonalTrends": {
-      "title": "Xu Hướng Theo Mùa",
-      "description": "So sánh doanh thu 4 mùa trong năm",
-      "spring": "Xuân",
-      "summer": "Hè",
-      "autumn": "Thu",
-      "winter": "Đông"
-    },
-    "topDays": {
-      "title": "Ngày Bán Hàng Tốt Nhất",
-      "description": "Top 5 ngày có doanh thu cao nhất",
-      "date": "Ngày",
-      "type": "Loại"
-    },
-    "filters": {
-      "period": "Khoảng thời gian",
-      "today": "Hôm nay",
-      "yesterday": "Hôm qua",
-      "last7days": "7 ngày qua",
-      "last30days": "30 ngày qua",
-      "thisMonth": "Tháng này",
-      "lastMonth": "Tháng trước",
-      "thisYear": "Năm nay",
-      "custom": "Tùy chỉnh"
-    }
+    "title": "Báo Cáo Doanh Thu (Mới)",
+    "subtitle": "Theo dõi doanh thu với giao diện cải tiến",
+    "placeholder": "Biểu đồ doanh thu mới sẽ được hiển thị ở đây"
   },
   "common": {
     "trendUp": "+{value}% so với tháng trước",

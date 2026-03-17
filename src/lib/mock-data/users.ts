@@ -14,7 +14,7 @@ export const mockUsers: User[] = [
     id: '2',
     name: 'Sarah Johnson',
     email: 'sarah.j@wdp.com',
-    role: 'staff',
+    role: 'sales',
     status: 'active',
     lastLogin: '2026-01-29 09:15 AM',
     createdAt: '2025-08-20',
@@ -32,7 +32,7 @@ export const mockUsers: User[] = [
     id: '4',
     name: 'Emily Davis',
     email: 'emily.d@wdp.com',
-    role: 'staff',
+    role: 'sales',
     status: 'active',
     lastLogin: '2026-01-29 08:00 AM',
     createdAt: '2025-09-05',
@@ -59,14 +59,14 @@ export const mockUsers: User[] = [
     id: '7',
     name: 'Jessica Brown',
     email: 'jessica.b@wdp.com',
-    role: 'staff',
+    role: 'sales',
     status: 'suspended',
     lastLogin: '2026-01-10 03:20 PM',
     createdAt: '2025-10-12',
   },
 ];
 
-export interface StaffPermission {
+export interface SalesPermission {
   module: string;
   canView: boolean;
   canCreate: boolean;
@@ -74,8 +74,8 @@ export interface StaffPermission {
   canDelete: boolean;
 }
 
-export const mockRolePermissions: Record<string, StaffPermission[]> = {
-  staff: [
+export const mockRolePermissions: Record<string, SalesPermission[]> = {
+  sales: [
     {
       module: 'orders',
       canView: true,

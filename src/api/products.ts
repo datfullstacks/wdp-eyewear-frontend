@@ -212,57 +212,6 @@ export interface ProductUpsertInput {
   description?: string;
   imageUrl?: string;
   mediaAssets?: ProductMediaAsset[];
-  /* ── extended fields for full product creation ── */
-  type?: string;
-  slug?: string;
-  status?: string;
-  salePrice?: number;
-  msrp?: number;
-  inventoryTrack?: boolean;
-  inventoryThreshold?: number;
-  variants?: Array<{
-    sku: string;
-    color?: string;
-    size?: string;
-    price?: number;
-    stock: number;
-  }>;
-  preOrder?: {
-    enabled?: boolean;
-    startAt?: string;
-    endAt?: string;
-    shipFrom?: string;
-    shipTo?: string;
-    depositPercent?: number;
-    maxQuantityPerOrder?: number;
-    allowCod?: boolean;
-    note?: string;
-  };
-  fulfillment?: {
-    returnWindowDays?: number;
-    warrantyMonths?: number;
-  };
-  seo?: {
-    modelCode?: string;
-    collections?: string[];
-    season?: string;
-    keywords?: string[];
-    countryOfOrigin?: string;
-  };
-  compatibility?: {
-    notes?: string;
-  };
-  presetCombo?: {
-    enabled?: boolean;
-    frameProductId?: string;
-    lensProductId?: string;
-    defaultNonPrescription?: boolean;
-  };
-  tryOn?: {
-    enabled?: boolean;
-  };
-  specs?: Record<string, unknown>;
-  servicesIncluded?: string[];
 }
 
 const PRODUCT_TYPES = new Set([
@@ -376,9 +325,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-function extractProductsPayload(
-  payload: unknown
-): { rows: BackendProduct[]; pagination?: BackendEnvelope<unknown>['pagination'] } {
+function extractProductsPayload(payload: unknown): {
+  rows: BackendProduct[];
+  pagination?: BackendEnvelope<unknown>['pagination'];
+} {
   if (typeof payload === 'string') {
     throw new Error(
       'Invalid products response (received string). Check NEXT_PUBLIC_API_URL.'
@@ -411,7 +361,9 @@ function extractProductsPayload(
     return { rows: (payload as any).products as BackendProduct[], pagination };
   }
 
-  throw new Error('Invalid products response shape. Check NEXT_PUBLIC_API_URL.');
+  throw new Error(
+    'Invalid products response shape. Check NEXT_PUBLIC_API_URL.'
+  );
 }
 
 function extractProductPayload(payload: unknown): BackendProduct {
@@ -436,7 +388,10 @@ function extractProductPayload(payload: unknown): BackendProduct {
   }
 
   // Some backends return the product object directly.
-  if (typeof (payload as any)._id === 'string' || typeof (payload as any).id === 'string') {
+  if (
+    typeof (payload as any)._id === 'string' ||
+    typeof (payload as any).id === 'string'
+  ) {
     return payload as BackendProduct;
   }
 
@@ -473,133 +428,44 @@ function toBackendUpsertPayload(
   input: ProductUpsertInput,
   mode: 'create' | 'update'
 ) {
-  const resolvedType = input.type || resolveType(input.category);
+  const resolvedType = resolveType(input.category);
   const mediaAssets = normalizeMediaAssets(input);
 
   const payload: Record<string, unknown> = {
     name: input.name,
     brand: input.brand,
     description: input.description || '',
-    type: resolvedType,
+    // Keep "other" to avoid strict type-guard requirements when UI doesn't collect all specs.
+    type: 'other',
     pricing: {
       currency: 'VND',
       basePrice: Number(input.price),
-      ...(input.salePrice != null ? { salePrice: Number(input.salePrice) } : { salePrice: Number(input.price) }),
-      ...(input.msrp != null ? { msrp: Number(input.msrp) } : {}),
+      salePrice: Number(input.price),
     },
     inventory: {
-      track: input.inventoryTrack ?? true,
-      ...(input.inventoryThreshold != null ? { threshold: input.inventoryThreshold } : { threshold: 5 }),
+      track: true,
+      threshold: 5,
     },
-    seo: {
-      collections: input.seo?.collections || [input.category || resolvedType],
-      ...(input.seo?.modelCode ? { modelCode: input.seo.modelCode } : {}),
-      ...(input.seo?.season ? { season: input.seo.season } : {}),
-      ...(input.seo?.keywords?.length ? { keywords: input.seo.keywords } : {}),
-      ...(input.seo?.countryOfOrigin ? { countryOfOrigin: input.seo.countryOfOrigin } : {}),
-    },
-  };
-
-  if (input.slug) {
-    payload.slug = input.slug;
-  }
-
-  // Variants
-  if (input.variants && input.variants.length > 0) {
-    payload.variants = input.variants.map((v) => ({
-      sku: v.sku,
-      stock: Number(v.stock),
-      ...(v.price != null ? { price: Number(v.price) } : {}),
-      options: {
-        ...(v.color ? { color: v.color } : {}),
-        ...(v.size ? { size: v.size } : {}),
-      },
-    }));
-  } else {
-    payload.variants = [
+    variants: [
       {
         sku: `SKU-${Date.now()}`,
         stock: Number(input.stock),
         price: Number(input.price),
       },
-    ];
-  }
+    ],
+    seo: {
+      collections: [input.category || resolvedType],
+    },
+  };
 
-  // Pre-order
-  if (input.preOrder?.enabled) {
-    payload.preOrder = {
-      enabled: true,
-      ...(input.preOrder.startAt ? { startAt: input.preOrder.startAt } : {}),
-      ...(input.preOrder.endAt ? { endAt: input.preOrder.endAt } : {}),
-      ...(input.preOrder.shipFrom ? { shipFrom: input.preOrder.shipFrom } : {}),
-      ...(input.preOrder.shipTo ? { shipTo: input.preOrder.shipTo } : {}),
-      ...(input.preOrder.depositPercent != null
-        ? { depositPercent: input.preOrder.depositPercent }
-        : {}),
-      ...(input.preOrder.maxQuantityPerOrder != null
-        ? { maxQuantityPerOrder: input.preOrder.maxQuantityPerOrder }
-        : {}),
-      allowCod: input.preOrder.allowCod ?? true,
-      ...(input.preOrder.note ? { note: input.preOrder.note } : {}),
-    };
-  }
-
-  // Fulfillment (manager-editable subset)
-  if (input.fulfillment) {
-    payload.fulfillment = {};
-    if (input.fulfillment.returnWindowDays != null)
-      (payload.fulfillment as Record<string, unknown>).returnWindowDays =
-        input.fulfillment.returnWindowDays;
-    if (input.fulfillment.warrantyMonths != null)
-      (payload.fulfillment as Record<string, unknown>).warrantyMonths =
-        input.fulfillment.warrantyMonths;
-  }
-
-  // Compatibility
-  if (input.compatibility?.notes) {
-    payload.compatibility = { notes: input.compatibility.notes };
-  }
-
-  // PresetCombo
-  if (input.presetCombo?.enabled) {
-    payload.presetCombo = {
-      enabled: true,
-      ...(input.presetCombo.frameProductId
-        ? { frameProductId: input.presetCombo.frameProductId }
-        : {}),
-      ...(input.presetCombo.lensProductId
-        ? { lensProductId: input.presetCombo.lensProductId }
-        : {}),
-      defaultNonPrescription: input.presetCombo.defaultNonPrescription ?? true,
-    };
-  }
-
-  // Media
   if (mediaAssets.length > 0) {
     payload.media = {
       assets: mediaAssets,
-      tryOn: {
-        enabled: input.tryOn?.enabled ?? false,
-      },
     };
-  } else if (input.tryOn?.enabled) {
-    payload.media = { tryOn: { enabled: true } };
   }
 
-  // Specs
-  if (input.specs && Object.keys(input.specs).length > 0) {
-    payload.specs = input.specs;
-  }
-
-  // Services included
-  if (input.servicesIncluded?.length) {
-    payload.servicesIncluded = input.servicesIncluded;
-  }
-
-  if (mode === 'create' && !input.status) {
-    payload.status = 'draft';
-  } else if (input.status) {
-    payload.status = input.status;
+  if (mode === 'create') {
+    payload.status = 'active';
   }
 
   return payload;
@@ -621,7 +487,9 @@ export const productApi = {
       ...rest,
     };
 
-    const response = await apiClient.get('/api/products', { params: requestParams });
+    const response = await apiClient.get('/api/products', {
+      params: requestParams,
+    });
     const { rows, pagination } = extractProductsPayload(response.data);
 
     return {

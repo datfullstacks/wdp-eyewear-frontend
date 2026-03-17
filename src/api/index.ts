@@ -4,13 +4,6 @@ export { default as authApi } from './auth';
 export { default as uploadApi } from './uploads';
 export { default as userApi } from './users';
 export { default as orderApi } from './orders';
-export {
-  getProducts as getManagerProducts,
-  getProductById,
-  createProduct,
-  updateProduct,
-  uploadFile as uploadManagerProductFile,
-} from './managerProducts';
 
 export type {
   Product,
@@ -19,7 +12,13 @@ export type {
   ProductUpsertInput,
   ProductMediaAsset,
 } from './products';
-export type { User, UsersResponse, UserRole, CreateUserInput, UpdateUserInput } from './users';
+export type {
+  User,
+  UsersResponse,
+  UserRole,
+  CreateUserInput,
+  UpdateUserInput,
+} from './users';
 export { toBackendRole, toFrontendRole } from './users';
 export type { AuthCredentials, RegisterData, AuthResponse } from './auth';
 export type { UploadResult } from './uploads';
@@ -30,19 +29,3 @@ export type {
   OrderRecord,
   OrdersResponse,
 } from './orders';
-export type {
-  Product as ManagerProduct,
-  ProductListResponse,
-  ProductDetailResponse,
-  Pricing,
-  Inventory,
-  PreOrder,
-  Variant,
-  VariantOption,
-  Asset,
-  Media,
-  TryOn,
-  ProductSpecs,
-  UpdateProductPayload,
-  UploadResponse,
-} from '@/types/managerProduct';

@@ -2,17 +2,9 @@
 import { Header } from '@/components/organisms/Header';
 
 import { SearchBar } from '@/components/molecules/SearchBar';
-import { Button as UiButton } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Filter, CheckCircle, RefreshCw } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { Pagination } from '@/components/molecules/Pagination';
+import { CheckCircle, Filter } from 'lucide-react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 
 import { PendingOrder } from '@/types/pending';
 import {
@@ -26,14 +18,38 @@ import { Button } from '@/components/atoms';
 import { orderApi } from '@/api';
 import { toPendingOrder } from '@/lib/orderAdapters';
 import { needsActionOrder } from '@/lib/orderWorkflow';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+const ITEMS_PER_PAGE = 10;
+
+function toLocalIsoDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function toIsoDateFromPendingCreatedAt(createdAt: string) {
+  const match = /^(\d{2})-(\d{2})-(\d{4})/.exec(String(createdAt || '').trim());
+  if (!match) return null;
+  return `${match[3]}-${match[2]}-${match[1]}`;
+}
 
 const OrdersPending = () => {
   const [orders, setOrders] = useState<PendingOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [createdDateFilter, setCreatedDateFilter] = useState<string>('');
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [detailModal, setDetailModal] = useState<PendingOrder | null>(null);
   const [processModal, setProcessModal] = useState<PendingOrder | null>(null);
   const [rejectModal, setRejectModal] = useState<PendingOrder | null>(null);
@@ -69,13 +85,31 @@ const OrdersPending = () => {
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.phone.includes(searchQuery);
-    const matchesPriority =
-      priorityFilter === 'all' || order.priority === priorityFilter;
-    return matchesSearch && matchesPriority;
+    const matchesDate = createdDateFilter
+      ? toIsoDateFromPendingCreatedAt(order.createdAt) === createdDateFilter
+      : true;
+    return matchesSearch && matchesDate;
   });
 
+  // Pagination
+  const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE);
+  const paginatedOrders = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return filteredOrders.slice(startIndex, endIndex);
+  }, [filteredOrders, currentPage]);
+
+  // Reset to page 1 when search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, createdDateFilter]);
+
+  const visibleSelectedCount = selectedOrders.filter((id) =>
+    paginatedOrders.some((order) => order.id === id)
+  ).length;
+
   const handleSelectAll = (checked: boolean) => {
-    setSelectedOrders(checked ? filteredOrders.map((o) => o.id) : []);
+    setSelectedOrders(checked ? paginatedOrders.map((o) => o.id) : []);
   };
 
   const handleSelectOrder = (orderId: string, checked: boolean) => {
@@ -109,6 +143,7 @@ const OrdersPending = () => {
     }
 
     try {
+      paginat;
       setIsSubmittingAction(true);
       await orderApi.cancel(rejectModal.orderDbId, {
         reason: reason || 'Đơn bị từ chối bởi nhân viên',
@@ -145,65 +180,68 @@ const OrdersPending = () => {
     }
   };
 
-  const urgentCount = orders.filter((o) => o.priority === 'urgent').length;
-  const highCount = orders.filter((o) => o.priority === 'high').length;
-
   return (
     <>
       <Header title="Đơn cần xử lý" subtitle="Xác nhận và xử lý đơn hàng mới" />
 
       <div className="space-y-6 p-6">
         <PendingStatsGrid
-          totalCount={orders.length}
-          urgentCount={urgentCount}
-          highCount={highCount}
-          selectedCount={selectedOrders.length}
+          totalCount={filteredOrders.length}
+          selectedCount={visibleSelectedCount}
         />
 
         {/* Filters & Actions */}
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
-            <div className="w-full sm:max-w-[300px]">
-              <SearchBar
-                placeholder="Tìm mã đơn, tên KH, SĐT..."
-                value={searchQuery}
-                onChange={setSearchQuery}
-              />
-            </div>
-            <div className="flex justify-start">
+            <div className="flex w-full items-center gap-2 sm:max-w-[360px]">
+              <div className="w-full">
+                <SearchBar
+                  placeholder="Tìm mã đơn, tên KH, SĐT..."
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                />
+              </div>
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <UiButton
+                  <Button
                     variant="outline"
-                    size="icon"
-                    aria-label="Bộ lọc"
-                    className="text-foreground/80 hover:text-foreground"
+                    size="sm"
+                    className={`w-9 px-0 ${
+                      createdDateFilter
+                        ? 'border-yellow-400 text-yellow-700 hover:border-yellow-500'
+                        : ''
+                    }`}
+                    aria-label="Lọc theo ngày"
                   >
-                    <Filter />
-                  </UiButton>
+                    <Filter className="h-4 w-4" />
+                  </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
-                  <DropdownMenuLabel>Độ ưu tiên</DropdownMenuLabel>
-                  <DropdownMenuRadioGroup
-                    value={priorityFilter}
-                    onValueChange={setPriorityFilter}
+                <DropdownMenuContent align="start" className="w-64">
+                  <DropdownMenuLabel>Lọc theo ngày tạo</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setCreatedDateFilter('')}>
+                    Tất cả
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      setCreatedDateFilter(toLocalIsoDate(new Date()))
+                    }
                   >
-                    <DropdownMenuRadioItem value="all">
-                      Tất cả
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="urgent">
-                      Khẩn cấp
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="high">
-                      Ưu tiên cao
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="normal">
-                      Bình thường
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="low">
-                      Thấp
-                    </DropdownMenuRadioItem>
-                  </DropdownMenuRadioGroup>
+                    Hôm nay
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <div className="space-y-2 px-2 py-2">
+                    <p className="text-foreground/70 text-xs font-medium">
+                      Chọn ngày
+                    </p>
+                    <input
+                      type="date"
+                      value={createdDateFilter}
+                      onChange={(e) => setCreatedDateFilter(e.target.value)}
+                      className="border-input bg-background text-foreground h-9 w-full rounded-md border px-2 text-sm focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:ring-offset-2 focus-visible:outline-none"
+                    />
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -233,31 +271,20 @@ const OrdersPending = () => {
                 </Button>
               </>
             )}
-
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() => {
-                void loadPendingOrders();
-              }}
-              disabled={isLoading || isSubmittingAction}
-            >
-              <RefreshCw className="h-4 w-4" />
-              Làm mới
-            </Button>
           </div>
         </div>
 
         {isLoading && (
-          <p className="text-foreground/70 text-sm">Đang tải dữ liệu đơn hàng...</p>
+          <p className="text-foreground/70 text-sm">
+            Đang tải dữ liệu đơn hàng...
+          </p>
         )}
         {!isLoading && errorMessage && (
           <p className="text-destructive text-sm">{errorMessage}</p>
         )}
 
         <PendingOrderTable
-          orders={filteredOrders}
+          orders={paginatedOrders}
           selectedOrders={selectedOrders}
           showEmptyState={!isLoading && !errorMessage}
           onSelectAll={handleSelectAll}
@@ -266,6 +293,18 @@ const OrdersPending = () => {
           onProcess={setProcessModal}
           onReject={setRejectModal}
         />
+
+        {!isLoading && !errorMessage && filteredOrders.length > 0 && (
+          <div className="mt-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              itemsPerPage={ITEMS_PER_PAGE}
+              totalItems={filteredOrders.length}
+            />
+          </div>
+        )}
       </div>
 
       <PendingDetailModal
