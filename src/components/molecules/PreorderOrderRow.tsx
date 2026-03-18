@@ -28,8 +28,8 @@ interface PreorderOrderRowProps {
   isSelected: boolean;
   onSelect: (id: string) => void;
   onViewDetail: (order: PreorderOrder) => void;
-  onLinkBatch: (order: PreorderOrder) => void;
-  onContact: (order: PreorderOrder) => void;
+  onLinkBatch?: (order: PreorderOrder) => void;
+  onContact?: (order: PreorderOrder) => void;
   onCancel: (order: PreorderOrder) => void;
   onMarkArrived: (order: PreorderOrder) => void;
   onStockIn: (order: PreorderOrder) => void;
@@ -269,12 +269,18 @@ export const PreorderOrderRow = ({
               Xem chi tiết
             </DropdownMenuItem>
 
-            <DropdownMenuItem onClick={() => onLinkBatch(order)}>
+            <DropdownMenuItem
+              onClick={() => onLinkBatch?.(order)}
+              disabled={!onLinkBatch}
+            >
               <Link2 className="mr-2 h-4 w-4" />
               Liên kết đợt hàng
             </DropdownMenuItem>
 
-            <DropdownMenuItem onClick={() => onContact(order)}>
+            <DropdownMenuItem
+              onClick={() => onContact?.(order)}
+              disabled={!onContact}
+            >
               <MessageSquare className="mr-2 h-4 w-4" />
               Liên hệ khách
             </DropdownMenuItem>
