@@ -65,11 +65,11 @@ Output:
 
 Representative frontend areas:
 
-- `/staff/orders/pending`
-- `/staff/orders/alerts`
-- `/staff/customers`
-- `/staff/cases/returns`
-- `/staff/cases/refunds`
+- `/sale/orders/pending`
+- `/sale/orders/alerts`
+- `/sale/customers`
+- `/sale/cases/returns`
+- `/sale/cases/refunds`
 
 ### 1.2 Operation
 
@@ -539,7 +539,7 @@ Evidence:
 Status:
 
 - Middleware protects only a limited set of generic root paths.
-- Direct role areas such as `/staff/*`, `/operation/*`, and `/manager/*` are not fully guarded by explicit role-based checks.
+- Direct role areas such as `/sale/*`, `/operation/*`, and `/manager/*` are not fully guarded by explicit role-based checks.
 
 Evidence:
 
@@ -594,7 +594,7 @@ Recommended order of work:
 
 - Fix production auth configuration.
 - Replace mocked role checks with session-based role checks.
-- Protect `/staff/*`, `/operation/*`, `/manager/*`, and future `/admin/*`.
+- Protect `/sale/*`, `/operation/*`, `/manager/*`, and future `/admin/*`.
 
 ### Priority 2: Stabilize Core Business Ownership
 

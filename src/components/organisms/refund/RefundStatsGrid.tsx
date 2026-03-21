@@ -1,60 +1,110 @@
-import { StatCard } from '@/components/molecules/StatCard';
-import { formatCurrency } from '@/types/refund';
 import {
   Clock,
-  Eye,
   CreditCard,
   CheckCircle,
+  Eye,
+  PackageCheck,
   TrendingDown,
 } from 'lucide-react';
 
+import { StatCard } from '@/components/molecules/StatCard';
+import { formatCurrency } from '@/types/refund';
+
 interface RefundStatsGridProps {
   stats: {
-    pending: number;
-    reviewing: number;
+    open: number;
+    waitingCustomer: number;
+    escalated: number;
+    approved: number;
+    returnPending: number;
     processing: number;
     completed: number;
     totalAmount: number;
   };
+  scope?: 'sale' | 'manager' | 'operation';
 }
 
-export const RefundStatsGrid = ({ stats }: RefundStatsGridProps) => {
-  const items = [
-    {
-      label: 'Đang xử lý',
-      value: String(stats.pending),
-      icon: Clock,
-      colorClass: 'bg-warning/10 text-warning',
-    },
-    {
-      label: 'Đang xem xét',
-      value: String(stats.reviewing),
-      icon: Eye,
-      colorClass: 'bg-primary/10 text-primary',
-    },
-    {
-      label: 'Đang hoàn tiền',
-      value: String(stats.processing),
-      icon: CreditCard,
-      colorClass: 'bg-success/10 text-success',
-    },
-    {
-      label: 'Hoàn thành',
-      value: String(stats.completed),
-      icon: CheckCircle,
-      colorClass: 'bg-success/10 text-success',
-    },
-    {
-      label: 'Tổng cần hoàn',
-      value: formatCurrency(stats.totalAmount),
-      icon: TrendingDown,
-      colorClass: 'bg-destructive/10 text-destructive',
-      isAmount: true,
-    },
-  ];
+export const RefundStatsGrid = ({
+  stats,
+  scope = 'sale',
+}: RefundStatsGridProps) => {
+  const items =
+    scope === 'operation'
+      ? [
+          {
+            label: 'San sang payout',
+            value: String(stats.approved),
+            icon: CreditCard,
+            isAmount: false,
+          },
+          {
+            label: 'Cho nhan hang',
+            value: String(stats.returnPending),
+            icon: PackageCheck,
+            isAmount: false,
+          },
+          {
+            label: 'Dang payout',
+            value: String(stats.processing),
+            icon: Clock,
+            isAmount: false,
+          },
+          {
+            label: 'Hoan thanh',
+            value: String(stats.completed),
+            icon: CheckCircle,
+            isAmount: false,
+          },
+          {
+            label: 'Tong can chi',
+            value: formatCurrency(stats.totalAmount),
+            icon: TrendingDown,
+            isAmount: true,
+          },
+        ]
+      : [
+          {
+            label: 'Dang xu ly',
+            value: String(stats.open),
+            icon: Clock,
+            isAmount: false,
+          },
+          {
+            label: 'Cho KH bo sung',
+            value: String(stats.waitingCustomer),
+            icon: Eye,
+            isAmount: false,
+          },
+          {
+            label: 'Can manager',
+            value: String(stats.escalated),
+            icon: CreditCard,
+            isAmount: false,
+          },
+          {
+            label: 'Da duyet',
+            value: String(stats.approved),
+            icon: CreditCard,
+            isAmount: false,
+          },
+          {
+            label: 'Hoan thanh',
+            value: String(stats.completed),
+            icon: CheckCircle,
+            isAmount: false,
+          },
+          {
+            label: 'Tong can hoan',
+            value: formatCurrency(stats.totalAmount),
+            icon: TrendingDown,
+            isAmount: true,
+          },
+        ];
 
   return (
-    <div className="grid grid-cols-5 gap-2">
+    <div
+      className={`grid grid-cols-2 gap-2 md:grid-cols-3 ${scope === 'operation' ? 'xl:grid-cols-5' : 'xl:grid-cols-6'}`}
+    >
       {items.map((item) => (
         <StatCard
           key={item.label}

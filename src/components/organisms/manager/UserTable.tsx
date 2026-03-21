@@ -26,11 +26,11 @@ interface UserTableProps {
   role: UserTabRole;
   onView?: (user: User) => void;
   onDelete?: (user: User) => void;
-  /** Translation strings for table headers */
   translations?: {
     user?: string;
     role?: string;
     phone?: string;
+    storeScope?: string;
     loginVia?: string;
     createdAt?: string;
     actions?: string;
@@ -41,7 +41,7 @@ interface UserTableProps {
 }
 
 function formatDate(dateStr?: string) {
-  if (!dateStr) return '—';
+  if (!dateStr) return '-';
   return new Date(dateStr).toLocaleDateString('vi-VN');
 }
 
@@ -61,9 +61,25 @@ function roleBadge(role: string) {
   );
 }
 
+function formatStoreScope(user: User) {
+  const scope = user.storeAccess;
+  if (!scope || scope.mode !== 'selected') {
+    return 'Toan he thong';
+  }
+
+  const primaryStoreLabel =
+    scope.primaryStore?.name ||
+    scope.stores.find((store: { id: string; name?: string }) => store.id === scope.primaryStoreId)?.name ||
+    '';
+  if (primaryStoreLabel) {
+    return `${primaryStoreLabel}${scope.storeIds.length > 1 ? ` +${scope.storeIds.length - 1}` : ''}`;
+  }
+
+  return `${scope.storeIds.length} cua hang`;
+}
+
 export function UserTable({
   users,
-  role,
   onView,
   onDelete,
   translations,
@@ -71,7 +87,7 @@ export function UserTable({
   if (users.length === 0) {
     return (
       <div className="flex items-center justify-center py-12 text-gray-500">
-        {translations?.noData || 'Không có dữ liệu người dùng'}
+        {translations?.noData || 'Khong co du lieu nguoi dung'}
       </div>
     );
   }
@@ -80,12 +96,15 @@ export function UserTable({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>{translations?.user || 'Người dùng'}</TableHead>
-          <TableHead>{translations?.role || 'Vai trò'}</TableHead>
-          <TableHead>{translations?.phone || 'Số điện thoại'}</TableHead>
-          <TableHead>{translations?.loginVia || 'Đăng nhập qua'}</TableHead>
-          <TableHead>{translations?.createdAt || 'Ngày tạo'}</TableHead>
-          <TableHead className="text-center">{translations?.actions || 'Hành động'}</TableHead>
+          <TableHead>{translations?.user || 'Nguoi dung'}</TableHead>
+          <TableHead>{translations?.role || 'Vai tro'}</TableHead>
+          <TableHead>{translations?.phone || 'So dien thoai'}</TableHead>
+          <TableHead>{translations?.storeScope || 'Pham vi cua hang'}</TableHead>
+          <TableHead>{translations?.loginVia || 'Dang nhap qua'}</TableHead>
+          <TableHead>{translations?.createdAt || 'Ngay tao'}</TableHead>
+          <TableHead className="text-center">
+            {translations?.actions || 'Hanh dong'}
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -101,15 +120,10 @@ export function UserTable({
               </div>
             </TableCell>
             <TableCell>{roleBadge(user.role)}</TableCell>
-            <TableCell className="text-gray-600">
-              {user.phone || '—'}
-            </TableCell>
-            <TableCell className="text-gray-600">
-              {user.provider || 'local'}
-            </TableCell>
-            <TableCell className="text-gray-600">
-              {formatDate(user.createdAt)}
-            </TableCell>
+            <TableCell className="text-gray-600">{user.phone || '-'}</TableCell>
+            <TableCell className="text-gray-600">{formatStoreScope(user)}</TableCell>
+            <TableCell className="text-gray-600">{user.provider || 'local'}</TableCell>
+            <TableCell className="text-gray-600">{formatDate(user.createdAt)}</TableCell>
             <TableCell className="text-center">
               <div className="flex items-center justify-center gap-1">
                 {onView && (

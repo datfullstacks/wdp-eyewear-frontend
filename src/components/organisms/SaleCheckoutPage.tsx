@@ -26,6 +26,7 @@ import type {
   CheckoutData,
   QuoteData,
   SaleCartItem,
+  SaleCheckoutPaymentMethod,
   ShippingAddressForm,
 } from '@/types/saleCheckout';
 
@@ -124,6 +125,23 @@ function formatMoney(value?: number): string {
 
 const DONG_SYMBOL = '\u20ab';
 
+const SALE_CHECKOUT_PAYMENT_OPTIONS: Array<{
+  id: SaleCheckoutPaymentMethod;
+  label: string;
+  description: string;
+}> = [
+  {
+    id: 'sepay',
+    label: 'SePay (QR)',
+    description: 'Thu truoc qua QR/SePay cho phan thanh toan ngay.',
+  },
+  {
+    id: 'cod',
+    label: 'COD',
+    description: 'Thu khi giao hang voi cac don hang du dieu kien.',
+  },
+];
+
 function getShippingFieldLabel(field: keyof ShippingAddressForm): string {
   return shippingFields.find((item) => item.field === field)?.label ?? field;
 }
@@ -137,6 +155,10 @@ function formatStatusValue(value?: string): string {
 
 function statusPillClassName(status?: string): string {
   const normalized = String(status || 'unknown').toLowerCase();
+
+  if (normalized === 'cod') {
+    return 'border-[#d5cfbf] bg-[#f7f4ec] text-[#5a513d]';
+  }
 
   if (
     normalized === 'paid' ||
@@ -278,8 +300,10 @@ function LeftCheckoutPanel({
   cartItems,
   subtotal,
   shippingForm,
+  paymentMethod,
   onBackToProducts,
   onShippingChange,
+  onPaymentMethodChange,
   onFillSwagger,
   errorMessage,
   isQuoting,
@@ -292,8 +316,10 @@ function LeftCheckoutPanel({
   cartItems: SaleCartItem[];
   subtotal: number;
   shippingForm: ShippingAddressForm;
+  paymentMethod: SaleCheckoutPaymentMethod;
   onBackToProducts: () => void;
   onShippingChange: (field: keyof ShippingAddressForm, value: string) => void;
+  onPaymentMethodChange: (method: SaleCheckoutPaymentMethod) => void;
   onFillSwagger: () => void;
   errorMessage: string;
   isQuoting: boolean;
@@ -426,6 +452,56 @@ function LeftCheckoutPanel({
           />
         </div>
 
+        <div className="mt-4">
+          <label className={metaLabelClassName}>{'Phuong thuc thanh toan'}</label>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {SALE_CHECKOUT_PAYMENT_OPTIONS.map((option) => {
+              const active = paymentMethod === option.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => onPaymentMethodChange(option.id)}
+                  className={cn(
+                    'rounded-2xl border px-4 py-4 text-left transition',
+                    active
+                      ? 'border-[#d39a00] bg-[#fff8df] shadow-[0_12px_24px_-18px_rgba(208,139,0,0.38)]'
+                      : 'border-[#e8deca] bg-white hover:border-[#d6b454] hover:bg-[#fff9eb]'
+                  )}
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={cn(
+                        'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border',
+                        active
+                          ? 'border-[#e7c35b] bg-[#fff1bc] text-[#a86a00]'
+                          : 'border-[#eee4d0] bg-[#faf6ee] text-[#7a6540]'
+                      )}
+                    >
+                      {option.id === 'cod' ? (
+                        <Package className="h-5 w-5" />
+                      ) : (
+                        <QrCode className="h-5 w-5" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-black text-[#201600]">
+                        {option.label}
+                      </div>
+                      <p className="mt-1 text-xs font-medium leading-5 text-[#7b6641]">
+                        {option.description}
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-2 text-xs font-medium text-[#876e2f]">
+            {'COD chi ap dung cho don du dieu kien. Neu gio hang co pre-order, backend se yeu cau quay ve SePay.'}
+          </p>
+        </div>
+
         {errorMessage && (
           <div className="mt-4 flex items-start gap-3 rounded-2xl border border-[#e8b5ae] bg-[#fff0ed] p-4 text-sm text-[#a03c2e]">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -466,8 +542,14 @@ function LeftCheckoutPanel({
               </>
             ) : (
               <>
-                <CreditCard className="h-5 w-5 text-[#0b5c2e]" />
-                {'Thanh to\u00e1n'}
+                {paymentMethod === 'cod' ? (
+                  <Package className="h-5 w-5 text-[#0b5c2e]" />
+                ) : (
+                  <CreditCard className="h-5 w-5 text-[#0b5c2e]" />
+                )}
+                {paymentMethod === 'cod'
+                  ? 'Tao don COD'
+                  : 'Thanh toan ngay'}
               </>
             )}
           </ActionButton>
@@ -600,10 +682,37 @@ function RealtimePanel({
 function SummaryPanel({
   summary,
   quoteResult,
+  checkoutResult,
 }: {
   summary: SummaryData;
   quoteResult: QuoteData | null;
+  checkoutResult: CheckoutData | null;
 }) {
+  const breakdown = checkoutResult?.breakdown;
+  const payNow = Number(breakdown?.payNow ?? quoteResult?.payNow ?? 0);
+  const payLater = Number(breakdown?.payLater ?? quoteResult?.payLater ?? 0);
+  const payNowMethod = String(
+    breakdown?.payNowMethod || quoteResult?.payNowMethod || 'sepay'
+  ).toUpperCase();
+  const payLaterMethod = payLater
+    ? String(
+        breakdown?.payLaterMethod || quoteResult?.payLaterMethod || 'cod'
+      ).toUpperCase()
+    : '';
+  const shippingCollectionTiming = String(
+    breakdown?.shippingCollectionTiming ||
+      quoteResult?.shippingCollectionTiming ||
+      'upfront'
+  )
+    .trim()
+    .toLowerCase();
+  const shippingTimingLabel =
+    shippingCollectionTiming === 'with_balance'
+      ? 'Thu cung dot thanh toan con lai'
+      : shippingCollectionTiming === 'on_delivery'
+        ? 'Thu khi giao hang'
+        : 'Thu ngay';
+
   return (
     <div className="rounded-[28px] border border-[#d39a00] bg-white p-5 shadow-[0_26px_55px_-36px_rgba(117,78,0,0.16)]">
       <div className="flex items-center gap-3">
@@ -643,6 +752,29 @@ function SummaryPanel({
               : '-'}
           </span>
         </div>
+        {(payNow > 0 || payLater > 0) && (
+          <>
+            {payNow > 0 && (
+              <div className="flex items-center justify-between border-b border-[#f1e8d1] pb-3 text-sm font-semibold text-[#4c3400]">
+                <span>{`Tra truoc (${payNowMethod})`}</span>
+                <span>
+                  {formatMoney(payNow)} {DONG_SYMBOL}
+                </span>
+              </div>
+            )}
+            {payLater > 0 && (
+              <div className="flex items-center justify-between border-b border-[#f1e8d1] pb-3 text-sm font-semibold text-[#4c3400]">
+                <span>{`Con lai (${payLaterMethod || 'COD'})`}</span>
+                <span>
+                  {formatMoney(payLater)} {DONG_SYMBOL}
+                </span>
+              </div>
+            )}
+            <div className="rounded-2xl border border-[#efe2be] bg-[#fffbf2] px-3 py-2 text-xs font-medium text-[#7b6641]">
+              {'Thu phi ship: '} {shippingTimingLabel}
+            </div>
+          </>
+        )}
       </div>
 
       <div className="mt-5 flex items-end justify-between gap-4">
@@ -671,6 +803,26 @@ function PaymentPanel({
 }) {
   if (!checkoutResult) return null;
 
+  const paymentMethod = String(
+    checkoutResult.payment?.method ||
+      checkoutResult.paymentMethod ||
+      checkoutResult.breakdown?.paymentMethod ||
+      ''
+  )
+    .trim()
+    .toLowerCase();
+  const isCod = paymentMethod === 'cod';
+  const payNow = Number(checkoutResult.breakdown?.payNow || 0);
+  const payLater = Number(checkoutResult.breakdown?.payLater || 0);
+  const amountDue = Number(
+    checkoutResult.payment?.amount ?? (isCod ? payLater : payNow)
+  );
+  const instruction =
+    checkoutResult.payment?.instruction ||
+    (isCod
+      ? 'Khach thanh toan khi giao hang thanh cong.'
+      : 'Thanh toan qua SePay/QR cho phan thu truoc.');
+
   return (
     <div className="rounded-[28px] border border-[#ead9a3] bg-white p-5 shadow-[0_28px_60px_-42px_rgba(84,57,0,0.14)]">
       <div className="flex items-center gap-3">
@@ -690,39 +842,68 @@ function PaymentPanel({
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border border-[#efe2be] bg-white p-3 text-sm">
           <div className="text-[11px] font-black tracking-[0.12em] text-[#866d36] uppercase">
-            {'M\u00e3 giao d\u1ecbch'}
+            {'Phuong thuc'}
           </div>
           <div className="mt-2 font-semibold text-[#201600]">
-            {checkoutResult.payment?.paymentCode || '-'}
+            {isCod ? 'COD' : 'SePay (QR)'}
           </div>
         </div>
         <div className="rounded-2xl border border-[#efe2be] bg-white p-3 text-sm">
           <div className="text-[11px] font-black tracking-[0.12em] text-[#866d36] uppercase">
-            {'Ng\u00e2n h\u00e0ng'}
+            {'So tien can thu'}
           </div>
           <div className="mt-2 font-semibold text-[#201600]">
-            {checkoutResult.payment?.bankName || '-'}
+            {formatMoney(amountDue)} {DONG_SYMBOL}
           </div>
         </div>
         <div className="rounded-2xl border border-[#efe2be] bg-white p-3 text-sm">
           <div className="text-[11px] font-black tracking-[0.12em] text-[#866d36] uppercase">
-            {'S\u1ed1 t\u00e0i kho\u1ea3n'}
+            {'Huong dan'}
           </div>
           <div className="mt-2 font-semibold text-[#201600]">
-            {checkoutResult.payment?.bankAccountNumber || '-'}
+            {instruction}
           </div>
         </div>
-        <div className="rounded-2xl border border-[#efe2be] bg-white p-3 text-sm">
-          <div className="text-[11px] font-black tracking-[0.12em] text-[#866d36] uppercase">
-            {'N\u1ed9i dung chuy\u1ec3n kho\u1ea3n'}
-          </div>
-          <div className="mt-2 font-semibold text-[#201600]">
-            {checkoutResult.payment?.content || '-'}
-          </div>
-        </div>
+        {!isCod && (
+          <>
+            <div className="rounded-2xl border border-[#efe2be] bg-white p-3 text-sm">
+              <div className="text-[11px] font-black tracking-[0.12em] text-[#866d36] uppercase">
+                {'Ngan hang'}
+              </div>
+              <div className="mt-2 font-semibold text-[#201600]">
+                {checkoutResult.payment?.bankName || '-'}
+              </div>
+            </div>
+            <div className="rounded-2xl border border-[#efe2be] bg-white p-3 text-sm">
+              <div className="text-[11px] font-black tracking-[0.12em] text-[#866d36] uppercase">
+                {'So tai khoan'}
+              </div>
+              <div className="mt-2 font-semibold text-[#201600]">
+                {checkoutResult.payment?.bankAccountNumber || '-'}
+              </div>
+            </div>
+            <div className="rounded-2xl border border-[#efe2be] bg-white p-3 text-sm sm:col-span-2">
+              <div className="text-[11px] font-black tracking-[0.12em] text-[#866d36] uppercase">
+                {'Noi dung chuyen khoan'}
+              </div>
+              <div className="mt-2 font-semibold text-[#201600]">
+                {checkoutResult.payment?.content || '-'}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
-      {checkoutResult.payment?.qrUrl && (
+      {payLater > 0 && (
+        <div className="mt-4 rounded-[24px] border border-[#efe2be] bg-[#fffbf2] p-4 text-sm text-[#6e5a33]">
+          {'COD con lai: '}
+          <span className="font-black text-[#201600]">
+            {formatMoney(payLater)} {DONG_SYMBOL}
+          </span>
+        </div>
+      )}
+
+      {!isCod && checkoutResult.payment?.qrUrl && (
         <div className="mt-4 rounded-[24px] border border-[#efe2be] bg-white p-4">
           <p className="text-[11px] font-black tracking-[0.12em] text-[#866d36] uppercase">
             {'M\u00e3 QR thanh to\u00e1n'}
@@ -756,6 +937,8 @@ export const SaleCheckoutPage: React.FC = () => {
 
   const [shippingForm, setShippingForm] =
     useState<ShippingAddressForm>(defaultShippingForm);
+  const [paymentMethod, setPaymentMethod] =
+    useState<SaleCheckoutPaymentMethod>('sepay');
   const [quoteResult, setQuoteResult] = useState<QuoteData | null>(null);
   const [checkoutResult, setCheckoutResult] = useState<CheckoutData | null>(
     null
@@ -842,6 +1025,7 @@ export const SaleCheckoutPage: React.FC = () => {
         cartItems,
         shippingAddress: shippingForm,
         note: shippingForm.note,
+        paymentMethod,
       });
       const quote = await createQuote(payload);
       setQuoteResult(quote);
@@ -882,13 +1066,34 @@ export const SaleCheckoutPage: React.FC = () => {
         cartItems,
         shippingAddress: shippingForm,
         note: shippingForm.note,
+        paymentMethod,
       });
 
       const checkout = await createCheckout(payload);
       setCheckoutResult(checkout);
 
-      if (checkout.orderId) {
+      const resolvedPaymentMethod = String(
+        checkout.payment?.method || checkout.paymentMethod || paymentMethod
+      )
+        .trim()
+        .toLowerCase();
+
+      setOrderDetail({
+        _id: checkout.orderId,
+        paymentStatus:
+          resolvedPaymentMethod === 'cod'
+            ? 'cod'
+            : checkout.payment?.status || checkout.paymentStatus || 'pending',
+        paymentMethod: resolvedPaymentMethod,
+        status: 'pending',
+        invoiceId: checkout.invoice ? { status: checkout.invoice.status } : null,
+        payment: checkout.payment,
+      });
+
+      if (checkout.orderId && resolvedPaymentMethod !== 'cod') {
         startOrderPolling(checkout.orderId);
+      } else {
+        stopOrderPolling();
       }
     } catch (error) {
       const message =
@@ -919,6 +1124,12 @@ export const SaleCheckoutPage: React.FC = () => {
     setShippingForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handlePaymentMethodChange = (method: SaleCheckoutPaymentMethod) => {
+    if (method === paymentMethod) return;
+    setPaymentMethod(method);
+    resetCheckoutArtifacts();
+  };
+
   const errorMessage = quoteError || checkoutError;
 
   return (
@@ -940,8 +1151,10 @@ export const SaleCheckoutPage: React.FC = () => {
                 cartItems={cartItems}
                 subtotal={subtotal}
                 shippingForm={shippingForm}
+                paymentMethod={paymentMethod}
                 onBackToProducts={() => router.push('/sale/products')}
                 onShippingChange={handleShippingChange}
+                onPaymentMethodChange={handlePaymentMethodChange}
                 onFillSwagger={fillSwaggerSampleShipping}
                 errorMessage={errorMessage}
                 isQuoting={isQuoting}
@@ -970,7 +1183,11 @@ export const SaleCheckoutPage: React.FC = () => {
                   }}
                   onStopPolling={stopOrderPolling}
                 />
-                <SummaryPanel summary={summary} quoteResult={quoteResult} />
+                <SummaryPanel
+                  summary={summary}
+                  quoteResult={quoteResult}
+                  checkoutResult={checkoutResult}
+                />
                 <PaymentPanel checkoutResult={checkoutResult} />
 
                 {orderDetail && (

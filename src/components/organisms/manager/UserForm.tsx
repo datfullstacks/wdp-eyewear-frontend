@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
 import { Button } from '@/components/atoms';
+import type { StoreRecord } from '@/api/stores';
 import type { UserTabRole } from './UserTable';
 
 export interface UserFormData {
@@ -14,6 +15,10 @@ export interface UserFormData {
   position?: string;
   permissions?: string[];
   password?: string;
+  storeScopeMode?: 'all' | 'selected';
+  primaryStoreId?: string;
+  storeIds?: string[];
+  storeScopeNote?: string;
 }
 
 interface UserFormProps {
@@ -24,6 +29,7 @@ interface UserFormProps {
   onCancel: () => void;
   isSubmitting?: boolean;
   showPassword?: boolean;
+  storeOptions?: StoreRecord[];
 }
 
 type RoleOption = {
@@ -121,6 +127,7 @@ export function UserForm({
   onCancel,
   isSubmitting = false,
   showPassword: showPasswordField = false,
+  storeOptions = [],
 }: UserFormProps) {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const roleField = useMemo(() => getRoleFieldConfig(role), [role]);
@@ -232,6 +239,152 @@ export function UserForm({
           </div>
         </div>
       )}
+
+      <div className="space-y-4 rounded-xl border border-gray-200 bg-gray-50/70 p-4">
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-gray-900">Pham vi cua hang</p>
+          <p className="text-xs text-gray-500">
+            Dung de tach queue don hang, refund va van hanh theo tung chi nhanh trong mo hinh chuoi cua hang.
+          </p>
+        </div>
+
+        {role === 'admin' ? (
+          <div className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">
+            System Admin mac dinh co pham vi toan he thong.
+          </div>
+        ) : role === 'customer' ? (
+          <div className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-600">
+            Customer khong can gan store scope truc tiep. Pham vi phuc vu se duoc xac dinh theo order.
+          </div>
+        ) : (
+          <>
+            <div className="grid gap-3 md:grid-cols-2">
+              <label className="rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-700">
+                <input
+                  type="radio"
+                  name="user-store-scope"
+                  checked={(formData.storeScopeMode || 'all') === 'all'}
+                  onChange={() =>
+                    onChange({
+                      ...formData,
+                      storeScopeMode: 'all',
+                      primaryStoreId: '',
+                      storeIds: [],
+                    })
+                  }
+                  className="mr-2"
+                />
+                Toan bo cua hang
+              </label>
+              <label className="rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-700">
+                <input
+                  type="radio"
+                  name="user-store-scope"
+                  checked={(formData.storeScopeMode || 'all') === 'selected'}
+                  onChange={() =>
+                    onChange({
+                      ...formData,
+                      storeScopeMode: 'selected',
+                    })
+                  }
+                  className="mr-2"
+                />
+                Chi cac cua hang duoc chon
+              </label>
+            </div>
+
+            {(formData.storeScopeMode || 'all') === 'selected' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-900">
+                    Cua hang mac dinh
+                  </label>
+                  <select
+                    value={formData.primaryStoreId || ''}
+                    onChange={(event) =>
+                      onChange({
+                        ...formData,
+                        primaryStoreId: event.target.value,
+                        storeIds: Array.from(
+                          new Set([
+                            ...(formData.storeIds || []),
+                            event.target.value,
+                          ].filter(Boolean))
+                        ),
+                      })
+                    }
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 transition-colors focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
+                  >
+                    <option value="">Chon cua hang mac dinh</option>
+                    {storeOptions.map((store) => (
+                      <option key={store.id} value={store.id}>
+                        {store.name} ({store.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <p className="mb-2 block text-sm font-medium text-gray-900">
+                    Cua hang duoc phep xu ly
+                  </p>
+                  <div className="grid gap-2 md:grid-cols-2">
+                    {storeOptions.map((store) => {
+                      const checked = (formData.storeIds || []).includes(store.id);
+                      return (
+                        <label
+                          key={store.id}
+                          className="flex items-start gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(event) => {
+                              const currentStoreIds = formData.storeIds || [];
+                              const nextStoreIds = event.target.checked
+                                ? [...currentStoreIds, store.id]
+                                : currentStoreIds.filter((value) => value !== store.id);
+                              const nextPrimaryStoreId =
+                                formData.primaryStoreId && nextStoreIds.includes(formData.primaryStoreId)
+                                  ? formData.primaryStoreId
+                                  : '';
+                              onChange({
+                                ...formData,
+                                storeIds: Array.from(new Set(nextStoreIds)),
+                                primaryStoreId: nextPrimaryStoreId,
+                              });
+                            }}
+                            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                          />
+                          <span className="leading-5">
+                            <span className="block font-medium text-gray-900">{store.name}</span>
+                            <span className="text-xs text-gray-500">{store.code}</span>
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-900">
+                    Ghi chu
+                  </label>
+                  <textarea
+                    value={formData.storeScopeNote || ''}
+                    onChange={(event) =>
+                      onChange({ ...formData, storeScopeNote: event.target.value })
+                    }
+                    rows={3}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 transition-colors focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
+                    placeholder="Vi du: chi phu trach cum Ha Noi noi thanh"
+                  />
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       {showPasswordField && (
         <div>

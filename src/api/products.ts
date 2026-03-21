@@ -1,12 +1,56 @@
 import apiClient from './client';
 
 export type ProductStatus = 'active' | 'inactive' | 'draft' | 'out_of_stock';
+export type PreOrderShippingCollectionTiming =
+  | 'upfront'
+  | 'with_balance'
+  | 'on_delivery';
+export type ProductTryOnStatus =
+  | 'draft'
+  | 'pending_review'
+  | 'approved'
+  | 'published'
+  | 'rejected'
+  | 'archived';
 
 export interface ProductMediaAsset {
+  _id?: string;
   assetType: '2d' | '3d';
   role: 'hero' | 'gallery' | 'thumbnail' | 'lifestyle' | 'try_on' | 'viewer';
   url: string;
+  alt?: string;
+  mime?: string;
+  width?: number;
+  height?: number;
   order?: number;
+  format?: 'glb' | 'gltf' | 'usdz';
+  posterUrl?: string;
+  ar?: {
+    glbUrl?: string;
+    usdzUrl?: string;
+  };
+  viewer?: {
+    background?: 'transparent' | 'white' | 'black';
+    initialCamera?: unknown;
+  };
+}
+
+export interface ProductStoreRef {
+  id: string;
+  name: string;
+  code: string;
+  status: 'active' | 'inactive';
+  type: string;
+  phone?: string;
+  email?: string;
+  addressLine1?: string;
+  ward?: string;
+  district?: string;
+  city?: string;
+  openingHours?: string;
+  supportsTryOn?: boolean;
+  supportsPickup?: boolean;
+  isDefault?: boolean;
 }
 
 export interface Product {
@@ -22,6 +66,7 @@ export interface Product {
   stock: number;
   status: ProductStatus;
   hasSold: boolean;
+  storeScope?: ProductDetail['storeScope'];
 }
 
 export interface ProductDetail extends Product {
@@ -41,6 +86,14 @@ export interface ProductDetail extends Product {
   preOrder?: {
     enabled?: boolean;
     allowCod?: boolean;
+    depositPercent?: number;
+    maxQuantityPerOrder?: number;
+    startAt?: string;
+    endAt?: string;
+    shipFrom?: string;
+    shipTo?: string;
+    shippingCollectionTiming?: PreOrderShippingCollectionTiming;
+    note?: string;
   };
   compatibility?: {
     productIds?: string[];
@@ -62,8 +115,25 @@ export interface ProductDetail extends Product {
   media?: {
     tryOn?: {
       enabled?: boolean;
-      status?: string;
+      status?: ProductTryOnStatus;
       assetIds?: string[];
+      arUrl?: string;
+      glbUrl?: string;
+      usdzUrl?: string;
+      launchUrl?: string;
+      effectPath?: string;
+      scene?: string;
+      resourcePaths?: string[];
+      rejectReason?: string;
+      prefab?: {
+        rotation?: string;
+        scale?: string;
+        translation?: string;
+        gravity?: string;
+        cut?: string;
+        usePhysics?: boolean;
+        colliders?: unknown[];
+      };
     };
     assets?: Array<{
       _id?: string;
@@ -79,9 +149,21 @@ export interface ProductDetail extends Product {
       order?: number;
       format?: string;
       posterUrl?: string;
+      ar?: {
+        glbUrl?: string;
+        usdzUrl?: string;
+      };
       ['ar.glbUrl']?: string;
       ['ar.usdzUrl']?: string;
     }>;
+  };
+  storeScope?: {
+    mode?: 'all' | 'selected';
+    primaryStoreId?: string | null;
+    storeIds?: string[];
+    note?: string;
+    primaryStore?: ProductStoreRef | null;
+    stores?: ProductStoreRef[];
   };
   servicesIncluded?: unknown[];
   bundleIds?: string[];
@@ -149,6 +231,20 @@ interface BackendProduct {
   preOrder?: {
     enabled?: boolean;
     allowCod?: boolean;
+    depositPercent?: number;
+    maxQuantityPerOrder?: number;
+    startAt?: string;
+    endAt?: string;
+    shipFrom?: string;
+    shipTo?: string;
+    shippingCollectionTiming?: PreOrderShippingCollectionTiming;
+    note?: string;
+  };
+  storeScope?: {
+    mode?: 'all' | 'selected';
+    primaryStoreId?: string | { _id?: string; id?: string; [key: string]: unknown };
+    storeIds?: Array<string | { _id?: string; id?: string; [key: string]: unknown }>;
+    note?: string;
   };
   compatibility?: {
     productIds?: string[];
@@ -164,8 +260,25 @@ interface BackendProduct {
   media?: {
     tryOn?: {
       enabled?: boolean;
-      status?: string;
+      status?: ProductTryOnStatus;
       assetIds?: string[];
+      arUrl?: string;
+      glbUrl?: string;
+      usdzUrl?: string;
+      launchUrl?: string;
+      effectPath?: string;
+      scene?: string;
+      resourcePaths?: string[];
+      rejectReason?: string;
+      prefab?: {
+        rotation?: string;
+        scale?: string;
+        translation?: string;
+        gravity?: string;
+        cut?: string;
+        usePhysics?: boolean;
+        colliders?: unknown[];
+      };
     };
     assets?: Array<{
       _id?: string;
@@ -181,6 +294,10 @@ interface BackendProduct {
       order?: number;
       format?: string;
       posterUrl?: string;
+      ar?: {
+        glbUrl?: string;
+        usdzUrl?: string;
+      };
       ['ar.glbUrl']?: string;
       ['ar.usdzUrl']?: string;
     }>;
@@ -212,6 +329,90 @@ export interface ProductUpsertInput {
   description?: string;
   imageUrl?: string;
   mediaAssets?: ProductMediaAsset[];
+  preOrder?: {
+    enabled: boolean;
+    allowCod: boolean;
+    depositPercent?: number;
+    maxQuantityPerOrder?: number;
+    startAt?: string;
+    endAt?: string;
+    shipFrom?: string;
+    shipTo?: string;
+    shippingCollectionTiming?: PreOrderShippingCollectionTiming;
+    note?: string;
+  };
+  storeScope?: {
+    mode: 'all' | 'selected';
+    primaryStoreId?: string;
+    storeIds?: string[];
+    note?: string;
+  };
+  type?: string;
+  tryOn?: {
+    enabled: boolean;
+    status?: ProductTryOnStatus;
+    rejectReason?: string;
+    arUrl?: string;
+    glbUrl?: string;
+    usdzUrl?: string;
+    launchUrl?: string;
+    effectPath?: string;
+    scene?: string;
+    resourcePaths?: string[];
+    assetIds?: string[];
+    prefab?: {
+      rotation?: string;
+      scale?: string;
+      translation?: string;
+      gravity?: string;
+      cut?: string;
+      usePhysics?: boolean;
+      colliders?: unknown[];
+    };
+  };
+  variant?: {
+    sku?: string;
+    barcode?: string;
+    color?: string;
+    size?: string;
+    warehouseLocation?: string;
+    assetIds?: string[];
+    price?: number;
+    stock?: number;
+  };
+  variants?: Array<{
+    sku?: string;
+    barcode?: string;
+    color?: string;
+    size?: string;
+    warehouseLocation?: string;
+    assetIds?: string[];
+    price?: number;
+    stock?: number;
+  }>;
+  specs?: {
+    common?: {
+      shape?: string;
+      gender?: 'men' | 'women' | 'unisex' | 'kids';
+      weightGram?: number;
+    };
+    frame?: {
+      material?: string;
+      hingeType?: 'standard' | 'spring';
+      nosePads?: boolean;
+      rimType?: string;
+      rxReady?: boolean;
+    };
+    dimensions?: {
+      bridgeMm?: number;
+      templeLengthMm?: number;
+      lensWidthMm?: number;
+      lensHeightMm?: number;
+    };
+    lens?: {
+      uvProtection?: string;
+    };
+  };
 }
 
 const PRODUCT_TYPES = new Set([
@@ -267,6 +468,68 @@ function getProductStock(raw?: BackendProduct): number {
   return variants.reduce((sum, variant) => sum + Number(variant.stock || 0), 0);
 }
 
+function normalizeStoreRef(raw: any): ProductStoreRef {
+  return {
+    id: String(raw?._id || raw?.id || ''),
+    name: String(raw?.name || ''),
+    code: String(raw?.code || ''),
+    status: String(raw?.status || 'active') as 'active' | 'inactive',
+    type: String(raw?.type || 'branch'),
+    phone: String(raw?.phone || ''),
+    email: String(raw?.email || ''),
+    addressLine1: String(raw?.addressLine1 || ''),
+    ward: String(raw?.ward || ''),
+    district: String(raw?.district || ''),
+    city: String(raw?.city || ''),
+    openingHours: String(raw?.openingHours || ''),
+    supportsTryOn: Boolean(raw?.supportsTryOn),
+    supportsPickup: raw?.supportsPickup !== false,
+    isDefault: Boolean(raw?.isDefault),
+  };
+}
+
+function normalizeStoreScope(raw?: BackendProduct): ProductDetail['storeScope'] {
+  const scope = raw?.storeScope;
+  if (!scope) {
+    return {
+      mode: 'all',
+      primaryStoreId: null,
+      storeIds: [],
+      note: '',
+      primaryStore: null,
+      stores: [],
+    };
+  }
+
+  const primaryStore =
+    scope.primaryStoreId && typeof scope.primaryStoreId === 'object'
+      ? normalizeStoreRef(scope.primaryStoreId)
+      : null;
+  const stores = Array.isArray(scope.storeIds)
+    ? scope.storeIds
+        .filter((item) => item && typeof item === 'object')
+        .map((item) => normalizeStoreRef(item))
+    : [];
+
+  return {
+    mode: scope.mode === 'selected' ? 'selected' : 'all',
+    primaryStoreId:
+      typeof scope.primaryStoreId === 'string'
+        ? scope.primaryStoreId
+        : primaryStore?.id || null,
+    storeIds: Array.isArray(scope.storeIds)
+      ? scope.storeIds
+          .map((item) =>
+            typeof item === 'string' ? item : String(item?._id || item?.id || '')
+          )
+          .filter(Boolean)
+      : [],
+    note: String(scope.note || ''),
+    primaryStore,
+    stores,
+  };
+}
+
 function resolveCategory(raw?: BackendProduct): string {
   return raw?.seo?.collections?.[0] || raw?.type || 'other';
 }
@@ -288,6 +551,7 @@ function mapBackendProduct(raw: BackendProduct): Product {
     stock: getProductStock(raw),
     status: raw.status || 'draft',
     hasSold: false,
+    storeScope: normalizeStoreScope(raw),
   };
 }
 
@@ -303,6 +567,7 @@ function mapBackendProductDetail(raw: BackendProduct): ProductDetail {
     fulfillment: raw.fulfillment,
     seo: raw.seo,
     media: raw.media,
+    storeScope: normalizeStoreScope(raw),
     servicesIncluded: raw.servicesIncluded,
     bundleIds: raw.bundleIds,
     specs: raw.specs,
@@ -403,10 +668,19 @@ function normalizeMediaAssets(input: ProductUpsertInput): ProductMediaAsset[] {
     (input.mediaAssets || [])
       .filter((asset) => asset?.url)
       .map((asset, index) => ({
+        _id: asset._id,
         assetType: asset.assetType || '2d',
         role: asset.role || 'gallery',
         url: asset.url,
+        alt: asset.alt,
+        mime: asset.mime,
+        width: asset.width,
+        height: asset.height,
         order: asset.order ?? index,
+        format: asset.format,
+        posterUrl: asset.posterUrl,
+        ar: asset.ar,
+        viewer: asset.viewer,
       })) || [];
 
   if (fromInput.length > 0) return fromInput;
@@ -418,19 +692,87 @@ function normalizeMediaAssets(input: ProductUpsertInput): ProductMediaAsset[] {
   return [];
 }
 
+function normalizeDateTimeInput(value?: string): string | undefined {
+  if (!value) return undefined;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return undefined;
+  return date.toISOString();
+}
+
+function buildPreOrderPayload(input: ProductUpsertInput) {
+  if (!input.preOrder) return undefined;
+
+  const depositPercent =
+    typeof input.preOrder.depositPercent === 'number'
+      ? Number(input.preOrder.depositPercent)
+      : undefined;
+  const maxQuantityPerOrder =
+    typeof input.preOrder.maxQuantityPerOrder === 'number'
+      ? Number(input.preOrder.maxQuantityPerOrder)
+      : undefined;
+
+  return {
+    enabled: Boolean(input.preOrder.enabled),
+    allowCod: Boolean(input.preOrder.allowCod),
+    depositPercent,
+    maxQuantityPerOrder,
+    startAt: normalizeDateTimeInput(input.preOrder.startAt),
+    endAt: normalizeDateTimeInput(input.preOrder.endAt),
+    shipFrom: normalizeDateTimeInput(input.preOrder.shipFrom),
+    shipTo: normalizeDateTimeInput(input.preOrder.shipTo),
+    shippingCollectionTiming:
+      input.preOrder.shippingCollectionTiming || 'upfront',
+    note: input.preOrder.note || '',
+  };
+}
+
 function toBackendUpsertPayload(
   input: ProductUpsertInput,
   mode: 'create' | 'update'
 ) {
-  const resolvedType = resolveType(input.category);
+  const resolvedType = input.type || resolveType(input.category);
   const mediaAssets = normalizeMediaAssets(input);
+  const variantInputs =
+    Array.isArray(input.variants) && input.variants.length > 0
+      ? input.variants
+      : [
+          {
+            sku: input.variant?.sku,
+            barcode: input.variant?.barcode,
+            color: input.variant?.color,
+            size: input.variant?.size,
+            warehouseLocation: input.variant?.warehouseLocation,
+            assetIds: input.variant?.assetIds,
+            price: input.variant?.price,
+            stock: input.variant?.stock,
+          },
+        ];
+  const normalizedVariants = variantInputs.map((variant, index) => ({
+    sku: variant.sku || `SKU-${Date.now()}-${index + 1}`,
+    barcode: variant.barcode,
+    options: {
+      ...(variant.color ? { color: variant.color } : {}),
+      ...(variant.size ? { size: variant.size } : {}),
+    },
+    stock:
+      typeof variant.stock === 'number' && Number.isFinite(variant.stock)
+        ? Number(variant.stock)
+        : Number(input.stock),
+    price:
+      typeof variant.price === 'number' && Number.isFinite(variant.price)
+        ? Number(variant.price)
+        : Number(input.price),
+    warehouseLocation: variant.warehouseLocation,
+    assetIds: Array.isArray(variant.assetIds)
+      ? variant.assetIds.filter(Boolean)
+      : undefined,
+  }));
 
   const payload: Record<string, unknown> = {
     name: input.name,
     brand: input.brand,
     description: input.description || '',
-    // Keep "other" to avoid strict type-guard requirements when UI doesn't collect all specs.
-    type: 'other',
+    type: resolvedType,
     pricing: {
       currency: 'VND',
       basePrice: Number(input.price),
@@ -440,13 +782,7 @@ function toBackendUpsertPayload(
       track: true,
       threshold: 5,
     },
-    variants: [
-      {
-        sku: `SKU-${Date.now()}`,
-        stock: Number(input.stock),
-        price: Number(input.price),
-      },
-    ],
+    variants: normalizedVariants,
     seo: {
       collections: [input.category || resolvedType],
     },
@@ -455,6 +791,48 @@ function toBackendUpsertPayload(
   if (mediaAssets.length > 0) {
     payload.media = {
       assets: mediaAssets,
+    };
+  }
+
+  const preOrder = buildPreOrderPayload(input);
+  if (preOrder) {
+    payload.preOrder = preOrder;
+  }
+
+  if (input.storeScope) {
+    payload.storeScope = {
+      mode: input.storeScope.mode,
+      primaryStoreId: input.storeScope.primaryStoreId,
+      storeIds: Array.isArray(input.storeScope.storeIds)
+        ? input.storeScope.storeIds.filter(Boolean)
+        : [],
+      note: input.storeScope.note || '',
+    };
+  }
+
+  if (input.specs) {
+    payload.specs = input.specs;
+  }
+
+  if (input.tryOn) {
+    payload.media = {
+      ...(payload.media as Record<string, unknown> | undefined),
+      tryOn: {
+        enabled: Boolean(input.tryOn.enabled),
+        status: input.tryOn.status || 'draft',
+        rejectReason: input.tryOn.rejectReason || '',
+        arUrl: input.tryOn.arUrl || '',
+        glbUrl: input.tryOn.glbUrl || '',
+        usdzUrl: input.tryOn.usdzUrl || '',
+        launchUrl: input.tryOn.launchUrl || '',
+        effectPath: input.tryOn.effectPath || '',
+        scene: input.tryOn.scene || '',
+        resourcePaths: input.tryOn.resourcePaths || [],
+        assetIds: Array.isArray(input.tryOn.assetIds)
+          ? input.tryOn.assetIds.filter(Boolean)
+          : [],
+        prefab: input.tryOn.prefab || {},
+      },
     };
   }
 

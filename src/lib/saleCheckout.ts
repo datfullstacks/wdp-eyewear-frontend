@@ -1,6 +1,7 @@
 import type {
   SaleCartItem,
   SaleCheckoutItemPayload,
+  SaleCheckoutPaymentMethod,
   SaleCheckoutPayload,
   SaleProduct,
   SaleProductOption,
@@ -79,8 +80,9 @@ export function buildCheckoutPayload(input: {
   cartItems: SaleCartItem[];
   shippingAddress: ShippingAddressForm;
   note?: string;
+  paymentMethod?: SaleCheckoutPaymentMethod;
 }): SaleCheckoutPayload {
-  const { cartItems, shippingAddress, note } = input;
+  const { cartItems, shippingAddress, note, paymentMethod } = input;
 
   return {
     items: cartItems.map((item) => buildCheckoutItem(item, item.quantity)),
@@ -89,5 +91,6 @@ export function buildCheckoutPayload(input: {
     shippingMethod: 'standard',
     shippingAddress,
     note: note || '',
+    paymentMethod,
   };
 }

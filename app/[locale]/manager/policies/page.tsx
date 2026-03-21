@@ -1,193 +1,205 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { AlertCircle, AlertTriangle, FileText, Loader2, Shield } from 'lucide-react';
+
 import { Header } from '@/components/organisms/Header';
 import { StatCard } from '@/components/molecules/StatCard';
 import { PolicyTable } from '@/components/organisms/manager';
 import { Input } from '@/components/atoms/Input';
-import { FileText, Shield, AlertCircle, AlertTriangle } from 'lucide-react';
-import { policiesData, type Policy } from '@/data/policiesData';
+import policyApi, { type PolicyRecord } from '@/api/policies';
 
 type StatusFilter = 'all' | 'active' | 'inactive' | 'draft';
-type CategoryFilter = 'all' | 'warranty' | 'return' | 'shipping' | 'purchase' | 'privacy' | 'terms';
+type CategoryFilter =
+  | 'all'
+  | 'warranty'
+  | 'return'
+  | 'shipping'
+  | 'purchase'
+  | 'privacy'
+  | 'terms';
 
 export default function PoliciesPage() {
   const router = useRouter();
-  const t = useTranslations('manager.policies');
+  const [policies, setPolicies] = useState<PolicyRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
-  const [apiError, setApiError] = useState('');
 
-  // Filtered policies
+  useEffect(() => {
+    let active = true;
+
+    const load = async () => {
+      try {
+        setLoading(true);
+        setApiError('');
+        const result = await policyApi.getAll({ page: 1, limit: 100 });
+        if (active) {
+          setPolicies(result.policies);
+        }
+      } catch (error) {
+        if (active) {
+          setApiError(error instanceof Error ? error.message : 'Failed to load policies.');
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void load();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const filteredPolicies = useMemo(() => {
-    return policiesData.filter((policy) => {
+    return policies.filter((policy) => {
       const matchesSearch =
         policy.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         policy.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
         policy.content.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesStatus =
-        statusFilter === 'all' || policy.status === statusFilter;
-
-      const matchesCategory =
-        categoryFilter === 'all' || policy.category === categoryFilter;
+      const matchesStatus = statusFilter === 'all' || policy.status === statusFilter;
+      const matchesCategory = categoryFilter === 'all' || policy.category === categoryFilter;
 
       return matchesSearch && matchesStatus && matchesCategory;
     });
-  }, [searchQuery, statusFilter, categoryFilter]);
+  }, [policies, searchQuery, statusFilter, categoryFilter]);
 
-  // Calculate stats
   const stats = useMemo(() => {
-    const total = policiesData.length;
-    const active = policiesData.filter((p) => p.status === 'active').length;
-    const needsUpdate = policiesData.filter((p) => {
-      if (p.status !== 'active') return false;
-      const updatedDate = new Date(p.updatedAt);
-      const now = new Date();
-      const monthsSinceUpdate = Math.floor(
-        (now.getTime() - updatedDate.getTime()) / (1000 * 60 * 60 * 24 * 30)
-      );
-      return monthsSinceUpdate >= 6; // Consider policies older than 6 months as needing update
+    const activePolicies = policies.filter((policy) => policy.status === 'active').length;
+    const needsReview = policies.filter((policy) => {
+      if (policy.status !== 'active') return false;
+      const monthsOld =
+        (Date.now() - new Date(policy.updatedAt || Date.now()).getTime()) /
+        (1000 * 60 * 60 * 24 * 30);
+      return monthsOld >= 6;
     }).length;
 
     return [
-      {
-        title: t('stats.totalPolicies'),
-        value: total.toString(),
-        icon: FileText,
-        trend: { value: 0, isPositive: true },
-      },
-      {
-        title: t('stats.activePolicies'),
-        value: active.toString(),
-        icon: Shield,
-        trend: { value: 0, isPositive: true },
-      },
-      {
-        title: t('stats.needsUpdate'),
-        value: needsUpdate.toString(),
-        icon: AlertCircle,
-        trend: { value: 0, isPositive: false },
-      },
+      { title: 'Total policies', value: policies.length, icon: FileText },
+      { title: 'Active policies', value: activePolicies, icon: Shield },
+      { title: 'Needs review', value: needsReview, icon: AlertCircle },
     ];
-  }, [t]);
+  }, [policies]);
 
-  const handleView = (policy: Policy) => {
-    // TODO: Navigate to detail page
-    console.log('View policy:', policy);
-    router.push(`/manager/policies/${policy.id}`);
-  };
+  const handleDelete = async (policy: PolicyRecord) => {
+    if (!window.confirm(`Delete policy "${policy.title}"?`)) return;
 
-  const handleDelete = async (policy: Policy) => {
-    if (!confirm(t('deleteConfirm', { name: policy.title }))) return;
     try {
-      // TODO: Call delete API
-      console.log('Delete policy:', policy);
+      await policyApi.remove(policy.id);
+      setPolicies((current) => current.filter((item) => item.id !== policy.id));
       setApiError('');
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : t('deleteFailed'));
+      setApiError(error instanceof Error ? error.message : 'Failed to delete policy.');
     }
   };
 
   return (
     <>
       <Header
-        title={t('title')}
-        subtitle={t('subtitle')}
+        title="Policy Management"
+        subtitle="Control business rules for purchase, return, warranty, shipping, and privacy"
         showAddButton
-        addButtonLabel={t('createPolicy')}
+        addButtonLabel="Create policy"
         onAdd={() => router.push('/manager/policies/create')}
       />
 
       <div className="space-y-6 p-6">
-        {/* Stats */}
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {stats.map((stat, index) => (
-            <StatCard key={index} {...stat} />
-          ))}
-        </section>
-
-        {/* Error Message */}
-        {apiError && (
-          <div className="flex items-center gap-2 rounded-md bg-red-50 p-4 text-red-700">
-            <AlertTriangle className="h-5 w-5" />
-            <span>{apiError}</span>
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
           </div>
+        ) : (
+          <>
+            <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {stats.map((stat) => (
+                <StatCard key={stat.title} {...stat} />
+              ))}
+            </section>
+
+            {apiError ? (
+              <div className="flex items-center gap-2 rounded-md bg-red-50 p-4 text-red-700">
+                <AlertTriangle className="h-5 w-5" />
+                <span>{apiError}</span>
+              </div>
+            ) : null}
+
+            <section className="flex flex-col gap-4 sm:flex-row">
+              <div className="flex-1">
+                <Input
+                  placeholder="Search by title, summary, or content"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                />
+              </div>
+              <div className="w-full sm:w-48">
+                <select
+                  value={categoryFilter}
+                  onChange={(event) => setCategoryFilter(event.target.value as CategoryFilter)}
+                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
+                >
+                  <option value="all">All categories</option>
+                  <option value="warranty">Warranty</option>
+                  <option value="return">Return</option>
+                  <option value="shipping">Shipping</option>
+                  <option value="purchase">Purchase</option>
+                  <option value="privacy">Privacy</option>
+                  <option value="terms">Terms</option>
+                </select>
+              </div>
+              <div className="w-full sm:w-48">
+                <select
+                  value={statusFilter}
+                  onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
+                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
+                >
+                  <option value="all">All status</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="draft">Draft</option>
+                </select>
+              </div>
+            </section>
+
+            <div className="text-sm text-gray-600">
+              Showing {filteredPolicies.length} policy item(s)
+            </div>
+
+            <section className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+              <PolicyTable
+                policies={filteredPolicies}
+                onView={(policy) => router.push(`/manager/policies/${policy.id}`)}
+                onDelete={handleDelete}
+                translations={{
+                  title: 'Policy',
+                  category: 'Category',
+                  lastUpdated: 'Last updated',
+                  status: 'Status',
+                  actions: 'Actions',
+                  noData: 'No policies found',
+                  warranty: 'Warranty',
+                  return: 'Return',
+                  shipping: 'Shipping',
+                  purchase: 'Purchase',
+                  privacy: 'Privacy',
+                  terms: 'Terms',
+                  active: 'Active',
+                  inactive: 'Inactive',
+                  draft: 'Draft',
+                  viewDetails: 'View',
+                  deletePolicy: 'Delete',
+                }}
+              />
+            </section>
+          </>
         )}
-
-        {/* Filters */}
-        <section className="flex flex-col gap-4 sm:flex-row">
-          <div className="flex-1">
-            <Input
-              placeholder={t('searchPlaceholder')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <div className="w-full sm:w-48">
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value as CategoryFilter)}
-              className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="all">{t('filters.allCategories')}</option>
-              <option value="warranty">{t('filters.warranty')}</option>
-              <option value="return">{t('filters.return')}</option>
-              <option value="shipping">{t('filters.shipping')}</option>
-              <option value="purchase">{t('filters.purchase')}</option>
-              <option value="privacy">{t('filters.privacy')}</option>
-              <option value="terms">{t('filters.terms')}</option>
-            </select>
-          </div>
-          <div className="w-full sm:w-48">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-              className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="all">{t('filters.allStatus')}</option>
-              <option value="active">{t('filters.active')}</option>
-              <option value="inactive">{t('filters.inactive')}</option>
-              <option value="draft">{t('filters.draft')}</option>
-            </select>
-          </div>
-        </section>
-
-        {/* Results count */}
-        <div className="text-sm text-gray-600">
-          {t('showingResults', { count: filteredPolicies.length })}
-        </div>
-
-        {/* Policies Table */}
-        <section className="rounded-lg border border-gray-200 bg-white overflow-x-auto">
-          <PolicyTable
-            policies={filteredPolicies}
-            onView={handleView}
-            onDelete={handleDelete}
-            translations={{
-              title: t('table.title'),
-              category: t('table.category'),
-              lastUpdated: t('table.lastUpdated'),
-              status: t('table.status'),
-              actions: t('table.actions'),
-              noData: t('table.noData'),
-              warranty: t('table.warranty'),
-              return: t('table.return'),
-              shipping: t('table.shipping'),
-              purchase: t('table.purchase'),
-              privacy: t('table.privacy'),
-              terms: t('table.terms'),
-              active: t('table.active'),
-              inactive: t('table.inactive'),
-              draft: t('table.draft'),
-              viewDetails: t('table.viewDetails'),
-              deletePolicy: t('table.deletePolicy'),
-            }}
-          />
-        </section>
       </div>
     </>
   );

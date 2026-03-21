@@ -18,8 +18,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { productApi, uploadApi, type Product, type ProductMediaAsset } from '@/api';
-import { buildUpsertPayload, getRoleUrl, getGalleryUrls, normalizeCategoryValue } from '@/lib/productHelpers';
+import { productApi, uploadApi, type ProductDetail, type ProductMediaAsset } from '@/api';
+import { buildProductFormState, buildUpsertPayload, EMPTY_PRODUCT_FORM } from '@/lib/productHelpers';
 import { AlertTriangle, ArrowLeft, Edit, Loader2, Package, Trash2, X, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -32,7 +32,7 @@ export default function ProductDetailPage() {
   const t = useTranslations('manager.products');
   const tDetail = useTranslations('manager.products.detail');
 
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<ProductDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState('');
   const [isEditing, setIsEditing] = useState(false);
@@ -40,17 +40,7 @@ export default function ProductDetailPage() {
   const [uploadingKey, setUploadingKey] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const [formData, setFormData] = useState<ProductFormState>({
-    name: '',
-    brand: '',
-    price: '',
-    stock: '',
-    category: '',
-    description: '',
-    heroImageUrl: '',
-    thumbnailUrl: '',
-    galleryUrls: [],
-  });
+  const [formData, setFormData] = useState<ProductFormState>(EMPTY_PRODUCT_FORM);
 
   const loadProduct = useCallback(async () => {
     try {
@@ -66,18 +56,8 @@ export default function ProductDetailPage() {
     }
   }, [productId]);
 
-  const populateForm = (data: Product) => {
-    setFormData({
-      name: data.name,
-      brand: data.brand,
-      price: String(data.price),
-      stock: String(data.stock),
-      category: normalizeCategoryValue(data.category),
-      description: data.description || '',
-      heroImageUrl: getRoleUrl(data, 'hero') || data.imageUrl,
-      thumbnailUrl: getRoleUrl(data, 'thumbnail'),
-      galleryUrls: getGalleryUrls(data),
-    });
+  const populateForm = (data: ProductDetail) => {
+    setFormData(buildProductFormState(data));
   };
 
   useEffect(() => {
@@ -150,8 +130,50 @@ export default function ProductDetailPage() {
     }));
   }, []);
 
+  const handleUploadVariantAsset = useCallback(
+    async (
+      file: File,
+      variantIndex: number,
+      field: 'imageUrl' | 'posterUrl' | 'glbUrl' | 'usdzUrl'
+    ) => {
+      const uploadSuffix =
+        field === 'imageUrl'
+          ? 'image'
+          : field === 'posterUrl'
+            ? 'poster'
+            : field === 'glbUrl'
+              ? 'glb'
+              : 'usdz';
+      const uploadKey = `variant-${variantIndex}-${uploadSuffix}`;
+      setUploadingKey(uploadKey);
+      setApiError('');
+      try {
+        const result = await uploadApi.uploadFile(file, { folder: 'products/variants' });
+        setFormData((prev) => ({
+          ...prev,
+          variants: prev.variants.map((variant, index) =>
+            index === variantIndex ? { ...variant, [field]: result.url } : variant
+          ),
+        }));
+      } catch (error) {
+        setApiError(
+          `Upload variant ${field} failed: ${error instanceof Error ? error.message : 'Unknown'}`
+        );
+      } finally {
+        setUploadingKey('');
+      }
+    },
+    []
+  );
+
   const handleSave = async () => {
-    if (!formData.name.trim() || !formData.price || !formData.stock || !formData.category) {
+    const hasAnyPrice = Boolean(
+      formData.price || formData.variants.some((variant) => variant.price)
+    );
+    const hasAnyStock = Boolean(
+      formData.stock || formData.variants.some((variant) => variant.stock)
+    );
+    if (!formData.name.trim() || !formData.category || !hasAnyPrice || !hasAnyStock) {
       setApiError(tDetail('fillRequired'));
       return;
     }
@@ -160,7 +182,7 @@ export default function ProductDetailPage() {
     setApiError('');
 
     try {
-      const payload = buildUpsertPayload(formData);
+      const payload = buildUpsertPayload(formData, { existingProduct: product });
       await productApi.update(productId, payload);
       await loadProduct();
       setIsEditing(false);
@@ -304,6 +326,7 @@ export default function ProductDetailPage() {
               onChange={setFormData}
               onUploadSingle={handleUploadSingle}
               onUploadGallery={handleUploadGallery}
+              onUploadVariantAsset={handleUploadVariantAsset}
               onRemoveGallery={handleRemoveGallery}
             />
           </Card>
