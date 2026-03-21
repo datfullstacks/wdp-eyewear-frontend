@@ -1,4 +1,25 @@
+import {
+  AlertTriangle,
+  Banknote,
+  CheckCircle,
+  CornerUpLeft,
+  CreditCard,
+  Eye,
+  MessageSquareWarning,
+  MoreHorizontal,
+  PackageCheck,
+  RotateCcw,
+  XCircle,
+} from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -8,62 +29,105 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
-  Eye,
-  CheckCircle,
-  XCircle,
-  CreditCard,
-  Phone,
-  MoreHorizontal,
-} from 'lucide-react';
-import {
   RefundRequest,
-  statusConfig,
-  methodConfig,
   formatCurrency,
+  methodConfig,
+  statusConfig,
 } from '@/types/refund';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 
 interface RefundTableProps {
   refunds: RefundRequest[];
+  scope: 'sale' | 'manager' | 'operation';
   onDetail: (refund: RefundRequest) => void;
   onApprove: (refund: RefundRequest) => void;
   onReject: (refund: RefundRequest) => void;
-  onProcess: (refund: RefundRequest) => void;
-  onContact: (refund: RefundRequest) => void;
+  onEscalate: (refund: RefundRequest) => void;
+  onRequestInfo: (refund: RefundRequest) => void;
+  onResumeReview: (refund: RefundRequest) => void;
+  onSendBack: (refund: RefundRequest) => void;
+  onConfirmReturnReceived: (refund: RefundRequest) => void;
+  onInspectionFailed: (refund: RefundRequest) => void;
+  onStartProcessing: (refund: RefundRequest) => void;
+  onComplete: (refund: RefundRequest) => void;
+  actionsDisabled?: boolean;
 }
 
 export const RefundTable = ({
   refunds,
+  scope,
   onDetail,
   onApprove,
   onReject,
-  onProcess,
-  onContact,
+  onEscalate,
+  onRequestInfo,
+  onResumeReview,
+  onSendBack,
+  onConfirmReturnReceived,
+  onInspectionFailed,
+  onStartProcessing,
+  onComplete,
+  actionsDisabled = false,
 }: RefundTableProps) => {
   return (
     <div className="glass-card overflow-hidden rounded-xl">
       <Table className="text-sm font-normal">
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead>Mã hoàn tiền</TableHead>
-            <TableHead>Mã đơn hàng</TableHead>
-            <TableHead>Khách hàng</TableHead>
-            <TableHead>Số tiền</TableHead>
-            <TableHead>Phương thức</TableHead>
-            <TableHead>Trạng thái</TableHead>
-            <TableHead>Ngày tạo</TableHead>
+            <TableHead>Ma hoan tien</TableHead>
+            <TableHead>Ma don hang</TableHead>
+            <TableHead>Khach hang</TableHead>
+            <TableHead>So tien</TableHead>
+            <TableHead>Phuong thuc</TableHead>
+            <TableHead>Trang thai</TableHead>
+            <TableHead>Ngay tao</TableHead>
             <TableHead className="w-[60px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
+          {refunds.length === 0 && (
+            <TableRow>
+              <TableCell
+                colSpan={8}
+                className="text-muted-foreground py-8 text-center text-sm"
+              >
+                Khong co yeu cau hoan tien phu hop.
+              </TableCell>
+            </TableRow>
+          )}
+
           {refunds.map((refund) => {
             const MethodIcon = methodConfig[refund.method].icon;
+            const canSaleApprove =
+              scope === 'sale' &&
+              (refund.status === 'requested' || refund.status === 'reviewing');
+            const canSaleReject =
+              scope === 'sale' &&
+              (refund.status === 'requested' ||
+                refund.status === 'reviewing' ||
+                refund.status === 'waiting_customer_info');
+            const canSaleEscalate =
+              scope === 'sale' &&
+              (refund.status === 'requested' || refund.status === 'reviewing');
+            const canSaleRequestInfo =
+              scope === 'sale' &&
+              (refund.status === 'requested' || refund.status === 'reviewing');
+            const canResumeReview =
+              scope === 'sale' && refund.status === 'waiting_customer_info';
+            const canManagerDecide =
+              scope === 'manager' && refund.status === 'escalated_to_manager';
+            const canOperationConfirmReturn =
+              scope === 'operation' && refund.status === 'return_pending';
+            const canOperationFailInspection =
+              scope === 'operation' &&
+              (refund.status === 'return_pending' ||
+                refund.status === 'return_received');
+            const canOperationStartProcessing =
+              scope === 'operation' &&
+              (refund.status === 'return_received' ||
+                (refund.status === 'approved' && !refund.requiresReturn));
+            const canOperationComplete =
+              scope === 'operation' && refund.status === 'processing';
+
             return (
               <TableRow key={refund.id} className="hover:bg-muted/30">
                 <TableCell className="text-foreground font-mono text-sm font-normal">
@@ -118,6 +182,7 @@ export const RefundTable = ({
                         variant="ghost"
                         size="icon"
                         className="text-foreground/80 hover:text-foreground h-8 w-8"
+                        disabled={actionsDisabled}
                       >
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
@@ -125,36 +190,136 @@ export const RefundTable = ({
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => onDetail(refund)}>
                         <Eye className="mr-2 h-4 w-4" />
-                        Xem chi tiết
+                        Xem chi tiet
                       </DropdownMenuItem>
-                      {(refund.status === 'pending' ||
-                        refund.status === 'reviewing') && (
+
+                      {(canSaleApprove || canManagerDecide) && (
                         <>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => onApprove(refund)}>
-                            <CheckCircle className="mr-2 h-4 w-4 text-success" />
-                            Duyệt
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onReject(refund)}>
-                            <XCircle className="mr-2 h-4 w-4 text-destructive" />
-                            Từ chối
+                          <DropdownMenuItem
+                            onClick={() => onApprove(refund)}
+                            disabled={actionsDisabled}
+                          >
+                            <CheckCircle className="text-success mr-2 h-4 w-4" />
+                            Duyet
                           </DropdownMenuItem>
                         </>
                       )}
-                      {refund.status === 'approved' && (
+
+                      {(canSaleReject || canManagerDecide) && (
                         <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => onProcess(refund)}>
-                            <CreditCard className="mr-2 h-4 w-4" />
-                            Hoàn tiền
+                          <DropdownMenuItem
+                            onClick={() => onReject(refund)}
+                            disabled={actionsDisabled}
+                          >
+                            <XCircle className="text-destructive mr-2 h-4 w-4" />
+                            Tu choi
                           </DropdownMenuItem>
                         </>
                       )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => onContact(refund)}>
-                        <Phone className="mr-2 h-4 w-4" />
-                        Liên hệ khách
-                      </DropdownMenuItem>
+
+                      {canSaleEscalate && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => onEscalate(refund)}
+                            disabled={actionsDisabled}
+                          >
+                            <AlertTriangle className="mr-2 h-4 w-4 text-amber-600" />
+                            Chuyen manager
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      {canSaleRequestInfo && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => onRequestInfo(refund)}
+                            disabled={actionsDisabled}
+                          >
+                            <MessageSquareWarning className="mr-2 h-4 w-4" />
+                            Yeu cau bo sung
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      {canResumeReview && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => onResumeReview(refund)}
+                            disabled={actionsDisabled}
+                          >
+                            <RotateCcw className="mr-2 h-4 w-4" />
+                            Tiep tuc review
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      {canManagerDecide && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => onSendBack(refund)}
+                            disabled={actionsDisabled}
+                          >
+                            <CornerUpLeft className="mr-2 h-4 w-4" />
+                            Tra lai staff
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      {canOperationConfirmReturn && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => onConfirmReturnReceived(refund)}
+                            disabled={actionsDisabled}
+                          >
+                            <PackageCheck className="mr-2 h-4 w-4 text-blue-600" />
+                            Xac nhan da nhan hang
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      {canOperationFailInspection && (
+                        <>
+                          <DropdownMenuItem
+                            onClick={() => onInspectionFailed(refund)}
+                            disabled={actionsDisabled}
+                          >
+                            <AlertTriangle className="mr-2 h-4 w-4 text-amber-600" />
+                            QC fail / tra lai review
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      {canOperationStartProcessing && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => onStartProcessing(refund)}
+                            disabled={actionsDisabled}
+                          >
+                            <CreditCard className="mr-2 h-4 w-4 text-amber-600" />
+                            Bat dau payout
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      {canOperationComplete && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => onComplete(refund)}
+                            disabled={actionsDisabled}
+                          >
+                            <Banknote className="mr-2 h-4 w-4 text-emerald-600" />
+                            Xac nhan da chuyen tien
+                          </DropdownMenuItem>
+                        </>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

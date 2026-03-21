@@ -1,57 +1,141 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useEffect, useMemo, useState } from 'react';
+import { AlertTriangle, Calendar, DollarSign, Loader2, ShoppingCart, Wallet } from 'lucide-react';
+
 import { Header } from '@/components/organisms/Header';
 import { StatCard } from '@/components/molecules/StatCard';
-import { DollarSign, TrendingUp, Calendar, Target } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import analyticsApi, { type RevenueSummary } from '@/api/analytics';
+
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+    maximumFractionDigits: 0,
+  }).format(value || 0);
 
 export default function RevenuePage() {
-  const t = useTranslations('manager.revenue');
+  const [summary, setSummary] = useState<RevenueSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const revenueStats = [
-    {
-      title: t('stats.monthlyRevenue'),
-      value: '284.5M',
-      icon: DollarSign,
-      trend: { value: 15, isPositive: true },
-    },
-    {
-      title: t('stats.growth'),
-      value: '+15%',
-      icon: TrendingUp,
-      trend: { value: 15, isPositive: true },
-    },
-    {
-      title: t('stats.yearlyRevenue'),
-      value: '2.8B',
-      icon: Calendar,
-      trend: { value: 22, isPositive: true },
-    },
-    {
-      title: t('stats.targetAchieved'),
-      value: '85%',
-      icon: Target,
-      trend: { value: 5, isPositive: true },
-    },
-  ];
+  useEffect(() => {
+    let active = true;
+
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const data = await analyticsApi.getRevenueSummary();
+        if (active) {
+          setSummary(data);
+        }
+      } catch (err) {
+        if (active) {
+          setError(err instanceof Error ? err.message : 'Failed to load revenue summary.');
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void load();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const stats = useMemo(
+    () =>
+      summary
+        ? [
+            {
+              title: 'Monthly revenue',
+              value: formatCurrency(summary.summary.monthlyRevenue),
+              icon: DollarSign,
+              trend: {
+                value: Math.abs(summary.summary.growth),
+                isPositive: summary.summary.growth >= 0,
+              },
+            },
+            {
+              title: 'Collected this month',
+              value: formatCurrency(summary.summary.monthlyCollected),
+              icon: Wallet,
+            },
+            {
+              title: 'Monthly orders',
+              value: summary.summary.monthlyOrders,
+              icon: ShoppingCart,
+            },
+            {
+              title: 'Yearly revenue',
+              value: formatCurrency(summary.summary.yearlyRevenue),
+              icon: Calendar,
+            },
+          ]
+        : [],
+    [summary],
+  );
 
   return (
     <>
       <Header
-        title={t('title')}
-        subtitle={t('subtitle')}
+        title="Revenue Overview"
+        subtitle="Monitor booked revenue, collected cash, and the last six months of order performance"
       />
 
       <div className="space-y-6 p-6">
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
-          {revenueStats.map((stat, index) => (
-            <StatCard key={index} {...stat} />
-          ))}
-        </section>
+        {error ? (
+          <div className="flex items-center gap-2 rounded-md bg-red-50 p-4 text-red-700">
+            <AlertTriangle className="h-5 w-5" />
+            <span>{error}</span>
+          </div>
+        ) : null}
 
-        <section className="rounded-lg border border-gray-200 bg-white p-6">
-          <p className="text-gray-500">{t('placeholder')}</p>
-        </section>
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+          </div>
+        ) : (
+          <>
+            <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
+              {stats.map((stat) => (
+                <StatCard key={stat.title} {...stat} />
+              ))}
+            </section>
+
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900">Recent monthly trend</h3>
+              <div className="mt-4 overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200 text-left text-gray-500">
+                      <th className="pb-3 pr-4">Month</th>
+                      <th className="pb-3 pr-4">Revenue</th>
+                      <th className="pb-3 pr-4">Collected</th>
+                      <th className="pb-3">Orders</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {summary?.monthly.map((row) => (
+                      <tr key={row.month} className="border-b border-gray-100 text-gray-700">
+                        <td className="py-3 pr-4">{row.month}</td>
+                        <td className="py-3 pr-4">{formatCurrency(row.revenue)}</td>
+                        <td className="py-3 pr-4">{formatCurrency(row.collected)}</td>
+                        <td className="py-3">{row.orders}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </>
+        )}
       </div>
     </>
   );

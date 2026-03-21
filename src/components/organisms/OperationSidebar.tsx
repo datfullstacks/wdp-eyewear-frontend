@@ -11,6 +11,7 @@ import {
   ChevronRight,
   ClipboardCheck,
   ClipboardList,
+  CreditCard,
   FileSearch,
   FileText,
   Glasses,
@@ -32,7 +33,10 @@ import {
 
 import { orderApi } from '@/api';
 import { Button } from '@/components/atoms';
-import { computeOrderMenuCounts, type OrderMenuCounts } from '@/lib/orderWorkflow';
+import {
+  computeOrderMenuCounts,
+  type OrderMenuCounts,
+} from '@/lib/orderWorkflow';
 import { cn } from '@/lib/utils';
 
 type BadgeType = 'warning' | 'error' | 'info';
@@ -51,39 +55,39 @@ type MenuItem = {
 const menuItems: MenuItem[] = [
   {
     icon: ShoppingCart,
-    label: 'Đơn hàng',
+    label: 'Don hang',
     children: [
       {
         icon: PackageCheck,
-        label: 'Đơn có sẵn',
+        label: 'Don co san',
         path: '/operation/orders/ready-stock',
         badgeKey: 'readyStock',
         badgeType: 'info',
       },
       {
         icon: Package,
-        label: 'Đơn Pre-order',
+        label: 'Don pre-order',
         path: '/operation/orders/preorder',
         badgeKey: 'preorder',
         badgeType: 'info',
       },
       {
         icon: Glasses,
-        label: 'Đơn Prescription',
+        label: 'Don prescription',
         path: '/operation/orders/prescription',
         badgeKey: 'prescription',
         badgeType: 'info',
       },
       {
         icon: FileText,
-        label: 'Đơn cần bổ sung Prescription',
+        label: 'Don can bo sung prescription',
         path: '/operation/orders/prescription-needed',
         badgeKey: 'prescriptionNeeded',
         badgeType: 'warning',
       },
       {
         icon: Wrench,
-        label: 'Đơn đang gia công',
+        label: 'Don dang gia cong',
         path: '/operation/orders/processing',
         badgeKey: 'processing',
         badgeType: 'info',
@@ -92,84 +96,99 @@ const menuItems: MenuItem[] = [
   },
   {
     icon: Truck,
-    label: 'Vận hành giao vận',
+    label: 'Van hanh giao van',
     children: [
       {
         icon: Printer,
-        label: 'Tạo vận đơn / In nhãn',
+        label: 'Tao van don / In nhan',
         path: '/operation/shipping/create',
       },
       {
         icon: MapPin,
-        label: 'Tracking / Đối soát',
+        label: 'Tracking / Doi soat',
         path: '/operation/shipping/tracking',
       },
       {
         icon: PackageCheck,
-        label: 'Bàn giao vận chuyển',
+        label: 'Ban giao van chuyen',
         path: '/operation/shipping/handover',
       },
     ],
   },
   {
+    icon: CreditCard,
+    label: 'Refund',
+    children: [
+      {
+        icon: CreditCard,
+        label: 'Payout queue',
+        path: '/operation/refunds',
+      },
+    ],
+  },
+  {
     icon: Wrench,
-    label: 'Gia công kính',
+    label: 'Gia cong kinh',
     children: [
       {
         icon: ClipboardList,
-        label: 'Hàng đợi gia công',
+        label: 'Hang doi gia cong',
         path: '/operation/lab/queue',
         badge: '8',
         badgeType: 'info',
       },
       {
         icon: ClipboardCheck,
-        label: 'Thông số lắp tròng / QC',
+        label: 'Thong so lap trong / QC',
         path: '/operation/lab/specs',
       },
       {
         icon: CheckSquare,
-        label: 'Kết quả QC & đóng gói',
+        label: 'Ket qua QC & dong goi',
         path: '/operation/lab/qc-results',
       },
     ],
   },
   {
     icon: Warehouse,
-    label: 'Sản phẩm & kho',
+    label: 'San pham & kho',
     children: [
-      { icon: Search, label: 'Tra cứu sản phẩm', path: '/operation/products' },
+      {
+        icon: Search,
+        label: 'Tra cuu san pham',
+        path: '/operation/products',
+      },
       {
         icon: FileSearch,
-        label: 'Tồn kho / tình trạng',
+        label: 'Ton kho / tinh trang',
         path: '/operation/inventory/stock',
       },
       {
         icon: Package,
-        label: 'Nhập hàng Pre-order',
+        label: 'Nhap hang pre-order',
         path: '/operation/inventory/import',
       },
     ],
   },
   {
     icon: Settings,
-    label: 'Thiết lập cá nhân',
+    label: 'Thiet lap ca nhan',
     children: [
       {
         icon: Bell,
-        label: 'Thông báo',
+        label: 'Thong bao',
         path: '/operation/settings/notifications',
         badge: '2',
         badgeType: 'info',
       },
       {
         icon: ListTodo,
-        label: 'Nhiệm vụ của tôi',
+        label: 'Nhiem vu cua toi',
         path: '/operation/settings/tasks',
       },
       {
         icon: User,
-        label: 'Cài đặt tài khoản',
+        label: 'Cai dat tai khoan',
         path: '/operation/settings/account',
       },
     ],
@@ -219,9 +238,13 @@ export const OperationSidebar: React.FC = () => {
       try {
         const result = await orderApi.getAll({ page: 1, limit: 500 });
         const counts = computeOrderMenuCounts(result.orders);
-        if (mounted) setOrderCounts(counts);
+        if (mounted) {
+          setOrderCounts(counts);
+        }
       } catch {
-        if (mounted) setOrderCounts(null);
+        if (mounted) {
+          setOrderCounts(null);
+        }
       }
     };
 
@@ -249,7 +272,9 @@ export const OperationSidebar: React.FC = () => {
         ...item,
         children: item.children.map((child) => {
           if (!child.badgeKey) return child;
+
           const value = orderCounts[child.badgeKey];
+
           return {
             ...child,
             badge: value > 0 ? String(value) : undefined,
@@ -261,11 +286,15 @@ export const OperationSidebar: React.FC = () => {
 
   const defaultOpenMap = useMemo(() => {
     const map = new Map<string, boolean>();
+
     for (const item of resolvedMenuItems) {
       if (!item.children) continue;
-      const open = item.children.some((c) => isActivePath(pathname, c.path, c.exact));
+      const open = item.children.some((child) =>
+        isActivePath(pathname, child.path, child.exact)
+      );
       map.set(item.label, open);
     }
+
     return map;
   }, [pathname, resolvedMenuItems]);
 
@@ -274,20 +303,31 @@ export const OperationSidebar: React.FC = () => {
     for (const item of resolvedMenuItems) {
       if (item.children) obj[item.label] = defaultOpenMap.get(item.label) ?? false;
     }
+
     return obj;
   });
 
-  useMemo(() => {
+  useEffect(() => {
     setOpenGroups((prev) => {
       const next = { ...prev };
+
       for (const item of resolvedMenuItems) {
         if (!item.children) continue;
-        const shouldOpen = item.children.some((c) => isActivePath(pathname, c.path, c.exact));
-        if (shouldOpen) next[item.label] = true;
+
+        const shouldOpen =
+          defaultOpenMap.get(item.label) ||
+          item.children.some((child) =>
+            isActivePath(pathname, child.path, child.exact)
+          );
+
+        if (shouldOpen) {
+          next[item.label] = true;
+        }
       }
+
       return next;
     });
-  }, [pathname, resolvedMenuItems]);
+  }, [defaultOpenMap, pathname, resolvedMenuItems]);
 
   return (
     <aside
@@ -320,17 +360,22 @@ export const OperationSidebar: React.FC = () => {
         variant="ghost"
         size="sm"
         type="button"
-        onClick={() => setCollapsed((v) => !v)}
+        onClick={() => setCollapsed((value) => !value)}
         className="absolute top-20 -right-3 h-6 w-6 rounded-full border border-gray-200 bg-gray-100 p-0 shadow-sm hover:bg-gray-200"
-        aria-label={collapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
+        aria-label={collapsed ? 'Mo sidebar' : 'Thu gon sidebar'}
       >
-        {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        {collapsed ? (
+          <ChevronRight className="h-4 w-4" />
+        ) : (
+          <ChevronLeft className="h-4 w-4" />
+        )}
       </Button>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {resolvedMenuItems.map((item) => {
           if (!item.children) {
             const active = isActivePath(pathname, item.path, item.exact);
+
             return (
               <Link
                 key={item.label}
@@ -350,8 +395,10 @@ export const OperationSidebar: React.FC = () => {
             );
           }
 
-          const hasActiveChild = item.children.some((c) => isActivePath(pathname, c.path, c.exact));
-          const isOpen = !!openGroups[item.label];
+          const hasActiveChild = item.children.some((child) =>
+            isActivePath(pathname, child.path, child.exact)
+          );
+          const isOpen = Boolean(openGroups[item.label]);
 
           return (
             <div key={item.label} className="space-y-1">
@@ -359,7 +406,10 @@ export const OperationSidebar: React.FC = () => {
                 type="button"
                 onClick={() =>
                   !collapsed &&
-                  setOpenGroups((p) => ({ ...p, [item.label]: !p[item.label] }))
+                  setOpenGroups((prev) => ({
+                    ...prev,
+                    [item.label]: !prev[item.label],
+                  }))
                 }
                 className={cn(
                   'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200',
@@ -373,7 +423,9 @@ export const OperationSidebar: React.FC = () => {
                 <item.icon className="h-5 w-5 flex-shrink-0" />
                 {!collapsed && (
                   <>
-                    <span className="flex-1 text-left font-medium">{item.label}</span>
+                    <span className="flex-1 text-left font-medium">
+                      {item.label}
+                    </span>
                     <ChevronDown
                       className={cn(
                         'h-4 w-4 transition-transform duration-200',
@@ -387,11 +439,16 @@ export const OperationSidebar: React.FC = () => {
               {!collapsed && isOpen && (
                 <div className="mt-1 space-y-1">
                   {item.children.map((child) => {
-                    const active = isActivePath(pathname, child.path, child.exact);
+                    const active = isActivePath(
+                      pathname,
+                      child.path,
+                      child.exact
+                    );
+
                     return (
                       <Link
                         key={child.path}
-                        href={child.path!}
+                        href={child.path ?? '/'}
                         aria-current={active ? 'page' : undefined}
                         className={cn(
                           'ml-6 flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-all duration-200',
@@ -403,7 +460,10 @@ export const OperationSidebar: React.FC = () => {
                         <child.icon className="h-4 w-4 flex-shrink-0" />
                         <span className="flex-1 truncate">{child.label}</span>
                         {child.badge && (
-                          <MenuItemBadge badge={child.badge} type={child.badgeType} />
+                          <MenuItemBadge
+                            badge={child.badge}
+                            type={child.badgeType}
+                          />
                         )}
                       </Link>
                     );
@@ -423,7 +483,7 @@ export const OperationSidebar: React.FC = () => {
 
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <p className="truncate font-medium text-gray-900">Nhân viên</p>
+              <p className="truncate font-medium text-gray-900">Nhan vien</p>
               <p className="truncate text-xs text-gray-500">Operations</p>
             </div>
           )}

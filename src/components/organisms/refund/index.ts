@@ -5,3 +5,5 @@ export { RefundApproveModal } from './RefundApproveModal';
 export { RefundRejectModal } from './RefundRejectModal';
 export { RefundProcessModal } from './RefundProcessModal';
 export { RefundContactModal } from './RefundContactModal';
+export { RefundEscalateModal } from './RefundEscalateModal';
+export { RefundInspectionModal } from './RefundInspectionModal';

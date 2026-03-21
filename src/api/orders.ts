@@ -173,6 +173,64 @@ interface BackendOrderItem {
   customization?: BackendItemCustomization;
 }
 
+interface BackendRefundBreakdown {
+  itemAmount?: number;
+  shippingFeeAmount?: number;
+  returnShippingFeeAmount?: number;
+  total?: number;
+}
+
+interface BackendRefundBankAccount {
+  bankName?: string;
+  accountNumber?: string;
+  accountHolder?: string;
+  note?: string;
+}
+
+interface BackendRefundHistoryEntry {
+  action?: string;
+  fromStatus?: string;
+  toStatus?: string;
+  actorUserId?: string;
+  actorRole?: string;
+  actorName?: string;
+  note?: string;
+  meta?: unknown;
+  createdAt?: string;
+}
+
+interface BackendOrderRefund {
+  status?: string;
+  reason?: string;
+  responsibility?: string;
+  requiresReturn?: boolean;
+  amount?: number;
+  requestedBreakdown?: BackendRefundBreakdown | null;
+  approvedBreakdown?: BackendRefundBreakdown | null;
+  requestedAt?: string;
+  approvedAt?: string;
+  processedAt?: string;
+  rejectReason?: string;
+  decisionNote?: string;
+  contactNote?: string;
+  escalateReason?: string;
+  contactChannels?: string[];
+  bankAccount?: BackendRefundBankAccount | null;
+  transactionRef?: string;
+  currentOwnerRole?: string;
+  currentOwnerUserId?: string;
+  nextActionCode?: string;
+  inspectionStatus?: string;
+  inspectionNote?: string;
+  inspectionAt?: string;
+  returnShipmentCode?: string;
+  returnCarrier?: string;
+  returnReceivedAt?: string;
+  payoutProofUrl?: string;
+  evidence?: string[] | null;
+  history?: BackendRefundHistoryEntry[] | null;
+}
+
 interface BackendOrder {
   _id?: string;
   id?: string;
@@ -192,6 +250,7 @@ interface BackendOrder {
   shippingAddress?: BackendShippingAddress;
   shipment?: BackendShipment | null;
   opsExecution?: BackendOpsExecution | null;
+  refund?: BackendOrderRefund | null;
 }
 
 interface BackendShippingInfo {
@@ -296,6 +355,85 @@ export interface OrderOpsExecutionPatch {
   itemStates?: Record<string, Partial<ReadyStockItemOpsState>>;
 }
 
+export type RefundResponsibility = 'customer' | 'system' | 'carrier' | 'mixed';
+
+export type RefundStatus =
+  | 'none'
+  | 'requested'
+  | 'reviewing'
+  | 'waiting_customer_info'
+  | 'escalated_to_manager'
+  | 'approved'
+  | 'return_pending'
+  | 'return_received'
+  | 'processing'
+  | 'completed'
+  | 'rejected';
+
+export interface RefundBreakdown {
+  itemAmount: number;
+  shippingFeeAmount: number;
+  returnShippingFeeAmount: number;
+  total: number;
+}
+
+export interface RefundBankAccount {
+  bankName: string;
+  accountNumber: string;
+  accountHolder: string;
+  note: string;
+}
+
+export interface RefundHistoryEntry {
+  action: string;
+  fromStatus: string;
+  toStatus: string;
+  actorUserId: string;
+  actorRole: string;
+  actorName: string;
+  note: string;
+  meta?: unknown;
+  createdAt?: string;
+}
+
+export type RefundInspectionStatus =
+  | 'not_required'
+  | 'pending'
+  | 'passed'
+  | 'failed';
+
+export interface OrderRefund {
+  status: RefundStatus;
+  reason: string;
+  responsibility?: RefundResponsibility;
+  requiresReturn: boolean;
+  amount: number;
+  requestedBreakdown: RefundBreakdown;
+  approvedBreakdown: RefundBreakdown;
+  requestedAt?: string;
+  approvedAt?: string;
+  processedAt?: string;
+  rejectReason: string;
+  decisionNote: string;
+  contactNote: string;
+  escalateReason: string;
+  contactChannels: Array<'email' | 'phone'>;
+  bankAccount?: RefundBankAccount;
+  transactionRef: string;
+  currentOwnerRole: string;
+  currentOwnerUserId?: string;
+  nextActionCode: string;
+  inspectionStatus: RefundInspectionStatus;
+  inspectionNote: string;
+  inspectionAt?: string;
+  returnShipmentCode: string;
+  returnCarrier: string;
+  returnReceivedAt?: string;
+  payoutProofUrl: string;
+  evidence: string[];
+  history: RefundHistoryEntry[];
+}
+
 export interface OrderRecord {
   id: string;
   code: string;
@@ -317,6 +455,7 @@ export interface OrderRecord {
   createdAt?: string;
   shipment?: OrderShipment | null;
   opsExecution?: Partial<ReadyStockOrderOpsState> | null;
+  refund?: OrderRefund | null;
 }
 
 export interface OrdersResponse {
@@ -413,8 +552,9 @@ function mapOpsExecutionItemState(
   return {
     picked: Boolean(raw?.picked),
     warehouseLocation: String(raw?.warehouseLocation || '').trim(),
-    issueType: (String(raw?.issueType || '').trim().toLowerCase() ||
-      null) as ReadyStockIssueType | null,
+    issueType: (String(raw?.issueType || '')
+      .trim()
+      .toLowerCase() || null) as ReadyStockIssueType | null,
     issueNote: String(raw?.issueNote || '').trim(),
     internalNote: String(raw?.internalNote || '').trim(),
   };
@@ -452,17 +592,141 @@ function mapOpsExecution(
     salesApprovedBy: String(raw.salesApprovedBy || '').trim(),
     salesHandoffNote: String(raw.salesHandoffNote || '').trim(),
     internalNote: String(raw.internalNote || '').trim(),
-    holdReason: (String(raw.holdReason || '').trim().toLowerCase() ||
-      null) as ReadyStockOrderOpsState['holdReason'],
+    holdReason: (String(raw.holdReason || '')
+      .trim()
+      .toLowerCase() || null) as ReadyStockOrderOpsState['holdReason'],
     holdNote: String(raw.holdNote || '').trim(),
     paymentFailed: Boolean(raw.paymentFailed),
     checklist,
-    carrierId: String(raw.carrierId || '').trim().toLowerCase(),
+    carrierId: String(raw.carrierId || '')
+      .trim()
+      .toLowerCase(),
     trackingCode: String(raw.trackingCode || '').trim(),
-    issueType: (String(raw.issueType || '').trim().toLowerCase() ||
-      null) as ReadyStockIssueType | null,
+    issueType: (String(raw.issueType || '')
+      .trim()
+      .toLowerCase() || null) as ReadyStockIssueType | null,
     issueNote: String(raw.issueNote || '').trim(),
     itemStates,
+  };
+}
+
+function mapRefundBreakdown(
+  raw?: BackendRefundBreakdown | null
+): RefundBreakdown {
+  return {
+    itemAmount: Number(raw?.itemAmount || 0),
+    shippingFeeAmount: Number(raw?.shippingFeeAmount || 0),
+    returnShippingFeeAmount: Number(raw?.returnShippingFeeAmount || 0),
+    total: Number(raw?.total || 0),
+  };
+}
+
+function mapRefundBankAccount(
+  raw?: BackendRefundBankAccount | null
+): RefundBankAccount | undefined {
+  if (!raw || !isRecord(raw)) return undefined;
+
+  const bankName = String(raw.bankName || '').trim();
+  const accountNumber = String(raw.accountNumber || '').trim();
+  const accountHolder = String(raw.accountHolder || '').trim();
+  const note = String(raw.note || '').trim();
+
+  if (!bankName && !accountNumber && !accountHolder && !note) {
+    return undefined;
+  }
+
+  return {
+    bankName,
+    accountNumber,
+    accountHolder,
+    note,
+  };
+}
+
+function mapRefundHistoryEntry(raw?: BackendRefundHistoryEntry | null): RefundHistoryEntry {
+  return {
+    action: String(raw?.action || '').trim(),
+    fromStatus: String(raw?.fromStatus || 'none')
+      .trim()
+      .toLowerCase(),
+    toStatus: String(raw?.toStatus || 'none')
+      .trim()
+      .toLowerCase(),
+    actorUserId: String(raw?.actorUserId || '').trim(),
+    actorRole: String(raw?.actorRole || '').trim().toLowerCase(),
+    actorName: String(raw?.actorName || '').trim(),
+    note: String(raw?.note || '').trim(),
+    meta: raw?.meta,
+    createdAt: String(raw?.createdAt || '').trim() || undefined,
+  };
+}
+
+function mapRefund(raw?: BackendOrderRefund | null): OrderRefund | null {
+  if (!raw || !isRecord(raw)) return null;
+
+  return {
+    status: (String(raw.status || 'none')
+      .trim()
+      .toLowerCase() || 'none') as RefundStatus,
+    reason: String(raw.reason || '').trim(),
+    responsibility: (String(raw.responsibility || '')
+      .trim()
+      .toLowerCase() || undefined) as RefundResponsibility | undefined,
+    requiresReturn: Boolean(raw.requiresReturn),
+    amount: Number(raw.amount || 0),
+    requestedBreakdown: mapRefundBreakdown(
+      raw.requestedBreakdown as BackendRefundBreakdown | null | undefined
+    ),
+    approvedBreakdown: mapRefundBreakdown(
+      raw.approvedBreakdown as BackendRefundBreakdown | null | undefined
+    ),
+    requestedAt: String(raw.requestedAt || '').trim() || undefined,
+    approvedAt: String(raw.approvedAt || '').trim() || undefined,
+    processedAt: String(raw.processedAt || '').trim() || undefined,
+    rejectReason: String(raw.rejectReason || '').trim(),
+    decisionNote: String(raw.decisionNote || '').trim(),
+    contactNote: String(raw.contactNote || '').trim(),
+    escalateReason: String(raw.escalateReason || '').trim(),
+    contactChannels: Array.isArray(raw.contactChannels)
+      ? raw.contactChannels
+          .map((channel) =>
+            String(channel || '')
+              .trim()
+              .toLowerCase()
+          )
+          .filter(
+            (channel): channel is 'email' | 'phone' =>
+              channel === 'email' || channel === 'phone'
+          )
+      : [],
+    bankAccount: mapRefundBankAccount(
+      raw.bankAccount as BackendRefundBankAccount | null | undefined
+    ),
+    transactionRef: String(raw.transactionRef || '').trim(),
+    currentOwnerRole: String(raw.currentOwnerRole || 'none')
+      .trim()
+      .toLowerCase(),
+    currentOwnerUserId: String(raw.currentOwnerUserId || '').trim() || undefined,
+    nextActionCode: String(raw.nextActionCode || '').trim().toLowerCase(),
+    inspectionStatus: (String(raw.inspectionStatus || 'not_required')
+      .trim()
+      .toLowerCase() || 'not_required') as RefundInspectionStatus,
+    inspectionNote: String(raw.inspectionNote || '').trim(),
+    inspectionAt: String(raw.inspectionAt || '').trim() || undefined,
+    returnShipmentCode: String(raw.returnShipmentCode || '').trim(),
+    returnCarrier: String(raw.returnCarrier || '').trim().toLowerCase(),
+    returnReceivedAt: String(raw.returnReceivedAt || '').trim() || undefined,
+    payoutProofUrl: String(raw.payoutProofUrl || '').trim(),
+    evidence: Array.isArray(raw.evidence)
+      ? raw.evidence
+          .map((entry) => String(entry || '').trim())
+          .filter(Boolean)
+      : [],
+    history: Array.isArray(raw.history)
+      ? raw.history.map((entry) =>
+          mapRefundHistoryEntry(entry as BackendRefundHistoryEntry)
+        )
+      : [],
   };
 }
 
@@ -648,6 +912,7 @@ function mapBackendOrder(raw: BackendOrder): OrderRecord {
     createdAt: raw.createdAt,
     shipment: mapShipment(raw.shipment),
     opsExecution: mapOpsExecution(raw.opsExecution),
+    refund: mapRefund(raw.refund),
   };
 }
 
@@ -807,6 +1072,7 @@ export const orderApi = {
     opsStage?: string;
     refundStatus?: string;
     userId?: string;
+    storeId?: string;
   }): Promise<OrdersResponse> => {
     const response = await apiClient.get('/api/orders', { params });
     const { rows, pagination } = extractOrdersPayload(response.data);
@@ -844,9 +1110,12 @@ export const orderApi = {
     id: string,
     status: OrderShippingTestStatus
   ): Promise<OrderShippingInfo> => {
-    const response = await apiClient.post(`/api/orders/${id}/shipping/test-status`, {
-      status,
-    });
+    const response = await apiClient.post(
+      `/api/orders/${id}/shipping/test-status`,
+      {
+        status,
+      }
+    );
     return mapShippingInfo(extractShippingPayload(response.data));
   },
 
@@ -892,7 +1161,10 @@ export const orderApi = {
     id: string,
     payload: OrderOpsExecutionPatch
   ): Promise<OrderRecord> => {
-    const response = await apiClient.put(`/api/orders/${id}/ops-execution`, payload);
+    const response = await apiClient.put(
+      `/api/orders/${id}/ops-execution`,
+      payload
+    );
     return mapBackendOrder(extractOrderPayload(response.data));
   },
 
@@ -910,6 +1182,88 @@ export const orderApi = {
     }
   ): Promise<void> => {
     await apiClient.put(`/api/orders/${id}/cancel`, payload || {});
+  },
+
+  createRefundRequest: async (
+    id: string,
+    payload: {
+      reason: string;
+      reasonCode?: string;
+      requestShippingFee?: boolean;
+      customerPaidReturnShippingFee?: number;
+      responsibility?: RefundResponsibility;
+      requiresReturn?: boolean;
+      note?: string;
+      requestedBreakdown?: Partial<RefundBreakdown>;
+      bankAccount?: {
+        bankName?: string;
+        accountNumber?: string;
+        accountHolder?: string;
+        note?: string;
+      };
+    }
+  ): Promise<OrderRecord> => {
+    const response = await apiClient.post(
+      `/api/orders/${id}/refund-request`,
+      payload
+    );
+    return mapBackendOrder(extractOrderPayload(response.data));
+  },
+
+  updateRefund: async (
+    id: string,
+    payload: {
+      action?:
+        | 'start_review'
+        | 'customer_submit_info'
+        | 'request_customer_info'
+        | 'approve'
+        | 'reject'
+        | 'escalate'
+        | 'manager_approve'
+        | 'manager_reject'
+        | 'send_back_to_staff'
+        | 'mark_return_pending'
+        | 'confirm_return_received'
+        | 'inspection_failed'
+        | 'start_processing'
+        | 'complete';
+      status?: RefundStatus;
+      responsibility?: RefundResponsibility;
+      requiresReturn?: boolean;
+      contactNote?: string;
+      contactChannels?: Array<'email' | 'phone'>;
+      decisionNote?: string;
+      note?: string;
+      rejectReason?: string;
+      escalateReason?: string;
+      transactionRef?: string;
+      payoutProofUrl?: string;
+      inspectionNote?: string;
+      returnShipmentCode?: string;
+      returnCarrier?: string;
+      evidence?: string[];
+      approvedBreakdown?: Partial<RefundBreakdown>;
+    }
+  ): Promise<OrderRecord> => {
+    const response = await apiClient.put(`/api/orders/${id}/refund`, payload);
+    return mapBackendOrder(extractOrderPayload(response.data));
+  },
+
+  overrideRefund: async (
+    id: string,
+    payload: {
+      action:
+        | 'reassign_sales'
+        | 'reassign_manager'
+        | 'reassign_operations'
+        | 'reset_reviewing'
+        | 'retry_customer_notification';
+      reason: string;
+    }
+  ): Promise<OrderRecord> => {
+    const response = await apiClient.post(`/api/orders/${id}/refund-override`, payload);
+    return mapBackendOrder(extractOrderPayload(response.data));
   },
 
   patchItem: async (

@@ -16,7 +16,7 @@ import {
 import { Header } from '@/components/organisms/Header';
 import { UserForm, type UserFormData } from '@/components/organisms/manager';
 import { Card } from '@/components/ui/card';
-import { userApi, toFrontendRole } from '@/api';
+import { storeApi, userApi, toFrontendRole, type StoreRecord } from '@/api';
 import { normalizeRole } from '@/lib/roles';
 import { getUserManagementBasePath, isAdminAreaPath } from '@/lib/userManagement';
 
@@ -81,6 +81,7 @@ export default function EditUserPage() {
   const pathname = usePathname();
   const userId = params.id as string;
   const [viewerRole, setViewerRole] = useState('');
+  const [storeOptions, setStoreOptions] = useState<StoreRecord[]>([]);
 
   const [role, setRole] = useState<EditRole>('customer');
   const [formData, setFormData] = useState<UserFormData>({
@@ -91,6 +92,10 @@ export default function EditUserPage() {
     position: '',
     permissions: [],
     password: '',
+    storeScopeMode: 'all',
+    primaryStoreId: '',
+    storeIds: [],
+    storeScopeNote: '',
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -107,9 +112,41 @@ export default function EditUserPage() {
   const isLockedAdminRole = role === 'admin' && !canManageAdmins;
 
   useEffect(() => {
-    void getSession().then((session) => {
+    let mounted = true;
+
+    const loadContext = async () => {
+      const session = await getSession();
+      if (!mounted) return;
+
       setViewerRole(normalizeRole(session?.user?.role));
-    });
+
+      try {
+        const [storesRes, viewerUser] = await Promise.all([
+          storeApi.getAll({ limit: 200, status: 'all' }),
+          session?.user?.id ? userApi.getById(session.user.id) : Promise.resolve(null),
+        ]);
+
+        const actorStoreIds =
+          viewerUser?.storeAccess?.mode === 'selected'
+            ? viewerUser.storeAccess.storeIds
+            : null;
+        const filteredStores = actorStoreIds
+          ? storesRes.stores.filter((store) => actorStoreIds.includes(store.id))
+          : storesRes.stores;
+
+        if (!mounted) return;
+        setStoreOptions(filteredStores);
+      } catch {
+        if (!mounted) return;
+        setStoreOptions([]);
+      }
+    };
+
+    void loadContext();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -123,10 +160,14 @@ export default function EditUserPage() {
           name: user.name,
           email: user.email,
           phone: user.phone || '',
-          department: '',
-          position: '',
-          permissions: [],
+          department: user.department || '',
+          position: user.position || '',
+          permissions: user.permissions || [],
           password: '',
+          storeScopeMode: user.storeAccess?.mode || 'all',
+          primaryStoreId: user.storeAccess?.primaryStoreId || '',
+          storeIds: user.storeAccess?.storeIds || [],
+          storeScopeNote: user.storeAccess?.note || '',
         });
       } catch (error) {
         setApiError(
@@ -165,7 +206,20 @@ export default function EditUserPage() {
       await userApi.update(userId, {
         name: formData.name,
         email: formData.email,
+        phone: formData.phone || undefined,
         role,
+        department: formData.department || undefined,
+        position: formData.position || undefined,
+        permissions: formData.permissions || [],
+        storeAccess:
+          role === 'admin' || role === 'customer'
+            ? { mode: 'all', storeIds: [] }
+            : {
+                mode: formData.storeScopeMode || 'all',
+                primaryStoreId: formData.primaryStoreId || undefined,
+                storeIds: formData.storeIds || [],
+                note: formData.storeScopeNote || undefined,
+              },
       });
       router.push(userBasePath);
     } catch (error) {
@@ -252,6 +306,7 @@ export default function EditUserPage() {
             onSubmit={handleSubmit}
             onCancel={() => router.push(userBasePath)}
             isSubmitting={isSubmitting}
+            storeOptions={storeOptions}
           />
         </Card>
       </div>

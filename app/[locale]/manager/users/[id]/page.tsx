@@ -309,6 +309,20 @@ export default function UserDetailPage() {
                 <dt className="text-sm font-medium text-gray-500">{tDetail('loginVia')}</dt>
                 <dd className="mt-1 text-base text-gray-900">{user.provider || 'local'}</dd>
               </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Phong ban / vi tri</dt>
+                <dd className="mt-1 text-base text-gray-900">
+                  {[user.department, user.position].filter(Boolean).join(' / ') || '-'}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Pham vi cua hang</dt>
+                <dd className="mt-1 text-base text-gray-900">
+                  {user.storeAccess?.mode === 'selected'
+                    ? `${user.storeAccess.primaryStore?.name || 'Chua chon mac dinh'} (${user.storeAccess.storeIds.length} cua hang)`
+                    : 'Toan he thong'}
+                </dd>
+              </div>
             </dl>
           </Card>
 
@@ -330,6 +344,12 @@ export default function UserDetailPage() {
               <div>
                 <dt className="text-sm font-medium text-gray-500">{tDetail('updatedAt')}</dt>
                 <dd className="mt-1 text-base text-gray-900">{formatDate(user.updatedAt)}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Quyen han</dt>
+                <dd className="mt-1 text-base text-gray-900">
+                  {user.permissions?.length ? user.permissions.join(', ') : '-'}
+                </dd>
               </div>
             </dl>
           </Card>

@@ -91,6 +91,19 @@ const CHECKLIST_LABELS: Record<ReadyStockChecklistKey, string> = {
   packageReady: 'Da dong goi xong',
 };
 
+function paymentBadgeMeta(order: OrderRecord) {
+  if (order.paymentStatus === 'paid') {
+    return { label: 'Da thanh toan', type: 'success' as const };
+  }
+  if (order.paymentStatus === 'partial') {
+    return { label: 'Thanh toan mot phan', type: 'info' as const };
+  }
+  if (order.paymentStatus === 'cod') {
+    return { label: 'COD', type: 'default' as const };
+  }
+  return { label: 'Cho thanh toan', type: 'warning' as const };
+}
+
 export function ReadyStockOpsModal({
   open,
   onOpenChange,
@@ -124,6 +137,7 @@ export function ReadyStockOpsModal({
   }, [open, ops]);
 
   if (!canShow || !order || !ops || !draft) return null;
+  const paymentMeta = paymentBadgeMeta(order);
 
   const toggleChecklist = (key: ReadyStockChecklistKey) => {
     setDraft((prev) =>
@@ -184,11 +198,10 @@ export function ReadyStockOpsModal({
             </div>
             <div className="space-y-1">
               <Label>Thanh toan</Label>
-              <StatusBadge
-                status={order.paymentStatus === 'paid' ? 'success' : 'warning'}
-              >
-                {order.paymentStatus}
-              </StatusBadge>
+              <StatusBadge status={paymentMeta.type}>{paymentMeta.label}</StatusBadge>
+              <div className="text-muted-foreground text-xs">
+                Phuong thuc: {String(order.paymentMethod || '-').toUpperCase()}
+              </div>
             </div>
             <div className="space-y-1">
               <Label>Trang thai van hanh</Label>

@@ -5,8 +5,15 @@ import { useRouter, useParams } from 'next/navigation';
 import { Header } from '@/components/organisms/Header';
 import { ProductForm, type ProductFormState } from '@/components/organisms/manager';
 import { Card } from '@/components/ui/card';
-import { productApi, uploadApi, type Product, type ProductMediaAsset } from '@/api';
-import { buildUpsertPayload, getRoleUrl, getGalleryUrls, normalizeCategoryValue } from '@/lib/productHelpers';
+import {
+  productApi,
+  storeApi,
+  uploadApi,
+  type ProductDetail,
+  type ProductMediaAsset,
+  type StoreRecord,
+} from '@/api';
+import { buildProductFormState, buildUpsertPayload, EMPTY_PRODUCT_FORM } from '@/lib/productHelpers';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 
 export default function EditProductPage() {
@@ -14,40 +21,25 @@ export default function EditProductPage() {
   const params = useParams();
   const productId = params.id as string;
 
-  const [product, setProduct] = useState<Product | null>(null);
-  const [formData, setFormData] = useState<ProductFormState>({
-    name: '',
-    brand: '',
-    price: '',
-    stock: '',
-    category: '',
-    description: '',
-    heroImageUrl: '',
-    thumbnailUrl: '',
-    galleryUrls: [],
-  });
+  const [product, setProduct] = useState<ProductDetail | null>(null);
+  const [formData, setFormData] = useState<ProductFormState>(EMPTY_PRODUCT_FORM);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingKey, setUploadingKey] = useState('');
   const [apiError, setApiError] = useState('');
+  const [storeOptions, setStoreOptions] = useState<StoreRecord[]>([]);
 
   useEffect(() => {
     const loadProduct = async () => {
       try {
         setIsLoading(true);
-        const data = await productApi.getById(productId);
+        const [data, storesResult] = await Promise.all([
+          productApi.getById(productId),
+          storeApi.getAll({ status: 'all', limit: 100 }),
+        ]);
         setProduct(data);
-        setFormData({
-          name: data.name,
-          brand: data.brand,
-          price: String(data.price),
-          stock: String(data.stock),
-          category: normalizeCategoryValue(data.category),
-          description: data.description || '',
-          heroImageUrl: getRoleUrl(data, 'hero') || data.imageUrl,
-          thumbnailUrl: getRoleUrl(data, 'thumbnail'),
-          galleryUrls: getGalleryUrls(data),
-        });
+        setFormData(buildProductFormState(data));
+        setStoreOptions(storesResult.stores);
       } catch (error) {
         setApiError(error instanceof Error ? error.message : 'Failed to load product');
       } finally {
@@ -101,6 +93,42 @@ export default function EditProductPage() {
     }
   }, []);
 
+  const handleUploadVariantAsset = useCallback(
+    async (
+      file: File,
+      variantIndex: number,
+      field: 'imageUrl' | 'posterUrl' | 'glbUrl' | 'usdzUrl'
+    ) => {
+      const uploadSuffix =
+        field === 'imageUrl'
+          ? 'image'
+          : field === 'posterUrl'
+            ? 'poster'
+            : field === 'glbUrl'
+              ? 'glb'
+              : 'usdz';
+      const uploadKey = `variant-${variantIndex}-${uploadSuffix}`;
+      setUploadingKey(uploadKey);
+      setApiError('');
+      try {
+        const result = await uploadApi.uploadFile(file, { folder: 'products/variants' });
+        setFormData((prev) => ({
+          ...prev,
+          variants: prev.variants.map((variant, index) =>
+            index === variantIndex ? { ...variant, [field]: result.url } : variant
+          ),
+        }));
+      } catch (error) {
+        setApiError(
+          `Upload variant ${field} failed: ${error instanceof Error ? error.message : 'Unknown'}`
+        );
+      } finally {
+        setUploadingKey('');
+      }
+    },
+    []
+  );
+
   const handleRemoveGallery = useCallback((index: number) => {
     setFormData((prev) => ({
       ...prev,
@@ -109,7 +137,13 @@ export default function EditProductPage() {
   }, []);
 
   const handleSubmit = async () => {
-    if (!formData.name.trim() || !formData.price || !formData.stock || !formData.category) {
+    const hasAnyPrice = Boolean(
+      formData.price || formData.variants.some((variant) => variant.price)
+    );
+    const hasAnyStock = Boolean(
+      formData.stock || formData.variants.some((variant) => variant.stock)
+    );
+    if (!formData.name.trim() || !formData.category || !hasAnyPrice || !hasAnyStock) {
       setApiError('Please fill all required fields');
       return;
     }
@@ -118,7 +152,7 @@ export default function EditProductPage() {
     setApiError('');
     
     try {
-      const payload = buildUpsertPayload(formData);
+      const payload = buildUpsertPayload(formData, { existingProduct: product });
       await productApi.update(productId, payload);
       router.push('/manager/products');
     } catch (error) {
@@ -165,11 +199,13 @@ export default function EditProductPage() {
         <Card className="p-6">
           <ProductForm
             formData={formData}
+            storeOptions={storeOptions}
             isSubmitting={isSubmitting}
             uploadingKey={uploadingKey}
             onChange={setFormData}
             onUploadSingle={handleUploadSingle}
             onUploadGallery={handleUploadGallery}
+            onUploadVariantAsset={handleUploadVariantAsset}
             onRemoveGallery={handleRemoveGallery}
             onCancel={() => router.back()}
             onSubmit={handleSubmit}

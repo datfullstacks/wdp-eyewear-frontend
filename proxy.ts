@@ -15,8 +15,14 @@ const intlMiddleware = createMiddleware(routing);
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+
+  if (pathname === '/staff' || pathname.startsWith('/staff/')) {
+    const salePath = pathname.replace(/^\/staff/, '/sale') || '/sale';
+    return NextResponse.redirect(new URL(salePath, request.url));
+  }
+
   const roleRestrictedAreas = [
-    { prefix: '/staff', canAccess: canAccessStaffArea },
+    { prefix: '/sale', canAccess: canAccessStaffArea },
     { prefix: '/operation', canAccess: canAccessOperationArea },
     { prefix: '/manager', canAccess: canAccessManagerArea },
     { prefix: '/admin', canAccess: canAccessAdminArea },
