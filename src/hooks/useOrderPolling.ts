@@ -11,8 +11,15 @@ import type {
 const DEFAULT_INTERVAL = 3000;
 const DEFAULT_TIMEOUT = 10 * 60 * 1000;
 
-function normalizePaymentStatus(value?: string): PaymentStatus {
+function normalizePaymentStatus(
+  value?: string,
+  paymentMethod?: string
+): PaymentStatus {
   const status = String(value || '').trim().toLowerCase();
+  const method = String(paymentMethod || '').trim().toLowerCase();
+  if (status === 'cod' || method === 'cod' || status.includes('pending_cod')) {
+    return 'cod';
+  }
   if (status === 'paid') return 'paid';
   if (status === 'failed') return 'failed';
   if (status.includes('pending') || status.includes('qr')) return 'pending';
@@ -63,7 +70,8 @@ export function useOrderPolling(options?: UseOrderPollingOptions) {
 
     return {
       paymentStatus: normalizePaymentStatus(
-        orderDetail.paymentStatus || orderDetail.payment?.status
+        orderDetail.paymentStatus || orderDetail.payment?.status,
+        orderDetail.paymentMethod || orderDetail.payment?.method
       ),
       orderStatus: normalizeOrderStatus(orderDetail.status),
       invoiceStatus: normalizeInvoiceStatus(orderDetail.invoiceId?.status),
@@ -99,12 +107,14 @@ export function useOrderPolling(options?: UseOrderPollingOptions) {
           setOrderDetail(detail);
 
           const paymentStatus = normalizePaymentStatus(
-            detail.paymentStatus || detail.payment?.status
+            detail.paymentStatus || detail.payment?.status,
+            detail.paymentMethod || detail.payment?.method
           );
           const orderStatus = normalizeOrderStatus(detail.status);
 
           const shouldStop =
             paymentStatus === 'paid' ||
+            paymentStatus === 'cod' ||
             paymentStatus === 'failed' ||
             orderStatus === 'cancelled';
 

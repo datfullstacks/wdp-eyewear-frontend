@@ -3,6 +3,7 @@ import {
   toBackendRole as mapToBackendRole,
   toFrontendRole as mapToFrontendRole,
 } from '@/lib/roles';
+import type { StoreRecord } from './stores';
 
 /**
  * Backend roles: customer, sales, operations, manager, admin
@@ -28,8 +29,21 @@ export interface User {
   provider?: string;
   avatarUrl?: string;
   phone?: string;
+  department?: string;
+  position?: string;
+  permissions?: string[];
+  storeAccess?: UserStoreScope;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface UserStoreScope {
+  mode: 'all' | 'selected';
+  primaryStoreId?: string;
+  primaryStore?: StoreRecord;
+  storeIds: string[];
+  stores: StoreRecord[];
+  note?: string;
 }
 
 export interface CreateUserInput {
@@ -38,6 +52,15 @@ export interface CreateUserInput {
   password: string;
   role: UserRole;
   phone?: string;
+  department?: string;
+  position?: string;
+  permissions?: string[];
+  storeAccess?: {
+    mode?: 'all' | 'selected';
+    primaryStoreId?: string;
+    storeIds?: string[];
+    note?: string;
+  };
 }
 
 export interface UpdateUserInput {
@@ -45,6 +68,15 @@ export interface UpdateUserInput {
   email?: string;
   phone?: string;
   role?: UserRole;
+  department?: string;
+  position?: string;
+  permissions?: string[];
+  storeAccess?: {
+    mode?: 'all' | 'selected';
+    primaryStoreId?: string;
+    storeIds?: string[];
+    note?: string;
+  };
 }
 
 export interface UsersResponse {
@@ -52,6 +84,11 @@ export interface UsersResponse {
   total: number;
   page: number;
   pageSize: number;
+}
+
+export interface UserStatsResponse {
+  total: number;
+  byRole: Record<string, number>;
 }
 
 interface BackendEnvelope<T> {
@@ -78,6 +115,22 @@ interface BackendAddress {
   isDefault?: boolean;
 }
 
+interface BackendStoreRef {
+  _id?: string;
+  id?: string;
+  name?: string;
+  code?: string;
+  status?: string;
+  type?: string;
+}
+
+interface BackendUserStoreAccess {
+  mode?: 'all' | 'selected' | string;
+  primaryStoreId?: BackendStoreRef | string | null;
+  storeIds?: Array<BackendStoreRef | string> | null;
+  note?: string;
+}
+
 interface BackendUser {
   _id?: string;
   id?: string;
@@ -86,6 +139,11 @@ interface BackendUser {
   role?: UserRole;
   provider?: string;
   avatar?: string;
+  phone?: string;
+  department?: string;
+  position?: string;
+  permissions?: string[];
+  storeAccess?: BackendUserStoreAccess | null;
   addresses?: BackendAddress[];
   createdAt?: string;
   updatedAt?: string;
@@ -131,9 +189,61 @@ function extractUsersPayload(
 }
 
 function resolvePhone(raw?: BackendUser): string | undefined {
+  if (typeof raw?.phone === 'string' && raw.phone.trim()) {
+    return raw.phone.trim();
+  }
   const addresses = raw?.addresses || [];
   const defaultAddress = addresses.find((a) => a?.isDefault);
   return defaultAddress?.phone || addresses[0]?.phone;
+}
+
+function mapStoreRef(raw?: BackendStoreRef | string | null): StoreRecord | undefined {
+  if (!raw) return undefined;
+
+  if (typeof raw === 'string') {
+    const id = raw.trim();
+    if (!id) return undefined;
+    return {
+      id,
+      name: '',
+      code: '',
+      status: 'active',
+      type: 'branch',
+    };
+  }
+
+  const id = String(raw._id || raw.id || '').trim();
+  if (!id) return undefined;
+
+  return {
+    id,
+    name: String(raw.name || ''),
+    code: String(raw.code || ''),
+    status: String(raw.status || 'active') as StoreRecord['status'],
+    type: String(raw.type || 'branch') as StoreRecord['type'],
+  };
+}
+
+function mapStoreAccess(raw?: BackendUserStoreAccess | null): UserStoreScope {
+  const primaryStore = mapStoreRef(raw?.primaryStoreId);
+  const stores = Array.isArray(raw?.storeIds)
+    ? raw.storeIds.map((item) => mapStoreRef(item)).filter(Boolean) as StoreRecord[]
+    : [];
+  const dedupedStores = Array.from(new Map(stores.map((store) => [store.id, store])).values());
+  const primaryStoreId = primaryStore?.id || '';
+
+  return {
+    mode: String(raw?.mode || 'all').trim().toLowerCase() === 'selected' ? 'selected' : 'all',
+    primaryStoreId: primaryStoreId || undefined,
+    primaryStore,
+    storeIds: Array.from(
+      new Set(
+        [primaryStoreId, ...dedupedStores.map((store) => store.id)].filter(Boolean)
+      )
+    ),
+    stores: dedupedStores,
+    note: String(raw?.note || ''),
+  };
 }
 
 function mapBackendUser(raw: BackendUser): User {
@@ -146,6 +256,12 @@ function mapBackendUser(raw: BackendUser): User {
     provider: raw.provider,
     avatarUrl: raw.avatar,
     phone: resolvePhone(raw),
+    department: String(raw.department || ''),
+    position: String(raw.position || ''),
+    permissions: Array.isArray(raw.permissions)
+      ? raw.permissions.map((value) => String(value || '')).filter(Boolean)
+      : [],
+    storeAccess: mapStoreAccess(raw.storeAccess),
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
   };
@@ -183,6 +299,20 @@ export const userApi = {
     return mapBackendUser(raw);
   },
 
+  getStats: async (): Promise<UserStatsResponse> => {
+    const response = await apiClient.get('/api/users/stats');
+    const payload = response.data;
+    const raw =
+      isRecord(payload) && isRecord((payload as any).data)
+        ? ((payload as any).data as UserStatsResponse)
+        : (payload as UserStatsResponse);
+
+    return {
+      total: Number(raw.total || 0),
+      byRole: isRecord(raw.byRole) ? (raw.byRole as Record<string, number>) : {},
+    };
+  },
+
   create: async (input: CreateUserInput): Promise<User> => {
     const body = {
       name: input.name,
@@ -190,6 +320,10 @@ export const userApi = {
       password: input.password,
       role: toBackendRole(input.role),
       ...(input.phone ? { phone: input.phone } : {}),
+      ...(input.department ? { department: input.department } : {}),
+      ...(input.position ? { position: input.position } : {}),
+      ...(input.permissions ? { permissions: input.permissions } : {}),
+      ...(input.storeAccess ? { storeAccess: input.storeAccess } : {}),
     };
     const { data } = await apiClient.post('/api/users', body);
     const raw = isRecord(data) && isRecord((data as any).data)
@@ -202,8 +336,12 @@ export const userApi = {
     const body: Record<string, unknown> = {};
     if (input.name) body.name = input.name;
     if (input.email) body.email = input.email;
-    if (input.phone) body.phone = input.phone;
+    if (input.phone !== undefined) body.phone = input.phone;
     if (input.role) body.role = toBackendRole(input.role);
+    if (input.department !== undefined) body.department = input.department;
+    if (input.position !== undefined) body.position = input.position;
+    if (input.permissions !== undefined) body.permissions = input.permissions;
+    if (input.storeAccess !== undefined) body.storeAccess = input.storeAccess;
     const { data } = await apiClient.put(`/api/users/${id}`, body);
     const raw = isRecord(data) && isRecord((data as any).data)
       ? (data as any).data as BackendUser
@@ -217,4 +355,3 @@ export const userApi = {
 };
 
 export default userApi;
-

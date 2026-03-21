@@ -1,10 +1,16 @@
 import type { PaymentStatus, PendingOrder } from '@/types/pending';
 
 export const PENDING_ORDER_APPROVAL_MESSAGE =
-  'Chỉ đơn đã thanh toán đầy đủ mới được duyệt.';
+  'Chi don da thu phan thanh toan truoc hoac chon COD moi duoc duyet.';
 
-export function canApprovePendingPaymentStatus(paymentStatus: PaymentStatus): boolean {
-  return paymentStatus === 'paid';
+export function canApprovePendingPaymentStatus(
+  paymentStatus: PaymentStatus
+): boolean {
+  return (
+    paymentStatus === 'paid' ||
+    paymentStatus === 'partial' ||
+    paymentStatus === 'cod'
+  );
 }
 
 export function canApprovePendingOrder(

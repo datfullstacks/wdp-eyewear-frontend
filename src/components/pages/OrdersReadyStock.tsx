@@ -41,8 +41,11 @@ function dateOnly(value: string): string {
   return dt.toISOString().slice(0, 10);
 }
 
-function isPaidReadyStockOrder(order: OrderRecord): boolean {
-  return isReadyStockOrder(order) && order.paymentStatus === 'paid';
+function isReadyStockFulfillableOrder(order: OrderRecord): boolean {
+  return (
+    isReadyStockOrder(order) &&
+    (order.paymentStatus === 'paid' || order.paymentStatus === 'cod')
+  );
 }
 
 const DEFAULT_FILTERS: ReadyStockFilters = {
@@ -143,10 +146,10 @@ export default function OrdersReadyStock() {
     setErrorMessage(null);
     try {
       const result = await orderApi.getAll({ page: 1, limit: 200 });
-      const ready = result.orders.filter(isPaidReadyStockOrder);
+      const ready = result.orders.filter(isReadyStockFulfillableOrder);
       setOrders(ready);
     } catch {
-      setOrders(mockReadyStockOrders.filter(isPaidReadyStockOrder));
+      setOrders(mockReadyStockOrders.filter(isReadyStockFulfillableOrder));
       setErrorMessage(
         'Không tải được danh sách đơn từ API. Đang hiển thị dữ liệu mẫu.'
       );
@@ -185,7 +188,7 @@ export default function OrdersReadyStock() {
     const query = searchTerm.trim().toLowerCase();
 
     return orders
-      .filter(isPaidReadyStockOrder)
+      .filter(isReadyStockFulfillableOrder)
       .filter((order) => {
         if (!query) return true;
         const haystack = [

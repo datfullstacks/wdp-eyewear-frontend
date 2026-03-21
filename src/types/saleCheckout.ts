@@ -69,6 +69,8 @@ export interface SaleCheckoutItemPayload {
   quantity: number;
 }
 
+export type SaleCheckoutPaymentMethod = 'sepay' | 'cod';
+
 export interface SaleCheckoutPayload {
   items: SaleCheckoutItemPayload[];
   shippingFee: number;
@@ -76,6 +78,7 @@ export interface SaleCheckoutPayload {
   shippingMethod: string;
   shippingAddress: ShippingAddressForm;
   note: string;
+  paymentMethod?: SaleCheckoutPaymentMethod;
 }
 
 export interface QuoteItem {
@@ -105,6 +108,10 @@ export interface QuoteData {
   payNowTotal: number;
   payLaterTotal: number;
   paymentMethod?: string;
+  payNowMethod?: string | null;
+  payLaterMethod?: string | null;
+  shippingCollectionTiming?: string;
+  shippingFeeMode?: string;
 }
 
 export interface CheckoutInvoice {
@@ -138,6 +145,11 @@ export interface CheckoutBreakdown {
   total?: number;
   payNow?: number;
   payLater?: number;
+  paymentMethod?: string;
+  payNowMethod?: string | null;
+  payLaterMethod?: string | null;
+  shippingFeeMode?: string;
+  shippingCollectionTiming?: string;
 }
 
 export interface CheckoutData {
@@ -145,11 +157,14 @@ export interface CheckoutData {
   invoice?: CheckoutInvoice;
   payment?: CheckoutPayment;
   breakdown?: CheckoutBreakdown;
+  paymentMethod?: string;
+  paymentStatus?: string;
 }
 
 export interface OrderDetailData {
   _id: string;
   paymentStatus?: string;
+  paymentMethod?: string;
   status?: string;
   invoiceId?: {
     status?: string;
@@ -163,7 +178,7 @@ export interface RealtimeOrderStatuses {
   invoiceStatus: InvoiceStatus;
 }
 
-export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'unknown';
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'cod' | 'unknown';
 export type OrderStatus = 'pending' | 'confirmed' | 'cancelled' | 'unknown';
 export type InvoiceStatus = 'issued' | 'paid' | 'void' | 'unknown';
 

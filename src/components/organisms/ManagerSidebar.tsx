@@ -8,23 +8,21 @@ import {
   LayoutDashboard,
   Glasses,
   Package,
+  Briefcase,
   DollarSign,
   Users,
-  Settings,
   LogOut,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
   BarChart3,
-  Bell,
-  User,
   FileText,
   TrendingUp,
   Percent,
   Tag,
   Shield,
   UserCog,
-  ClipboardList,
+  CreditCard,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -84,112 +82,107 @@ export const ManagerSidebar: React.FC = () => {
   const pathname = usePathname();
   const t = useTranslations('manager.sidebar');
 
-  const menuItems: MenuItem[] = useMemo(() => [
-    {
-      icon: LayoutDashboard,
-      key: 'overview',
-      label: t('overview'),
-      path: '/manager/dashboard',
-      exact: true,
-    },
-    {
-      icon: Package,
-      key: 'productsAndPricing',
-      label: t('productsAndPricing'),
-      children: [
-        {
-          icon: Package,
-          key: 'productManagement',
-          label: t('productManagement'),
-          path: '/manager/products',
-        },
-        {
-          icon: DollarSign,
-          key: 'pricingStrategy',
-          label: t('pricingStrategy'),
-          path: '/manager/pricing',
-        },
-        {
-          icon: Tag,
-          key: 'promotionsAndDiscounts',
-          label: t('promotionsAndDiscounts'),
-          path: '/manager/discounts',
-        },
-      ],
-    },
-    {
-      icon: BarChart3,
-      key: 'revenueAndReports',
-      label: t('revenueAndReports'),
-      children: [
-        {
-          icon: TrendingUp,
-          key: 'revenueOverview',
-          label: t('revenueOverview'),
-          path: '/manager/revenue',
-        },
-        {
-          icon: Percent,
-          key: 'detailedReports',
-          label: t('detailedReports'),
-          path: '/manager/revenue-new',
-        },
-      ],
-    },
-    {
-      icon: Users,
-      key: 'humanResources',
-      label: t('humanResources'),
-      children: [
-        {
-          icon: UserCog,
-          key: 'userManagement',
-          label: t('userManagement'),
-          path: '/manager/users',
-        },
-      ],
-    },
-    {
-      icon: Shield,
-      key: 'policiesAndSystem',
-      label: t('policiesAndSystem'),
-      children: [
-        {
-          icon: FileText,
-          key: 'policies',
-          label: t('policies'),
-          path: '/manager/policies',
-        },
-        {
-          icon: ClipboardList,
-          key: 'systemSettings',
-          label: t('systemSettings'),
-          path: '/manager/settings',
-        },
-      ],
-    },
-    {
-      icon: Settings,
-      key: 'personalSettings',
-      label: t('personalSettings'),
-      children: [
-        {
-          icon: Bell,
-          key: 'notifications',
-          label: t('notifications'),
-          path: '/manager/notifications',
-          badge: '2',
-          badgeType: 'info' as BadgeType,
-        },
-        {
-          icon: User,
-          key: 'accountSettings',
-          label: t('accountSettings'),
-          path: '/manager/account',
-        },
-      ],
-    },
-  ], [t]);
+  const menuItems: MenuItem[] = useMemo(
+    () => [
+      {
+        icon: LayoutDashboard,
+        key: 'overview',
+        label: t('overview'),
+        path: '/manager/dashboard',
+        exact: true,
+      },
+      {
+        icon: Package,
+        key: 'productsAndPricing',
+        label: t('productsAndPricing'),
+        children: [
+          {
+            icon: Package,
+            key: 'productManagement',
+            label: t('productManagement'),
+            path: '/manager/products',
+          },
+          {
+            icon: Briefcase,
+            key: 'storeNetwork',
+            label: 'Store Network',
+            path: '/manager/stores',
+          },
+          {
+            icon: DollarSign,
+            key: 'pricingStrategy',
+            label: t('pricingStrategy'),
+            path: '/manager/pricing',
+          },
+          {
+            icon: Tag,
+            key: 'promotionsAndDiscounts',
+            label: t('promotionsAndDiscounts'),
+            path: '/manager/discounts',
+          },
+        ],
+      },
+      {
+        icon: BarChart3,
+        key: 'revenueAndReports',
+        label: t('revenueAndReports'),
+        children: [
+          {
+            icon: TrendingUp,
+            key: 'revenueOverview',
+            label: t('revenueOverview'),
+            path: '/manager/revenue',
+          },
+          {
+            icon: Percent,
+            key: 'detailedReports',
+            label: t('detailedReports'),
+            path: '/manager/revenue-new',
+          },
+        ],
+      },
+      {
+        icon: CreditCard,
+        key: 'afterSales',
+        label: 'After Sales',
+        children: [
+          {
+            icon: CreditCard,
+            key: 'refundApprovals',
+            label: 'Refund Approvals',
+            path: '/manager/refunds',
+          },
+        ],
+      },
+      {
+        icon: Users,
+        key: 'humanResources',
+        label: t('humanResources'),
+        children: [
+          {
+            icon: UserCog,
+            key: 'userManagement',
+            label: t('userManagement'),
+            path: '/manager/users',
+          },
+        ],
+      },
+      {
+        icon: Shield,
+        key: 'policiesAndSystem',
+        label: t('policiesAndSystem'),
+        children: [
+          {
+            icon: FileText,
+            key: 'policies',
+            label: t('policies'),
+            path: '/manager/policies',
+          },
+        ],
+      },
+    ],
+    [t]
+  );
 
   const defaultOpenMap = useMemo(() => {
     const map = new Map<string, boolean>();
@@ -206,8 +199,7 @@ export const ManagerSidebar: React.FC = () => {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const obj: Record<string, boolean> = {};
     for (const item of menuItems) {
-      if (item.children)
-        obj[item.key] = defaultOpenMap.get(item.key) ?? false;
+      if (item.children) obj[item.key] = defaultOpenMap.get(item.key) ?? false;
     }
     return obj;
   });
@@ -393,7 +385,9 @@ export const ManagerSidebar: React.FC = () => {
 
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <p className="truncate font-medium text-gray-900">{t('manager')}</p>
+              <p className="truncate font-medium text-gray-900">
+                {t('manager')}
+              </p>
               <p className="truncate text-xs text-gray-500">Manager</p>
             </div>
           )}

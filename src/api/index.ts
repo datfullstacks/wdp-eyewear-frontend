@@ -6,6 +6,7 @@ export { default as userApi } from './users';
 export { default as orderApi } from './orders';
 export { default as preorderApi } from './preorders';
 export { default as checkoutApi } from './checkout';
+export { default as storeApi } from './stores';
 export {
   getProducts,
   createQuote,
@@ -16,11 +17,26 @@ export {
 export type {
   Product,
   ProductDetail,
+  PreOrderShippingCollectionTiming,
+  ProductTryOnStatus,
   ProductsResponse,
   ProductUpsertInput,
   ProductMediaAsset,
 } from './products';
-export type { User, UsersResponse, UserRole, CreateUserInput, UpdateUserInput } from './users';
+export type {
+  StoreRecord,
+  StoresResponse,
+  StoreStatus,
+  StoreType,
+  StoreUpsertInput,
+} from './stores';
+export type {
+  User,
+  UsersResponse,
+  UserRole,
+  CreateUserInput,
+  UpdateUserInput,
+} from './users';
 export { toBackendRole, toFrontendRole } from './users';
 export type { AuthCredentials, RegisterData, AuthResponse } from './auth';
 export type { UploadResult } from './uploads';
@@ -30,6 +46,10 @@ export type {
   OrderItem,
   OrderRecord,
   OrdersResponse,
+  RefundBankAccount,
+  RefundBreakdown,
+  RefundResponsibility,
+  RefundStatus,
 } from './orders';
 export type {
   PreorderBatchStatus,

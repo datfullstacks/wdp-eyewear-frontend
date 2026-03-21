@@ -8,8 +8,13 @@ import {
   ChevronRight,
   Glasses,
   LayoutDashboard,
+  Receipt,
+  ShieldAlert,
+  ScrollText,
+  Settings,
   ShieldCheck,
   Users,
+  Building2,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -41,6 +46,31 @@ export function AdminSidebar() {
         icon: Users,
         label: 'Access Review',
         path: '/admin/users',
+      },
+      {
+        icon: Building2,
+        label: 'Store Network',
+        path: '/admin/stores',
+      },
+      {
+        icon: ShieldAlert,
+        label: 'Refund Monitoring',
+        path: '/admin/refunds',
+      },
+      {
+        icon: Receipt,
+        label: 'Reconciliation',
+        path: '/admin/reconciliation',
+      },
+      {
+        icon: ScrollText,
+        label: 'Refund Audit',
+        path: '/admin/audit',
+      },
+      {
+        icon: Settings,
+        label: 'System Config',
+        path: '/admin/settings',
       },
     ],
     []
