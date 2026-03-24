@@ -8,6 +8,11 @@ import {
   canAccessManagerArea,
   canAccessOperationArea,
   canAccessStaffArea,
+  getDefaultRouteForRole,
+  getLegacyAdminBusinessRedirectPath,
+  isAdminRole,
+  isManagerRole,
+  isLegacyAdminBusinessPath,
 } from '@/lib/roles';
 
 // In next-intl v4, localeDetection & localeCookie are part of the routing config
@@ -19,6 +24,55 @@ export async function proxy(request: NextRequest) {
   if (pathname === '/staff' || pathname.startsWith('/staff/')) {
     const salePath = pathname.replace(/^\/staff/, '/sale') || '/sale';
     return NextResponse.redirect(new URL(salePath, request.url));
+  }
+
+  if (pathname === '/operation/orders/prescription-needed') {
+    const { auth } = await import('@/lib/auth');
+    const session = await auth();
+
+    if (!session) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('callbackUrl', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    if (canAccessStaffArea(session.user?.role)) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = '/sale/orders/prescription-needed';
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    if (!canAccessOperationArea(session.user?.role)) {
+      const redirectUrl = new URL(getDefaultRouteForRole(session.user?.role), request.url);
+      redirectUrl.searchParams.set('callbackUrl', pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
+
+  if (isLegacyAdminBusinessPath(pathname)) {
+    const { auth } = await import('@/lib/auth');
+    const session = await auth();
+
+    if (!session) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('callbackUrl', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    if (isManagerRole(session.user?.role)) {
+      const nextPath = getLegacyAdminBusinessRedirectPath(pathname);
+      if (nextPath) {
+        const redirectUrl = request.nextUrl.clone();
+        redirectUrl.pathname = nextPath;
+        return NextResponse.redirect(redirectUrl);
+      }
+    }
+
+    if (!isAdminRole(session.user?.role)) {
+      const redirectUrl = new URL(getDefaultRouteForRole(session.user?.role), request.url);
+      redirectUrl.searchParams.set('callbackUrl', pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
   }
 
   const roleRestrictedAreas = [
@@ -63,7 +117,7 @@ export async function proxy(request: NextRequest) {
     }
 
     if (!matchedRoleArea.canAccess(session.user?.role)) {
-      const redirectUrl = new URL('/auth/post-login', request.url);
+      const redirectUrl = new URL(getDefaultRouteForRole(session.user?.role), request.url);
       redirectUrl.searchParams.set('callbackUrl', pathname);
       return NextResponse.redirect(redirectUrl);
     }

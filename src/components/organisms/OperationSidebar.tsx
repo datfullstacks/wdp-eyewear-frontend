@@ -79,13 +79,6 @@ const menuItems: MenuItem[] = [
         badgeType: 'info',
       },
       {
-        icon: FileText,
-        label: 'Don can bo sung prescription',
-        path: '/operation/orders/prescription-needed',
-        badgeKey: 'prescriptionNeeded',
-        badgeType: 'warning',
-      },
-      {
         icon: Wrench,
         label: 'Don dang gia cong',
         path: '/operation/orders/processing',
@@ -117,8 +110,13 @@ const menuItems: MenuItem[] = [
   },
   {
     icon: CreditCard,
-    label: 'Refund',
+    label: 'After-sales',
     children: [
+      {
+        icon: FileText,
+        label: 'Warranty service',
+        path: '/operation/cases/warranties',
+      },
       {
         icon: CreditCard,
         label: 'Payout queue',

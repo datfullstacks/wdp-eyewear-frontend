@@ -1,7 +1,6 @@
 'use client';
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
 import type {
   ReadyStockChecklistKey,
@@ -49,6 +48,10 @@ function baseState(): ReadyStockOrderOpsState {
     salesApprovedAt: '',
     salesApprovedBy: '',
     salesHandoffNote: '',
+    approvalState: 'none',
+    managerReviewRequestedAt: '',
+    managerReviewRequestedBy: '',
+    managerReviewReason: '',
     internalNote: '',
     holdReason: null,
     holdNote: '',
@@ -75,208 +78,206 @@ function holdStatusFromIssue(type: ReadyStockIssueType): ReadyStockOpsStatus {
   return 'on_hold';
 }
 
-export const useReadyStockOpsStore = create<ReadyStockOpsStoreState>()(
-  persist(
-    (set) => ({
-      byOrderId: {},
-      upsert: (orderId, patch) =>
-        set((state) => ({
-          byOrderId: {
-            ...state.byOrderId,
-            [orderId]: {
-              ...(state.byOrderId[orderId] || baseState()),
-              ...patch,
-              lastUpdatedAt: patch.lastUpdatedAt || nowIso(),
-            },
+export const useReadyStockOpsStore = create<ReadyStockOpsStoreState>()((set) => ({
+  byOrderId: {},
+  upsert: (orderId, patch) =>
+    set((state) => ({
+      byOrderId: {
+        ...state.byOrderId,
+        [orderId]: {
+          ...(state.byOrderId[orderId] || baseState()),
+          ...patch,
+          lastUpdatedAt: patch.lastUpdatedAt || nowIso(),
+        },
+      },
+    })),
+  setStatus: (orderId, status) =>
+    set((state) => ({
+      byOrderId: {
+        ...state.byOrderId,
+        [orderId]: {
+          ...(state.byOrderId[orderId] || baseState()),
+          opsStatus: status,
+          lastUpdatedAt: nowIso(),
+        },
+      },
+    })),
+  setTracking: (orderId, carrierId, trackingCode) =>
+    set((state) => ({
+      byOrderId: {
+        ...state.byOrderId,
+        [orderId]: {
+          ...(state.byOrderId[orderId] || baseState()),
+          carrierId,
+          trackingCode,
+          lastUpdatedAt: nowIso(),
+        },
+      },
+    })),
+  setAssignee: (orderId, assignee) =>
+    set((state) => ({
+      byOrderId: {
+        ...state.byOrderId,
+        [orderId]: {
+          ...(state.byOrderId[orderId] || baseState()),
+          assignee,
+          lastUpdatedAt: nowIso(),
+        },
+      },
+    })),
+  setHold: (orderId, reason, note) =>
+    set((state) => ({
+      byOrderId: {
+        ...state.byOrderId,
+        [orderId]: {
+          ...(state.byOrderId[orderId] || baseState()),
+          opsStatus: reason === 'address' ? 'waiting_customer_info' : 'on_hold',
+          holdReason: reason,
+          holdNote: note,
+          lastUpdatedAt: nowIso(),
+        },
+      },
+    })),
+  clearHold: (orderId) =>
+    set((state) => {
+      const current = state.byOrderId[orderId];
+      if (!current) return state;
+      return {
+        byOrderId: {
+          ...state.byOrderId,
+          [orderId]: {
+            ...current,
+            opsStatus: ['on_hold', 'waiting_customer_info', 'exception_hold', 'blocked'].includes(
+              current.opsStatus
+            )
+              ? 'pending_operations'
+              : current.opsStatus,
+            holdReason: null,
+            holdNote: '',
+            lastUpdatedAt: nowIso(),
           },
-        })),
-      setStatus: (orderId, status) =>
-        set((state) => ({
-          byOrderId: {
-            ...state.byOrderId,
-            [orderId]: {
-              ...(state.byOrderId[orderId] || baseState()),
-              opsStatus: status,
-              lastUpdatedAt: nowIso(),
+        },
+      };
+    }),
+  setPaymentFailed: (orderId, failed) =>
+    set((state) => ({
+      byOrderId: {
+        ...state.byOrderId,
+        [orderId]: {
+          ...(state.byOrderId[orderId] || baseState()),
+          paymentFailed: failed,
+          lastUpdatedAt: nowIso(),
+        },
+      },
+    })),
+  setItemState: (orderId, itemKey, patch) =>
+    set((state) => {
+      const current = state.byOrderId[orderId] || baseState();
+      const existing = current.itemStates[itemKey] || {
+        picked: false,
+        warehouseLocation: '',
+        issueType: null,
+        issueNote: '',
+        internalNote: '',
+      };
+      return {
+        byOrderId: {
+          ...state.byOrderId,
+          [orderId]: {
+            ...current,
+            itemStates: {
+              ...current.itemStates,
+              [itemKey]: { ...existing, ...patch },
             },
+            lastUpdatedAt: nowIso(),
           },
-        })),
-      setTracking: (orderId, carrierId, trackingCode) =>
-        set((state) => ({
-          byOrderId: {
-            ...state.byOrderId,
-            [orderId]: {
-              ...(state.byOrderId[orderId] || baseState()),
-              carrierId,
-              trackingCode,
-              lastUpdatedAt: nowIso(),
+        },
+      };
+    }),
+  toggleItemPicked: (orderId, itemKey) =>
+    set((state) => {
+      const current = state.byOrderId[orderId] || baseState();
+      const existing = current.itemStates[itemKey];
+      if (!existing) return state;
+      return {
+        byOrderId: {
+          ...state.byOrderId,
+          [orderId]: {
+            ...current,
+            itemStates: {
+              ...current.itemStates,
+              [itemKey]: { ...existing, picked: !existing.picked },
             },
+            lastUpdatedAt: nowIso(),
           },
-        })),
-      setAssignee: (orderId, assignee) =>
-        set((state) => ({
-          byOrderId: {
-            ...state.byOrderId,
-            [orderId]: {
-              ...(state.byOrderId[orderId] || baseState()),
-              assignee,
-              lastUpdatedAt: nowIso(),
+        },
+      };
+    }),
+  toggleChecklist: (orderId, key) =>
+    set((state) => {
+      const current =
+        state.byOrderId[orderId] ||
+        ({
+          ...baseState(),
+        } satisfies ReadyStockOrderOpsState);
+
+      return {
+        byOrderId: {
+          ...state.byOrderId,
+          [orderId]: {
+            ...current,
+            checklist: {
+              ...current.checklist,
+              [key]: !current.checklist[key],
             },
+            lastUpdatedAt: nowIso(),
           },
-        })),
-      setHold: (orderId, reason, note) =>
-        set((state) => ({
-          byOrderId: {
-            ...state.byOrderId,
-            [orderId]: {
-              ...(state.byOrderId[orderId] || baseState()),
-              opsStatus: reason === 'address' ? 'waiting_customer_info' : 'on_hold',
-              holdReason: reason,
-              holdNote: note,
-              lastUpdatedAt: nowIso(),
-            },
-          },
-        })),
-      clearHold: (orderId) =>
-        set((state) => {
-          const current = state.byOrderId[orderId];
-          if (!current) return state;
-          return {
-            byOrderId: {
-              ...state.byOrderId,
-              [orderId]: {
-                ...current,
-                opsStatus: ['on_hold', 'waiting_customer_info', 'exception_hold', 'blocked'].includes(current.opsStatus)
-                  ? 'pending_operations'
-                  : current.opsStatus,
-                holdReason: null,
-                holdNote: '',
-                lastUpdatedAt: nowIso(),
-              },
-            },
-          };
-        }),
-      setPaymentFailed: (orderId, failed) =>
-        set((state) => ({
-          byOrderId: {
-            ...state.byOrderId,
-            [orderId]: {
-              ...(state.byOrderId[orderId] || baseState()),
-              paymentFailed: failed,
-              lastUpdatedAt: nowIso(),
-            },
-          },
-        })),
-      setItemState: (orderId, itemKey, patch) =>
-        set((state) => {
-          const current = state.byOrderId[orderId] || baseState();
-          const existing = current.itemStates[itemKey] || {
-            picked: false,
-            warehouseLocation: '',
+        },
+      };
+    }),
+  reportIssue: (orderId, type, note) =>
+    set((state) => ({
+      byOrderId: {
+        ...state.byOrderId,
+        [orderId]: {
+          ...(state.byOrderId[orderId] || baseState()),
+          opsStatus: holdStatusFromIssue(type),
+          holdReason: holdReasonFromIssue(type),
+          holdNote: note,
+          issueType: type,
+          issueNote: note,
+          lastUpdatedAt: nowIso(),
+        },
+      },
+    })),
+  clearIssue: (orderId) =>
+    set((state) => {
+      const current = state.byOrderId[orderId];
+      if (!current) return state;
+      return {
+        byOrderId: {
+          ...state.byOrderId,
+          [orderId]: {
+            ...current,
+            opsStatus: ['on_hold', 'waiting_customer_info', 'exception_hold', 'blocked'].includes(
+              current.opsStatus
+            )
+              ? 'pending_operations'
+              : current.opsStatus,
+            holdReason: current.issueType ? null : current.holdReason,
+            holdNote: current.issueType ? '' : current.holdNote,
             issueType: null,
             issueNote: '',
-            internalNote: '',
-          };
-          return {
-            byOrderId: {
-              ...state.byOrderId,
-              [orderId]: {
-                ...current,
-                itemStates: {
-                  ...current.itemStates,
-                  [itemKey]: { ...existing, ...patch },
-                },
-                lastUpdatedAt: nowIso(),
-              },
-            },
-          };
-        }),
-      toggleItemPicked: (orderId, itemKey) =>
-        set((state) => {
-          const current = state.byOrderId[orderId] || baseState();
-          const existing = current.itemStates[itemKey];
-          if (!existing) return state;
-          return {
-            byOrderId: {
-              ...state.byOrderId,
-              [orderId]: {
-                ...current,
-                itemStates: {
-                  ...current.itemStates,
-                  [itemKey]: { ...existing, picked: !existing.picked },
-                },
-                lastUpdatedAt: nowIso(),
-              },
-            },
-          };
-        }),
-      toggleChecklist: (orderId, key) =>
-        set((state) => {
-          const current =
-            state.byOrderId[orderId] ||
-            ({
-              ...baseState(),
-            } satisfies ReadyStockOrderOpsState);
-
-          return {
-            byOrderId: {
-              ...state.byOrderId,
-              [orderId]: {
-                ...current,
-                checklist: {
-                  ...current.checklist,
-                  [key]: !current.checklist[key],
-                },
-                lastUpdatedAt: nowIso(),
-              },
-            },
-          };
-        }),
-      reportIssue: (orderId, type, note) =>
-        set((state) => ({
-          byOrderId: {
-            ...state.byOrderId,
-            [orderId]: {
-              ...(state.byOrderId[orderId] || baseState()),
-              opsStatus: holdStatusFromIssue(type),
-              holdReason: holdReasonFromIssue(type),
-              holdNote: note,
-              issueType: type,
-              issueNote: note,
-              lastUpdatedAt: nowIso(),
-            },
+            lastUpdatedAt: nowIso(),
           },
-        })),
-      clearIssue: (orderId) =>
-        set((state) => {
-          const current = state.byOrderId[orderId];
-          if (!current) return state;
-          return {
-            byOrderId: {
-              ...state.byOrderId,
-              [orderId]: {
-                ...current,
-                opsStatus:
-                  ['on_hold', 'waiting_customer_info', 'exception_hold', 'blocked'].includes(current.opsStatus)
-                    ? 'pending_operations'
-                    : current.opsStatus,
-                holdReason: current.issueType ? null : current.holdReason,
-                holdNote: current.issueType ? '' : current.holdNote,
-                issueType: null,
-                issueNote: '',
-                lastUpdatedAt: nowIso(),
-              },
-            },
-          };
-        }),
-      reset: (orderId) =>
-        set((state) => {
-          const next = { ...state.byOrderId };
-          delete next[orderId];
-          return { byOrderId: next };
-        }),
-      resetAll: () => set({ byOrderId: {} }),
+        },
+      };
     }),
-    { name: 'ready-stock-ops-storage' }
-  )
-);
+  reset: (orderId) =>
+    set((state) => {
+      const next = { ...state.byOrderId };
+      delete next[orderId];
+      return { byOrderId: next };
+    }),
+  resetAll: () => set({ byOrderId: {} }),
+}));

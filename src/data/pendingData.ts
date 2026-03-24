@@ -1,23 +1,20 @@
-import {
-  PendingOrder,
-  PaymentStatusConfig,
-} from '@/types/pending';
+import { PendingOrder, PaymentStatusConfig } from '@/types/pending';
 
 export const pendingOrders: PendingOrder[] = [
   {
     id: 'ORD-2024-001',
-    customer: 'Nguyễn Văn An',
+    customer: 'Nguyen Van An',
     phone: '0901234567',
-    address: '123 Nguyễn Huệ, Q1, TP.HCM',
+    address: '123 Nguyen Hue, Q1, TP.HCM',
     products: [
       {
-        name: 'Gọng kính Titan Pro',
-        variant: 'Đen - Size M',
+        name: 'Gong kinh Titan Pro',
+        variant: 'Den - Size M',
         qty: 1,
         price: 2500000,
       },
       {
-        name: 'Tròng cận Essilor',
+        name: 'Trong can Essilor',
         variant: '1.67 - Crizal',
         qty: 2,
         price: 3200000,
@@ -26,18 +23,19 @@ export const pendingOrders: PendingOrder[] = [
     total: 5700000,
     status: 'pending',
     createdAt: '2024-01-15 09:30',
-    note: 'Khách cần gấp trong tuần này',
+    note: 'Khach can gap trong tuan nay',
     hasPrescription: true,
     paymentStatus: 'paid',
+    approvalState: 'none',
   },
   {
     id: 'ORD-2024-002',
-    customer: 'Trần Thị Bình',
+    customer: 'Tran Thi Binh',
     phone: '0912345678',
-    address: '456 Lê Lợi, Q3, TP.HCM',
+    address: '456 Le Loi, Q3, TP.HCM',
     products: [
       {
-        name: 'Kính mát Rayban Aviator',
+        name: 'Kinh mat Rayban Aviator',
         variant: 'Gold - G15',
         qty: 1,
         price: 4500000,
@@ -49,21 +47,22 @@ export const pendingOrders: PendingOrder[] = [
     note: '',
     hasPrescription: false,
     paymentStatus: 'pending',
+    approvalState: 'none',
   },
   {
     id: 'ORD-2024-003',
-    customer: 'Lê Hoàng Cường',
+    customer: 'Le Hoang Cuong',
     phone: '0923456789',
-    address: '789 Hai Bà Trưng, Q1, TP.HCM',
+    address: '789 Hai Ba Trung, Q1, TP.HCM',
     products: [
       {
-        name: 'Gọng kính Oakley',
-        variant: 'Đen mờ - Size L',
+        name: 'Gong kinh Oakley',
+        variant: 'Den mo - Size L',
         qty: 1,
         price: 3800000,
       },
       {
-        name: 'Tròng đổi màu Transitions',
+        name: 'Trong doi mau Transitions',
         variant: '1.60 - Brown',
         qty: 2,
         price: 4500000,
@@ -72,19 +71,20 @@ export const pendingOrders: PendingOrder[] = [
     total: 8300000,
     status: 'pending',
     createdAt: '2024-01-15 08:00',
-    note: 'Khách VIP - ưu tiên xử lý',
+    note: 'Khach VIP - uu tien xu ly',
     hasPrescription: true,
     paymentStatus: 'paid',
+    approvalState: 'none',
   },
   {
     id: 'ORD-2024-004',
-    customer: 'Phạm Minh Đức',
+    customer: 'Pham Minh Duc',
     phone: '0934567890',
     address: '321 CMT8, Q10, TP.HCM',
     products: [
       {
-        name: 'Gọng kính nhựa Classic',
-        variant: 'Nâu - Size S',
+        name: 'Gong kinh nhua Classic',
+        variant: 'Nau - Size S',
         qty: 1,
         price: 1200000,
       },
@@ -95,21 +95,22 @@ export const pendingOrders: PendingOrder[] = [
     note: '',
     hasPrescription: false,
     paymentStatus: 'cod',
+    approvalState: 'none',
   },
   {
     id: 'ORD-2024-005',
-    customer: 'Võ Thị Em',
+    customer: 'Vo Thi Em',
     phone: '0945678901',
-    address: '654 Điện Biên Phủ, Bình Thạnh, TP.HCM',
+    address: '654 Dien Bien Phu, Binh Thanh, TP.HCM',
     products: [
       {
-        name: 'Gọng kính thời trang',
-        variant: 'Hồng - Size M',
+        name: 'Gong kinh thoi trang',
+        variant: 'Hong - Size M',
         qty: 1,
         price: 1800000,
       },
       {
-        name: 'Tròng chống ánh sáng xanh',
+        name: 'Trong chong anh sang xanh',
         variant: '1.56 - Clear',
         qty: 2,
         price: 1500000,
@@ -118,16 +119,17 @@ export const pendingOrders: PendingOrder[] = [
     total: 3300000,
     status: 'pending',
     createdAt: '2024-01-15 11:45',
-    note: 'Gọi xác nhận trước khi giao',
+    note: 'Goi xac nhan truoc khi giao',
     hasPrescription: true,
     paymentStatus: 'partial',
+    approvalState: 'none',
   },
 ];
 
 export const paymentStatusConfig: Record<string, PaymentStatusConfig> = {
-  paid: { label: 'Đã thanh toán', color: 'success' },
-  pending: { label: 'Chưa thanh toán', color: 'warning' },
-  partial: { label: 'Thanh toán một phần', color: 'info' },
+  paid: { label: 'Da thanh toan', color: 'success' },
+  pending: { label: 'Chua thanh toan', color: 'warning' },
+  partial: { label: 'Thanh toan mot phan', color: 'info' },
   cod: { label: 'COD', color: 'default' },
 };
 

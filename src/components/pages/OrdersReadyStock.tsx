@@ -22,7 +22,6 @@ import {
   type ReadyStockFilters,
 } from '@/components/organisms/ready-stock';
 import { Button } from '@/components/ui/button';
-import { mockReadyStockOrders } from '@/data/readyStockMock';
 import { isReadyStockOrder } from '@/lib/orderWorkflow';
 import { useStatusRealtimeReload } from '@/hooks/useStatusRealtime';
 import {
@@ -149,7 +148,7 @@ export default function OrdersReadyStock() {
       const ready = result.orders.filter(isReadyStockFulfillableOrder);
       setOrders(ready);
     } catch {
-      setOrders(mockReadyStockOrders.filter(isReadyStockFulfillableOrder));
+      setOrders([]);
       setErrorMessage(
         'Không tải được danh sách đơn từ API. Đang hiển thị dữ liệu mẫu.'
       );

@@ -455,6 +455,15 @@ export function toPendingOrder(order: OrderRecord): PendingOrder {
     note: order.note || '',
     hasPrescription: order.items.some(requiresPrescription),
     paymentStatus: mapPaymentStatus(order.paymentStatus),
+    approvalState:
+      order.opsExecution?.approvalState === 'manager_review_requested'
+        ? 'manager_review_requested'
+        : order.opsExecution?.approvalState === 'sent_back_to_sale'
+          ? 'sent_back_to_sale'
+          : 'none',
+    managerReviewRequestedAt: order.opsExecution?.managerReviewRequestedAt,
+    managerReviewRequestedBy: order.opsExecution?.managerReviewRequestedBy,
+    managerReviewReason: order.opsExecution?.managerReviewReason,
   };
 }
 

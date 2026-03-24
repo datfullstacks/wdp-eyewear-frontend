@@ -221,6 +221,15 @@ export function createDefaultReadyStockOpsState(
       backendOps.salesHandoffNote ||
       'Sales da kiem tra thong tin giao hang, xac nhan don du dieu kien xu ly van hanh.\n' +
         'Route vao queue Ready Stock vi: khong phai pre-order, khong phai prescription.',
+    approvalState:
+      backendOps.approvalState === 'manager_review_requested'
+        ? 'manager_review_requested'
+        : backendOps.approvalState === 'sent_back_to_sale'
+          ? 'sent_back_to_sale'
+          : 'none',
+    managerReviewRequestedAt: backendOps.managerReviewRequestedAt || '',
+    managerReviewRequestedBy: backendOps.managerReviewRequestedBy || '',
+    managerReviewReason: backendOps.managerReviewReason || '',
     internalNote: backendOps.internalNote || '',
     holdReason: backendOps.holdReason || null,
     holdNote: backendOps.holdNote || '',

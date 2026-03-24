@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Filter } from 'lucide-react';
 
@@ -385,6 +386,14 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
       : scope === 'operation'
         ? 'Operations tiep nhan case da duoc duyet va thuc hien payout'
         : 'Xu ly cac yeu cau hoan tien tu khach hang';
+  const afterSalesHref =
+    scope === 'manager'
+      ? '/manager/cases/support'
+      : scope === 'operation'
+        ? '/operation/cases/warranties'
+        : '/sale/cases/returns';
+  const afterSalesLabel =
+    scope === 'operation' ? 'Warranty service queue' : 'Open after-sales support';
   const statusFilterOptions =
     scope === 'operation'
       ? operationStatusFilterOptions
@@ -419,6 +428,12 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
           </div>
 
           <div className="flex items-center gap-2">
+            <Link
+              href={afterSalesHref}
+              className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
+            >
+              {afterSalesLabel}
+            </Link>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button

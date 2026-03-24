@@ -23,6 +23,7 @@ interface InventoryTableProps {
   onViewDetail: (item: InventoryItem) => void;
   onEditStock: (item: InventoryItem) => void;
   onViewHistory: (item: InventoryItem) => void;
+  historyEnabled?: boolean;
 }
 
 export const InventoryTable = ({
@@ -30,6 +31,7 @@ export const InventoryTable = ({
   onViewDetail,
   onEditStock,
   onViewHistory,
+  historyEnabled = true,
 }: InventoryTableProps) => {
   return (
     <div className="glass-card overflow-hidden rounded-xl">
@@ -101,9 +103,12 @@ export const InventoryTable = ({
                         : 'Khong theo doi ton'}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => onViewHistory(item)}>
+                    <DropdownMenuItem
+                      onClick={() => onViewHistory(item)}
+                      disabled={!historyEnabled}
+                    >
                       <History className="mr-2 h-4 w-4" />
-                      Lich su xuat nhap
+                      {historyEnabled ? 'Lich su xuat nhap' : 'Lich su chua co API'}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

@@ -12,6 +12,7 @@ import {
 import analyticsApi, { type RefundAuditFilters, type RefundAuditTrail } from '@/api/analytics';
 import { Button } from '@/components/atoms';
 import { Header } from '@/components/organisms/Header';
+import { SystemScopeBlockedPage } from '@/components/pages/SystemScopeBlockedPage';
 import { Card } from '@/components/ui/card';
 
 const formatDateTime = (value?: string | null) => {
@@ -37,7 +38,7 @@ function formatToken(value: string) {
     .join(' ');
 }
 
-export default function AdminRefundAuditPage() {
+export function RefundAuditWorkspace() {
   const [audit, setAudit] = useState<RefundAuditTrail | null>(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -103,7 +104,7 @@ export default function AdminRefundAuditPage() {
     <>
       <Header
         title="Refund Audit Trail"
-        subtitle="Trace every refund state transition, actor, and decision note"
+        subtitle="Trace refund transitions, actors, and decision notes under manager ownership"
       />
 
       <div className="space-y-6 p-6">
@@ -394,5 +395,15 @@ export default function AdminRefundAuditPage() {
         )}
       </div>
     </>
+  );
+}
+
+export default function AdminRefundAuditPage() {
+  return (
+    <SystemScopeBlockedPage
+      title="Refund Audit Trail"
+      subtitle="Compatibility route kept for legacy admin links"
+      message="Refund audit belongs to manager-owned business governance. Admin should use system audit, access review, and platform controls instead of business refund history."
+    />
   );
 }

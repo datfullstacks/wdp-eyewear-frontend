@@ -123,6 +123,10 @@ interface BackendOpsExecution {
   salesApprovedAt?: string;
   salesApprovedBy?: string;
   salesHandoffNote?: string;
+  approvalState?: string;
+  managerReviewRequestedAt?: string;
+  managerReviewRequestedBy?: string;
+  managerReviewReason?: string;
   internalNote?: string;
   holdReason?: string | null;
   holdNote?: string;
@@ -343,6 +347,10 @@ export interface OrderOpsExecutionPatch {
   salesApprovedAt?: string;
   salesApprovedBy?: string;
   salesHandoffNote?: string;
+  approvalState?: ReadyStockOrderOpsState['approvalState'];
+  managerReviewRequestedAt?: string;
+  managerReviewRequestedBy?: string;
+  managerReviewReason?: string;
   internalNote?: string;
   holdReason?: ReadyStockOrderOpsState['holdReason'];
   holdNote?: string;
@@ -591,6 +599,22 @@ function mapOpsExecution(
       typeof raw.salesApprovedAt === 'string' ? raw.salesApprovedAt : undefined,
     salesApprovedBy: String(raw.salesApprovedBy || '').trim(),
     salesHandoffNote: String(raw.salesHandoffNote || '').trim(),
+    approvalState: (() => {
+      const approvalState = String(raw.approvalState || '').trim().toLowerCase();
+      if (approvalState === 'manager_review_requested') {
+        return 'manager_review_requested';
+      }
+      if (approvalState === 'sent_back_to_sale') {
+        return 'sent_back_to_sale';
+      }
+      return 'none';
+    })(),
+    managerReviewRequestedAt:
+      typeof raw.managerReviewRequestedAt === 'string'
+        ? raw.managerReviewRequestedAt
+        : undefined,
+    managerReviewRequestedBy: String(raw.managerReviewRequestedBy || '').trim(),
+    managerReviewReason: String(raw.managerReviewReason || '').trim(),
     internalNote: String(raw.internalNote || '').trim(),
     holdReason: (String(raw.holdReason || '')
       .trim()

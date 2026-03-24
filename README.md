@@ -1,6 +1,27 @@
 # WDP Eyewear Frontend
 
-A modern e-commerce frontend built with Next.js 16, TypeScript, Tailwind CSS, and comprehensive tooling for building a production-ready eyewear online store.
+Internal web dashboard for the WDP Eyewear business and system teams, built with Next.js 16, TypeScript, and Tailwind CSS.
+
+This repo is now treated as backoffice-only. Customer demo flows live in `../wdp-eyewear-mobile`.
+
+## Dashboard Scope
+
+This web repo serves internal dashboards for four active web roles:
+
+- `Sales/Support Staff` via `/sale/*`
+- `Operations Staff` via `/operation/*`
+- `Manager` via `/manager/*`
+- `System Admin` via `/admin/*`
+
+Business ownership belongs to `manager`. System ownership belongs to `admin`. Legacy business pages under `/admin/refunds`, `/admin/reconciliation`, and `/admin/audit` are compatibility entries only.
+
+Current internal ownership highlights:
+
+- `/sale/cases/returns` is the live after-sales console for return and warranty tickets.
+- `/sale/orders/prescription-needed` is the sales/support-owned prescription clarification queue.
+- `/operation/cases/warranties` is the operations warranty service queue.
+- `/manager/cases/support` is the manager read-only cross-store support overview.
+- `/operation/orders/prescription-needed` remains as a compatibility URL and no longer owns the workflow.
 
 ## 🚀 Tech Stack
 
@@ -30,7 +51,7 @@ A modern e-commerce frontend built with Next.js 16, TypeScript, Tailwind CSS, an
 
 ### Testing
 - **Cypress** - E2E testing
-- Test coverage for authentication, products, cart, and checkout flows
+- Current coverage focuses on authentication, route protection, and critical dashboard flows
 
 ### Code Quality
 - **ESLint** - Linting with Next.js config
@@ -175,7 +196,7 @@ Components are organized following Atomic Design methodology:
 
 - Default language: **Vietnamese** (`vi`)
 - Supported languages: `vi`, `en`
-- Access via locale prefix: `/vi/products`, `/en/products`
+- Access via locale prefix: `/vi/manager/dashboard`, `/en/admin/dashboard`
 - Messages stored in `messages/` directory
 
 ## 🔐 Authentication
@@ -190,16 +211,15 @@ NextAuth.js v5 with:
 ## 📊 State Management
 
 - **Server State**: TanStack Query for API data
-- **Client State**: Zustand for auth, cart, and UI state
+- **Client State**: Zustand for auth, UI state, and limited non-authoritative local workflow state
 - **Form State**: React Hook Form with Zod validation
 
 ## 🧪 Testing Strategy
 
 Cypress E2E tests cover:
-- Authentication flows (login, register, logout)
-- Product browsing and search
-- Shopping cart operations
-- Checkout process
+- Authentication flows and role-aware redirects
+- Protected route access for dashboard areas
+- Selected business dashboard workflows and smoke coverage
 
 ## 📝 Environment Variables
 

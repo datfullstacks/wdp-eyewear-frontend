@@ -78,6 +78,13 @@ const menuItems: MenuItem[] = [
         badgeKey: 'alerts',
         badgeType: 'error',
       },
+      {
+        icon: FileHeart,
+        label: 'Prescription clarification',
+        path: '/sale/orders/prescription-needed',
+        badgeKey: 'prescriptionNeeded',
+        badgeType: 'warning',
+      },
     ],
   },
   {
@@ -88,13 +95,6 @@ const menuItems: MenuItem[] = [
         icon: RefreshCw,
         label: 'Đổi / trả / bảo hành',
         path: '/sale/cases/returns',
-        badge: '4',
-        badgeType: 'warning',
-      },
-      {
-        icon: MessageSquare,
-        label: 'Khiếu nại & hỗ trợ',
-        path: '/sale/cases/complaints',
       },
       {
         icon: CreditCard,
@@ -421,4 +421,3 @@ export const Sidebar: React.FC = () => {
     </aside>
   );
 };
-
