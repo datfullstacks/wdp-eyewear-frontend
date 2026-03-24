@@ -106,7 +106,6 @@ const PREORDER_SHIPPING_TIMING_OPTIONS: Array<{
   label: string;
 }> = [
   { value: 'upfront', label: 'Collect upfront' },
-  { value: 'with_balance', label: 'Collect with balance' },
   { value: 'on_delivery', label: 'Collect on delivery' },
 ];
 
