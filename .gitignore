@@ -6,6 +6,7 @@ node_modules/
 # Testing
 coverage/
 .nyc_output/
+cypress/e2e/internal-*.cy.ts
 cypress/videos/
 cypress/screenshots/
 cypress/downloads/
