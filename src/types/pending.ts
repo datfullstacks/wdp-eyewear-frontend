@@ -20,6 +20,10 @@ export interface PendingOrder {
   note: string;
   hasPrescription: boolean;
   paymentStatus: PaymentStatus;
+  approvalState: 'none' | 'manager_review_requested' | 'sent_back_to_sale';
+  managerReviewRequestedAt?: string;
+  managerReviewRequestedBy?: string;
+  managerReviewReason?: string;
 }
 
 export interface PaymentStatusConfig {

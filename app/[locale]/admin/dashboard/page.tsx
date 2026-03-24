@@ -5,14 +5,11 @@ import Link from 'next/link';
 import {
   Activity,
   AlertTriangle,
+  Building2,
   KeyRound,
   Loader2,
-  Package,
-  Receipt,
   Settings,
-  ShieldAlert,
   ShieldCheck,
-  ShoppingCart,
   UserCog,
 } from 'lucide-react';
 
@@ -20,14 +17,12 @@ import { Header } from '@/components/organisms/Header';
 import { Card } from '@/components/ui/card';
 import { StatCard } from '@/components/molecules/StatCard';
 import { userApi, type UserStatsResponse } from '@/api/users';
-import productApi from '@/api/products';
-import orderApi from '@/api/orders';
+import storeApi from '@/api/stores';
 import systemConfigApi, { type SystemConfig } from '@/api/systemConfig';
 
 export default function AdminDashboardPage() {
   const [userStats, setUserStats] = useState<UserStatsResponse | null>(null);
-  const [productTotal, setProductTotal] = useState(0);
-  const [orderTotal, setOrderTotal] = useState(0);
+  const [storeTotal, setStoreTotal] = useState(0);
   const [systemConfig, setSystemConfig] = useState<SystemConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -39,18 +34,16 @@ export default function AdminDashboardPage() {
       try {
         setLoading(true);
         setError('');
-        const [users, products, orders, config] = await Promise.all([
+        const [users, stores, config] = await Promise.all([
           userApi.getStats(),
-          productApi.getAll({ page: 1, limit: 1 }),
-          orderApi.getAll({ page: 1, limit: 1 }),
+          storeApi.getAll({ page: 1, limit: 1, status: 'all' }),
           systemConfigApi.get(),
         ]);
 
         if (!active) return;
 
         setUserStats(users);
-        setProductTotal(products.total);
-        setOrderTotal(orders.total);
+        setStoreTotal(stores.total);
         setSystemConfig(config);
       } catch (err) {
         if (active) {
@@ -78,23 +71,22 @@ export default function AdminDashboardPage() {
         icon: UserCog,
       },
       {
-        title: 'Managers + admins',
-        value:
-          Number(userStats?.byRole?.manager || 0) + Number(userStats?.byRole?.admin || 0),
+        title: 'Admin accounts',
+        value: Number(userStats?.byRole?.admin || 0),
         icon: KeyRound,
       },
       {
-        title: 'Products',
-        value: productTotal,
-        icon: Package,
+        title: 'Manager accounts',
+        value: Number(userStats?.byRole?.manager || 0),
+        icon: UserCog,
       },
       {
-        title: 'Orders',
-        value: orderTotal,
-        icon: ShoppingCart,
+        title: 'Stores',
+        value: storeTotal,
+        icon: Building2,
       },
     ],
-    [orderTotal, productTotal, userStats],
+    [storeTotal, userStats],
   );
 
   return (
@@ -159,42 +151,13 @@ export default function AdminDashboardPage() {
 
                 <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
                   <div className="mb-2 text-sm font-medium text-slate-800">
-                    Refund workflow policy
+                    System ownership
                   </div>
                   <div className="grid gap-2 text-sm text-slate-600 md:grid-cols-2">
-                    <div>
-                      Staff approval limit:{' '}
-                      <span className="font-medium text-slate-900">
-                        {new Intl.NumberFormat('vi-VN').format(
-                          Number(systemConfig?.refunds?.staffApprovalLimit || 0)
-                        )}{' '}
-                        VND
-                      </span>
-                    </div>
-                    <div>
-                      Return-required:
-                      <span className="ml-1 font-medium text-slate-900">
-                        {systemConfig?.refunds?.requiresManagerForReturn
-                          ? 'Manager approval'
-                          : 'Staff can approve'}
-                      </span>
-                    </div>
-                    <div>
-                      Shipping refund:
-                      <span className="ml-1 font-medium text-slate-900">
-                        {systemConfig?.refunds?.requiresManagerForShippingRefund
-                          ? 'Manager approval'
-                          : 'Staff can approve'}
-                      </span>
-                    </div>
-                    <div>
-                      Payout proof:
-                      <span className="ml-1 font-medium text-slate-900">
-                        {systemConfig?.refunds?.requirePayoutProof
-                          ? 'Required'
-                          : 'Optional'}
-                      </span>
-                    </div>
+                    <div>Auth, role matrix, and access governance</div>
+                    <div>Store master data and carrier integration config</div>
+                    <div>Feature flags and payment/platform controls</div>
+                    <div>Maintenance mode and deployment-safe settings</div>
                   </div>
                 </div>
               </Card>
@@ -207,45 +170,53 @@ export default function AdminDashboardPage() {
                 <p className="mt-2 text-sm text-gray-600">
                   Review system flags, payment settings, and carrier integrations.
                 </p>
-                <Link
-                  href="/admin/settings"
-                  className="mt-4 inline-flex items-center rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
-                >
-                  Open system settings
-                </Link>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <Link
+                    href="/admin/settings"
+                    className="inline-flex items-center rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+                  >
+                    Open system settings
+                  </Link>
+                  <Link
+                    href="/admin/stores"
+                    className="inline-flex items-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                  >
+                    Open stores
+                  </Link>
+                </div>
               </Card>
             </section>
 
             <section className="grid gap-4 md:grid-cols-2">
               <Card className="p-6">
-                <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-amber-700">
-                  <ShieldAlert className="h-5 w-5" />
+                <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
+                  <UserCog className="h-5 w-5" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900">Refund monitoring</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Access review</h3>
                 <p className="mt-2 text-sm text-gray-600">
-                  Review stuck refund cases, owner queues, and payout backlog.
+                  Review admin and manager accounts without dropping into daily business queues.
                 </p>
                 <Link
-                  href="/admin/refunds"
-                  className="mt-4 inline-flex items-center rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-600"
+                  href="/admin/users"
+                  className="mt-4 inline-flex items-center rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-900"
                 >
-                  Open monitoring
+                  Open users
                 </Link>
               </Card>
 
               <Card className="p-6">
-                <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
-                  <Receipt className="h-5 w-5" />
+                <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
+                  <Building2 className="h-5 w-5" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900">Reconciliation</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Store master data</h3>
                 <p className="mt-2 text-sm text-gray-600">
-                  Verify invoice state, payout references, and refund mismatches.
+                  Manage store metadata, pickup support, and integration readiness at system scope.
                 </p>
                 <Link
-                  href="/admin/reconciliation"
-                  className="mt-4 inline-flex items-center rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-900"
+                  href="/admin/stores"
+                  className="mt-4 inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
                 >
-                  Open reconciliation
+                  Open stores
                 </Link>
               </Card>
             </section>

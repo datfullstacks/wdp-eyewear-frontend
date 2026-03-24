@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
+import { getDefaultRouteForRole } from '@/lib/roles';
 
 export default async function PostLoginPage({
   searchParams,
@@ -15,26 +16,9 @@ export default async function PostLoginPage({
   const safeCallbackUrl = callbackUrl?.startsWith('/') ? callbackUrl : '/';
 
   const role = (session.user.role ?? '').trim().toLowerCase();
-  const shouldRedirectToAdmin = role === 'admin';
-  const shouldRedirectToSale = role === 'sales' || role === 'staff';
-  const shouldRedirectToOperation = role === 'operations' || role === 'operation';
-  const shouldRedirectToManager = role === 'manager';
-
-  if (shouldRedirectToAdmin) {
-    redirect('/admin/dashboard');
+  if (safeCallbackUrl !== '/' && safeCallbackUrl !== '/login') {
+    redirect(safeCallbackUrl);
   }
 
-  if (shouldRedirectToManager) {
-    redirect('/manager/dashboard');
-  }
-
-  if (shouldRedirectToOperation) {
-    redirect('/operation/orders/ready-stock');
-  }
-
-  if (role === 'customer') {
-    redirect('/');
-  }
-
-  redirect(shouldRedirectToSale ? '/sale/products' : safeCallbackUrl);
+  redirect(getDefaultRouteForRole(role));
 }

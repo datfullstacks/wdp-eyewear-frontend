@@ -12,6 +12,7 @@ import analyticsApi, {
 import { orderApi } from '@/api';
 import { Button } from '@/components/atoms';
 import { Header } from '@/components/organisms/Header';
+import { SystemScopeBlockedPage } from '@/components/pages/SystemScopeBlockedPage';
 import { Card } from '@/components/ui/card';
 import {
   Dialog,
@@ -164,7 +165,7 @@ function CaseTable({
   );
 }
 
-export default function AdminRefundMonitoringPage() {
+export function RefundMonitoringWorkspace() {
   const [overview, setOverview] = useState<AdminRefundOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -269,7 +270,7 @@ export default function AdminRefundMonitoringPage() {
     <>
       <Header
         title="Refund Monitoring"
-        subtitle="Admin view for stuck cases, payout backlog, and ownership distribution"
+        subtitle="Manager workspace for exception handling, payout backlog, and owner distribution"
       />
 
       <div className="space-y-6 p-6">
@@ -445,14 +446,14 @@ export default function AdminRefundMonitoringPage() {
                 </p>
                 <div className="mt-4 flex flex-wrap gap-3">
                   <Link
-                    href="/admin/reconciliation"
+                    href="/manager/reconciliation"
                     className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
                   >
                     Open reconciliation
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <Link
-                    href="/admin/audit"
+                    href="/manager/audit"
                     className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
                   >
                     Open audit trail
@@ -478,7 +479,7 @@ export default function AdminRefundMonitoringPage() {
         <DialogContent className="w-[92vw] max-w-md p-4 sm:p-5">
           <DialogHeader>
             <DialogTitle className="text-base font-semibold text-gray-900">
-              Refund emergency override
+              Refund business override
             </DialogTitle>
             <DialogDescription className="text-gray-600">
               {selectedCase
@@ -547,5 +548,15 @@ export default function AdminRefundMonitoringPage() {
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+export default function AdminRefundMonitoringPage() {
+  return (
+    <SystemScopeBlockedPage
+      title="Refund Monitoring"
+      subtitle="Compatibility route kept for legacy admin links"
+      message="Refund monitoring, reconciliation, and audit are business workflows under manager ownership. Admin retains only system configuration and access governance in this web dashboard."
+    />
   );
 }

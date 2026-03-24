@@ -3,3 +3,4 @@ export { PendingOrderTable } from './PendingOrderTable';
 export { PendingDetailModal } from './PendingDetailModal';
 export { ProcessModal } from './ProcessModal';
 export { RejectModal } from './RejectModal';
+export { SendBackModal } from './SendBackModal';

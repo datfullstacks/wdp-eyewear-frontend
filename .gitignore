@@ -6,14 +6,20 @@ node_modules/
 # Testing
 coverage/
 .nyc_output/
+cypress/e2e/internal-*.cy.ts
 cypress/videos/
 cypress/screenshots/
+cypress/downloads/
+playwright-report/
+test-results/
 
 # Next.js
 .next/
 out/
 build/
 dist/
+.turbo/
+.cache/
 
 # Production
 *.tsbuildinfo
@@ -21,6 +27,9 @@ dist/
 # Misc
 .DS_Store
 *.pem
+.eslintcache
+.idea/
+.vscode/
 
 # Debug
 npm-debug.log*

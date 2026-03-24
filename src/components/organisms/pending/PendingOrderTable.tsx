@@ -11,6 +11,7 @@ import { PendingOrderRow } from '@/components/molecules/PendingOrderRow';
 
 interface PendingOrderTableProps {
   orders: PendingOrder[];
+  scope?: 'sale' | 'manager';
   selectedOrders: string[];
   showEmptyState?: boolean;
   onSelectAll: (checked: boolean) => void;
@@ -18,16 +19,21 @@ interface PendingOrderTableProps {
   onViewDetail: (order: PendingOrder) => void;
   onProcess: (order: PendingOrder) => void;
   onReject: (order: PendingOrder) => void;
+  onEscalate: (order: PendingOrder) => void;
+  onSendBack: (order: PendingOrder) => void;
 }
 
 export const PendingOrderTable = ({
   orders,
+  scope = 'sale',
   selectedOrders,
   showEmptyState = true,
   onSelectOrder,
   onViewDetail,
   onProcess,
   onReject,
+  onEscalate,
+  onSendBack,
 }: PendingOrderTableProps) => {
   return (
     <div className="glass-card overflow-hidden rounded-xl">
@@ -48,11 +54,14 @@ export const PendingOrderTable = ({
             <PendingOrderRow
               key={order.id}
               order={order}
+              scope={scope}
               isSelected={selectedOrders.includes(order.id)}
               onSelect={onSelectOrder}
               onViewDetail={onViewDetail}
               onProcess={onProcess}
               onReject={onReject}
+              onEscalate={onEscalate}
+              onSendBack={onSendBack}
             />
           ))}
         </TableBody>

@@ -34,7 +34,7 @@ import {
 } from '@/data/preorderData';
 import { useStatusRealtimeReload } from '@/hooks/useStatusRealtime';
 import { toPreorderOrder } from '@/lib/orderAdapters';
-import { hasOperationHandoff } from '@/lib/orderWorkflow';
+import { hasOperationHandoff, isPreorderOrder } from '@/lib/orderWorkflow';
 import type { PreorderOrder } from '@/types/preorder';
 
 function extractApiErrorMessage(error: unknown, fallback: string) {
@@ -86,12 +86,7 @@ const OrdersPreorder = () => {
     try {
       const result = await orderApi.getAll({ page: 1, limit: 200 });
       const mapped = result.orders
-        .filter(
-          (order) =>
-            (order.orderType === 'pre_order' ||
-              order.items.some((item) => item.preOrder)) &&
-            hasOperationHandoff(order)
-        )
+        .filter((order) => isPreorderOrder(order) && hasOperationHandoff(order))
         .map(toPreorderOrder);
 
       setOrders(mapped);
