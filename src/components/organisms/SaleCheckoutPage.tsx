@@ -707,11 +707,9 @@ function SummaryPanel({
     .trim()
     .toLowerCase();
   const shippingTimingLabel =
-    shippingCollectionTiming === 'with_balance'
-      ? 'Thu cung dot thanh toan con lai'
-      : shippingCollectionTiming === 'on_delivery'
-        ? 'Thu khi giao hang'
-        : 'Thu ngay';
+    shippingCollectionTiming === 'on_delivery' || shippingCollectionTiming === 'with_balance'
+      ? 'Thu khi giao hang'
+      : 'Thu ngay';
 
   return (
     <div className="rounded-[28px] border border-[#d39a00] bg-white p-5 shadow-[0_26px_55px_-36px_rgba(117,78,0,0.16)]">

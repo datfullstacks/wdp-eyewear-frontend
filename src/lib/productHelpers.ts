@@ -705,7 +705,11 @@ export function buildProductFormState(product?: ProductDetail | null): ProductFo
     preOrderEndAt: toDateTimeLocalValue(product.preOrder?.endAt),
     preOrderShipFrom: toDateTimeLocalValue(product.preOrder?.shipFrom),
     preOrderShipTo: toDateTimeLocalValue(product.preOrder?.shipTo),
-    preOrderShippingCollectionTiming: product.preOrder?.shippingCollectionTiming || 'upfront',
+    preOrderShippingCollectionTiming:
+      String(product.preOrder?.shippingCollectionTiming || '').trim().toLowerCase() ===
+      'with_balance'
+        ? 'on_delivery'
+        : product.preOrder?.shippingCollectionTiming || 'upfront',
     preOrderNote: product.preOrder?.note || '',
     storeScopeMode: product.storeScope?.mode === 'selected' ? 'selected' : 'all',
     primaryStoreId: toText(product.storeScope?.primaryStoreId),

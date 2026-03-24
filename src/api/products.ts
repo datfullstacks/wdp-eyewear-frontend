@@ -3,8 +3,10 @@ import apiClient from './client';
 export type ProductStatus = 'active' | 'inactive' | 'draft' | 'out_of_stock';
 export type PreOrderShippingCollectionTiming =
   | 'upfront'
-  | 'with_balance'
   | 'on_delivery';
+type LegacyPreOrderShippingCollectionTiming =
+  | PreOrderShippingCollectionTiming
+  | 'with_balance';
 export type ProductTryOnStatus =
   | 'draft'
   | 'pending_review'
@@ -237,7 +239,7 @@ interface BackendProduct {
     endAt?: string;
     shipFrom?: string;
     shipTo?: string;
-    shippingCollectionTiming?: PreOrderShippingCollectionTiming;
+    shippingCollectionTiming?: LegacyPreOrderShippingCollectionTiming;
     note?: string;
   };
   storeScope?: {
@@ -534,6 +536,22 @@ function resolveCategory(raw?: BackendProduct): string {
   return raw?.seo?.collections?.[0] || raw?.type || 'other';
 }
 
+function normalizePreOrderConfig(
+  preOrder?: BackendProduct['preOrder']
+): ProductDetail['preOrder'] {
+  if (!preOrder) return undefined;
+
+  const shippingCollectionTiming =
+    preOrder.shippingCollectionTiming === 'with_balance'
+      ? 'on_delivery'
+      : preOrder.shippingCollectionTiming || 'upfront';
+
+  return {
+    ...preOrder,
+    shippingCollectionTiming,
+  };
+}
+
 function mapBackendProduct(raw: BackendProduct): Product {
   const id = raw._id || raw.id || '';
   const price = Number(raw.pricing?.salePrice ?? raw.pricing?.basePrice ?? 0);
@@ -562,7 +580,7 @@ function mapBackendProductDetail(raw: BackendProduct): ProductDetail {
     slug: raw.slug,
     pricing: raw.pricing,
     inventory: raw.inventory,
-    preOrder: raw.preOrder,
+    preOrder: normalizePreOrderConfig(raw.preOrder),
     compatibility: raw.compatibility,
     fulfillment: raw.fulfillment,
     seo: raw.seo,
