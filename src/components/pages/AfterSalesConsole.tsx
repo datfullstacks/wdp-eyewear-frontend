@@ -1,0 +1,717 @@
+'use client';
+
+import Link from 'next/link';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { AlertTriangle, ExternalLink, Loader2, MessageSquare, RefreshCw } from 'lucide-react';
+
+import supportApi, {
+  type SupportMessageRecord,
+  type SupportTicketCategory,
+  type SupportTicketRecord,
+  type SupportTicketStatus,
+  type WarrantyEligibility,
+} from '@/api/support';
+import { SearchBar } from '@/components/molecules/SearchBar';
+import { Header } from '@/components/organisms/Header';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+
+type AfterSalesScope = 'sale' | 'operation' | 'manager';
+type ConsoleTab = 'return' | 'warranty' | 'prescription';
+
+type TabConfig = {
+  value: ConsoleTab;
+  label: string;
+  category: SupportTicketCategory;
+};
+
+const TAB_CONFIG: Record<AfterSalesScope, TabConfig[]> = {
+  sale: [
+    { value: 'return', label: 'Return', category: 'return' },
+    { value: 'warranty', label: 'Warranty', category: 'warranty' },
+  ],
+  operation: [{ value: 'warranty', label: 'Warranty service', category: 'warranty' }],
+  manager: [
+    { value: 'return', label: 'Return', category: 'return' },
+    { value: 'warranty', label: 'Warranty', category: 'warranty' },
+    { value: 'prescription', label: 'Prescription', category: 'prescription' },
+  ],
+};
+
+const SCOPE_COPY: Record<
+  AfterSalesScope,
+  { title: string; subtitle: string; refundHref: string; refundLabel: string }
+> = {
+  sale: {
+    title: 'After-sales support',
+    subtitle: 'Live return and warranty console for sales/support staff',
+    refundHref: '/sale/cases/refunds',
+    refundLabel: 'Open refund workspace',
+  },
+  operation: {
+    title: 'Warranty service queue',
+    subtitle: 'Store-scoped warranty servicing owned by operations',
+    refundHref: '/operation/refunds',
+    refundLabel: 'Open refund payout queue',
+  },
+  manager: {
+    title: 'Business support overview',
+    subtitle: 'Cross-store read-only view of return, warranty, and prescription tickets',
+    refundHref: '/manager/refunds/monitoring',
+    refundLabel: 'Open refund monitoring',
+  },
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  open: 'Open',
+  in_progress: 'In progress',
+  resolved: 'Resolved',
+  closed: 'Closed',
+  requested: 'Requested',
+  under_review: 'Under review',
+  approved: 'Approved',
+  rejected: 'Rejected',
+  in_service: 'In service',
+  completed: 'Completed',
+};
+
+const CATEGORY_LABELS: Record<SupportTicketCategory, string> = {
+  general: 'General',
+  order: 'Order',
+  prescription: 'Prescription',
+  shipping: 'Shipping',
+  refund: 'Refund',
+  return: 'Return',
+  warranty: 'Warranty',
+};
+
+const ELIGIBILITY_LABELS: Record<WarrantyEligibility, string> = {
+  eligible: 'Eligible',
+  expired: 'Expired',
+  not_covered: 'Not covered',
+};
+
+function formatDateTime(value?: string) {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+  return date.toLocaleString('vi-VN');
+}
+
+function formatCurrency(value?: number) {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+    maximumFractionDigits: 0,
+  }).format(Number(value || 0));
+}
+
+function getStatusTone(status: SupportTicketStatus) {
+  if (['rejected', 'closed'].includes(status)) return 'bg-rose-50 text-rose-700 border-rose-200';
+  if (['approved', 'resolved', 'completed'].includes(status)) {
+    return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+  }
+  if (['requested', 'under_review', 'in_progress', 'in_service'].includes(status)) {
+    return 'bg-amber-50 text-amber-700 border-amber-200';
+  }
+  return 'bg-slate-50 text-slate-700 border-slate-200';
+}
+
+function getStatusOptions(scope: AfterSalesScope, category: SupportTicketCategory) {
+  if (scope === 'manager') return [] as SupportTicketStatus[];
+  if (category === 'return') {
+    return ['open', 'in_progress', 'resolved', 'closed'] as SupportTicketStatus[];
+  }
+  if (scope === 'sale' && category === 'warranty') {
+    return ['under_review', 'approved', 'rejected'] as SupportTicketStatus[];
+  }
+  if (scope === 'operation' && category === 'warranty') {
+    return ['in_service', 'completed'] as SupportTicketStatus[];
+  }
+  return [] as SupportTicketStatus[];
+}
+
+function TicketDetailDialog({
+  ticket,
+  open,
+  onOpenChange,
+  scope,
+  onReply,
+  onUpdateStatus,
+  isSubmitting,
+}: {
+  ticket: SupportTicketRecord | null;
+  open: boolean;
+  onOpenChange: (value: boolean) => void;
+  scope: AfterSalesScope;
+  onReply: (message: string) => Promise<void>;
+  onUpdateStatus: (status: SupportTicketStatus, note: string) => Promise<void>;
+  isSubmitting: boolean;
+}) {
+  const [replyMessage, setReplyMessage] = useState('');
+  const [nextStatus, setNextStatus] = useState<SupportTicketStatus | ''>('');
+  const [statusNote, setStatusNote] = useState('');
+
+  useEffect(() => {
+    if (!open) return;
+    setReplyMessage('');
+    setStatusNote('');
+    setNextStatus('');
+  }, [open, ticket?.id]);
+
+  if (!ticket) return null;
+
+  const statusOptions = getStatusOptions(scope, ticket.category);
+  const isReadOnly = scope === 'manager';
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{ticket.subject}</DialogTitle>
+          <DialogDescription>
+            {CATEGORY_LABELS[ticket.category]} ticket {ticket.id}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card className="p-4">
+              <h3 className="text-sm font-semibold text-gray-900">Ticket details</h3>
+              <dl className="mt-3 space-y-2 text-sm text-gray-600">
+                <div className="flex justify-between gap-3">
+                  <dt>Category</dt>
+                  <dd className="font-medium text-gray-900">{CATEGORY_LABELS[ticket.category]}</dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt>Status</dt>
+                  <dd>
+                    <span
+                      className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getStatusTone(ticket.status)}`}
+                    >
+                      {STATUS_LABELS[ticket.status] || ticket.status}
+                    </span>
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt>Priority</dt>
+                  <dd className="font-medium text-gray-900">{ticket.priority}</dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt>Customer</dt>
+                  <dd className="text-right font-medium text-gray-900">
+                    {ticket.user?.name || ticket.email || '-'}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt>Last updated</dt>
+                  <dd className="text-right font-medium text-gray-900">
+                    {formatDateTime(ticket.lastMessageAt || ticket.updatedAt)}
+                  </dd>
+                </div>
+              </dl>
+            </Card>
+
+            <Card className="p-4">
+              <h3 className="text-sm font-semibold text-gray-900">Linked order/store</h3>
+              <dl className="mt-3 space-y-2 text-sm text-gray-600">
+                <div className="flex justify-between gap-3">
+                  <dt>Order</dt>
+                  <dd className="text-right font-medium text-gray-900">
+                    {ticket.order?.paymentCode || ticket.orderId || '-'}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt>Order type</dt>
+                  <dd className="text-right font-medium text-gray-900">
+                    {ticket.order?.orderType || '-'}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt>Total</dt>
+                  <dd className="text-right font-medium text-gray-900">
+                    {ticket.order ? formatCurrency(ticket.order.total) : '-'}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt>Store</dt>
+                  <dd className="text-right font-medium text-gray-900">
+                    {ticket.store?.name || ticket.store?.code || '-'}
+                  </dd>
+                </div>
+              </dl>
+            </Card>
+          </div>
+
+          {ticket.warranty ? (
+            <Card className="p-4">
+              <h3 className="text-sm font-semibold text-gray-900">Warranty snapshot</h3>
+              <dl className="mt-3 grid gap-3 text-sm text-gray-600 md:grid-cols-2">
+                <div>
+                  <dt>Item</dt>
+                  <dd className="font-medium text-gray-900">{ticket.warranty.itemName || '-'}</dd>
+                </div>
+                <div>
+                  <dt>Eligibility</dt>
+                  <dd className="font-medium text-gray-900">
+                    {ELIGIBILITY_LABELS[ticket.warranty.eligibility]}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Warranty months</dt>
+                  <dd className="font-medium text-gray-900">{ticket.warranty.warrantyMonths}</dd>
+                </div>
+                <div>
+                  <dt>Expires at</dt>
+                  <dd className="font-medium text-gray-900">
+                    {formatDateTime(ticket.warranty.expiresAt)}
+                  </dd>
+                </div>
+                {ticket.warranty.decisionNote ? (
+                  <div className="md:col-span-2">
+                    <dt>Decision note</dt>
+                    <dd className="font-medium text-gray-900">{ticket.warranty.decisionNote}</dd>
+                  </div>
+                ) : null}
+                {ticket.warranty.serviceNote ? (
+                  <div className="md:col-span-2">
+                    <dt>Service note</dt>
+                    <dd className="font-medium text-gray-900">{ticket.warranty.serviceNote}</dd>
+                  </div>
+                ) : null}
+              </dl>
+            </Card>
+          ) : null}
+
+          <Card className="p-4">
+            <h3 className="text-sm font-semibold text-gray-900">Conversation</h3>
+            <div className="mt-4 space-y-3">
+              {ticket.messages.length === 0 ? (
+                <p className="text-sm text-gray-500">No messages yet.</p>
+              ) : (
+                ticket.messages.map((message: SupportMessageRecord) => (
+                  <div
+                    key={message.id}
+                    className={`rounded-lg border p-3 text-sm ${
+                      message.sender === 'staff'
+                        ? 'border-amber-200 bg-amber-50'
+                        : 'border-slate-200 bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="font-medium text-gray-900">
+                        {message.sender === 'staff' ? 'Staff' : 'Customer'}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {formatDateTime(message.createdAt)}
+                      </span>
+                    </div>
+                    <p className="mt-2 whitespace-pre-wrap text-gray-700">{message.message}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          </Card>
+
+          {!isReadOnly ? (
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Card className="p-4">
+                <Label className="text-sm font-semibold text-gray-900">Reply</Label>
+                <Textarea
+                  className="mt-3"
+                  placeholder="Add a staff reply..."
+                  value={replyMessage}
+                  onChange={(event) => setReplyMessage(event.target.value)}
+                  rows={5}
+                />
+                <div className="mt-3 flex justify-end">
+                  <Button
+                    onClick={() => void onReply(replyMessage)}
+                    disabled={isSubmitting || !replyMessage.trim()}
+                  >
+                    Send reply
+                  </Button>
+                </div>
+              </Card>
+
+              <Card className="p-4">
+                <Label className="text-sm font-semibold text-gray-900">Update status</Label>
+                <select
+                  value={nextStatus}
+                  onChange={(event) =>
+                    setNextStatus(event.target.value as SupportTicketStatus | '')
+                  }
+                  className="mt-3 flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
+                >
+                  <option value="">Select next status</option>
+                  {statusOptions.map((status) => (
+                    <option key={status} value={status}>
+                      {STATUS_LABELS[status] || status}
+                    </option>
+                  ))}
+                </select>
+                <Textarea
+                  className="mt-3"
+                  placeholder={
+                    ticket.category === 'warranty'
+                      ? 'Decision note or service note...'
+                      : 'Optional status note...'
+                  }
+                  value={statusNote}
+                  onChange={(event) => setStatusNote(event.target.value)}
+                  rows={4}
+                />
+                <div className="mt-3 flex justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      if (!nextStatus) return;
+                      void onUpdateStatus(nextStatus, statusNote);
+                    }}
+                    disabled={isSubmitting || !nextStatus}
+                  >
+                    Apply status
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          ) : null}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope }) {
+  const tabs = TAB_CONFIG[scope];
+  const [activeTab, setActiveTab] = useState<ConsoleTab>(tabs[0].value);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [eligibilityFilter, setEligibilityFilter] = useState<string>('all');
+  const [tickets, setTickets] = useState<SupportTicketRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicketRecord | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const activeConfig = useMemo(
+    () => tabs.find((tab) => tab.value === activeTab) || tabs[0],
+    [activeTab, tabs],
+  );
+
+  const loadTickets = useCallback(async () => {
+    try {
+      setLoading(true);
+      setErrorMessage('');
+
+      if (activeConfig.category === 'warranty') {
+        const result = await supportApi.getWarrantyCases({
+          page: 1,
+          limit: 100,
+          status: statusFilter !== 'all' ? statusFilter : undefined,
+          eligibility:
+            eligibilityFilter !== 'all'
+              ? (eligibilityFilter as WarrantyEligibility)
+              : undefined,
+          q: searchQuery || undefined,
+        });
+        setTickets(result.items);
+      } else {
+        const result = await supportApi.getTickets({
+          page: 1,
+          limit: 100,
+          category: activeConfig.category,
+          status: statusFilter !== 'all' ? statusFilter : undefined,
+          q: searchQuery || undefined,
+        });
+        setTickets(result.items);
+      }
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : 'Failed to load support tickets.',
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [activeConfig.category, eligibilityFilter, searchQuery, statusFilter]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadTickets();
+    }, 200);
+
+    return () => window.clearTimeout(timer);
+  }, [loadTickets]);
+
+  useEffect(() => {
+    setStatusFilter('all');
+    setEligibilityFilter('all');
+    setSuccessMessage('');
+  }, [activeTab]);
+
+  const openTicketDetail = async (ticket: SupportTicketRecord) => {
+    try {
+      setDetailLoading(true);
+      setDetailOpen(true);
+      setSelectedTicket(ticket);
+      const detail = await supportApi.getTicket(ticket.id);
+      setSelectedTicket(detail);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : 'Failed to load support ticket detail.',
+      );
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const refreshSelectedTicket = async (ticketId: string) => {
+    const detail = await supportApi.getTicket(ticketId);
+    setSelectedTicket(detail);
+  };
+
+  const handleReply = async (message: string) => {
+    if (!selectedTicket || !message.trim()) return;
+
+    try {
+      setSubmitting(true);
+      await supportApi.replyTicket(selectedTicket.id, { message: message.trim() });
+      await Promise.all([refreshSelectedTicket(selectedTicket.id), loadTickets()]);
+      setSuccessMessage('Reply sent successfully.');
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to send reply.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleStatusUpdate = async (status: SupportTicketStatus, note: string) => {
+    if (!selectedTicket || !status) return;
+
+    try {
+      setSubmitting(true);
+      const payload =
+        selectedTicket.category === 'warranty'
+          ? scope === 'operation'
+            ? { status, serviceNote: note.trim() || undefined }
+            : { status, decisionNote: note.trim() || undefined }
+          : { status, note: note.trim() || undefined };
+
+      await supportApi.updateTicketStatus(selectedTicket.id, payload);
+      await Promise.all([refreshSelectedTicket(selectedTicket.id), loadTickets()]);
+      setSuccessMessage('Status updated successfully.');
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : 'Failed to update support status.',
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <>
+      <Header title={SCOPE_COPY[scope].title} subtitle={SCOPE_COPY[scope].subtitle} />
+
+      <div className="space-y-6 p-6">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href={SCOPE_COPY[scope].refundHref}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+            >
+              {SCOPE_COPY[scope].refundLabel}
+              <ExternalLink className="h-4 w-4" />
+            </Link>
+            {scope === 'sale' ? (
+              <Link
+                href="/sale/orders/prescription-needed"
+                className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+              >
+                Prescription clarification
+                <ExternalLink className="h-4 w-4" />
+              </Link>
+            ) : null}
+          </div>
+
+          <Button variant="outline" className="gap-2" onClick={() => void loadTickets()}>
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+        </div>
+
+        {errorMessage ? (
+          <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            <AlertTriangle className="h-4 w-4" />
+            <span>{errorMessage}</span>
+          </div>
+        ) : null}
+
+        {successMessage ? (
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {successMessage}
+          </div>
+        ) : null}
+
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ConsoleTab)}>
+          <TabsList>
+            {tabs.map((tab) => (
+              <TabsTrigger key={tab.value} value={tab.value}>
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          {tabs.map((tab) => (
+            <TabsContent key={tab.value} value={tab.value} className="space-y-4">
+              <div className="flex flex-col gap-3 lg:flex-row">
+                <div className="flex-1">
+                  <SearchBar
+                    placeholder="Search by order, customer, phone, or ticket subject"
+                    value={searchQuery}
+                    onChange={setSearchQuery}
+                  />
+                </div>
+                <div className="w-full lg:w-56">
+                  <select
+                    value={statusFilter}
+                    onChange={(event) => setStatusFilter(event.target.value)}
+                    className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
+                  >
+                    <option value="all">All statuses</option>
+                    {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {tab.value === 'warranty' ? (
+                  <div className="w-full lg:w-56">
+                    <select
+                      value={eligibilityFilter}
+                      onChange={(event) => setEligibilityFilter(event.target.value)}
+                      className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
+                    >
+                      <option value="all">All eligibility</option>
+                      {Object.entries(ELIGIBILITY_LABELS).map(([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : null}
+              </div>
+
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                </div>
+              ) : (
+                <Card className="overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-sm">
+                      <thead className="bg-slate-50 text-left text-gray-500">
+                        <tr>
+                          <th className="px-4 py-3">Ticket</th>
+                          <th className="px-4 py-3">Customer</th>
+                          <th className="px-4 py-3">Store</th>
+                          <th className="px-4 py-3">Status</th>
+                          <th className="px-4 py-3">Last update</th>
+                          <th className="px-4 py-3 text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {tickets.map((ticket) => (
+                          <tr key={ticket.id} className="border-t border-gray-100 text-gray-700">
+                            <td className="px-4 py-3">
+                              <div className="font-medium text-gray-900">{ticket.subject}</div>
+                              <div className="text-xs text-gray-500">
+                                {ticket.order?.paymentCode || ticket.orderId || ticket.id}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div>{ticket.user?.name || ticket.email || '-'}</div>
+                              <div className="text-xs text-gray-500">{ticket.user?.role || '-'}</div>
+                            </td>
+                            <td className="px-4 py-3">
+                              {ticket.store?.name || ticket.store?.code || '-'}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span
+                                className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getStatusTone(ticket.status)}`}
+                              >
+                                {STATUS_LABELS[ticket.status] || ticket.status}
+                              </span>
+                              {ticket.warranty ? (
+                                <div className="mt-1 text-xs text-gray-500">
+                                  {ELIGIBILITY_LABELS[ticket.warranty.eligibility]}
+                                </div>
+                              ) : null}
+                            </td>
+                            <td className="px-4 py-3">
+                              {formatDateTime(ticket.lastMessageAt || ticket.updatedAt)}
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <Button variant="outline" size="sm" onClick={() => void openTicketDetail(ticket)}>
+                                Open
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                        {tickets.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="px-4 py-10 text-center text-sm text-gray-500">
+                              No support tickets match the current filters.
+                            </td>
+                          </tr>
+                        ) : null}
+                      </tbody>
+                    </table>
+                  </div>
+                </Card>
+              )}
+            </TabsContent>
+          ))}
+        </Tabs>
+
+        {detailLoading && detailOpen ? (
+          <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+            Loading ticket detail...
+          </div>
+        ) : null}
+      </div>
+
+      <TicketDetailDialog
+        ticket={selectedTicket}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        scope={scope}
+        onReply={handleReply}
+        onUpdateStatus={handleStatusUpdate}
+        isSubmitting={submitting}
+      />
+    </>
+  );
+}

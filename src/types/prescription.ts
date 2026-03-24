@@ -16,6 +16,8 @@ export interface ContactHistory {
 export interface SupplementOrder {
   id: string;
   orderId: string;
+  supportTicketId?: string;
+  supportStatus?: string;
   customer: string;
   phone: string;
   email: string;

@@ -10,24 +10,36 @@ import {
 } from '@/components/ui/dialog';
 import {
   PENDING_ORDER_APPROVAL_MESSAGE,
+  PENDING_ORDER_MANAGER_APPROVAL_MESSAGE,
   canApprovePendingOrder,
+  canManagerApprovePendingOrder,
+  canManagerHandlePendingOrder,
 } from '@/lib/pendingOrders';
 import { PendingOrder } from '@/types/pending';
 
 interface ProcessModalProps {
+  scope?: 'sale' | 'manager';
   order: PendingOrder | null;
   onClose: () => void;
   onConfirm: () => void;
 }
 
 export const ProcessModal = ({
+  scope = 'sale',
   order,
   onClose,
   onConfirm,
 }: ProcessModalProps) => {
   if (!order) return null;
 
-  const canApprove = canApprovePendingOrder(order);
+  const canApprove =
+    scope === 'manager'
+      ? canManagerApprovePendingOrder(order)
+      : canApprovePendingOrder(order);
+  const helperText =
+    scope === 'manager'
+      ? order.managerReviewReason || PENDING_ORDER_MANAGER_APPROVAL_MESSAGE
+      : PENDING_ORDER_APPROVAL_MESSAGE;
 
   return (
     <Dialog open={!!order} onOpenChange={onClose}>
@@ -57,7 +69,7 @@ export const ProcessModal = ({
 
           {!canApprove && (
             <p className="text-sm font-medium text-amber-700">
-              {PENDING_ORDER_APPROVAL_MESSAGE}
+              {helperText}
             </p>
           )}
 

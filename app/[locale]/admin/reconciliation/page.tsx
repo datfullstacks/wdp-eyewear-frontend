@@ -17,6 +17,7 @@ import analyticsApi, {
 } from '@/api/analytics';
 import { Button } from '@/components/atoms';
 import { Header } from '@/components/organisms/Header';
+import { SystemScopeBlockedPage } from '@/components/pages/SystemScopeBlockedPage';
 import { Card } from '@/components/ui/card';
 
 const formatCurrency = (value: number) =>
@@ -57,7 +58,7 @@ function formatMatchStatus(status: RefundReconciliationRow['matchStatus']) {
 
 type ProofFilter = 'all' | 'with' | 'without';
 
-export default function AdminReconciliationPage() {
+export function RefundReconciliationWorkspace() {
   const [report, setReport] = useState<RefundReconciliation | null>(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -154,8 +155,8 @@ export default function AdminReconciliationPage() {
   return (
     <>
       <Header
-        title="Finance Reconciliation"
-        subtitle="Verify paid amounts, approved refunds, payout refs, and invoice state"
+        title="Refund Reconciliation"
+        subtitle="Verify approved amounts, payout references, and invoice mismatches under business governance"
       />
 
       <div className="space-y-6 p-6">
@@ -436,5 +437,15 @@ export default function AdminReconciliationPage() {
         )}
       </div>
     </>
+  );
+}
+
+export default function AdminReconciliationPage() {
+  return (
+    <SystemScopeBlockedPage
+      title="Refund Reconciliation"
+      subtitle="Compatibility route kept for legacy admin links"
+      message="Refund reconciliation is now owned by manager as part of business finance governance. Admin remains responsible for system configuration, store master data, and access controls."
+    />
   );
 }

@@ -35,6 +35,7 @@ export default function OrdersDelayed() {
   const [orders, setOrders] = useState<DelayedOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [readOnlyMessage, setReadOnlyMessage] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [severityFilter, setSeverityFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -130,7 +131,11 @@ export default function OrdersDelayed() {
   };
 
   const handleEscalate = (orderId: string, note: string) => {
-    console.log('Escalating order:', orderId, note);
+    void orderId;
+    void note;
+    setReadOnlyMessage(
+      'Order alert actions are read-only in the web dashboard until backend escalation APIs are exposed.'
+    );
     setEscalateOrder(null);
   };
 
@@ -139,7 +144,12 @@ export default function OrdersDelayed() {
     method: ContactMethod,
     note: string
   ) => {
-    console.log('Contacting customer:', orderId, method, note);
+    void orderId;
+    void method;
+    void note;
+    setReadOnlyMessage(
+      'Customer contact logging is not wired to a live backend endpoint in this dashboard yet.'
+    );
     setContactOrder(null);
   };
 
@@ -148,7 +158,12 @@ export default function OrdersDelayed() {
     action: ResolveAction,
     note: string
   ) => {
-    console.log('Resolving order:', orderId, action, note);
+    void orderId;
+    void action;
+    void note;
+    setReadOnlyMessage(
+      'Alert resolution stays read-only here until backend workflow actions are available.'
+    );
     setResolveOrder(null);
   };
 
@@ -216,6 +231,11 @@ export default function OrdersDelayed() {
         )}
         {!isLoading && errorMessage && (
           <p className="text-destructive text-sm">{errorMessage}</p>
+        )}
+        {readOnlyMessage && (
+          <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {readOnlyMessage}
+          </p>
         )}
 
         {!isLoading && !errorMessage && (

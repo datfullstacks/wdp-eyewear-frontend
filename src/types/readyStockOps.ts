@@ -58,6 +58,10 @@ export type ReadyStockOrderOpsState = {
   salesApprovedAt: string;
   salesApprovedBy: string;
   salesHandoffNote: string;
+  approvalState: 'none' | 'manager_review_requested' | 'sent_back_to_sale';
+  managerReviewRequestedAt: string;
+  managerReviewRequestedBy: string;
+  managerReviewReason: string;
   internalNote: string;
   holdReason: ReadyStockHoldReason | null;
   holdNote: string;

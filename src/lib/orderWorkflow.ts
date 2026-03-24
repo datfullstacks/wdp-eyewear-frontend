@@ -63,6 +63,10 @@ export function getOrderAgeDays(order: Pick<OrderRecord, 'createdAt'>): number {
 }
 
 export function isPreorderOrder(order: Pick<OrderRecord, 'orderType' | 'items'>): boolean {
+  if (String(order.orderType || '').toLowerCase() === 'prescription') {
+    return false;
+  }
+
   return (
     String(order.orderType || '').toLowerCase() === 'pre_order' ||
     order.items.some((item) => item.preOrder)
@@ -108,18 +112,11 @@ export function isProcessingPrescriptionOrder(order: OrderRecord): boolean {
 
 export function needsActionOrder(order: OrderRecord): boolean {
   const raw = normalizeRawOrderStatus(order);
-  if (raw === 'cancelled') return false;
-
-  if (raw === 'returned') return true;
+  if (raw === 'cancelled' || raw === 'returned') return false;
 
   if (raw === 'pending') return true;
 
   if (order.paymentStatus === 'pending' && order.paymentMethod !== 'cod') return true;
-
-  if (needsPrescriptionSupplement(order)) return true;
-
-  const rx = toPrescriptionOrder(order);
-  if (rx && rx.prescriptionStatus !== 'approved') return true;
 
   return false;
 }

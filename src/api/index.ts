@@ -7,6 +7,7 @@ export { default as orderApi } from './orders';
 export { default as preorderApi } from './preorders';
 export { default as checkoutApi } from './checkout';
 export { default as storeApi } from './stores';
+export { default as supportApi } from './support';
 export {
   getProducts,
   createQuote,
@@ -66,6 +67,18 @@ export type {
   CheckoutRequest,
   CheckoutResponse,
 } from './checkout';
+export type {
+  SupportTicketCategory,
+  SupportTicketStatus,
+  SupportPriority,
+  WarrantyEligibility,
+  SupportMessageRecord,
+  SupportTicketRecord,
+  SupportTicketsResponse,
+  ListSupportTicketsParams,
+  CreateSupportTicketInput,
+  UpdateSupportTicketStatusInput,
+} from './support';
 export type {
   SaleCartItem,
   SaleProduct,

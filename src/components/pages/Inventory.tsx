@@ -29,7 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { mockHistoryEntries } from '@/data/inventoryData';
 import { InventoryItem } from '@/types/inventory';
 
 const PAGE_SIZE_OPTIONS = [20, 50, 100] as const;
@@ -270,6 +269,7 @@ const Inventory = () => {
               onViewDetail={handleViewDetail}
               onEditStock={handleEditStock}
               onViewHistory={handleViewHistory}
+              historyEnabled={false}
             />
 
             {filteredInventory.length > 0 && totalPages > 1 ? (
@@ -337,7 +337,7 @@ const Inventory = () => {
 
         <InventoryHistoryModal
           item={selectedItem}
-          entries={mockHistoryEntries}
+          entries={[]}
           open={isHistoryOpen}
           onOpenChange={setIsHistoryOpen}
         />

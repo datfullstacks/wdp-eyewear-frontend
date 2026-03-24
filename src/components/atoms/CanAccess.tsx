@@ -3,7 +3,7 @@
 import { type ReactNode, useEffect, useState } from 'react';
 import { getSession } from 'next-auth/react';
 
-import { toFrontendRole } from '@/lib/roles';
+import { toBackendRole } from '@/lib/roles';
 
 type Role =
   | 'customer'
@@ -21,9 +21,9 @@ interface CanAccessProps {
 }
 
 function matchesRole(expectedRoles: Role[], currentRole: string): boolean {
-  const normalizedRole = toFrontendRole(currentRole);
+  const normalizedRole = toBackendRole(currentRole);
   return expectedRoles.some((expectedRole) => {
-    const normalizedExpectedRole = toFrontendRole(expectedRole);
+    const normalizedExpectedRole = toBackendRole(expectedRole);
     return normalizedExpectedRole === normalizedRole;
   });
 }
