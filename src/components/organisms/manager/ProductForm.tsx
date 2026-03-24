@@ -1374,51 +1374,93 @@ export function ProductForm({
                 />
               </div>
 
+              {/* ── Bảng nhập Prefab X / Y / Z ── */}
+              <div className="mt-4 overflow-hidden rounded-md border border-gray-200">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      <th className="px-3 py-2 text-left w-1/4">Thuộc tính</th>
+                      <th className="px-3 py-2 text-center w-1/4">X</th>
+                      <th className="px-3 py-2 text-center w-1/4">Y</th>
+                      <th className="px-3 py-2 text-center w-1/4">Z</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {(
+                      [
+                        {
+                          label: 'Rotation',
+                          hint: '(tuy chon)',
+                          key: 'tryOnRotation' as const,
+                          defaults: ['270', '0', '0'],
+                        },
+                        {
+                          label: 'Scale',
+                          hint: '(tuy chon)',
+                          key: 'tryOnScale' as const,
+                          defaults: ['0.019', '0.019', '0.01'],
+                        },
+                        {
+                          label: 'Translation',
+                          hint: '(tuy chon)',
+                          key: 'tryOnTranslation' as const,
+                          defaults: ['0', '0', '0'],
+                        },
+                        {
+                          label: 'Gravity',
+                          hint: '(tuy chon)',
+                          key: 'tryOnGravity' as const,
+                          defaults: ['0', '0', '0'],
+                        },
+                      ] as const
+                    ).map(({ label, hint, key, defaults }) => {
+                      const parts = (formData[key] || '').split(/\s+/);
+                      const xVal = parts[0] ?? '';
+                      const yVal = parts[1] ?? '';
+                      const zVal = parts[2] ?? '';
+                      const buildValue = (x: string, y: string, z: string) =>
+                        [x, y, z].join(' ');
+                      return (
+                        <tr key={key} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-3 py-2">
+                            <span className="font-medium text-gray-700">{label}</span>
+                            <span className="ml-1 text-xs text-gray-400">{hint}</span>
+                          </td>
+                          {(['x', 'y', 'z'] as const).map((axis, axisIdx) => {
+                            const axisVal = [xVal, yVal, zVal][axisIdx];
+                            return (
+                              <td key={axis} className="px-2 py-2">
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs font-bold text-gray-400 w-3 shrink-0 uppercase">
+                                    {axis}
+                                  </span>
+                                  <input
+                                    type="number"
+                                    step="any"
+                                    value={axisVal}
+                                    placeholder={defaults[axisIdx]}
+                                    onChange={(event) => {
+                                      const newParts = [xVal, yVal, zVal];
+                                      newParts[axisIdx] = event.target.value;
+                                      onChange((prev) => ({
+                                        ...prev,
+                                        [key]: buildValue(newParts[0], newParts[1], newParts[2]),
+                                      }));
+                                    }}
+                                    className="w-full rounded border border-gray-200 px-2 py-1 text-sm text-center focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-300"
+                                  />
+                                </div>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
               <div className="mt-4 grid grid-cols-2 gap-4">
-                <Input
-                  label="Prefab rotation (tuy chon)"
-                  value={formData.tryOnRotation}
-                  onChange={(event) =>
-                    onChange((prev) => ({
-                      ...prev,
-                      tryOnRotation: event.target.value,
-                    }))
-                  }
-                  placeholder="270 0 0"
-                />
-                <Input
-                  label="Prefab scale (tuy chon)"
-                  value={formData.tryOnScale}
-                  onChange={(event) =>
-                    onChange((prev) => ({
-                      ...prev,
-                      tryOnScale: event.target.value,
-                    }))
-                  }
-                  placeholder="0.019 0.019 0.01"
-                />
-                <Input
-                  label="Prefab translation (tuy chon)"
-                  value={formData.tryOnTranslation}
-                  onChange={(event) =>
-                    onChange((prev) => ({
-                      ...prev,
-                      tryOnTranslation: event.target.value,
-                    }))
-                  }
-                  placeholder="0 0 0"
-                />
-                <Input
-                  label="Prefab gravity (tuy chon)"
-                  value={formData.tryOnGravity}
-                  onChange={(event) =>
-                    onChange((prev) => ({
-                      ...prev,
-                      tryOnGravity: event.target.value,
-                    }))
-                  }
-                  placeholder="0 0 0"
-                />
                 <Input
                   label="Prefab cut (tuy chon)"
                   value={formData.tryOnCut}
