@@ -2,36 +2,25 @@
 
 Updated: 2026-03-13
 
-This document summarizes the business role model for the WDP Eyewear web dashboard, the expected interaction constraints between roles, and the current frontend delivery status.
+This document summarizes the business role model for the WDP Eyewear frontend, the expected interaction constraints between roles, and the current frontend delivery status.
 
-The product topic still uses five roles:
+The intended role model is:
 
-- `Customer`
-- `Sales/Support Staff`
-- `Operations Staff`
+- `Staff`
+- `Operation`
 - `Manager`
 - `System Admin`
-
-The web repo in this phase is scoped to internal dashboards only, so the active web roles are:
-
-- `Sales/Support Staff`
-- `Operations Staff`
-- `Manager`
-- `System Admin`
-
-For route compatibility, the dashboard still uses the legacy route groups `/sale/*` and `/operation/*`.
 
 The key design principle is ownership:
 
-- `Customer` remains part of the product scope, but customer-facing demo flows are owned by the mobile app repo.
-- `Sales/Support Staff` owns customer-facing intake and customer communication.
-- `Operations Staff` owns fulfillment and execution.
+- `Staff` owns customer-facing intake and customer communication.
+- `Operation` owns fulfillment and execution.
 - `Manager` owns business rules, approvals, and performance control.
 - `System Admin` owns platform, security, permissions, and system reliability.
 
 ## 1. Role Definitions
 
-### 1.1 Sales/Support Staff
+### 1.1 Staff
 
 Mission:
 
@@ -78,12 +67,11 @@ Representative frontend areas:
 
 - `/sale/orders/pending`
 - `/sale/orders/alerts`
-- `/sale/orders/prescription-needed`
 - `/sale/customers`
 - `/sale/cases/returns`
 - `/sale/cases/refunds`
 
-### 1.2 Operations Staff
+### 1.2 Operation
 
 Mission:
 
@@ -129,7 +117,7 @@ Representative frontend areas:
 - `/operation/orders/ready-stock`
 - `/operation/orders/preorder`
 - `/operation/orders/prescription`
-- `/operation/cases/warranties`
+- `/operation/orders/prescription-needed`
 - `/operation/orders/processing`
 - `/operation/shipping/*`
 - `/operation/inventory/*`
@@ -163,7 +151,7 @@ Not allowed:
 
 Input:
 
-- Escalations from sales/support staff and operations staff.
+- Escalations from staff and operation.
 - Performance dashboards and business data.
 - Product, pricing, discount, and policy change requests.
 
@@ -182,7 +170,6 @@ Representative frontend areas:
 - `/manager/users`
 - `/manager/policies`
 - `/manager/revenue`
-- `/manager/cases/support`
 
 ### 1.4 System Admin
 
@@ -227,8 +214,7 @@ Representative frontend areas:
 
 Current status:
 
-- Dedicated `/admin/*` pages now exist, but they are system-only.
-- Legacy business paths under `/admin/refunds`, `/admin/reconciliation`, and `/admin/audit` are compatibility entries that redirect managers or block admins from business workflows.
+- No dedicated admin frontend area exists yet.
 
 ## 2. Binding Rules Between Roles
 
@@ -236,14 +222,14 @@ The four roles must be linked by explicit ownership and approval rules.
 
 ### 2.1 Ownership Rules
 
-- `Sales/Support Staff` owns customer data quality and customer-side clarification.
-- `Operations Staff` owns item flow, inventory flow, lab flow, and logistics flow.
+- `Staff` owns customer data quality and customer-side clarification.
+- `Operation` owns item flow, inventory flow, lab flow, and logistics flow.
 - `Manager` owns policy, pricing, exceptions, and approval thresholds.
 - `System Admin` owns auth, permissions, secrets, system config, and auditability.
 
 ### 2.2 Handoff Rules
 
-#### Sales/Support Staff -> Operations Staff
+#### Staff -> Operation
 
 An order can only move from staff to operation when all minimum business requirements are satisfied:
 
@@ -253,11 +239,11 @@ An order can only move from staff to operation when all minimum business require
 - Ordered items are sufficiently specified.
 - If prescription is required, the order is either complete enough for operations or clearly routed into prescription handling.
 
-If these conditions are not met, the order remains with sales/support staff.
+If these conditions are not met, the order remains with staff.
 
-#### Operations Staff -> Sales/Support Staff
+#### Operation -> Staff
 
-Operations staff returns an order to sales/support staff when the blocker depends on customer clarification, for example:
+Operation returns an order to staff when the blocker depends on customer clarification, for example:
 
 - Missing prescription values.
 - Unclear prescription image.
@@ -265,7 +251,7 @@ Operations staff returns an order to sales/support staff when the blocker depend
 - Delivery data mismatch.
 - Payment or address re-confirmation needed.
 
-#### Sales/Support Staff or Operations Staff -> Manager
+#### Staff or Operation -> Manager
 
 Escalate to manager when the action exceeds normal authority, for example:
 
@@ -293,8 +279,8 @@ These rules should be enforced:
 - The requester should not be the sole approver for high-risk actions.
 - Business approvals belong to manager, not system admin.
 - System configuration belongs to system admin, not manager.
-- Sales/support staff should not directly update stock.
-- Operations staff should not directly change commercial policy.
+- Staff should not directly update stock.
+- Operation should not directly change commercial policy.
 
 ### 2.4 Audit Requirements
 
@@ -315,17 +301,17 @@ Suggested business ownership by state:
 
 | State / Situation | Primary Owner | Secondary Owner | Notes |
 | --- | --- | --- | --- |
-| New order / waiting confirmation | Sales/Support Staff | Manager | Intake and validation stage |
-| Waiting customer information | Sales/Support Staff | Operations Staff | Operations may request data; sales/support owns customer follow-up |
-| Ready for fulfillment | Operations Staff | Sales/Support Staff | Sales/support should no longer own execution |
-| Ready-stock pick / pack / ship | Operations Staff | Manager | Operational execution |
-| Pre-order waiting arrival | Operations Staff | Manager | Supply/inbound execution |
-| Prescription missing | Sales/Support Staff | Operations Staff | Customer follow-up first |
-| Prescription review / approval | Operations Staff | Sales/Support Staff | Technical validation |
-| Lab / processing | Operations Staff | Manager | Execution and SLA |
-| Return / refund request intake | Sales/Support Staff | Manager | Customer-facing case entry |
-| Return physical verification | Operations Staff | Sales/Support Staff | Physical goods verification |
-| Refund approval above threshold | Manager | Sales/Support Staff | Financial/business control |
+| New order / waiting confirmation | Staff | Manager | Intake and validation stage |
+| Waiting customer information | Staff | Operation | Operation may request data, staff owns customer follow-up |
+| Ready for fulfillment | Operation | Staff | Staff should no longer own execution |
+| Ready-stock pick / pack / ship | Operation | Manager | Operational execution |
+| Pre-order waiting arrival | Operation | Manager | Supply/inbound execution |
+| Prescription missing | Staff | Operation | Customer follow-up first |
+| Prescription review / approval | Operation | Staff | Technical validation |
+| Lab / processing | Operation | Manager | Execution and SLA |
+| Return / refund request intake | Staff | Manager | Customer-facing case entry |
+| Return physical verification | Operation | Staff | Physical goods verification |
+| Refund approval above threshold | Manager | Staff | Financial/business control |
 | Pricing / discount / policy change | Manager | System Admin | Admin supports platform, not business authority |
 | Auth / permission / env issue | System Admin | Manager | System-level ownership |
 
@@ -358,8 +344,8 @@ Production blocker currently observed:
 
 | Role | Current FE Coverage | Maturity | Notes |
 | --- | --- | --- | --- |
-| Sales/Support Staff | Broad route coverage and usable core workflows | Medium-High | Best-developed business role |
-| Operations Staff | Broad route coverage with mixed real and local/mock workflows | Medium | Main execution concepts are present |
+| Staff | Broad route coverage and usable core workflows | Medium-High | Best-developed business role |
+| Operation | Broad route coverage with mixed real and local/mock workflows | Medium | Main execution concepts are present |
 | Manager | Good route coverage but mixed real and mock management modules | Medium-Low | Products and users are stronger than pricing/policy/discount/revenue |
 | System Admin | No dedicated route/module yet | Very Low | Not started as a real FE domain |
 
@@ -377,7 +363,7 @@ Evidence:
 - `app/api/auth/[...nextauth]/route.ts`
 - `app/[locale]/auth/post-login/page.tsx`
 
-### Sales/Support Staff Core Flows
+### Staff Core Flows
 
 - Pending order list reads real orders.
 - Order confirmation uses backend status update.
@@ -391,7 +377,7 @@ Evidence:
 - `src/components/pages/Customers.tsx`
 - `src/components/pages/Products.tsx`
 
-### Operations Staff Core Flows
+### Operation Core Flows
 
 - Prescription queue reads real orders.
 - Prescription values can be patched to backend items.
@@ -654,7 +640,7 @@ Current frontend is not yet strong enough to:
 
 In short:
 
-- `Sales/Support Staff`: meaningful and usable prototype, with some real backend actions.
-- `Operations Staff`: good business modeling, but still partly local/mock.
+- `Staff`: meaningful and usable prototype, with some real backend actions.
+- `Operation`: good business modeling, but still partly local/mock.
 - `Manager`: partly real, partly placeholder/mock.
 - `System Admin`: not yet implemented in FE.
