@@ -76,16 +76,14 @@ export default function CreateProductPage() {
     async (
       file: File,
       variantIndex: number,
-      field: 'imageUrl' | 'posterUrl' | 'glbUrl' | 'usdzUrl'
+      field: 'imageUrl' | 'posterUrl' | 'glbUrl'
     ) => {
       const uploadSuffix =
         field === 'imageUrl'
           ? 'image'
           : field === 'posterUrl'
             ? 'poster'
-            : field === 'glbUrl'
-              ? 'glb'
-              : 'usdz';
+            : 'glb';
       const uploadKey = `variant-${variantIndex}-${uploadSuffix}`;
       setUploadingKey(uploadKey);
       setApiError('');
@@ -153,6 +151,7 @@ export default function CreateProductPage() {
           <ProductForm
             formData={formData}
             storeOptions={storeOptions}
+            availableTryOnStatuses={['draft', 'pending_review']}
             isSubmitting={isSubmitting}
             uploadingKey={uploadingKey}
             onChange={setFormData}
