@@ -4,6 +4,9 @@ export type ProductStatus = 'active' | 'inactive' | 'draft' | 'out_of_stock';
 export type PreOrderShippingCollectionTiming =
   | 'upfront'
   | 'on_delivery';
+type LegacyPreOrderShippingCollectionTiming =
+  | PreOrderShippingCollectionTiming
+  | 'with_balance';
 export type ProductTryOnStatus =
   | 'draft'
   | 'pending_review'
@@ -236,7 +239,7 @@ interface BackendProduct {
     endAt?: string;
     shipFrom?: string;
     shipTo?: string;
-    shippingCollectionTiming?: PreOrderShippingCollectionTiming;
+    shippingCollectionTiming?: LegacyPreOrderShippingCollectionTiming;
     note?: string;
   };
   storeScope?: {

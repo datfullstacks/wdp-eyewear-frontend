@@ -706,7 +706,8 @@ export function buildProductFormState(product?: ProductDetail | null): ProductFo
     preOrderShipFrom: toDateTimeLocalValue(product.preOrder?.shipFrom),
     preOrderShipTo: toDateTimeLocalValue(product.preOrder?.shipTo),
     preOrderShippingCollectionTiming:
-      product.preOrder?.shippingCollectionTiming === 'with_balance'
+      String(product.preOrder?.shippingCollectionTiming || '').trim().toLowerCase() ===
+      'with_balance'
         ? 'on_delivery'
         : product.preOrder?.shippingCollectionTiming || 'upfront',
     preOrderNote: product.preOrder?.note || '',
