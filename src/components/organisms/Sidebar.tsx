@@ -105,11 +105,6 @@ const menuItems: MenuItem[] = [
         label: 'Lịch sử đơn & ghi chú',
         path: '/sale/customers/history',
       },
-      {
-        icon: FileHeart,
-        label: 'Hồ sơ Prescription',
-        path: '/sale/customers/prescriptions',
-      },
     ],
   },
   {
@@ -224,17 +219,26 @@ export const Sidebar: React.FC = () => {
     return obj;
   });
 
-  useMemo(() => {
+  useEffect(() => {
     setOpenGroups((prev) => {
+      let changed = false;
       const next = { ...prev };
+
       for (const item of resolvedMenuItems) {
         if (!item.children) continue;
-        const shouldOpen = item.children.some((c) => isActivePath(pathname, c.path, c.exact));
-        if (shouldOpen) next[item.label] = true;
+        const shouldOpen =
+          defaultOpenMap.get(item.label) ||
+          item.children.some((c) => isActivePath(pathname, c.path, c.exact));
+
+        if (shouldOpen && !prev[item.label]) {
+          next[item.label] = true;
+          changed = true;
+        }
       }
-      return next;
+
+      return changed ? next : prev;
     });
-  }, [pathname, resolvedMenuItems]);
+  }, [defaultOpenMap, pathname, resolvedMenuItems]);
 
   return (
     <aside

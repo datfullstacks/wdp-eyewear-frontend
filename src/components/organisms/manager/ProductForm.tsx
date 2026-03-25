@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Input } from '@/components/atoms/Input';
 import { Button } from '@/components/atoms';
 import { MAX_TRY_ON_MODELS } from '@/lib/productHelpers';
@@ -29,7 +30,6 @@ export interface ProductVariantFormState {
   imageUrl: string;
   posterUrl: string;
   glbUrl: string;
-  usdzUrl: string;
 }
 
 export interface ProductFormState {
@@ -79,7 +79,6 @@ export interface ProductFormState {
   tryOnRejectReason: string;
   tryOnPosterUrl: string;
   tryOnGlbUrl: string;
-  tryOnUsdzUrl: string;
   tryOnArUrl: string;
   tryOnLaunchUrl: string;
   tryOnEffectPath: string;
@@ -133,6 +132,7 @@ const HINGE_TYPE_OPTIONS = [
 interface ProductFormProps {
   formData: ProductFormState;
   storeOptions?: StoreRecord[];
+  availableTryOnStatuses?: ProductTryOnStatus[];
   isSubmitting: boolean;
   uploadingKey: string;
   onChange: (updater: (prev: ProductFormState) => ProductFormState) => void;
@@ -140,8 +140,8 @@ interface ProductFormProps {
   onUploadGallery: (files: FileList | null) => Promise<void>;
   onUploadVariantAsset: (
     file: File,
-    variantIndex: number,
-    field: 'imageUrl' | 'posterUrl' | 'glbUrl' | 'usdzUrl'
+    variantId: string,
+    field: 'imageUrl' | 'posterUrl' | 'glbUrl'
   ) => Promise<void>;
   onRemoveGallery: (index: number) => void;
   onCancel?: () => void;
@@ -152,6 +152,7 @@ interface ProductFormProps {
 export function ProductForm({
   formData,
   storeOptions = [],
+  availableTryOnStatuses,
   isSubmitting,
   uploadingKey,
   onChange,
@@ -163,6 +164,10 @@ export function ProductForm({
   onSubmit,
   submitLabel = 'Save',
 }: ProductFormProps) {
+  const getVariantUploadKey = (
+    variantId: string,
+    suffix: 'image' | 'poster' | 'glb'
+  ) => `variant-${variantId || 'unknown'}-${suffix}`;
   const priceValue = Number(formData.price || 0);
   const previewBasePrice = Number.isFinite(priceValue) ? Math.max(0, priceValue) : 0;
   const previewDepositPercent = formData.preOrderEnabled
@@ -175,10 +180,44 @@ export function ProductForm({
   const supportsTryOn =
     formData.category === 'frame' || formData.category === 'sunglasses';
   const variantRows = formData.variants || [];
+  const hasFrameSpecs = [
+    formData.frameShape,
+    formData.frameWeightGram,
+    formData.frameMaterial,
+    formData.frameRimType,
+    formData.dimensionBridgeMm,
+    formData.dimensionTempleLengthMm,
+    formData.dimensionLensWidthMm,
+    formData.dimensionLensHeightMm,
+    formData.lensUvProtection,
+  ].some((value) => Boolean(String(value || '').trim()));
+  const hasTryOnAdvancedSettings =
+    [
+      formData.tryOnScene,
+      formData.tryOnArUrl,
+      formData.tryOnLaunchUrl,
+      formData.tryOnEffectPath,
+      formData.tryOnResourcePaths,
+      formData.tryOnRotation,
+      formData.tryOnScale,
+      formData.tryOnTranslation,
+      formData.tryOnGravity,
+      formData.tryOnCut,
+    ].some((value) => Boolean(String(value || '').trim())) || formData.tryOnUsePhysics;
+  const [isTryOnAdvancedOpen, setIsTryOnAdvancedOpen] = useState(hasTryOnAdvancedSettings);
+  const tryOnStatusOptions = availableTryOnStatuses?.length
+    ? TRY_ON_STATUS_OPTIONS.filter((option) => availableTryOnStatuses.includes(option.value))
+    : TRY_ON_STATUS_OPTIONS;
   const mappedTryOnModelCount = variantRows.filter(
-    (variant) => Boolean(String(variant.glbUrl || '').trim() || String(variant.usdzUrl || '').trim())
+    (variant) => Boolean(String(variant.glbUrl || '').trim())
   ).length;
   const tryOnModelLimitReached = mappedTryOnModelCount >= MAX_TRY_ON_MODELS;
+
+  useEffect(() => {
+    if (hasTryOnAdvancedSettings) {
+      setIsTryOnAdvancedOpen(true);
+    }
+  }, [hasTryOnAdvancedSettings]);
 
   const updateVariant = (
     index: number,
@@ -208,7 +247,6 @@ export function ProductForm({
           imageUrl: '',
           posterUrl: '',
           glbUrl: '',
-          usdzUrl: '',
         },
       ],
     }));
@@ -463,7 +501,7 @@ export function ProductForm({
               Variants and asset mapping
             </p>
             <p className="mt-1 text-xs text-gray-500">
-              Map image, GLB, and USDZ per color or size so mobile can switch assets correctly when the customer changes variant.
+              Map image and GLB per color or size so mobile can switch assets correctly when the customer changes variant.
             </p>
             <p className="mt-2 text-xs font-medium text-amber-800">
               Try-on supports up to {MAX_TRY_ON_MODELS} mapped models per product. Current mapped models: {mappedTryOnModelCount}/{MAX_TRY_ON_MODELS}
@@ -582,10 +620,13 @@ export function ProductForm({
                   <input
                     type="file"
                     accept="image/*"
-                    disabled={isSubmitting || uploadingKey === `variant-${index}-image`}
+                    disabled={
+                      isSubmitting ||
+                      uploadingKey === getVariantUploadKey(variant.id, 'image')
+                    }
                     onChange={(event) => {
                       const file = event.target.files?.[0];
-                      if (file) void onUploadVariantAsset(file, index, 'imageUrl');
+                      if (file) void onUploadVariantAsset(file, variant.id, 'imageUrl');
                     }}
                     className="block w-full text-sm text-gray-600"
                   />
@@ -617,10 +658,13 @@ export function ProductForm({
                   <input
                     type="file"
                     accept="image/*"
-                    disabled={isSubmitting || uploadingKey === `variant-${index}-poster`}
+                    disabled={
+                      isSubmitting ||
+                      uploadingKey === getVariantUploadKey(variant.id, 'poster')
+                    }
                     onChange={(event) => {
                       const file = event.target.files?.[0];
-                      if (file) void onUploadVariantAsset(file, index, 'posterUrl');
+                      if (file) void onUploadVariantAsset(file, variant.id, 'posterUrl');
                     }}
                     className="block w-full text-sm text-gray-600"
                   />
@@ -638,7 +682,7 @@ export function ProductForm({
                 </div>
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-4">
+              <div className="mt-4">
                 <div className="rounded-md border border-gray-100 p-3">
                   <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
                     <Upload className="h-4 w-4" />
@@ -647,10 +691,13 @@ export function ProductForm({
                   <input
                     type="file"
                     accept=".glb,.gltf,model/gltf-binary,model/gltf+json"
-                    disabled={isSubmitting || uploadingKey === `variant-${index}-glb`}
+                    disabled={
+                      isSubmitting ||
+                      uploadingKey === getVariantUploadKey(variant.id, 'glb')
+                    }
                     onChange={(event) => {
                       const file = event.target.files?.[0];
-                      if (file) void onUploadVariantAsset(file, index, 'glbUrl');
+                      if (file) void onUploadVariantAsset(file, variant.id, 'glbUrl');
                     }}
                     className="block w-full text-sm text-gray-600"
                   />
@@ -666,34 +713,6 @@ export function ProductForm({
                     placeholder="https://...glb"
                   />
                 </div>
-
-                <div className="rounded-md border border-gray-100 p-3">
-                  <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <Upload className="h-4 w-4" />
-                    USDZ asset
-                  </div>
-                  <input
-                    type="file"
-                    accept=".usdz,model/vnd.usdz+zip"
-                    disabled={isSubmitting || uploadingKey === `variant-${index}-usdz`}
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (file) void onUploadVariantAsset(file, index, 'usdzUrl');
-                    }}
-                    className="block w-full text-sm text-gray-600"
-                  />
-                  <Input
-                    label="USDZ URL"
-                    value={variant.usdzUrl}
-                    onChange={(event) =>
-                      updateVariant(index, (current) => ({
-                        ...current,
-                        usdzUrl: event.target.value,
-                      }))
-                    }
-                    placeholder="https://...usdz"
-                  />
-                </div>
               </div>
             </div>
           ))}
@@ -704,206 +723,212 @@ export function ProductForm({
         <div className="rounded-md border border-gray-200 p-4">
           <div className="mb-4">
             <p className="text-sm font-medium text-gray-700">
-              Frame and mobile fit specs
+              Frame and mobile fit specs (optional)
             </p>
             <p className="mt-1 text-xs text-gray-500">
-              Required to save a real frame or sunglasses product instead of a generic other-type placeholder.
+              Chi nhap khi da co thong so that. Co the de trong va bo sung sau, manager khong can doan de luu san pham.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Shape"
-              value={formData.frameShape}
-              onChange={(event) =>
-                onChange((prev) => ({ ...prev, frameShape: event.target.value }))
-              }
-              placeholder="rectangle"
-            />
+          <details open={hasFrameSpecs} className="rounded-md border border-dashed border-gray-300 bg-gray-50 px-4 py-3">
+            <summary className="cursor-pointer text-sm font-medium text-gray-700">
+              {hasFrameSpecs ? 'Dang co thong so da nhap' : 'Them thong so khi da xac nhan duoc'}
+            </summary>
 
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Gender
-              </label>
-              <Select
-                value={formData.frameGender}
-                onValueChange={(value) =>
-                  onChange((prev) => ({
-                    ...prev,
-                    frameGender: value as ProductFormState['frameGender'],
-                  }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  {GENDER_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Input
-              label="Weight (gram)"
-              type="number"
-              value={formData.frameWeightGram}
-              onChange={(event) =>
-                onChange((prev) => ({
-                  ...prev,
-                  frameWeightGram: event.target.value,
-                }))
-              }
-              placeholder="22"
-            />
-            <Input
-              label="Frame material"
-              value={formData.frameMaterial}
-              onChange={(event) =>
-                onChange((prev) => ({
-                  ...prev,
-                  frameMaterial: event.target.value,
-                }))
-              }
-              placeholder="acetate"
-            />
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Hinge type
-              </label>
-              <Select
-                value={formData.frameHingeType}
-                onValueChange={(value) =>
-                  onChange((prev) => ({
-                    ...prev,
-                    frameHingeType: value as ProductFormState['frameHingeType'],
-                  }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select hinge type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {HINGE_TYPE_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Input
-              label="Rim type"
-              value={formData.frameRimType}
-              onChange={(event) =>
-                onChange((prev) => ({
-                  ...prev,
-                  frameRimType: event.target.value,
-                }))
-              }
-              placeholder="full"
-            />
-          </div>
-
-          <div className="mt-4 grid grid-cols-2 gap-4">
-            <Input
-              label="Bridge (mm)"
-              type="number"
-              value={formData.dimensionBridgeMm}
-              onChange={(event) =>
-                onChange((prev) => ({
-                  ...prev,
-                  dimensionBridgeMm: event.target.value,
-                }))
-              }
-              placeholder="18"
-            />
-            <Input
-              label="Temple length (mm)"
-              type="number"
-              value={formData.dimensionTempleLengthMm}
-              onChange={(event) =>
-                onChange((prev) => ({
-                  ...prev,
-                  dimensionTempleLengthMm: event.target.value,
-                }))
-              }
-              placeholder="145"
-            />
-            <Input
-              label="Lens width (mm)"
-              type="number"
-              value={formData.dimensionLensWidthMm}
-              onChange={(event) =>
-                onChange((prev) => ({
-                  ...prev,
-                  dimensionLensWidthMm: event.target.value,
-                }))
-              }
-              placeholder="52"
-            />
-            <Input
-              label="Lens height (mm)"
-              type="number"
-              value={formData.dimensionLensHeightMm}
-              onChange={(event) =>
-                onChange((prev) => ({
-                  ...prev,
-                  dimensionLensHeightMm: event.target.value,
-                }))
-              }
-              placeholder="40"
-            />
-
-            {formData.category === 'sunglasses' ? (
+            <div className="mt-4 grid grid-cols-2 gap-4">
               <Input
-                label="UV protection"
-                value={formData.lensUvProtection}
+                label="Shape"
+                value={formData.frameShape}
                 onChange={(event) =>
-                  onChange((prev) => ({
-                    ...prev,
-                    lensUvProtection: event.target.value,
-                  }))
+                  onChange((prev) => ({ ...prev, frameShape: event.target.value }))
                 }
-                placeholder="UV400"
+                placeholder="rectangle"
               />
-            ) : null}
-          </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-4">
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <input
-                type="checkbox"
-                checked={formData.frameNosePads}
-                onChange={(event) =>
-                  onChange((prev) => ({
-                    ...prev,
-                    frameNosePads: event.target.checked,
-                  }))
-                }
-              />
-              Has nose pads
-            </label>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Gender
+                </label>
+                <Select
+                  value={formData.frameGender}
+                  onValueChange={(value) =>
+                    onChange((prev) => ({
+                      ...prev,
+                      frameGender: value as ProductFormState['frameGender'],
+                    }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {GENDER_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <input
-                type="checkbox"
-                checked={formData.frameRxReady}
+              <Input
+                label="Weight (gram)"
+                type="number"
+                value={formData.frameWeightGram}
                 onChange={(event) =>
                   onChange((prev) => ({
                     ...prev,
-                    frameRxReady: event.target.checked,
+                    frameWeightGram: event.target.value,
                   }))
                 }
+                placeholder="22"
               />
-              RX ready
-            </label>
-          </div>
+              <Input
+                label="Frame material"
+                value={formData.frameMaterial}
+                onChange={(event) =>
+                  onChange((prev) => ({
+                    ...prev,
+                    frameMaterial: event.target.value,
+                  }))
+                }
+                placeholder="acetate"
+              />
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Hinge type
+                </label>
+                <Select
+                  value={formData.frameHingeType}
+                  onValueChange={(value) =>
+                    onChange((prev) => ({
+                      ...prev,
+                      frameHingeType: value as ProductFormState['frameHingeType'],
+                    }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select hinge type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {HINGE_TYPE_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Input
+                label="Rim type"
+                value={formData.frameRimType}
+                onChange={(event) =>
+                  onChange((prev) => ({
+                    ...prev,
+                    frameRimType: event.target.value,
+                  }))
+                }
+                placeholder="full"
+              />
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-4">
+              <Input
+                label="Bridge (mm)"
+                type="number"
+                value={formData.dimensionBridgeMm}
+                onChange={(event) =>
+                  onChange((prev) => ({
+                    ...prev,
+                    dimensionBridgeMm: event.target.value,
+                  }))
+                }
+                placeholder="18"
+              />
+              <Input
+                label="Temple length (mm)"
+                type="number"
+                value={formData.dimensionTempleLengthMm}
+                onChange={(event) =>
+                  onChange((prev) => ({
+                    ...prev,
+                    dimensionTempleLengthMm: event.target.value,
+                  }))
+                }
+                placeholder="145"
+              />
+              <Input
+                label="Lens width (mm)"
+                type="number"
+                value={formData.dimensionLensWidthMm}
+                onChange={(event) =>
+                  onChange((prev) => ({
+                    ...prev,
+                    dimensionLensWidthMm: event.target.value,
+                  }))
+                }
+                placeholder="52"
+              />
+              <Input
+                label="Lens height (mm)"
+                type="number"
+                value={formData.dimensionLensHeightMm}
+                onChange={(event) =>
+                  onChange((prev) => ({
+                    ...prev,
+                    dimensionLensHeightMm: event.target.value,
+                  }))
+                }
+                placeholder="40"
+              />
+
+              {formData.category === 'sunglasses' ? (
+                <Input
+                  label="UV protection"
+                  value={formData.lensUvProtection}
+                  onChange={(event) =>
+                    onChange((prev) => ({
+                      ...prev,
+                      lensUvProtection: event.target.value,
+                    }))
+                  }
+                  placeholder="UV400"
+                />
+              ) : null}
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-4">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={formData.frameNosePads}
+                  onChange={(event) =>
+                    onChange((prev) => ({
+                      ...prev,
+                      frameNosePads: event.target.checked,
+                    }))
+                  }
+                />
+                Has nose pads
+              </label>
+
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={formData.frameRxReady}
+                  onChange={(event) =>
+                    onChange((prev) => ({
+                      ...prev,
+                      frameRxReady: event.target.checked,
+                    }))
+                  }
+                />
+                RX ready
+              </label>
+            </div>
+          </details>
         </div>
       ) : null}
 
@@ -912,7 +937,7 @@ export function ProductForm({
           <div>
             <p className="text-sm font-medium text-gray-700">Pre-order config</p>
             <p className="mt-1 text-xs text-gray-500">
-              Manager-owned business config for deposit, split payment, and shipping collection timing.
+              Manager-owned business config for deposit, split payment, and shipping collection timing. Cac moc thoi gian co the de trong neu chua chot.
             </p>
           </div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -1011,6 +1036,10 @@ export function ProductForm({
                 }
               />
             </div>
+
+            <p className="text-xs text-gray-500">
+              Neu chua biet lich giao du kien, co the de trong Ship from va Ship to roi cap nhat sau.
+            </p>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -1186,7 +1215,7 @@ export function ProductForm({
           <div>
             <p className="text-sm font-medium text-gray-700">Mobile try-on config</p>
             <p className="mt-1 text-xs text-gray-500">
-              Phan nay chi cau hinh workflow va runtime cho try-on tren mobile. File poster, GLB va USDZ
+              Phan nay chi cau hinh workflow va runtime cho try-on tren mobile. File poster va GLB
               duoc upload theo tung bien the o phia tren.
             </p>
           </div>
@@ -1216,55 +1245,41 @@ export function ProductForm({
           <div className="mt-4 space-y-4">
             <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900">
               <p className="font-semibold">Manager can nho:</p>
-              <p className="mt-1">Moi bien the muon thu kinh nen co image, poster, GLB va USDZ rieng.</p>
+              <p className="mt-1">Moi bien the muon thu kinh nen co image, poster va GLB rieng.</p>
               <p className="mt-1">Toi da {MAX_TRY_ON_MODELS} bien the duoc map try-on trong 1 san pham.</p>
               <p className="mt-1">Effect path la tuy chon nang cao. Da so truong hop co the de trong.</p>
             </div>
 
             {mappedTryOnModelCount > MAX_TRY_ON_MODELS ? (
               <p className="rounded-md border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700">
-                Giam so bien the da map GLB/USDZ xuong {MAX_TRY_ON_MODELS} hoac it hon truoc khi luu san pham try-on.
+                Giam so bien the da map try-on xuong {MAX_TRY_ON_MODELS} hoac it hon truoc khi luu san pham try-on.
               </p>
             ) : null}
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Trang thai try-on
-                </label>
-                <Select
-                  value={formData.tryOnStatus}
-                  onValueChange={(value) =>
-                    onChange((prev) => ({
-                      ...prev,
-                      tryOnStatus: value as ProductTryOnStatus,
-                    }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Chon trang thai" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TRY_ON_STATUS_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Input
-                label="Scene / effect code (tuy chon)"
-                value={formData.tryOnScene}
-                onChange={(event) =>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Trang thai try-on
+              </label>
+              <Select
+                value={formData.tryOnStatus}
+                onValueChange={(value) =>
                   onChange((prev) => ({
                     ...prev,
-                    tryOnScene: event.target.value,
+                    tryOnStatus: value as ProductTryOnStatus,
                   }))
                 }
-                placeholder="Vi du: effect kx..."
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Chon trang thai" />
+                </SelectTrigger>
+                <SelectContent>
+                  {tryOnStatusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {formData.tryOnStatus === 'rejected' ? (
@@ -1290,7 +1305,7 @@ export function ProductForm({
             {(formData.tryOnStatus === 'approved' ||
               formData.tryOnStatus === 'published') && (
               <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs font-medium text-amber-800">
-                Neu trang thai la Da duyet hoac Dang hien thi, moi bien the da bat try-on phai co du ca GLB va USDZ.
+                Neu trang thai la Da duyet hoac Dang hien thi, moi bien the da map try-on phai co GLB.
               </p>
             )}
 
@@ -1306,135 +1321,162 @@ export function ProductForm({
               </p>
             ) : null}
 
-            <p className="rounded-md border border-gray-200 bg-white p-3 text-xs text-gray-600">
-              Neu chi dung GLB/USDZ theo tung bien the, ban co the de trong toan bo nhom field nang cao ben duoi.
-            </p>
+            <details
+              open={isTryOnAdvancedOpen}
+              onToggle={(event) =>
+                setIsTryOnAdvancedOpen((event.currentTarget as HTMLDetailsElement).open)
+              }
+              className="rounded-md border border-dashed border-gray-300 bg-white px-4 py-3"
+            >
+              <summary className="cursor-pointer text-sm font-medium text-gray-700">
+                Cai dat try-on nang cao (tuy chon)
+              </summary>
 
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="Web AR URL (tuy chon)"
-                value={formData.tryOnArUrl}
-                onChange={(event) =>
-                  onChange((prev) => ({
-                    ...prev,
-                    tryOnArUrl: event.target.value,
-                  }))
-                }
-                placeholder="https://..."
-              />
-              <Input
-                label="Launch URL fallback (tuy chon)"
-                value={formData.tryOnLaunchUrl}
-                onChange={(event) =>
-                  onChange((prev) => ({
-                    ...prev,
-                    tryOnLaunchUrl: event.target.value,
-                  }))
-                }
-                placeholder="https://..."
-              />
-              <Input
-                label="Effect path (nang cao, thuong de trong)"
-                value={formData.tryOnEffectPath}
-                onChange={(event) =>
-                  onChange((prev) => ({
-                    ...prev,
-                    tryOnEffectPath: event.target.value,
-                  }))
-                }
-                placeholder="effects/frame_effect"
-              />
-            </div>
+              <p className="mt-3 rounded-md border border-gray-200 bg-white p-3 text-xs text-gray-600">
+                Neu chi dung GLB theo tung bien the, ban co the de trong toan bo nhom field ben duoi.
+              </p>
+              <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+                Moi gia tri nhap o day se ghi de runtime mac dinh. Neu model dang hien thi binh thuong, hay de trong.
+                Khong nen bat physics neu chua cau hinh collider.
+              </p>
 
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Resource paths bo sung (tuy chon)
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                <Input
+                  label="Scene / effect code (tuy chon)"
+                  value={formData.tryOnScene}
+                  onChange={(event) =>
+                    onChange((prev) => ({
+                      ...prev,
+                      tryOnScene: event.target.value,
+                    }))
+                  }
+                  placeholder="Vi du: effect kx..."
+                />
+                <Input
+                  label="Web AR URL (tuy chon)"
+                  value={formData.tryOnArUrl}
+                  onChange={(event) =>
+                    onChange((prev) => ({
+                      ...prev,
+                      tryOnArUrl: event.target.value,
+                    }))
+                  }
+                  placeholder="https://..."
+                />
+                <Input
+                  label="Launch URL fallback (tuy chon)"
+                  value={formData.tryOnLaunchUrl}
+                  onChange={(event) =>
+                    onChange((prev) => ({
+                      ...prev,
+                      tryOnLaunchUrl: event.target.value,
+                    }))
+                  }
+                  placeholder="https://..."
+                />
+                <Input
+                  label="Effect path (nang cao, thuong de trong)"
+                  value={formData.tryOnEffectPath}
+                  onChange={(event) =>
+                    onChange((prev) => ({
+                      ...prev,
+                      tryOnEffectPath: event.target.value,
+                    }))
+                  }
+                  placeholder="effects/frame_effect"
+                />
+              </div>
+
+              <div className="mt-4">
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Resource paths bo sung (tuy chon)
+                </label>
+                <textarea
+                  value={formData.tryOnResourcePaths}
+                  onChange={(event) =>
+                    onChange((prev) => ({
+                      ...prev,
+                      tryOnResourcePaths: event.target.value,
+                    }))
+                  }
+                  rows={3}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none"
+                  placeholder="Moi dong 1 resource path"
+                />
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                <Input
+                  label="Prefab rotation (tuy chon)"
+                  value={formData.tryOnRotation}
+                  onChange={(event) =>
+                    onChange((prev) => ({
+                      ...prev,
+                      tryOnRotation: event.target.value,
+                    }))
+                  }
+                  placeholder="-90 0 0"
+                />
+                <Input
+                  label="Prefab scale (tuy chon)"
+                  value={formData.tryOnScale}
+                  onChange={(event) =>
+                    onChange((prev) => ({
+                      ...prev,
+                      tryOnScale: event.target.value,
+                    }))
+                  }
+                  placeholder="1 1 1"
+                />
+                <Input
+                  label="Prefab translation (tuy chon)"
+                  value={formData.tryOnTranslation}
+                  onChange={(event) =>
+                    onChange((prev) => ({
+                      ...prev,
+                      tryOnTranslation: event.target.value,
+                    }))
+                  }
+                  placeholder="0 0 0"
+                />
+                <Input
+                  label="Prefab gravity (tuy chon)"
+                  value={formData.tryOnGravity}
+                  onChange={(event) =>
+                    onChange((prev) => ({
+                      ...prev,
+                      tryOnGravity: event.target.value,
+                    }))
+                  }
+                  placeholder="0 0 0"
+                />
+                <Input
+                  label="Prefab cut (tuy chon)"
+                  value={formData.tryOnCut}
+                  onChange={(event) =>
+                    onChange((prev) => ({
+                      ...prev,
+                      tryOnCut: event.target.value,
+                    }))
+                  }
+                  placeholder="head"
+                />
+              </div>
+
+              <label className="mt-4 flex items-center gap-2 text-sm font-medium text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={formData.tryOnUsePhysics}
+                  onChange={(event) =>
+                    onChange((prev) => ({
+                      ...prev,
+                      tryOnUsePhysics: event.target.checked,
+                    }))
+                  }
+                />
+                Bat physics cho prefab (nang cao)
               </label>
-              <textarea
-                value={formData.tryOnResourcePaths}
-                onChange={(event) =>
-                  onChange((prev) => ({
-                    ...prev,
-                    tryOnResourcePaths: event.target.value,
-                  }))
-                }
-                rows={3}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none"
-                placeholder="Moi dong 1 resource path"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="Prefab rotation (tuy chon)"
-                value={formData.tryOnRotation}
-                onChange={(event) =>
-                  onChange((prev) => ({
-                    ...prev,
-                    tryOnRotation: event.target.value,
-                  }))
-                }
-                placeholder="270 0 0"
-              />
-              <Input
-                label="Prefab scale (tuy chon)"
-                value={formData.tryOnScale}
-                onChange={(event) =>
-                  onChange((prev) => ({
-                    ...prev,
-                    tryOnScale: event.target.value,
-                  }))
-                }
-                placeholder="0.019 0.019 0.01"
-              />
-              <Input
-                label="Prefab translation (tuy chon)"
-                value={formData.tryOnTranslation}
-                onChange={(event) =>
-                  onChange((prev) => ({
-                    ...prev,
-                    tryOnTranslation: event.target.value,
-                  }))
-                }
-                placeholder="0 0 0"
-              />
-              <Input
-                label="Prefab gravity (tuy chon)"
-                value={formData.tryOnGravity}
-                onChange={(event) =>
-                  onChange((prev) => ({
-                    ...prev,
-                    tryOnGravity: event.target.value,
-                  }))
-                }
-                placeholder="0 0 0"
-              />
-              <Input
-                label="Prefab cut (tuy chon)"
-                value={formData.tryOnCut}
-                onChange={(event) =>
-                  onChange((prev) => ({
-                    ...prev,
-                    tryOnCut: event.target.value,
-                  }))
-                }
-                placeholder="head"
-              />
-            </div>
-
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <input
-                type="checkbox"
-                checked={formData.tryOnUsePhysics}
-                onChange={(event) =>
-                  onChange((prev) => ({
-                    ...prev,
-                    tryOnUsePhysics: event.target.checked,
-                  }))
-                }
-              />
-              Bat physics cho prefab (nang cao)
-            </label>
+            </details>
           </div>
         ) : null}
       </div>

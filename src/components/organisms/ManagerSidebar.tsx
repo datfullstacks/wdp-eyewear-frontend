@@ -2,35 +2,36 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useMemo, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useEffect, useMemo, useState } from 'react';
+import { signOut } from 'next-auth/react';
+import { useLocale, useTranslations } from 'next-intl';
 import {
-  LayoutDashboard,
-  Glasses,
-  Package,
-  ShoppingCart,
-  ClipboardList,
-  Clock,
   AlertTriangle,
-  DollarSign,
-  Users,
-  LogOut,
+  BarChart3,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ChevronDown,
-  BarChart3,
-  FileText,
-  TrendingUp,
-  Percent,
-  Tag,
-  Shield,
-  UserCog,
+  ClipboardList,
+  Clock,
   CreditCard,
+  DollarSign,
+  FileText,
+  Glasses,
+  LayoutDashboard,
+  LogOut,
+  Package,
+  Percent,
+  Shield,
+  ShoppingCart,
+  Tag,
+  TrendingUp,
+  UserCog,
+  Users,
   type LucideIcon,
 } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/atoms';
+import { cn } from '@/lib/utils';
 
 type BadgeType = 'warning' | 'error' | 'info';
 
@@ -44,6 +45,61 @@ type MenuItem = {
   badgeType?: BadgeType;
   children?: MenuItem[];
 };
+
+type SidebarCopy = {
+  orders: string;
+  allOrders: string;
+  pendingOrders: string;
+  orderAlerts: string;
+  statistics: string;
+  afterSales: string;
+  refundApprovals: string;
+  refundMonitoring: string;
+  refundReconciliation: string;
+  refundAudit: string;
+  supportOverview: string;
+  roleLabel: string;
+  logout: string;
+  loggingOut: string;
+};
+
+function getSidebarCopy(locale: string): SidebarCopy {
+  if (locale === 'vi') {
+    return {
+      orders: 'Đơn hàng',
+      allOrders: 'Tất cả đơn hàng',
+      pendingOrders: 'Đơn cần xử lý',
+      orderAlerts: 'Đơn trễ / cảnh báo',
+      statistics: 'Thống kê',
+      afterSales: 'Hậu mãi',
+      refundApprovals: 'Phê duyệt hoàn tiền',
+      refundMonitoring: 'Giám sát hoàn tiền',
+      refundReconciliation: 'Đối soát hoàn tiền',
+      refundAudit: 'Kiểm toán hoàn tiền',
+      supportOverview: 'Tổng quan hỗ trợ',
+      roleLabel: 'Quản lý',
+      logout: 'Đăng xuất',
+      loggingOut: 'Đang đăng xuất...',
+    };
+  }
+
+  return {
+    orders: 'Orders',
+    allOrders: 'All orders',
+    pendingOrders: 'Orders needing action',
+    orderAlerts: 'Delayed / alert orders',
+    statistics: 'Statistics',
+    afterSales: 'After sales',
+    refundApprovals: 'Refund approvals',
+    refundMonitoring: 'Refund monitoring',
+    refundReconciliation: 'Refund reconciliation',
+    refundAudit: 'Refund audit',
+    supportOverview: 'Support overview',
+    roleLabel: 'Manager',
+    logout: 'Logout',
+    loggingOut: 'Signing out...',
+  };
+}
 
 function MenuItemBadge({
   badge,
@@ -73,6 +129,7 @@ function MenuItemBadge({
 function isActivePath(pathname: string, itemPath?: string, exact?: boolean) {
   if (!itemPath) return false;
   if (exact) return pathname === itemPath || pathname.endsWith(itemPath);
+
   return (
     pathname === itemPath ||
     pathname.endsWith(itemPath) ||
@@ -82,8 +139,22 @@ function isActivePath(pathname: string, itemPath?: string, exact?: boolean) {
 
 export const ManagerSidebar: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const pathname = usePathname();
+  const locale = useLocale();
   const t = useTranslations('manager.sidebar');
+  const copy = getSidebarCopy(locale);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+
+    try {
+      setIsLoggingOut(true);
+      await signOut({ callbackUrl: `/${locale}/login` });
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   const menuItems: MenuItem[] = useMemo(
     () => [
@@ -122,25 +193,25 @@ export const ManagerSidebar: React.FC = () => {
       {
         icon: ShoppingCart,
         key: 'orders',
-        label: 'Đơn hàng',
+        label: copy.orders,
         children: [
           {
             icon: ClipboardList,
             key: 'allOrders',
-            label: 'Tất cả đơn hàng',
+            label: copy.allOrders,
             path: '/manager/orders',
             exact: true,
           },
           {
             icon: Clock,
             key: 'pendingOrders',
-            label: 'Đơn cần xử lý',
+            label: copy.pendingOrders,
             path: '/manager/orders/pending',
           },
           {
             icon: AlertTriangle,
             key: 'orderAlerts',
-            label: 'Đơn trễ / cảnh báo',
+            label: copy.orderAlerts,
             path: '/manager/orders/alerts',
           },
         ],
@@ -159,7 +230,7 @@ export const ManagerSidebar: React.FC = () => {
           {
             icon: Percent,
             key: 'detailedReports',
-            label: t('detailedReports'),
+            label: copy.statistics,
             path: '/manager/revenue-new',
           },
         ],
@@ -167,37 +238,37 @@ export const ManagerSidebar: React.FC = () => {
       {
         icon: CreditCard,
         key: 'afterSales',
-        label: 'After Sales',
+        label: copy.afterSales,
         children: [
           {
             icon: CreditCard,
             key: 'refundApprovals',
-            label: 'Refund Approvals',
+            label: copy.refundApprovals,
             path: '/manager/refunds',
             exact: true,
           },
           {
             icon: AlertTriangle,
             key: 'refundMonitoring',
-            label: 'Refund Monitoring',
+            label: copy.refundMonitoring,
             path: '/manager/refunds/monitoring',
           },
           {
             icon: TrendingUp,
             key: 'refundReconciliation',
-            label: 'Reconciliation',
+            label: copy.refundReconciliation,
             path: '/manager/reconciliation',
           },
           {
             icon: FileText,
             key: 'refundAudit',
-            label: 'Refund Audit',
+            label: copy.refundAudit,
             path: '/manager/audit',
           },
           {
             icon: FileText,
             key: 'supportOverview',
-            label: 'Support overview',
+            label: copy.supportOverview,
             path: '/manager/cases/support',
           },
         ],
@@ -229,43 +300,57 @@ export const ManagerSidebar: React.FC = () => {
         ],
       },
     ],
-    [t]
+    [copy, t]
   );
 
   const defaultOpenMap = useMemo(() => {
     const map = new Map<string, boolean>();
+
     for (const item of menuItems) {
       if (!item.children) continue;
-      const open = item.children.some((c) =>
-        isActivePath(pathname, c.path, c.exact)
+      const open = item.children.some((child) =>
+        isActivePath(pathname, child.path, child.exact)
       );
       map.set(item.key, open);
     }
+
     return map;
-  }, [pathname, menuItems]);
+  }, [menuItems, pathname]);
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
-    const obj: Record<string, boolean> = {};
+    const initialState: Record<string, boolean> = {};
+
     for (const item of menuItems) {
-      if (item.children) obj[item.key] = defaultOpenMap.get(item.key) ?? false;
+      if (item.children) {
+        initialState[item.key] = defaultOpenMap.get(item.key) ?? false;
+      }
     }
-    return obj;
+
+    return initialState;
   });
 
-  useMemo(() => {
-    setOpenGroups((prev) => {
-      const next = { ...prev };
+  useEffect(() => {
+    setOpenGroups((previous) => {
+      let changed = false;
+      const next = { ...previous };
+
       for (const item of menuItems) {
         if (!item.children) continue;
-        const shouldOpen = item.children.some((c) =>
-          isActivePath(pathname, c.path, c.exact)
-        );
-        if (shouldOpen) next[item.key] = true;
+        const shouldOpen =
+          defaultOpenMap.get(item.key) ||
+          item.children.some((child) =>
+            isActivePath(pathname, child.path, child.exact)
+          );
+
+        if (shouldOpen && !previous[item.key]) {
+          next[item.key] = true;
+          changed = true;
+        }
       }
-      return next;
+
+      return changed ? next : previous;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+  }, [defaultOpenMap, menuItems, pathname]);
 
   return (
     <aside
@@ -274,7 +359,6 @@ export const ManagerSidebar: React.FC = () => {
         collapsed ? 'w-20' : 'w-72'
       )}
     >
-      {/* Logo */}
       <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4">
         {!collapsed ? (
           <div className="flex items-center gap-2">
@@ -295,12 +379,11 @@ export const ManagerSidebar: React.FC = () => {
         )}
       </div>
 
-      {/* Toggle */}
       <Button
         variant="ghost"
         size="sm"
         type="button"
-        onClick={() => setCollapsed((v) => !v)}
+        onClick={() => setCollapsed((value) => !value)}
         className="absolute top-20 -right-3 h-6 w-6 rounded-full border border-gray-200 bg-gray-100 p-0 shadow-sm hover:bg-gray-200"
         aria-label={collapsed ? t('expandSidebar') : t('collapseSidebar')}
       >
@@ -311,12 +394,11 @@ export const ManagerSidebar: React.FC = () => {
         )}
       </Button>
 
-      {/* Nav */}
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {menuItems.map((item) => {
-          // Leaf
           if (!item.children) {
             const active = isActivePath(pathname, item.path, item.exact);
+
             return (
               <Link
                 key={item.key}
@@ -331,30 +413,29 @@ export const ManagerSidebar: React.FC = () => {
                 )}
               >
                 <item.icon className="h-5 w-5 flex-shrink-0" />
-                {!collapsed && (
+                {!collapsed ? (
                   <span className="font-medium">{item.label}</span>
-                )}
+                ) : null}
               </Link>
             );
           }
 
-          // Group
-          const hasActiveChild = item.children.some((c) =>
-            isActivePath(pathname, c.path, c.exact)
+          const hasActiveChild = item.children.some((child) =>
+            isActivePath(pathname, child.path, child.exact)
           );
-          const isOpen = !!openGroups[item.key];
+          const isOpen = Boolean(openGroups[item.key]);
 
           return (
             <div key={item.key} className="space-y-1">
               <button
                 type="button"
-                onClick={() =>
-                  !collapsed &&
-                  setOpenGroups((p) => ({
-                    ...p,
-                    [item.key]: !p[item.key],
-                  }))
-                }
+                onClick={() => {
+                  if (collapsed) return;
+                  setOpenGroups((previous) => ({
+                    ...previous,
+                    [item.key]: !previous[item.key],
+                  }));
+                }}
                 className={cn(
                   'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200',
                   hasActiveChild
@@ -365,7 +446,7 @@ export const ManagerSidebar: React.FC = () => {
                 aria-expanded={!collapsed ? isOpen : undefined}
               >
                 <item.icon className="h-5 w-5 flex-shrink-0" />
-                {!collapsed && (
+                {!collapsed ? (
                   <>
                     <span className="flex-1 text-left font-medium">
                       {item.label}
@@ -377,11 +458,10 @@ export const ManagerSidebar: React.FC = () => {
                       )}
                     />
                   </>
-                )}
+                ) : null}
               </button>
 
-              {/* Children */}
-              {!collapsed && isOpen && (
+              {!collapsed && isOpen ? (
                 <div className="mt-1 space-y-1">
                   {item.children.map((child) => {
                     const active = isActivePath(
@@ -389,6 +469,7 @@ export const ManagerSidebar: React.FC = () => {
                       child.path,
                       child.exact
                     );
+
                     return (
                       <Link
                         key={child.path}
@@ -403,23 +484,22 @@ export const ManagerSidebar: React.FC = () => {
                       >
                         <child.icon className="h-4 w-4 flex-shrink-0" />
                         <span className="flex-1 truncate">{child.label}</span>
-                        {child.badge && (
+                        {child.badge ? (
                           <MenuItemBadge
                             badge={child.badge}
                             type={child.badgeType}
                           />
-                        )}
+                        ) : null}
                       </Link>
                     );
                   })}
                 </div>
-              )}
+              ) : null}
             </div>
           );
         })}
       </nav>
 
-      {/* User */}
       <div className="border-t border-gray-200 p-4">
         <div
           className={cn(
@@ -431,25 +511,28 @@ export const ManagerSidebar: React.FC = () => {
             QL
           </div>
 
-          {!collapsed && (
+          {!collapsed ? (
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium text-gray-900">
                 {t('manager')}
               </p>
-              <p className="truncate text-xs text-gray-500">Manager</p>
+              <p className="truncate text-xs text-gray-500">{copy.roleLabel}</p>
             </div>
-          )}
+          ) : null}
 
-          {!collapsed && (
+          {!collapsed ? (
             <Button
               variant="ghost"
               size="sm"
               type="button"
+              onClick={() => void handleLogout()}
+              disabled={isLoggingOut}
               className="text-gray-600 hover:text-gray-900"
             >
               <LogOut className="h-4 w-4" />
+              <span>{isLoggingOut ? copy.loggingOut : copy.logout}</span>
             </Button>
-          )}
+          ) : null}
         </div>
       </div>
     </aside>

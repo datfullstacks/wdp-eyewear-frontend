@@ -34,7 +34,6 @@ function createEmptyVariant(index = 0): ProductVariantFormState {
     imageUrl: '',
     posterUrl: '',
     glbUrl: '',
-    usdzUrl: '',
   };
 }
 
@@ -72,20 +71,19 @@ export const EMPTY_PRODUCT_FORM: ProductFormState = {
   frameWeightGram: '',
   frameMaterial: '',
   frameHingeType: 'spring',
-  frameRimType: 'full',
+  frameRimType: '',
   frameNosePads: true,
   frameRxReady: true,
   dimensionBridgeMm: '',
   dimensionTempleLengthMm: '',
   dimensionLensWidthMm: '',
   dimensionLensHeightMm: '',
-  lensUvProtection: 'UV400',
+  lensUvProtection: '',
   tryOnEnabled: false,
   tryOnStatus: 'draft',
   tryOnRejectReason: '',
   tryOnPosterUrl: '',
   tryOnGlbUrl: '',
-  tryOnUsdzUrl: '',
   tryOnArUrl: '',
   tryOnLaunchUrl: '',
   tryOnEffectPath: '',
@@ -114,14 +112,6 @@ function toNumberString(value: unknown) {
   return Number.isFinite(number) ? String(number) : '';
 }
 
-function toPositiveNumber(value: string, label: string) {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed < 0) {
-    throw new Error(`${label} must be a valid number`);
-  }
-  return parsed;
-}
-
 function toOptionalNumber(value: string) {
   if (!toText(value)) return undefined;
   const parsed = Number(value);
@@ -141,6 +131,14 @@ function parseStringList(value: string) {
     .split(/\r?\n|,/)
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function hasAnyFilledValue(values: unknown[]) {
+  return values.some((value) => {
+    if (value == null) return false;
+    if (typeof value === 'string') return value.trim().length > 0;
+    return true;
+  });
 }
 
 function createObjectId(seed: string, index = 0) {
@@ -195,7 +193,6 @@ function getEffectiveVariants(form: ProductFormState): ProductVariantFormState[]
       imageUrl: '',
       posterUrl: form.tryOnPosterUrl,
       glbUrl: form.tryOnGlbUrl,
-      usdzUrl: form.tryOnUsdzUrl,
     },
   ];
 }
@@ -207,9 +204,7 @@ function buildVariantLabel(variant: ProductVariantFormState, index: number) {
 }
 
 function countMappedTryOnModels(variants: ProductVariantFormState[]) {
-  return variants.filter(
-    (variant) => Boolean(toText(variant.glbUrl) || toText(variant.usdzUrl))
-  ).length;
+  return variants.filter((variant) => Boolean(toText(variant.glbUrl))).length;
 }
 
 function buildMediaBundle(form: ProductFormState) {
@@ -223,7 +218,6 @@ function buildMediaBundle(form: ProductFormState) {
     const label = buildVariantLabel(variant, index);
     const imageAssetId = variant.imageUrl ? createObjectId(`${variant.id || 'variant'}-image`, index) : '';
     const glbAssetId = variant.glbUrl ? createObjectId(`${variant.id || 'variant'}-glb`, index) : '';
-    const usdzAssetId = variant.usdzUrl ? createObjectId(`${variant.id || 'variant'}-usdz`, index) : '';
     const posterUrl =
       toText(variant.posterUrl) ||
       toText(variant.imageUrl) ||
@@ -258,26 +252,9 @@ function buildMediaBundle(form: ProductFormState) {
       });
     }
 
-    if (variant.usdzUrl) {
-      assets.push({
-        _id: usdzAssetId,
-        url: variant.usdzUrl,
-        role: 'try_on',
-        assetType: '3d',
-        order: order++,
-        format: 'usdz',
-        posterUrl,
-        ar: {
-          usdzUrl: variant.usdzUrl,
-        },
-        alt: `${toText(form.name) || 'Product'} ${label} USDZ`,
-      });
-    }
-
     return {
       image: imageAssetId,
       glb: glbAssetId,
-      usdz: usdzAssetId,
     };
   });
 
@@ -323,7 +300,7 @@ function buildMediaBundle(form: ProductFormState) {
       thumbnail: thumbnailAssetId,
       gallery: galleryAssetIds,
       variants: variantIds,
-      tryOnAssetIds: variantIds.flatMap((variant) => [variant.glb, variant.usdz]).filter(Boolean),
+      tryOnAssetIds: variantIds.flatMap((variant) => [variant.glb]).filter(Boolean),
     },
   };
 }
@@ -335,6 +312,48 @@ function getAssetUrl(asset?: BackendMediaAsset | null) {
 function getAssetById(product: ProductDetail, assetId?: string) {
   if (!assetId) return undefined;
   return product.media?.assets?.find((asset) => String(asset?._id || '') === String(assetId));
+}
+
+function sortMediaAssetsByOrder<T extends { order?: number | null }>(assets: T[]) {
+  return [...assets].sort((left, right) => {
+    const leftOrder = left?.order ?? Number.MAX_SAFE_INTEGER;
+    const rightOrder = right?.order ?? Number.MAX_SAFE_INTEGER;
+    return leftOrder - rightOrder;
+  });
+}
+
+function buildVariantAssetMap(product: ProductDetail) {
+  const variants = Array.isArray(product.variants) ? product.variants : [];
+  const assets = sortMediaAssetsByOrder(product.media?.assets || []);
+  const assetQueues = new Map<string, BackendMediaAsset[]>();
+
+  assets.forEach((asset) => {
+    const assetId = toText((asset as { _id?: string; id?: string } | undefined)?._id) ||
+      toText((asset as { _id?: string; id?: string } | undefined)?.id);
+    if (!assetId || !asset?.url) return;
+
+    const queue = assetQueues.get(assetId) || [];
+    queue.push(asset);
+    assetQueues.set(assetId, queue);
+  });
+
+  const byVariant = new Map<string, BackendMediaAsset[]>();
+  variants.forEach((variant, index) => {
+    const variantId = String(variant?._id || `variant-${index + 1}`);
+    const assetIds = Array.isArray(variant?.assetIds) ? variant.assetIds : [];
+    const matchedAssets = assetIds
+      .map((assetId) => {
+        const queue = assetQueues.get(toText(assetId));
+        if (!Array.isArray(queue) || queue.length === 0) return undefined;
+        if (queue.length === 1) return queue[0];
+        return queue.shift();
+      })
+      .filter((asset): asset is BackendMediaAsset => Boolean(asset?.url));
+
+    byVariant.set(variantId, matchedAssets);
+  });
+
+  return byVariant;
 }
 
 function findVariantAsset(
@@ -357,44 +376,66 @@ function buildFrameSpecsPayload(
 ): ProductUpsertInput['specs'] | undefined {
   if (!TRY_ON_CAPABLE_CATEGORIES.has(resolvedType)) return undefined;
 
-  const frameMaterial = toText(form.frameMaterial);
-  const bridgeMm = toText(form.dimensionBridgeMm);
-  const templeLengthMm = toText(form.dimensionTempleLengthMm);
-  const lensWidthMm = toText(form.dimensionLensWidthMm);
+  const shape = toOptionalText(form.frameShape);
+  const weightGram = toOptionalNumber(form.frameWeightGram);
+  const material = toOptionalText(form.frameMaterial);
+  const rimType = toOptionalText(form.frameRimType);
+  const bridgeMm = toOptionalNumber(form.dimensionBridgeMm);
+  const templeLengthMm = toOptionalNumber(form.dimensionTempleLengthMm);
+  const lensWidthMm = toOptionalNumber(form.dimensionLensWidthMm);
+  const lensHeightMm = toOptionalNumber(form.dimensionLensHeightMm);
+  const uvProtection =
+    resolvedType === 'sunglasses' ? toOptionalText(form.lensUvProtection) : undefined;
 
-  if (!frameMaterial) throw new Error('Frame material is required');
-  if (!bridgeMm) throw new Error('Bridge width is required');
-  if (!templeLengthMm) throw new Error('Temple length is required');
-  if (!lensWidthMm) throw new Error('Lens width is required');
+  const hasAnySpecs = hasAnyFilledValue([
+    shape,
+    weightGram,
+    material,
+    rimType,
+    bridgeMm,
+    templeLengthMm,
+    lensWidthMm,
+    lensHeightMm,
+    uvProtection,
+  ]);
 
-  const specs: ProductUpsertInput['specs'] = {
-    common: {
-      shape: toOptionalText(form.frameShape),
-      gender: normalizeFrameGender(form.frameGender),
-      weightGram: toOptionalNumber(form.frameWeightGram),
-    },
-    frame: {
-      material: frameMaterial,
-      hingeType: normalizeHingeType(form.frameHingeType),
-      nosePads: Boolean(form.frameNosePads),
-      rimType: toOptionalText(form.frameRimType),
-      rxReady: Boolean(form.frameRxReady),
-    },
-    dimensions: {
-      bridgeMm: toPositiveNumber(form.dimensionBridgeMm, 'Bridge mm'),
-      templeLengthMm: toPositiveNumber(form.dimensionTempleLengthMm, 'Temple length mm'),
-      lensWidthMm: toPositiveNumber(form.dimensionLensWidthMm, 'Lens width mm'),
-      lensHeightMm: toOptionalNumber(form.dimensionLensHeightMm),
-    },
-  };
+  if (!hasAnySpecs) return undefined;
 
-  if (resolvedType === 'sunglasses') {
-    specs.lens = {
-      uvProtection: toOptionalText(form.lensUvProtection) || 'UV400',
+  const specs: ProductUpsertInput['specs'] = {};
+
+  if (hasAnyFilledValue([shape, weightGram])) {
+    specs.common = {
+      shape,
+      weightGram,
     };
   }
 
-  return specs;
+  if (hasAnyFilledValue([material, rimType])) {
+    specs.frame = {
+      material,
+      hingeType: normalizeHingeType(form.frameHingeType),
+      nosePads: Boolean(form.frameNosePads),
+      rimType,
+      rxReady: Boolean(form.frameRxReady),
+    };
+  }
+
+  if (hasAnyFilledValue([bridgeMm, templeLengthMm, lensWidthMm, lensHeightMm])) {
+    specs.dimensions = {
+      bridgeMm,
+      templeLengthMm,
+      lensWidthMm,
+      lensHeightMm,
+    };
+  }
+
+  if (uvProtection) {
+    specs.lens = {
+      uvProtection,
+    };
+  }
+
+  return Object.keys(specs).length > 0 ? specs : undefined;
 }
 
 function buildTryOnInput(
@@ -419,22 +460,24 @@ function buildTryOnInput(
   }
 
   const firstVariantWithGlb = variants.find((variant) => toText(variant.glbUrl));
-  const firstVariantWithUsdz = variants.find((variant) => toText(variant.usdzUrl));
+  const mappedVariants = variants.filter((variant) => Boolean(toText(variant.glbUrl)));
 
   if (
     status === 'approved' ||
     status === 'published'
   ) {
-    const missingVariant = variants.find(
-      (variant) => !toText(variant.glbUrl) || !toText(variant.usdzUrl)
+    const missingGlbVariant = mappedVariants.find(
+      (variant) => !toText(variant.glbUrl)
     );
-    if (missingVariant) {
-      throw new Error('Published or approved try-on requires both GLB and USDZ assets for every variant');
+    if (!firstVariantWithGlb || missingGlbVariant) {
+      throw new Error(
+        'Published or approved try-on requires at least one GLB asset, and every mapped variant must include GLB'
+      );
     }
   }
 
   const variantNeedingPoster = variants.find((variant) => {
-    const has3dAsset = Boolean(toText(variant.glbUrl) || toText(variant.usdzUrl));
+    const has3dAsset = Boolean(toText(variant.glbUrl));
     const hasPoster = Boolean(
       toText(variant.posterUrl) ||
         toText(variant.imageUrl) ||
@@ -458,7 +501,6 @@ function buildTryOnInput(
     rejectReason,
     arUrl: toOptionalText(form.tryOnArUrl),
     glbUrl: toOptionalText(firstVariantWithGlb?.glbUrl),
-    usdzUrl: toOptionalText(firstVariantWithUsdz?.usdzUrl),
     launchUrl: toOptionalText(form.tryOnLaunchUrl),
     effectPath: toOptionalText(form.tryOnEffectPath),
     scene: toOptionalText(form.tryOnScene),
@@ -557,7 +599,6 @@ export function buildUpsertPayload(
       assetIds: [
         ids.variants[index]?.image,
         ids.variants[index]?.glb,
-        ids.variants[index]?.usdz,
       ].filter(Boolean),
       price:
         toText(variant.price) &&
@@ -597,6 +638,7 @@ export function buildProductFormState(product?: ProductDetail | null): ProductFo
   if (!product) return { ...EMPTY_PRODUCT_FORM };
 
   const firstVariant = product.variants?.[0] || null;
+  const variantAssetsById = buildVariantAssetMap(product);
   const specs = (product.specs as Record<string, any>) || {};
   const common = specs.common || {};
   const frame = specs.frame || {};
@@ -607,37 +649,24 @@ export function buildProductFormState(product?: ProductDetail | null): ProductFo
   const fallbackHero = getRoleUrl(product, 'hero') || product.imageUrl;
   const fallbackGlbAsset = getTryOnAsset(
     product,
-    (asset) => asset?.assetType === '3d' && String(asset?.format || '').toLowerCase() === 'glb'
-  );
-  const fallbackUsdzAsset = getTryOnAsset(
-    product,
-    (asset) => asset?.assetType === '3d' && String(asset?.format || '').toLowerCase() === 'usdz'
+    (asset) =>
+      asset?.assetType === '3d' &&
+      ['glb', 'gltf'].includes(String(asset?.format || '').toLowerCase())
   );
   const variants =
     product.variants?.length
       ? product.variants.map((variant, index) => {
-          const imageAsset = findVariantAsset(
-            product,
-            variant,
-            (asset) => asset?.assetType === '2d'
-          );
-          const glbAsset = findVariantAsset(
-            product,
-            variant,
+          const variantId = String(variant._id || `variant-${index + 1}`);
+          const variantAssets = variantAssetsById.get(variantId) || [];
+          const imageAsset = variantAssets.find((asset) => asset?.assetType === '2d');
+          const glbAsset = variantAssets.find(
             (asset) =>
               asset?.assetType === '3d' &&
-              String(asset?.format || '').toLowerCase() === 'glb'
-          );
-          const usdzAsset = findVariantAsset(
-            product,
-            variant,
-            (asset) =>
-              asset?.assetType === '3d' &&
-              String(asset?.format || '').toLowerCase() === 'usdz'
+              ['glb', 'gltf'].includes(String(asset?.format || '').toLowerCase())
           );
 
           return {
-            id: String(variant._id || `variant-${index + 1}`),
+            id: variantId,
             sku: variant.sku || '',
             color: toText(variant.options?.color),
             size: toText(variant.options?.size),
@@ -647,7 +676,6 @@ export function buildProductFormState(product?: ProductDetail | null): ProductFo
             imageUrl: getAssetUrl(imageAsset),
             posterUrl:
               toText(glbAsset?.posterUrl) ||
-              toText(usdzAsset?.posterUrl) ||
               getAssetUrl(imageAsset) ||
               fallbackThumbnail ||
               fallbackHero,
@@ -661,21 +689,10 @@ export function buildProductFormState(product?: ProductDetail | null): ProductFo
                   getAssetUrl(fallbackGlbAsset) ||
                   toText(tryOn.glbUrl)
                 : ''),
-            usdzUrl:
-              toText(usdzAsset?.ar?.usdzUrl) ||
-              toText(usdzAsset?.['ar.usdzUrl']) ||
-              getAssetUrl(usdzAsset) ||
-              (index === 0
-                ? toText(fallbackUsdzAsset?.ar?.usdzUrl) ||
-                  toText(fallbackUsdzAsset?.['ar.usdzUrl']) ||
-                  getAssetUrl(fallbackUsdzAsset) ||
-                  toText(tryOn.usdzUrl)
-                : ''),
           };
         })
       : [createEmptyVariant(0)];
   const firstVariantGlb = variants.find((variant) => toText(variant.glbUrl))?.glbUrl || '';
-  const firstVariantUsdz = variants.find((variant) => toText(variant.usdzUrl))?.usdzUrl || '';
   const firstVariantPoster = variants.find((variant) => toText(variant.posterUrl))?.posterUrl || '';
   const totalVariantStock = variants.reduce((sum, variant) => {
     const value = Number(variant.stock);
@@ -727,20 +744,19 @@ export function buildProductFormState(product?: ProductDetail | null): ProductFo
     frameWeightGram: toNumberString(common.weightGram),
     frameMaterial: toText(frame.material),
     frameHingeType: normalizeHingeType(frame.hingeType),
-    frameRimType: toText(frame.rimType) || 'full',
+    frameRimType: toText(frame.rimType),
     frameNosePads: Boolean(frame.nosePads),
     frameRxReady: frame.rxReady !== false,
     dimensionBridgeMm: toNumberString(dimensions.bridgeMm),
     dimensionTempleLengthMm: toNumberString(dimensions.templeLengthMm),
     dimensionLensWidthMm: toNumberString(dimensions.lensWidthMm),
     dimensionLensHeightMm: toNumberString(dimensions.lensHeightMm),
-    lensUvProtection: toText(lens.uvProtection) || 'UV400',
+    lensUvProtection: toText(lens.uvProtection),
     tryOnEnabled: Boolean(tryOn.enabled),
     tryOnStatus: (toText(tryOn.status) as ProductTryOnStatus) || 'draft',
     tryOnRejectReason: toText(tryOn.rejectReason),
     tryOnPosterUrl: firstVariantPoster || fallbackThumbnail || fallbackHero,
     tryOnGlbUrl: firstVariantGlb || toText(tryOn.glbUrl),
-    tryOnUsdzUrl: firstVariantUsdz || toText(tryOn.usdzUrl),
     tryOnArUrl: toText(tryOn.arUrl),
     tryOnLaunchUrl: toText(tryOn.launchUrl),
     tryOnEffectPath: toText(tryOn.effectPath),

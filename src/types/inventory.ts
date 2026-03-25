@@ -30,6 +30,8 @@ export type AdjustmentReason =
 
 export interface InventoryItem {
   id: string;
+  productId?: string;
+  variantId?: string;
   sku: string;
   name: string;
   brand: string;

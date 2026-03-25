@@ -75,18 +75,16 @@ export default function CreateProductPage() {
   const handleUploadVariantAsset = useCallback(
     async (
       file: File,
-      variantIndex: number,
-      field: 'imageUrl' | 'posterUrl' | 'glbUrl' | 'usdzUrl'
+      variantId: string,
+      field: 'imageUrl' | 'posterUrl' | 'glbUrl'
     ) => {
       const uploadSuffix =
         field === 'imageUrl'
           ? 'image'
           : field === 'posterUrl'
             ? 'poster'
-            : field === 'glbUrl'
-              ? 'glb'
-              : 'usdz';
-      const uploadKey = `variant-${variantIndex}-${uploadSuffix}`;
+            : 'glb';
+      const uploadKey = `variant-${variantId || 'unknown'}-${uploadSuffix}`;
       setUploadingKey(uploadKey);
       setApiError('');
       try {
@@ -94,7 +92,9 @@ export default function CreateProductPage() {
         setFormData((prev) => ({
           ...prev,
           variants: prev.variants.map((variant, index) =>
-            index === variantIndex ? { ...variant, [field]: result.url } : variant
+            variant.id === variantId
+              ? { ...variant, [field]: result.url }
+              : variant
           ),
         }));
       } catch (error) {
@@ -153,6 +153,7 @@ export default function CreateProductPage() {
           <ProductForm
             formData={formData}
             storeOptions={storeOptions}
+            availableTryOnStatuses={['draft', 'pending_review']}
             isSubmitting={isSubmitting}
             uploadingKey={uploadingKey}
             onChange={setFormData}

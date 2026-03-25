@@ -24,6 +24,8 @@ interface InventoryTableProps {
   onEditStock: (item: InventoryItem) => void;
   onViewHistory: (item: InventoryItem) => void;
   historyEnabled?: boolean;
+  stockEditEnabled?: boolean;
+  stockEditLabel?: string;
 }
 
 export const InventoryTable = ({
@@ -32,6 +34,8 @@ export const InventoryTable = ({
   onEditStock,
   onViewHistory,
   historyEnabled = true,
+  stockEditEnabled = true,
+  stockEditLabel,
 }: InventoryTableProps) => {
   return (
     <div className="glass-card overflow-hidden rounded-xl">
@@ -64,9 +68,11 @@ export const InventoryTable = ({
               </TableCell>
               <TableCell className="text-center">
                 {item.trackInventory !== false ? (
-                  <span className="text-foreground font-normal">{item.stock}</span>
+                  <span className="text-foreground font-normal">
+                    {item.stock}
+                  </span>
                 ) : (
-                  <span className="text-foreground/70 text-xs font-medium uppercase tracking-wide">
+                  <span className="text-foreground/70 text-xs font-medium tracking-wide uppercase">
                     Không theo dõi
                   </span>
                 )}
@@ -95,12 +101,20 @@ export const InventoryTable = ({
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => onEditStock(item)}
-                      disabled={item.trackInventory === false}
+                      disabled={
+                        item.trackInventory === false ||
+                        !item.variantId ||
+                        !stockEditEnabled
+                      }
                     >
                       <Edit className="mr-2 h-4 w-4" />
-                      {item.trackInventory !== false
-                        ? 'Cập nhật tồn kho'
-                        : 'Không theo dõi tồn'}
+                      {item.trackInventory === false
+                        ? 'Khong theo doi ton'
+                        : !item.variantId
+                          ? 'Khong co bien the nhap kho'
+                          : stockEditEnabled
+                            ? stockEditLabel || 'Nhap kho'
+                            : stockEditLabel || 'Chua co quyen nhap kho'}
                     </DropdownMenuItem>
                     {historyEnabled ? (
                       <>

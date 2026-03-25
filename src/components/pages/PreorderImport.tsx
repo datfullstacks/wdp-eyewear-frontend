@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { getSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { SearchBar } from '@/components/molecules/SearchBar';
 import { Header } from '@/components/organisms/Header';
@@ -21,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Plus, Filter } from 'lucide-react';
-import { preorderApi, productApi } from '@/api';
+import { preorderApi, productApi, userApi } from '@/api';
 import type {
   CreatePreorderBatchInput,
   Product,
@@ -149,6 +150,10 @@ const PreorderImport = () => {
   const [createDraft, setCreateDraft] = useState(createInitialDraft);
   const [createError, setCreateError] = useState('');
   const [isSubmittingCreate, setIsSubmittingCreate] = useState(false);
+  const [resolvedStoreId, setResolvedStoreId] = useState('');
+  const [resolvedStoreLabel, setResolvedStoreLabel] = useState('');
+  const [storeScopeError, setStoreScopeError] = useState('');
+  const [isResolvingStoreScope, setIsResolvingStoreScope] = useState(true);
 
   const productOptions = useMemo<ImportProductOption[]>(
     () =>
@@ -245,6 +250,63 @@ const PreorderImport = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter, supplierFilter, pageSize]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadStoreScope = async () => {
+      setIsResolvingStoreScope(true);
+      setStoreScopeError('');
+
+      try {
+        const session = await getSession();
+        const currentUserId = String(session?.user?.id || '').trim();
+        if (!currentUserId) {
+          throw new Error('Khong xac dinh duoc tai khoan dang nhap.');
+        }
+
+        const currentUser = await userApi.getById(currentUserId);
+        const scope = currentUser.storeAccess;
+        const nextStoreId =
+          scope?.primaryStoreId || scope?.storeIds?.[0] || '';
+
+        if (!nextStoreId) {
+          throw new Error(
+            'Tai khoan operation chua duoc gan cua hang de tao dot nhap kho.'
+          );
+        }
+
+        const nextStoreLabel =
+          scope?.primaryStore?.name ||
+          scope?.stores.find((store) => store.id === nextStoreId)?.name ||
+          '';
+
+        if (!mounted) return;
+        setResolvedStoreId(nextStoreId);
+        setResolvedStoreLabel(nextStoreLabel);
+      } catch (error) {
+        if (!mounted) return;
+        setResolvedStoreId('');
+        setResolvedStoreLabel('');
+        setStoreScopeError(
+          getErrorMessage(
+            error,
+            'Khong tai duoc pham vi cua hang cua tai khoan operation.'
+          )
+        );
+      } finally {
+        if (mounted) {
+          setIsResolvingStoreScope(false);
+        }
+      }
+    };
+
+    void loadStoreScope();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     loadPageData(currentPage);
@@ -395,6 +457,13 @@ const PreorderImport = () => {
     const supplier = createDraft.supplier.trim();
     const batchCode = createDraft.batchCode.trim().toUpperCase();
 
+    if (!resolvedStoreId) {
+      setCreateError(
+        storeScopeError || 'Tai khoan operation chua duoc gan cua hang de tao dot nhap.'
+      );
+      return;
+    }
+
     if (!batchCode) {
       setCreateError('Batch code la bat buoc.');
       return;
@@ -446,6 +515,7 @@ const PreorderImport = () => {
 
       const createdBatch = await preorderApi.createBatch({
         batchCode,
+        storeId: resolvedStoreId,
         supplier,
         orderDate: createDraft.orderDate,
         expectedDate: createDraft.expectedDate || undefined,
@@ -472,10 +542,28 @@ const PreorderImport = () => {
     <>
       <Header
         title="Nhap hang Pre-order"
-        subtitle="Operation quan ly batch nhap kho va cap nhat hang pre-order ve kho"
+        subtitle={
+          resolvedStoreLabel
+            ? `Operation quan ly batch nhap kho cho ${resolvedStoreLabel}`
+            : 'Operation quan ly batch nhap kho va cap nhat hang pre-order ve kho'
+        }
       />
       <div className="space-y-6 p-6">
         <ImportStatsGrid stats={stats} />
+
+        {storeScopeError ? (
+          <div className="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+            {storeScopeError}
+          </div>
+        ) : resolvedStoreId ? (
+          <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+            Dot nhap hang moi se duoc tao cho{' '}
+            <span className="font-semibold">
+              {resolvedStoreLabel || 'cua hang duoc phan quyen'}
+            </span>
+            .
+          </div>
+        ) : null}
 
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
@@ -544,9 +632,13 @@ const PreorderImport = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button onClick={handleOpenCreate} className="gap-2">
+            <Button
+              onClick={handleOpenCreate}
+              className="gap-2"
+              disabled={isResolvingStoreScope || !resolvedStoreId}
+            >
               <Plus className="h-4 w-4" />
-              Tao dot hang moi
+              {isResolvingStoreScope ? 'Dang tai cua hang...' : 'Tao dot hang moi'}
             </Button>
           </div>
         </div>

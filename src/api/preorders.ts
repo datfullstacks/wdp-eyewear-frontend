@@ -157,6 +157,7 @@ export interface ListPreorderBatchesParams {
 
 export interface CreatePreorderBatchInput {
   batchCode: string;
+  storeId: string;
   supplier: string;
   orderDate: string;
   expectedDate?: string;
