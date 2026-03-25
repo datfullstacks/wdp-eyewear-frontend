@@ -314,6 +314,48 @@ function getAssetById(product: ProductDetail, assetId?: string) {
   return product.media?.assets?.find((asset) => String(asset?._id || '') === String(assetId));
 }
 
+function sortMediaAssetsByOrder<T extends { order?: number | null }>(assets: T[]) {
+  return [...assets].sort((left, right) => {
+    const leftOrder = left?.order ?? Number.MAX_SAFE_INTEGER;
+    const rightOrder = right?.order ?? Number.MAX_SAFE_INTEGER;
+    return leftOrder - rightOrder;
+  });
+}
+
+function buildVariantAssetMap(product: ProductDetail) {
+  const variants = Array.isArray(product.variants) ? product.variants : [];
+  const assets = sortMediaAssetsByOrder(product.media?.assets || []);
+  const assetQueues = new Map<string, BackendMediaAsset[]>();
+
+  assets.forEach((asset) => {
+    const assetId = toText((asset as { _id?: string; id?: string } | undefined)?._id) ||
+      toText((asset as { _id?: string; id?: string } | undefined)?.id);
+    if (!assetId || !asset?.url) return;
+
+    const queue = assetQueues.get(assetId) || [];
+    queue.push(asset);
+    assetQueues.set(assetId, queue);
+  });
+
+  const byVariant = new Map<string, BackendMediaAsset[]>();
+  variants.forEach((variant, index) => {
+    const variantId = String(variant?._id || `variant-${index + 1}`);
+    const assetIds = Array.isArray(variant?.assetIds) ? variant.assetIds : [];
+    const matchedAssets = assetIds
+      .map((assetId) => {
+        const queue = assetQueues.get(toText(assetId));
+        if (!Array.isArray(queue) || queue.length === 0) return undefined;
+        if (queue.length === 1) return queue[0];
+        return queue.shift();
+      })
+      .filter((asset): asset is BackendMediaAsset => Boolean(asset?.url));
+
+    byVariant.set(variantId, matchedAssets);
+  });
+
+  return byVariant;
+}
+
 function findVariantAsset(
   product: ProductDetail,
   variant: NonNullable<ProductDetail['variants']>[number] | null | undefined,
@@ -596,6 +638,7 @@ export function buildProductFormState(product?: ProductDetail | null): ProductFo
   if (!product) return { ...EMPTY_PRODUCT_FORM };
 
   const firstVariant = product.variants?.[0] || null;
+  const variantAssetsById = buildVariantAssetMap(product);
   const specs = (product.specs as Record<string, any>) || {};
   const common = specs.common || {};
   const frame = specs.frame || {};
@@ -613,21 +656,17 @@ export function buildProductFormState(product?: ProductDetail | null): ProductFo
   const variants =
     product.variants?.length
       ? product.variants.map((variant, index) => {
-          const imageAsset = findVariantAsset(
-            product,
-            variant,
-            (asset) => asset?.assetType === '2d'
-          );
-          const glbAsset = findVariantAsset(
-            product,
-            variant,
+          const variantId = String(variant._id || `variant-${index + 1}`);
+          const variantAssets = variantAssetsById.get(variantId) || [];
+          const imageAsset = variantAssets.find((asset) => asset?.assetType === '2d');
+          const glbAsset = variantAssets.find(
             (asset) =>
               asset?.assetType === '3d' &&
               ['glb', 'gltf'].includes(String(asset?.format || '').toLowerCase())
           );
 
           return {
-            id: String(variant._id || `variant-${index + 1}`),
+            id: variantId,
             sku: variant.sku || '',
             color: toText(variant.options?.color),
             size: toText(variant.options?.size),
