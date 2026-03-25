@@ -7,6 +7,7 @@ import { Header } from '@/components/organisms/Header';
 import { StatCard } from '@/components/molecules/StatCard';
 import { Card } from '@/components/ui/card';
 import analyticsApi, { type RevenueSummary } from '@/api/analytics';
+import { ManagerRevenueInsights } from '@/components/analytics/ManagerRevenueInsights';
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('vi-VN', {
@@ -108,6 +109,12 @@ export default function RevenuePage() {
                 <StatCard key={stat.title} {...stat} />
               ))}
             </section>
+
+            <ManagerRevenueInsights
+              summary={summary}
+              title="Revenue analytics"
+              subtitle="Monthly trend, collection quality, and channel mix built from live order data."
+            />
 
             <Card className="p-6">
               <h3 className="text-lg font-semibold text-gray-900">Recent monthly trend</h3>
