@@ -34,7 +34,7 @@ export default function AdminDashboardPage() {
       try {
         setLoading(true);
         setError('');
-        const [users, stores, config] = await Promise.all([
+        const [users, stores, config] = await Promise.allSettled([
           userApi.getStats(),
           storeApi.getAll({ page: 1, limit: 1, status: 'all' }),
           systemConfigApi.get(),
@@ -42,9 +42,38 @@ export default function AdminDashboardPage() {
 
         if (!active) return;
 
-        setUserStats(users);
-        setStoreTotal(stores.total);
-        setSystemConfig(config);
+        const errors: string[] = [];
+
+        if (users.status === 'fulfilled') {
+          setUserStats(users.value);
+        } else {
+          setUserStats(null);
+          errors.push(
+            users.reason instanceof Error ? users.reason.message : 'Failed to load user stats.'
+          );
+        }
+
+        if (stores.status === 'fulfilled') {
+          setStoreTotal(stores.value.total);
+        } else {
+          setStoreTotal(0);
+          errors.push(
+            stores.reason instanceof Error ? stores.reason.message : 'Failed to load stores.'
+          );
+        }
+
+        if (config.status === 'fulfilled') {
+          setSystemConfig(config.value);
+        } else {
+          setSystemConfig(null);
+          errors.push(
+            config.reason instanceof Error
+              ? config.reason.message
+              : 'Failed to load system config.'
+          );
+        }
+
+        setError(errors.join(' '));
       } catch (err) {
         if (active) {
           setError(err instanceof Error ? err.message : 'Failed to load admin dashboard.');
