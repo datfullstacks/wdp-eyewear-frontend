@@ -110,6 +110,19 @@ export const PreorderOrderRow = ({
     (order.opsStatus === 'shipment_created' ||
       Boolean(String(order.carrierId || '').trim()) ||
       Boolean(String(order.trackingCode || '').trim()));
+  const suppliers = Array.from(
+    new Set(
+      order.products
+        .map((product) => String(product.supplier || '').trim())
+        .filter(Boolean)
+    )
+  );
+  const supplierSummary =
+    suppliers.length === 0
+      ? '-'
+      : suppliers.length === 1
+        ? suppliers[0]
+        : `${suppliers[0]} +${suppliers.length - 1}`;
 
   return (
     <TableRow className="hover:bg-muted/30">
@@ -131,6 +144,14 @@ export const PreorderOrderRow = ({
             {order.customerPhone}
           </span>
         </div>
+      </TableCell>
+
+      <TableCell>
+        <span className="text-foreground/90">{order.storeName || '-'}</span>
+      </TableCell>
+
+      <TableCell>
+        <span className="text-foreground/90">{supplierSummary}</span>
       </TableCell>
 
       <TableCell>

@@ -28,7 +28,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { statusFilterOptions } from '@/data/preorderData';
+import {
+  priorityFilterOptions,
+  statusFilterOptions,
+} from '@/data/preorderData';
 import { useStatusRealtimeReload } from '@/hooks/useStatusRealtime';
 import { toPreorderOrder } from '@/lib/orderAdapters';
 import { hasOperationHandoff, isPreorderOrder } from '@/lib/orderWorkflow';
@@ -63,6 +66,7 @@ const OrdersPreorder = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
   const [orderDateFrom, setOrderDateFrom] = useState('');
   const [orderDateTo, setOrderDateTo] = useState('');
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
@@ -133,19 +137,35 @@ const OrdersPreorder = () => {
   const filteredOrders = useMemo(
     () =>
       orders.filter((order) => {
+        const searchValue = searchQuery.toLowerCase();
         const matchesSearch =
-          order.orderCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          order.orderCode.toLowerCase().includes(searchValue) ||
+          order.storeName.toLowerCase().includes(searchValue) ||
           order.customerName
             .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          order.customerPhone.includes(searchQuery);
+            .includes(searchValue) ||
+          order.customerPhone.includes(searchQuery) ||
+          order.products.some((product) =>
+            [product.name, product.supplier, product.warehouseLocation]
+              .join(' ')
+              .toLowerCase()
+              .includes(searchValue)
+          );
         const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+        const matchesPriority =
+          priorityFilter === 'all' || order.priority === priorityFilter;
         const matchesDateFrom = !orderDateFrom || order.orderDate >= orderDateFrom;
         const matchesDateTo = !orderDateTo || order.orderDate <= orderDateTo;
 
-        return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo;
+        return (
+          matchesSearch &&
+          matchesStatus &&
+          matchesPriority &&
+          matchesDateFrom &&
+          matchesDateTo
+        );
       }),
-    [orderDateFrom, orderDateTo, orders, searchQuery, statusFilter]
+    [orderDateFrom, orderDateTo, orders, priorityFilter, searchQuery, statusFilter]
   );
 
   const stats = useMemo(
@@ -296,6 +316,18 @@ const OrdersPreorder = () => {
                   onValueChange={setStatusFilter}
                 >
                   {statusFilterOptions.map((opt) => (
+                    <DropdownMenuRadioItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Độ ưu tiên</DropdownMenuLabel>
+                <DropdownMenuRadioGroup
+                  value={priorityFilter}
+                  onValueChange={setPriorityFilter}
+                >
+                  {priorityFilterOptions.map((opt) => (
                     <DropdownMenuRadioItem key={opt.value} value={opt.value}>
                       {opt.label}
                     </DropdownMenuRadioItem>

@@ -82,9 +82,12 @@ function getShipmentStatusMeta(order: PreorderOrder) {
   }
 
   if (
-    ['transporting', 'sorting', 'delivering', 'money_collect_delivering'].includes(
-      raw
-    )
+    [
+      'transporting',
+      'sorting',
+      'delivering',
+      'money_collect_delivering',
+    ].includes(raw)
   ) {
     return { label: 'Đang vận chuyển', type: 'info' as const };
   }
@@ -136,7 +139,8 @@ export const PreorderDetailModal = ({
     0
   );
 
-  const sectionClass = 'rounded-xl border border-border/80 bg-card p-4 shadow-sm';
+  const sectionClass =
+    'rounded-xl border border-border/80 bg-card p-4 shadow-sm';
   const sectionTitleClass = 'mb-3 text-base font-semibold text-foreground';
   const statCardClass =
     'rounded-lg border border-border/70 bg-background p-3 shadow-sm';
@@ -145,70 +149,27 @@ export const PreorderDetailModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[96vw] max-w-5xl overflow-y-auto border border-border/80 bg-background p-4 text-foreground shadow-2xl sm:p-6">
+      <DialogContent className="border-border/80 bg-background text-foreground max-h-[90vh] w-[96vw] max-w-5xl overflow-y-auto border p-4 shadow-2xl sm:p-6">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-foreground">
+          <DialogTitle className="text-foreground text-xl font-semibold">
             Chi tiết đơn Pre-order
           </DialogTitle>
-          <DialogDescription className="text-sm font-medium text-foreground/90">
+          <DialogDescription className="text-foreground/90 text-sm font-medium">
             {order.orderCode} - {formatDate(order.orderDate)}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className={sectionClass}>
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-              <div className="space-y-2">
-                <div className="text-lg font-semibold text-foreground">
+          <div className="border-border bg-card grid grid-cols-2 gap-3 rounded-lg border p-3 shadow-sm">
+            <div className="flex items-center gap-2">
+              <User className="text-foreground h-4 w-4" />
+              <div>
+                <p className="text-foreground text-sm font-medium">
+                  Khách hàng
+                </p>
+                <p className="text-foreground font-semibold">
                   {order.customerName}
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <PreorderOrderStatusBadge status={order.status} />
-                  <PreorderPaymentBadge status={order.paymentStatus} />
-                  <StatusBadge status={opsStatusMeta.type}>
-                    Ops: {opsStatusMeta.label}
-                  </StatusBadge>
-                  {shipmentStatusMeta && (
-                    <StatusBadge status={shipmentStatusMeta.type}>
-                      GHN: {shipmentStatusMeta.label}
-                    </StatusBadge>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className={statCardClass}>
-                  <div className="text-xs font-medium text-foreground/80">
-                    Tổng tiền
-                  </div>
-                  <div className="mt-1 text-base font-semibold text-foreground">
-                    {formatCurrency(order.totalAmount)}
-                  </div>
-                </div>
-                <div className={statCardClass}>
-                  <div className="text-xs font-medium text-foreground/80">
-                    Đã thanh toán
-                  </div>
-                  <div className="mt-1 text-base font-semibold text-success">
-                    {formatCurrency(order.depositAmount)}
-                  </div>
-                </div>
-                <div className={statCardClass}>
-                  <div className="text-xs font-medium text-foreground/80">
-                    Còn lại
-                  </div>
-                  <div className="mt-1 text-base font-semibold text-warning">
-                    {formatCurrency(remainingAmount)}
-                  </div>
-                </div>
-                <div className={statCardClass}>
-                  <div className="text-xs font-medium text-foreground/80">
-                    Số lượng
-                  </div>
-                  <div className="mt-1 text-base font-semibold text-foreground">
-                    {totalQuantity} sản phẩm
-                  </div>
-                </div>
+                </p>
               </div>
             </div>
           </div>
@@ -250,7 +211,7 @@ export const PreorderDetailModal = ({
                       <ClipboardList className="h-4 w-4" />
                       Mã đơn
                     </Label>
-                    <div className="font-mono text-sm font-semibold text-foreground">
+                    <div className="text-foreground font-mono text-sm font-semibold">
                       {order.orderCode}
                     </div>
                   </div>
@@ -261,13 +222,17 @@ export const PreorderDetailModal = ({
                       <CalendarDays className="h-4 w-4" />
                       Ngày tạo
                     </Label>
-                    <div className={valueClass}>{formatDate(order.orderDate)}</div>
+                    <div className={valueClass}>
+                      {formatDate(order.orderDate)}
+                    </div>
                   </div>
                 ) : null}
                 {order.expectedDate ? (
                   <div className="space-y-1">
                     <Label className={labelClass}>Dự kiến về</Label>
-                    <div className={valueClass}>{formatDate(order.expectedDate)}</div>
+                    <div className={valueClass}>
+                      {formatDate(order.expectedDate)}
+                    </div>
                   </div>
                 ) : null}
                 {order.paymentStatus ? (
@@ -282,42 +247,37 @@ export const PreorderDetailModal = ({
               </div>
             </div>
 
-            <div className={`${sectionClass} lg:col-span-3`}>
-              <div className={sectionTitleClass}>Sản phẩm đặt trước</div>
+            <div>
+              <h4 className="text-foreground mb-3 font-semibold">
+                Sản phẩm đặt trước
+              </h4>
               <div className="space-y-3">
                 {order.products.map((product, idx) => (
                   <div
-                    key={`${product.sku}-${idx}`}
-                    className="rounded-lg border border-border/70 bg-background p-3 shadow-sm"
+                    key={idx}
+                    className="border-border bg-card flex items-center justify-between rounded-lg border p-3 shadow-sm"
                   >
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <div className="font-semibold text-foreground">
-                            {product.name}
-                          </div>
-                          <PreorderProductStatusBadge status={product.status} />
-                        </div>
-                        <div className="text-sm font-medium text-foreground/90">
-                          SKU: {product.sku} - Biến thể: {product.variant} - SL:{' '}
-                          {product.quantity}
-                        </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-foreground font-semibold">
+                          {product.name}
+                        </span>
+                        <PreorderProductStatusBadge status={product.status} />
                       </div>
 
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:min-w-[360px]">
-                        <div className="space-y-1">
-                          <Label className={labelClass}>Lô nhập hàng</Label>
-                          <div className={valueClass}>{product.batchCode || '-'}</div>
+                      <p className="text-foreground text-sm">
+                        {product.sku} - {product.variant} x{product.quantity}
+                      </p>
+
+                      {product.batchCode && (
+                        <div className="mt-1 flex items-center gap-2">
+                          <Truck className="text-foreground h-3 w-3" />
+                          <span className="text-foreground/90 text-xs font-medium">
+                            Lô: {product.batchCode} - Dự kiến:{' '}
+                            {formatDate(product.batchExpectedDate || '')}
+                          </span>
                         </div>
-                        <div className="space-y-1">
-                          <Label className={labelClass}>Dự kiến batch về</Label>
-                          <div className={valueClass}>
-                            {product.batchExpectedDate
-                              ? formatDate(product.batchExpectedDate)
-                              : '-'}
-                          </div>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -338,7 +298,7 @@ export const PreorderDetailModal = ({
                 </div>
                 <div className="space-y-1">
                   <Label className={labelClass}>Mã giao vận</Label>
-                  <div className="font-mono text-sm font-semibold text-foreground">
+                  <div className="text-foreground font-mono text-sm font-semibold">
                     {order.trackingCode || '-'}
                   </div>
                 </div>
@@ -367,9 +327,9 @@ export const PreorderDetailModal = ({
             </div>
 
             {order.notes && (
-              <div className="rounded-xl border border-warning/30 bg-warning/10 p-4 shadow-sm lg:col-span-3">
-                <div className="mb-2 font-semibold text-warning">Ghi chú</div>
-                <div className="whitespace-pre-wrap text-sm font-medium text-foreground">
+              <div className="border-warning/30 bg-warning/10 rounded-xl border p-4 shadow-sm lg:col-span-3">
+                <div className="text-warning mb-2 font-semibold">Ghi chú</div>
+                <div className="text-foreground text-sm font-medium whitespace-pre-wrap">
                   {order.notes}
                 </div>
               </div>

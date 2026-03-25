@@ -9,12 +9,16 @@ function item(
 ): OrderItem {
   return {
     id,
+    productId: '',
+    variantId: '',
     name,
     type: 'frame',
     quantity,
     unitPrice,
     lineTotal: quantity * unitPrice,
     variant: 'Mặc định',
+    supplier: '',
+    warehouseLocation: '',
     preOrder: false,
     hasPrescription: false,
     prescriptionMode: 'none',
@@ -28,6 +32,8 @@ export const mockReadyStockOrders: OrderRecord[] = [
   {
     id: 'mock-rs-001',
     code: 'RS-0001',
+    storeId: 'store-hcm-q1',
+    storeName: 'Flagship Q1',
     status: 'pending',
     rawStatus: 'confirmed',
     paymentStatus: 'paid',
@@ -47,6 +53,8 @@ export const mockReadyStockOrders: OrderRecord[] = [
   {
     id: 'mock-rs-002',
     code: 'RS-0002',
+    storeId: 'store-hcm-q1',
+    storeName: 'Flagship Q1',
     status: 'processing',
     rawStatus: 'processing',
     paymentStatus: 'cod',
@@ -69,6 +77,8 @@ export const mockReadyStockOrders: OrderRecord[] = [
   {
     id: 'mock-rs-003',
     code: 'RS-0003',
+    storeId: 'store-hcm-q5',
+    storeName: 'Branch Q5',
     status: 'processing',
     rawStatus: 'shipped',
     paymentStatus: 'paid',

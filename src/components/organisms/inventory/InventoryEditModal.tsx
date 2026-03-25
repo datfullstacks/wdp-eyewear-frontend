@@ -22,6 +22,7 @@ interface InventoryEditModalProps {
   item: InventoryItem | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  storeLabel?: string;
   onUpdate: (
     item: InventoryItem,
     payload: {
@@ -37,6 +38,7 @@ export const InventoryEditModal = ({
   item,
   open,
   onOpenChange,
+  storeLabel,
   onUpdate,
 }: InventoryEditModalProps) => {
   const [receiveQty, setReceiveQty] = useState('1');
@@ -138,6 +140,12 @@ export const InventoryEditModal = ({
                   className="mt-1"
                 />
               </div>
+            </div>
+            <div>
+              <label className="text-foreground/70 text-sm font-medium">
+                Cua hang
+              </label>
+              <Input value={storeLabel || '-'} className="mt-1" disabled />
             </div>
             <div>
               <label className="text-foreground/70 text-sm font-medium">
