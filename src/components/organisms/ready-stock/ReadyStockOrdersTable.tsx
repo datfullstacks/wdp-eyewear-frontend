@@ -206,7 +206,7 @@ export function ReadyStockOrdersTable({
               </TableHead>
               <TableHead className="whitespace-nowrap">Trạng thái</TableHead>
               <TableHead className="w-[190px] text-right whitespace-nowrap">
-                Action
+                Thao tác
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -221,14 +221,13 @@ export function ReadyStockOrdersTable({
                 const key = getReadyStockItemKey(order.id, item, index);
                 return Boolean(ops.itemStates?.[key]?.picked);
               });
-              const hasShipment = Boolean(
-                String(
-                  order.shipment?.orderCode ||
-                    order.shipment?.trackingCode ||
-                    ops.trackingCode ||
-                    ''
-                ).trim()
-              );
+              const shippingCode = String(
+                order.shipment?.orderCode ||
+                  order.shipment?.trackingCode ||
+                  ops.trackingCode ||
+                  ''
+              ).trim();
+              const hasShipment = Boolean(shippingCode);
               const isClosed =
                 ops.opsStatus === 'delivered' ||
                 ops.opsStatus === 'closed' ||
@@ -316,14 +315,9 @@ export function ReadyStockOrdersTable({
                       <StatusBadge status={opsBadgeType(ops.opsStatus)}>
                         {READY_STOCK_OPS_STATUS_LABEL[ops.opsStatus]}
                       </StatusBadge>
-                      {order.shipment?.latestStatus && (
-                        <div className="text-foreground/70 text-xs">
-                          GHN: {order.shipment.latestStatus}
-                        </div>
-                      )}
-                      {order.shipment?.orderCode && (
+                      {shippingCode && (
                         <div className="text-foreground/70 font-mono text-xs">
-                          {order.shipment.orderCode}
+                          {shippingCode}
                         </div>
                       )}
                     </div>

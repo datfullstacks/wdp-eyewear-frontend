@@ -16,6 +16,7 @@ export interface PendingOrder {
   products: PendingOrderProduct[];
   total: number;
   status: string;
+  orderType?: string;
   createdAt: string;
   note: string;
   hasPrescription: boolean;

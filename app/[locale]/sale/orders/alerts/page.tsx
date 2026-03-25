@@ -1,7 +1,5 @@
-import OrdersDelayed from '@/components/pages/OrdersDelayed';
+import { redirect } from 'next/navigation';
 
-function page() {
-  return <OrdersDelayed />;
+export default function Page() {
+  redirect('/sale/orders');
 }
-
-export default page;

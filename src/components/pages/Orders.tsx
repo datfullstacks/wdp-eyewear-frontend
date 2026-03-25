@@ -1,11 +1,12 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { Filter } from 'lucide-react';
+
+import { SearchBar } from '@/components/molecules/SearchBar';
 import { Header } from '@/components/organisms/Header';
 import { RecentOrdersTable } from '@/components/organisms/RecentOrdersTable';
-import { SearchBar } from '@/components/molecules/SearchBar';
 import { Button } from '@/components/ui/button';
-import { Filter } from 'lucide-react';
-import { useState } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,10 +26,17 @@ const statusFilters = [
 ];
 
 const Orders = () => {
+  const [mounted, setMounted] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<
     'all' | 'pending' | 'processing' | 'completed' | 'cancelled'
   >('all');
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
     <>
@@ -40,7 +48,6 @@ const Orders = () => {
       />
 
       <div className="space-y-6 p-6">
-        {/* Filters */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
           <div className="w-full sm:max-w-[240px]">
             <SearchBar
@@ -56,7 +63,7 @@ const Orders = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  aria-label="B? l?c"
+                  aria-label="Bộ lọc"
                   className="text-foreground/80 hover:text-foreground"
                 >
                   <Filter />
@@ -88,7 +95,6 @@ const Orders = () => {
           </div>
         </div>
 
-        {/* Order List */}
         <RecentOrdersTable searchTerm={searchTerm} statusFilter={statusFilter} />
       </div>
     </>

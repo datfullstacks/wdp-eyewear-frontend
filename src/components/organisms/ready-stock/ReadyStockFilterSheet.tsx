@@ -3,7 +3,6 @@
 import { READY_STOCK_OPS_STATUS_LABEL } from '@/lib/readyStockOps';
 import type { ReadyStockOpsStatus } from '@/types/readyStockOps';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -36,8 +35,6 @@ export type ReadyStockFilters = {
   shipment: ReadyStockShipmentFilter;
   opsStatus: 'all' | ReadyStockOpsStatus;
   assignee: 'all' | 'unassigned' | 'me' | string;
-  hasNoteOnly: boolean;
-  hasIssueOnly: boolean;
 };
 
 const OPS_STATUS_OPTIONS: ReadyStockOpsStatus[] = [
@@ -79,20 +76,26 @@ export function ReadyStockFilterSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-[92vw] max-w-[420px]">
         <SheetHeader>
-          <SheetTitle>{'Bộ lọc đơn Ready Stock'}</SheetTitle>
+          <SheetTitle>Bộ lọc đơn có sẵn</SheetTitle>
         </SheetHeader>
 
         <div className="mt-4 space-y-5">
           <div className="space-y-2">
             <div className="text-foreground text-sm font-semibold">
-              {'Ngày Sales duyệt'}
+              Ngày Sales duyệt
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <Label htmlFor="sales-from">{'Từ'}</Label>
+                <Label
+                  htmlFor="sales-from"
+                  className="font-semibold text-slate-900"
+                >
+                  Từ
+                </Label>
                 <Input
                   id="sales-from"
                   type="date"
+                  className="border-slate-300 bg-white text-slate-900 [color-scheme:light] focus-visible:ring-slate-400"
                   value={filters.salesApprovedFrom}
                   onChange={(e) =>
                     onChange({ salesApprovedFrom: e.target.value })
@@ -100,10 +103,16 @@ export function ReadyStockFilterSheet({
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="sales-to">{'Đến'}</Label>
+                <Label
+                  htmlFor="sales-to"
+                  className="font-semibold text-slate-900"
+                >
+                  Đến
+                </Label>
                 <Input
                   id="sales-to"
                   type="date"
+                  className="border-slate-300 bg-white text-slate-900 [color-scheme:light] focus-visible:ring-slate-400"
                   value={filters.salesApprovedTo}
                   onChange={(e) =>
                     onChange({ salesApprovedTo: e.target.value })
@@ -117,7 +126,7 @@ export function ReadyStockFilterSheet({
 
           <div className="space-y-2">
             <div className="text-foreground text-sm font-semibold">
-              {'Trạng thái vận hành'}
+              Trạng thái vận hành
             </div>
             <Select
               value={filters.opsStatus}
@@ -126,10 +135,10 @@ export function ReadyStockFilterSheet({
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder={'Chọn trạng thái vận hành'} />
+                <SelectValue placeholder="Chọn trạng thái vận hành" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{'Tất cả'}</SelectItem>
+                <SelectItem value="all">Tất cả</SelectItem>
                 {OPS_STATUS_OPTIONS.map((status) => (
                   <SelectItem key={status} value={status}>
                     {READY_STOCK_OPS_STATUS_LABEL[status]}
@@ -141,7 +150,7 @@ export function ReadyStockFilterSheet({
 
           <div className="space-y-2">
             <div className="text-foreground text-sm font-semibold">
-              {'Tình trạng GHN'}
+              Tình trạng GHN
             </div>
             <Select
               value={filters.shipment}
@@ -150,24 +159,20 @@ export function ReadyStockFilterSheet({
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder={'Chọn tình trạng GHN'} />
+                <SelectValue placeholder="Chọn tình trạng GHN" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{'Tất cả'}</SelectItem>
+                <SelectItem value="all">Tất cả</SelectItem>
                 <SelectItem value="without_tracking">
-                  {'Chưa có vận đơn'}
+                  Chưa có vận đơn
                 </SelectItem>
-                <SelectItem value="with_tracking">
-                  {'Đã có vận đơn GHN'}
-                </SelectItem>
+                <SelectItem value="with_tracking">Đã có vận đơn GHN</SelectItem>
                 <SelectItem value="in_delivery">
-                  {'Đang giao / luồng GHN'}
+                  Đang giao / luồng GHN
                 </SelectItem>
-                <SelectItem value="delivered">
-                  {'Đã giao thành công'}
-                </SelectItem>
+                <SelectItem value="delivered">Đã giao thành công</SelectItem>
                 <SelectItem value="issue">
-                  {'Lỗi giao / hoàn / cần xử lý'}
+                  Lỗi giao / hoàn / cần xử lý
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -175,19 +180,19 @@ export function ReadyStockFilterSheet({
 
           <div className="space-y-2">
             <div className="text-foreground text-sm font-semibold">
-              {'Người phụ trách'}
+              Người phụ trách
             </div>
             <Select
               value={filters.assignee}
               onValueChange={(value) => onChange({ assignee: value })}
             >
               <SelectTrigger>
-                <SelectValue placeholder={'Chọn người phụ trách'} />
+                <SelectValue placeholder="Chọn người phụ trách" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{'Tất cả'}</SelectItem>
-                <SelectItem value="unassigned">{'Chưa nhận'}</SelectItem>
-                <SelectItem value="me">{'Tôi'}</SelectItem>
+                <SelectItem value="all">Tất cả</SelectItem>
+                <SelectItem value="unassigned">Chưa nhận</SelectItem>
+                <SelectItem value="me">Tôi</SelectItem>
                 {assigneeOptions.map((name) => (
                   <SelectItem key={name} value={name}>
                     {name}
@@ -196,43 +201,17 @@ export function ReadyStockFilterSheet({
               </SelectContent>
             </Select>
           </div>
-
-          <Separator />
-
-          <div className="space-y-3">
-            <div className="text-foreground text-sm font-semibold">
-              {'Tùy chọn'}
-            </div>
-            <label className="border-border bg-muted/20 flex items-center gap-2 rounded-md border p-2 text-sm">
-              <Checkbox
-                checked={filters.hasNoteOnly}
-                onCheckedChange={() =>
-                  onChange({ hasNoteOnly: !filters.hasNoteOnly })
-                }
-              />
-              <span className="text-foreground/90">
-                {'Chỉ hiển thị đơn có ghi chú'}
-              </span>
-            </label>
-            <label className="border-border bg-muted/20 flex items-center gap-2 rounded-md border p-2 text-sm">
-              <Checkbox
-                checked={filters.hasIssueOnly}
-                onCheckedChange={() =>
-                  onChange({ hasIssueOnly: !filters.hasIssueOnly })
-                }
-              />
-              <span className="text-foreground/90">
-                {'Chỉ hiển thị đơn có vấn đề cần xử lý'}
-              </span>
-            </label>
-          </div>
         </div>
 
-        <SheetFooter className="mt-6">
-          <Button variant="outline" onClick={onReset}>
-            {'Đặt lại'}
+        <SheetFooter className="mt-6 border-t border-slate-200 pt-4">
+          <Button
+            variant="outline"
+            onClick={onReset}
+            className="border-slate-300 bg-white font-semibold text-slate-900 shadow-sm hover:border-slate-400 hover:bg-slate-50 hover:text-slate-950"
+          >
+            Đặt lại
           </Button>
-          <Button onClick={() => onOpenChange(false)}>{'Áp dụng'}</Button>
+          <Button onClick={() => onOpenChange(false)}>Áp dụng</Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>

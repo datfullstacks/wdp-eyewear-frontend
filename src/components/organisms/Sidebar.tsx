@@ -123,29 +123,6 @@ const menuItems: MenuItem[] = [
       },
     ],
   },
-  {
-    icon: Settings,
-    label: 'Thiết lập cá nhân',
-    children: [
-      {
-        icon: Bell,
-        label: 'Thông báo',
-        path: '/sale/settings/notifications',
-        badge: '2',
-        badgeType: 'info',
-      },
-      {
-        icon: ListTodo,
-        label: 'Nhiệm vụ của tôi',
-        path: '/sale/settings/tasks',
-      },
-      {
-        icon: User,
-        label: 'Cài đặt tài khoản',
-        path: '/sale/settings/account',
-      },
-    ],
-  },
 ];
 
 function MenuItemBadge({
