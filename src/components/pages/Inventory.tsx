@@ -50,6 +50,9 @@ const Inventory = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [availableStores, setAvailableStores] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
   const [resolvedStoreId, setResolvedStoreId] = useState('');
   const [resolvedStoreLabel, setResolvedStoreLabel] = useState('');
   const [storeScopeError, setStoreScopeError] = useState('');
@@ -101,7 +104,31 @@ const Inventory = () => {
 
         const currentUser = await userApi.getById(currentUserId);
         const scope = currentUser.storeAccess;
-        const nextStoreId = scope?.primaryStoreId || scope?.storeIds?.[0] || '';
+        const scopeStores = Array.isArray(scope?.stores)
+          ? scope.stores
+              .map((store) => ({
+                id: String(store?.id || '').trim(),
+                name: String(store?.name || '').trim() || String(store?.id || '').trim(),
+              }))
+              .filter((store) => store.id)
+          : [];
+
+        const storesById = new Map(scopeStores.map((store) => [store.id, store]));
+        const primaryStoreId = String(scope?.primaryStoreId || '').trim();
+        const primaryStoreName = String(scope?.primaryStore?.name || '').trim();
+        if (primaryStoreId && !storesById.has(primaryStoreId)) {
+          storesById.set(primaryStoreId, {
+            id: primaryStoreId,
+            name: primaryStoreName || primaryStoreId,
+          });
+        }
+
+        const stores = Array.from(storesById.values());
+        const nextStoreId =
+          primaryStoreId ||
+          String(scope?.storeIds?.[0] || '').trim() ||
+          stores[0]?.id ||
+          '';
 
         if (!nextStoreId) {
           throw new Error(
@@ -109,16 +136,15 @@ const Inventory = () => {
           );
         }
 
-        const nextStoreLabel =
-          scope?.primaryStore?.name ||
-          scope?.stores.find((store) => store.id === nextStoreId)?.name ||
-          '';
+        const nextStoreLabel = storesById.get(nextStoreId)?.name || '';
 
         if (!mounted) return;
+        setAvailableStores(stores);
         setResolvedStoreId(nextStoreId);
         setResolvedStoreLabel(nextStoreLabel);
       } catch (err) {
         if (!mounted) return;
+        setAvailableStores([]);
         setResolvedStoreId('');
         setResolvedStoreLabel('');
         const message =
@@ -302,7 +328,7 @@ const Inventory = () => {
           </div>
         ) : null}
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-start">
           <div className="w-full sm:max-w-[240px]">
             <SearchBar
               placeholder="Tim theo ten, SKU, thuong hieu..."
@@ -310,6 +336,30 @@ const Inventory = () => {
               onChange={setSearchTerm}
             />
           </div>
+
+          {availableStores.length > 1 ? (
+            <Select
+              value={resolvedStoreId}
+              onValueChange={(value) => {
+                setResolvedStoreId(value);
+                setResolvedStoreLabel(
+                  availableStores.find((store) => store.id === value)?.name || ''
+                );
+              }}
+              disabled={isResolvingStoreScope}
+            >
+              <SelectTrigger className="w-full sm:w-[260px]">
+                <SelectValue placeholder="Chon cua hang" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableStores.map((store) => (
+                  <SelectItem key={store.id} value={store.id}>
+                    {store.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : null}
 
           <div className="flex justify-start">
             <DropdownMenu>
@@ -443,6 +493,7 @@ const Inventory = () => {
           item={selectedItem}
           open={isEditOpen}
           onOpenChange={setIsEditOpen}
+          storeLabel={resolvedStoreLabel}
           onUpdate={handleUpdateStock}
         />
 
