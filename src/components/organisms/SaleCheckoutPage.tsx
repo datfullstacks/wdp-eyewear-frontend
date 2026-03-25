@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   AlertCircle,
@@ -17,8 +17,10 @@ import {
 } from 'lucide-react';
 
 import { createCheckout, createQuote } from '@/api/saleCheckout';
+import { RuntimeFeatureBlockedPage } from '@/components/pages/RuntimeFeatureBlockedPage';
 import { Header } from '@/components/organisms/Header';
 import { useOrderPolling } from '@/hooks/useOrderPolling';
+import { useRuntimeSystemConfig } from '@/hooks/useRuntimeSystemConfig';
 import { buildCheckoutPayload } from '@/lib/saleCheckout';
 import { cn } from '@/lib/utils';
 import { useSaleCartStore } from '@/stores/saleCartStore';
@@ -125,7 +127,7 @@ function formatMoney(value?: number): string {
 
 const DONG_SYMBOL = '\u20ab';
 
-const SALE_CHECKOUT_PAYMENT_OPTIONS: Array<{
+const ALL_SALE_CHECKOUT_PAYMENT_OPTIONS: Array<{
   id: SaleCheckoutPaymentMethod;
   label: string;
   description: string;
@@ -301,6 +303,8 @@ function LeftCheckoutPanel({
   subtotal,
   shippingForm,
   paymentMethod,
+  paymentOptions,
+  codEnabled,
   onBackToProducts,
   onShippingChange,
   onPaymentMethodChange,
@@ -317,6 +321,12 @@ function LeftCheckoutPanel({
   subtotal: number;
   shippingForm: ShippingAddressForm;
   paymentMethod: SaleCheckoutPaymentMethod;
+  paymentOptions: Array<{
+    id: SaleCheckoutPaymentMethod;
+    label: string;
+    description: string;
+  }>;
+  codEnabled: boolean;
   onBackToProducts: () => void;
   onShippingChange: (field: keyof ShippingAddressForm, value: string) => void;
   onPaymentMethodChange: (method: SaleCheckoutPaymentMethod) => void;
@@ -455,7 +465,7 @@ function LeftCheckoutPanel({
         <div className="mt-4">
           <label className={metaLabelClassName}>{'Phuong thuc thanh toan'}</label>
           <div className="grid gap-3 sm:grid-cols-2">
-            {SALE_CHECKOUT_PAYMENT_OPTIONS.map((option) => {
+            {paymentOptions.map((option) => {
               const active = paymentMethod === option.id;
               return (
                 <button
@@ -498,7 +508,9 @@ function LeftCheckoutPanel({
             })}
           </div>
           <p className="mt-2 text-xs font-medium text-[#876e2f]">
-            {'COD chi ap dung cho don du dieu kien. Neu gio hang co pre-order, backend se yeu cau quay ve SePay.'}
+            {codEnabled
+              ? 'COD chi ap dung cho don du dieu kien. Neu gio hang co pre-order, backend se yeu cau quay ve SePay.'
+              : 'COD dang tat trong system config. Don moi se duoc thu qua SePay.'}
           </p>
         </div>
 
@@ -929,6 +941,11 @@ function PaymentPanel({
 
 export const SaleCheckoutPage: React.FC = () => {
   const router = useRouter();
+  const {
+    config: runtimeConfig,
+    loading: loadingRuntimeConfig,
+    error: runtimeConfigError,
+  } = useRuntimeSystemConfig();
 
   const cartItems = useSaleCartStore((state) => state.items);
   const clearCart = useSaleCartStore((state) => state.clearCart);
@@ -946,6 +963,16 @@ export const SaleCheckoutPage: React.FC = () => {
   const [checkoutError, setCheckoutError] = useState('');
   const [isQuoting, setIsQuoting] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+
+  const codEnabled = runtimeConfig?.payments?.codEnabled !== false;
+  const maintenanceMode = runtimeConfig?.maintenanceMode === true;
+  const paymentOptions = useMemo(
+    () =>
+      ALL_SALE_CHECKOUT_PAYMENT_OPTIONS.filter(
+        (option) => option.id !== 'cod' || codEnabled
+      ),
+    [codEnabled]
+  );
 
   const {
     orderDetail,
@@ -967,6 +994,21 @@ export const SaleCheckoutPage: React.FC = () => {
     () => resolveSummary(subtotal, quoteResult, checkoutResult),
     [checkoutResult, quoteResult, subtotal]
   );
+
+  useEffect(() => {
+    if (
+      paymentMethod === 'cod' &&
+      !paymentOptions.some((option) => option.id === 'cod')
+    ) {
+      setPaymentMethod('sepay');
+      setQuoteResult(null);
+      setCheckoutResult(null);
+      setQuoteError('');
+      setCheckoutError('');
+      setOrderDetail(null);
+      stopOrderPolling();
+    }
+  }, [paymentMethod, paymentOptions, setOrderDetail, stopOrderPolling]);
 
   const resetCheckoutArtifacts = () => {
     setQuoteResult(null);
@@ -1130,6 +1172,53 @@ export const SaleCheckoutPage: React.FC = () => {
 
   const errorMessage = quoteError || checkoutError;
 
+  if (loadingRuntimeConfig) {
+    return (
+      <>
+        <Header
+          title={'Thanh to\u00e1n b\u00e1n h\u00e0ng'}
+          subtitle={'Dang dong bo system config runtime'}
+        />
+        <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-[#fffdfa]">
+          <Loader2 className="h-8 w-8 animate-spin text-[#d08b00]" />
+        </div>
+      </>
+    );
+  }
+
+  if (runtimeConfigError) {
+    return (
+      <RuntimeFeatureBlockedPage
+        title="Thanh toan ban hang"
+        subtitle="Khong the nap system config runtime"
+        heading="Khong the dong bo cau hinh he thong"
+        message={
+          runtimeConfigError ||
+          'Khong the xac dinh trang thai COD, pre-order va maintenance o thoi diem hien tai.'
+        }
+        primaryHref="/sale/products"
+        primaryLabel="Quay lai san pham"
+        secondaryHref="/sale/orders"
+        secondaryLabel="Mo don hang"
+      />
+    );
+  }
+
+  if (maintenanceMode) {
+    return (
+      <RuntimeFeatureBlockedPage
+        title="Thanh toan ban hang"
+        subtitle="He thong dang bao tri runtime"
+        heading="Tam dung tao don moi"
+        message="Admin da bat maintenance mode. Sale can tam dung checkout cho den khi he thong mo lai."
+        primaryHref="/sale/orders"
+        primaryLabel="Mo danh sach don"
+        secondaryHref="/sale/products"
+        secondaryLabel="Quay lai san pham"
+      />
+    );
+  }
+
   return (
     <>
       <Header
@@ -1150,6 +1239,8 @@ export const SaleCheckoutPage: React.FC = () => {
                 subtotal={subtotal}
                 shippingForm={shippingForm}
                 paymentMethod={paymentMethod}
+                paymentOptions={paymentOptions}
+                codEnabled={codEnabled}
                 onBackToProducts={() => router.push('/sale/products')}
                 onShippingChange={handleShippingChange}
                 onPaymentMethodChange={handlePaymentMethodChange}
