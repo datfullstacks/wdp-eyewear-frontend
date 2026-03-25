@@ -129,10 +129,17 @@ const OrdersPreorder = () => {
       orders.filter((order) => {
         const matchesSearch =
           order.orderCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          order.storeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
           order.customerName
             .toLowerCase()
             .includes(searchQuery.toLowerCase()) ||
-          order.customerPhone.includes(searchQuery);
+          order.customerPhone.includes(searchQuery) ||
+          order.products.some((product) =>
+            [product.name, product.supplier, product.warehouseLocation]
+              .join(' ')
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase())
+          );
         const matchesStatus =
           statusFilter === 'all' || order.status === statusFilter;
         const matchesPriority =

@@ -273,6 +273,14 @@ export function ReadyStockOrderDetailModal({
   const invoice = toInvoiceCode(order);
   const paymentCode = toPaymentCode(order);
   const summary = summarizeItems(order);
+  const orderSuppliers = Array.from(
+    new Set(
+      order.items
+        .map((item) => item.supplier)
+        .map((value) => String(value || '').trim())
+        .filter(Boolean)
+    )
+  );
   const addr = parseAddress(order.customerAddress);
   const email =
     (String(order.customerPhone || '').replace(/\D/g, '') ||
@@ -751,6 +759,21 @@ export function ReadyStockOrderDetailModal({
             </div>
           </div>
 
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label>{'C\u1eeda h\u00e0ng x\u1eed l\u00fd'}</Label>
+              <div className="text-foreground text-sm font-semibold">
+                {order.storeName || '-'}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>{'Nh\u00e0 cung c\u1ea5p'}</Label>
+              <div className="text-foreground text-sm font-semibold">
+                {orderSuppliers.length > 0 ? orderSuppliers.join(', ') : '-'}
+              </div>
+            </div>
+          </div>
+
           <div className="border-border bg-muted/20 rounded-lg border p-3">
             <div className="text-foreground font-semibold">
               {'Th\u00f4ng tin duy\u1ec7t Sales'}
@@ -928,7 +951,7 @@ export function ReadyStockOrderDetailModal({
                   const state = resolvedOps.itemStates?.[key];
                   const picked = Boolean(state?.picked);
                   const issueType = state?.issueType || null;
-                  const location = state?.warehouseLocation || '';
+                  const location = state?.warehouseLocation || item.warehouseLocation || '';
                   const internalNote = state?.internalNote || '';
                   const issueNote = state?.issueNote || '';
 
@@ -965,6 +988,9 @@ export function ReadyStockOrderDetailModal({
                           <div className="text-foreground/90 text-xs">
                             {'\u0110\u01a1n gi\u00e1: '} {formatCurrencyVnd(item.unitPrice)} {'\u2022'}{' '}
                             {'Th\u00e0nh ti\u1ec1n: '} {formatCurrencyVnd(item.lineTotal)}
+                          </div>
+                          <div className="text-foreground/90 text-xs">
+                            {'Nh\u00e0 cung c\u1ea5p: '} {item.supplier || '-'}
                           </div>
                         </div>
 
