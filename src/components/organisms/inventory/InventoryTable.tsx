@@ -99,14 +99,20 @@ export const InventoryTable = ({
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => onEditStock(item)}
-                      disabled={item.trackInventory === false || !stockEditEnabled}
+                      disabled={
+                        item.trackInventory === false ||
+                        !item.variantId ||
+                        !stockEditEnabled
+                      }
                     >
                       <Edit className="mr-2 h-4 w-4" />
                       {item.trackInventory === false
                         ? 'Khong theo doi ton'
+                        : !item.variantId
+                          ? 'Khong co bien the nhap kho'
                         : stockEditEnabled
-                          ? stockEditLabel || 'Cap nhat ton kho'
-                          : stockEditLabel || 'Nhap kho tai man pre-order'}
+                          ? stockEditLabel || 'Nhap kho'
+                          : stockEditLabel || 'Chua co quyen nhap kho'}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem

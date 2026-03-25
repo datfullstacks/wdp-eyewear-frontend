@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { getSession } from 'next-auth/react';
 import { Filter } from 'lucide-react';
 import inventoryApi from '@/api/inventory';
+import { userApi } from '@/api/users';
 import { SearchBar } from '@/components/molecules/SearchBar';
 import { Header } from '@/components/organisms/Header';
 import {
@@ -33,7 +35,6 @@ import {
 import { InventoryItem } from '@/types/inventory';
 
 const PAGE_SIZE_OPTIONS = [20, 50, 100] as const;
-const STOCK_EDIT_ENABLED = false;
 
 const Inventory = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -49,6 +50,10 @@ const Inventory = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [resolvedStoreId, setResolvedStoreId] = useState('');
+  const [resolvedStoreLabel, setResolvedStoreLabel] = useState('');
+  const [storeScopeError, setStoreScopeError] = useState('');
+  const [isResolvingStoreScope, setIsResolvingStoreScope] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -77,6 +82,60 @@ const Inventory = () => {
 
     return () => {
       isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadStoreScope = async () => {
+      setIsResolvingStoreScope(true);
+      setStoreScopeError('');
+
+      try {
+        const session = await getSession();
+        const currentUserId = String(session?.user?.id || '').trim();
+        if (!currentUserId) {
+          throw new Error('Khong xac dinh duoc tai khoan dang nhap.');
+        }
+
+        const currentUser = await userApi.getById(currentUserId);
+        const scope = currentUser.storeAccess;
+        const nextStoreId = scope?.primaryStoreId || scope?.storeIds?.[0] || '';
+
+        if (!nextStoreId) {
+          throw new Error(
+            'Tai khoan operation chua duoc gan cua hang de nhap kho.'
+          );
+        }
+
+        const nextStoreLabel =
+          scope?.primaryStore?.name ||
+          scope?.stores.find((store) => store.id === nextStoreId)?.name ||
+          '';
+
+        if (!mounted) return;
+        setResolvedStoreId(nextStoreId);
+        setResolvedStoreLabel(nextStoreLabel);
+      } catch (err) {
+        if (!mounted) return;
+        setResolvedStoreId('');
+        setResolvedStoreLabel('');
+        const message =
+          (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data
+            ?.message ||
+          (err as { message?: string })?.message ||
+          'Khong tai duoc pham vi cua hang cua tai khoan operation.';
+        setStoreScopeError(message);
+      } finally {
+        if (mounted) setIsResolvingStoreScope(false);
+      }
+    };
+
+    void loadStoreScope();
+
+    return () => {
+      mounted = false;
     };
   }, []);
 
@@ -140,7 +199,7 @@ const Inventory = () => {
   };
 
   const handleEditStock = (item: InventoryItem) => {
-    if (!STOCK_EDIT_ENABLED) return;
+    if (!resolvedStoreId) return;
     setSelectedItem(item);
     setIsEditOpen(true);
   };
@@ -157,18 +216,41 @@ const Inventory = () => {
 
   const handleUpdateStock = async (
     item: InventoryItem,
-    newStock: number,
-    reason: string
+    payload: {
+      quantity: number;
+      supplier: string;
+      warehouseLocation?: string;
+      note?: string;
+    }
   ) => {
     if (item.trackInventory === false) {
       throw new Error('San pham nay khong theo doi ton kho.');
     }
 
-    await inventoryApi.updateVariantStock({
-      rowId: item.id,
-      sku: item.sku,
-      stock: newStock,
-      reason,
+    if (!resolvedStoreId) {
+      throw new Error(
+        storeScopeError || 'Tai khoan operation chua duoc gan cua hang de nhap kho.'
+      );
+    }
+
+    if (!item.productId || !item.variantId) {
+      throw new Error('Khong tim thay bien the hop le de tao phieu nhap kho.');
+    }
+
+    await inventoryApi.createReceipt({
+      storeId: resolvedStoreId,
+      supplier: payload.supplier,
+      warehouseLocation: payload.warehouseLocation,
+      note: payload.note,
+      items: [
+        {
+          productId: item.productId,
+          variantId: item.variantId,
+          quantity: payload.quantity,
+          sku: item.sku,
+          variantLabel: item.variant,
+        },
+      ],
     });
 
     await reloadItems();
@@ -178,26 +260,35 @@ const Inventory = () => {
     <>
       <Header
         title="Ton kho va tinh trang hang"
-        subtitle="Operation xem ton kho hien tai. Nhap kho thuc hien qua batch pre-order."
+        subtitle="Operation theo doi ton kho va tao phieu nhap kho cho tung bien the."
       />
 
       <div className="space-y-6 p-6">
         <InventoryStatsGrid stats={stats} />
 
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          <p className="font-medium">Trang nay chi de theo doi ton kho.</p>
-          <p className="mt-1">
-            Role operation khong duoc sua stock truc tiep qua san pham. Neu can
-            nhap hang, hay dung luong{' '}
-            <Link
-              href="/operation/inventory/import"
-              className="font-semibold underline underline-offset-4"
-            >
-              Nhap hang pre-order
-            </Link>
-            .
-          </p>
-        </div>
+        {storeScopeError ? (
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+            {storeScopeError}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+            <p className="font-medium">
+              {resolvedStoreLabel
+                ? `Phieu nhap kho se duoc tao cho ${resolvedStoreLabel}.`
+                : 'Operation co the nhap kho truc tiep tu man nay.'}
+            </p>
+            <p className="mt-1">
+              Hang nhap theo batch pre-order van co the xu ly tai{' '}
+              <Link
+                href="/operation/inventory/import"
+                className="font-semibold underline underline-offset-4"
+              >
+                Nhap hang pre-order
+              </Link>
+              .
+            </p>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-6 text-sm text-slate-600">
@@ -288,8 +379,8 @@ const Inventory = () => {
               onEditStock={handleEditStock}
               onViewHistory={handleViewHistory}
               historyEnabled={false}
-              stockEditEnabled={STOCK_EDIT_ENABLED}
-              stockEditLabel="Nhap kho tai man pre-order"
+              stockEditEnabled={Boolean(resolvedStoreId) && !isResolvingStoreScope}
+              stockEditLabel="Nhap kho"
             />
 
             {filteredInventory.length > 0 && totalPages > 1 ? (
@@ -348,14 +439,12 @@ const Inventory = () => {
           onOpenChange={setIsDetailOpen}
         />
 
-        {STOCK_EDIT_ENABLED ? (
-          <InventoryEditModal
-            item={selectedItem}
-            open={isEditOpen}
-            onOpenChange={setIsEditOpen}
-            onUpdate={handleUpdateStock}
-          />
-        ) : null}
+        <InventoryEditModal
+          item={selectedItem}
+          open={isEditOpen}
+          onOpenChange={setIsEditOpen}
+          onUpdate={handleUpdateStock}
+        />
 
         <InventoryHistoryModal
           item={selectedItem}
