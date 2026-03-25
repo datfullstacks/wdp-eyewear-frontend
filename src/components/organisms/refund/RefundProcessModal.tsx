@@ -90,10 +90,10 @@ export const RefundProcessModal = ({
       <DialogContent className="w-[92vw] max-w-md p-4 sm:p-5">
         <DialogHeader>
           <DialogTitle className="text-foreground text-base font-semibold">
-            Hoan tat payout
+            Hoàn tất payout
           </DialogTitle>
           <DialogDescription className="text-foreground/70">
-            Nhap thong tin giao dich hoan tien cho yeu cau {refund?.id || ''}
+            Nhập thông tin giao dịch hoàn tiền cho yêu cầu {refund?.id || ''}
           </DialogDescription>
         </DialogHeader>
 
@@ -101,41 +101,41 @@ export const RefundProcessModal = ({
           <div className="space-y-4">
             <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
               <p className="mb-2 font-medium text-slate-900">
-                Thong tin payout
+                Thông tin payout
               </p>
               <div className="space-y-1 text-sm text-slate-700">
                 <p>
-                  So tien: <span className="font-bold">{formatCurrency(amount)}</span>
+                  Số tiền: <span className="font-bold">{formatCurrency(amount)}</span>
                 </p>
-                <p>Phuong thuc: {methodConfig[refund.method].label}</p>
+                <p>Phương thức: {methodConfig[refund.method].label}</p>
                 {refund.bankInfo ? (
                   <>
-                    <p>Bank: {refund.bankInfo.bankName || '--'}</p>
+                    <p>Ngân hàng: {refund.bankInfo.bankName || '--'}</p>
                     <p>So TK: {refund.bankInfo.accountNumber || '--'}</p>
-                    <p>Chu TK: {refund.bankInfo.accountHolder || '--'}</p>
+                    <p>Chủ TK: {refund.bankInfo.accountHolder || '--'}</p>
                   </>
                 ) : (
-                  <p>Khach chua cung cap thong tin tai khoan.</p>
+                  <p>Khách chưa cung cấp thông tin tài khoản.</p>
                 )}
               </div>
             </div>
 
             <div>
-              <Label className="text-foreground/80">Ma giao dich</Label>
+              <Label className="text-foreground/80">Mã giao dịch</Label>
               <Input
                 value={transactionRef}
                 onChange={(event) => setTransactionRef(event.target.value)}
-                placeholder="Nhap ma giao dich payout..."
+                placeholder="Nhập mã giao dịch payout..."
                 className="mt-1"
               />
             </div>
 
             <div>
-              <Label className="text-foreground/80">Link chung tu payout (neu co)</Label>
+              <Label className="text-foreground/80">Link chứng từ payout (nếu có)</Label>
               <Input
                 value={payoutProofUrl}
                 onChange={(event) => setPayoutProofUrl(event.target.value)}
-                placeholder="https://... bang chung chuyen tien"
+                placeholder="https://... bằng chứng chuyển tiền"
                 className="mt-1"
               />
               <div className="mt-2">
@@ -147,17 +147,17 @@ export const RefundProcessModal = ({
                   className="text-sm"
                 />
                 {uploadingProof ? (
-                  <p className="mt-1 text-xs text-slate-500">Dang upload chung tu...</p>
+                  <p className="mt-1 text-xs text-slate-500">Đang upload chứng từ...</p>
                 ) : null}
               </div>
             </div>
 
             <div>
-              <Label className="text-foreground/80">Ghi chu</Label>
+              <Label className="text-foreground/80">Ghi chú</Label>
               <Textarea
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
-                placeholder="Nhap ghi chu doi soat neu can..."
+                placeholder="Nhập ghi chú đối soát nếu cần..."
                 className="mt-1"
               />
             </div>
@@ -170,14 +170,14 @@ export const RefundProcessModal = ({
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
           >
-            Huy
+            Hủy
           </Button>
           <Button
             onClick={() => void handleSubmit()}
             disabled={isSubmitting || !transactionRef.trim()}
           >
             <CreditCard className="mr-2 h-4 w-4" />
-            {isSubmitting ? 'Dang xu ly...' : 'Xac nhan da chuyen tien'}
+            {isSubmitting ? 'Đang xử lý...' : 'Xác nhận đã chuyển tiền'}
           </Button>
         </DialogFooter>
       </DialogContent>

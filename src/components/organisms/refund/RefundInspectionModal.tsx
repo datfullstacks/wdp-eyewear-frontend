@@ -62,10 +62,10 @@ export const RefundInspectionModal = ({
   }, [refund]);
 
   const isFailMode = mode === 'fail';
-  const title = isFailMode ? 'QC fail hang hoan' : 'Xac nhan nhan hang hoan';
+  const title = isFailMode ? 'QC fail hàng hoàn' : 'Xác nhận nhận hàng hoàn';
   const description = isFailMode
-    ? `Gui case ${refund?.id || ''} ve lai reviewing sau khi inspection khong dat.`
-    : `Xac nhan da nhan hang va inspection pass cho ${refund?.id || ''}.`;
+    ? `Gửi case ${refund?.id || ''} về lại reviewing sau khi inspection không đạt.`
+    : `Xác nhận đã nhận hàng và inspection pass cho ${refund?.id || ''}.`;
 
   const handleSubmit = async () => {
     await onSubmit({
@@ -109,33 +109,34 @@ export const RefundInspectionModal = ({
                   <PackageCheck className="h-5 w-5" />
                 )}
                 <span className="font-medium">
-                  {isFailMode ? 'Hang hoan can review lai' : 'Hang hoan da duoc tiep nhan'}
+                  {isFailMode ? 'Hàng hoàn cần review lại' : 'Hàng hoàn đã được tiếp nhận'}
                 </span>
               </div>
               <p className="text-sm text-slate-700">
-                So tien lien quan: <span className="font-bold">{formatCurrency(amount)}</span>
+                Số tiền liên quan:{' '}
+                <span className="font-bold">{formatCurrency(amount)}</span>
               </p>
               <p className="text-sm text-slate-700">
-                Khach hang: {refund.customerName} - {refund.customerPhone}
+                Khách hàng: {refund.customerName} - {refund.customerPhone}
               </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label className="text-foreground/80">Don vi van chuyen tra hang</Label>
+                <Label className="text-foreground/80">Đơn vị vận chuyển trả hàng</Label>
                 <Input
                   value={returnCarrier}
                   onChange={(event) => setReturnCarrier(event.target.value)}
-                  placeholder="ghn / khach tu gui..."
+                  placeholder="ghn / khách tự gửi..."
                   className="mt-1"
                 />
               </div>
               <div>
-                <Label className="text-foreground/80">Ma van don tra</Label>
+                <Label className="text-foreground/80">Mã vận đơn trả</Label>
                 <Input
                   value={returnShipmentCode}
                   onChange={(event) => setReturnShipmentCode(event.target.value)}
-                  placeholder="Nhap ma van don tra neu co..."
+                  placeholder="Nhập mã vận đơn trả nếu có..."
                   className="mt-1"
                 />
               </div>
@@ -143,15 +144,15 @@ export const RefundInspectionModal = ({
 
             <div>
               <Label className="text-foreground/80">
-                {isFailMode ? 'Ly do QC fail' : 'Ghi chu inspection'}
+                {isFailMode ? 'Lý do QC fail' : 'Ghi chú inspection'}
               </Label>
               <Textarea
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
                 placeholder={
                   isFailMode
-                    ? 'Mo ta tinh trang nhan ve khong dat, sai hang, thieu hang...'
-                    : 'Nhap ghi chu tiep nhan / inspection neu can...'
+                    ? 'Mô tả tình trạng nhận về không đạt, sai hàng, thiếu hàng...'
+                    : 'Nhập ghi chú tiếp nhận / inspection nếu cần...'
                 }
                 className="mt-1"
               />
@@ -165,7 +166,7 @@ export const RefundInspectionModal = ({
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
           >
-            Huy
+            Hủy
           </Button>
           <Button
             onClick={() => void handleSubmit()}
@@ -173,10 +174,10 @@ export const RefundInspectionModal = ({
             className={isFailMode ? 'bg-amber-600 text-white hover:bg-amber-700' : undefined}
           >
             {isSubmitting
-              ? 'Dang xu ly...'
+              ? 'Đang xử lý...'
               : isFailMode
-                ? 'Tra case ve reviewing'
-                : 'Xac nhan nhan hang'}
+                ? 'Trả case về reviewing'
+                : 'Xác nhận nhận hàng'}
           </Button>
         </DialogFooter>
       </DialogContent>

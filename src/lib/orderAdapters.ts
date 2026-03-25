@@ -116,6 +116,39 @@ function mapPaymentStatus(status: OrderRecord['paymentStatus']): PaymentStatus {
   return 'pending';
 }
 
+function resolvePendingOrderType(order: OrderRecord): string {
+  const normalized = String(order.orderType || '')
+    .trim()
+    .toLowerCase();
+
+  if (normalized === 'pre_order' || normalized === 'preorder') {
+    return 'pre_order';
+  }
+
+  if (normalized === 'ready_stock') {
+    return 'ready_stock';
+  }
+
+  if (
+    normalized === 'prescription' ||
+    normalized === 'made_to_order' ||
+    normalized === 'made-to-order' ||
+    normalized === 'custom'
+  ) {
+    return 'prescription';
+  }
+
+  if (order.items.some((item) => item.preOrder)) {
+    return 'pre_order';
+  }
+
+  if (order.items.some(requiresPrescription)) {
+    return 'prescription';
+  }
+
+  return normalized;
+}
+
 function getRawOrderStatus(order: Pick<OrderRecord, 'rawStatus'>): string {
   return String(order.rawStatus || '')
     .trim()
@@ -451,6 +484,7 @@ export function toPendingOrder(order: OrderRecord): PendingOrder {
     products,
     total: order.total,
     status: order.rawStatus || 'pending',
+    orderType: resolvePendingOrderType(order),
     createdAt: formatDateTime(order.createdAt),
     note: order.note || '',
     hasPrescription: order.items.some(requiresPrescription),

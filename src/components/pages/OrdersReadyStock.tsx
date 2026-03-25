@@ -26,7 +26,6 @@ import { isReadyStockOrder } from '@/lib/orderWorkflow';
 import { useStatusRealtimeReload } from '@/hooks/useStatusRealtime';
 import {
   createDefaultReadyStockOpsState,
-  getReadyStockWarnings,
   inferSalesApprovedAt,
   toInvoiceCode,
   toPaymentCode,
@@ -53,8 +52,6 @@ const DEFAULT_FILTERS: ReadyStockFilters = {
   shipment: 'all',
   opsStatus: 'all',
   assignee: 'all',
-  hasNoteOnly: false,
-  hasIssueOnly: false,
 };
 
 const ACTIVE_SHIPMENT_STATUSES = new Set([
@@ -265,29 +262,6 @@ export default function OrdersReadyStock() {
           return false;
         }
 
-        const warnings = getReadyStockWarnings(order, ops);
-        const hasIssue =
-          warnings.some((warning) => warning !== 'special_note') ||
-          Boolean(String(ops.issueType || '').trim()) ||
-          Boolean(String(ops.issueNote || '').trim()) ||
-          Object.values(ops.itemStates || {}).some(
-            (state) =>
-              Boolean(String(state.issueType || '').trim()) ||
-              Boolean(String(state.issueNote || '').trim())
-          );
-        const hasNote =
-          Boolean(String(order.note || '').trim()) ||
-          Boolean(String(ops.salesHandoffNote || '').trim()) ||
-          Boolean(String(ops.internalNote || '').trim()) ||
-          Boolean(String(ops.holdNote || '').trim()) ||
-          Boolean(String(ops.issueNote || '').trim()) ||
-          Object.values(ops.itemStates || {}).some((s) =>
-            Boolean(String(s.internalNote || '').trim())
-          );
-
-        if (filters.hasIssueOnly && !hasIssue) return false;
-        if (filters.hasNoteOnly && !hasNote) return false;
-
         return true;
       });
   }, [orders, filters, resolveOps, searchTerm, meName]);
@@ -451,7 +425,7 @@ export default function OrdersReadyStock() {
 
   return (
     <>
-      <Header title="Đơn có sẵn (Ready stock)" subtitle="" />
+      <Header title="Quản lý đơn có sẵn" subtitle="" />
 
       <div className="space-y-6 p-6">
         <ReadyStockStatsGrid orders={orders} resolveOps={resolveOps} />

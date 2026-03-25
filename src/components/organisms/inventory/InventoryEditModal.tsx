@@ -52,7 +52,9 @@ export const InventoryEditModal = ({
     if (isOpen && item) {
       setReceiveQty('1');
       setSupplier('');
-      setWarehouseLocation(item.location && item.location !== '-' ? item.location : '');
+      setWarehouseLocation(
+        item.location && item.location !== '-' ? item.location : ''
+      );
       setNote('');
       setError(null);
     }
@@ -85,8 +87,12 @@ export const InventoryEditModal = ({
       onOpenChange(false);
     } catch (err) {
       const message =
-        (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data
-          ?.message ||
+        (
+          err as {
+            response?: { data?: { message?: string } };
+            message?: string;
+          }
+        )?.response?.data?.message ||
         (err as { message?: string })?.message ||
         'Khong the nhap kho. Vui long thu lai.';
       setError(message);
@@ -102,7 +108,9 @@ export const InventoryEditModal = ({
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="text-foreground">
-            {item.trackInventory !== false ? 'Nhap kho cho bien the' : 'Khong theo doi ton'}
+            {item.trackInventory !== false
+              ? 'Nhap kho cho bien the'
+              : 'Khong theo doi ton'}
           </DialogTitle>
           <DialogDescription className="text-foreground/90">
             {item.name} ({item.sku})
@@ -114,9 +122,11 @@ export const InventoryEditModal = ({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-foreground/70 text-sm font-medium">
-                  Ton kho hien tai
+                  Tồn kho hiện tại
                 </label>
-                <p className="text-foreground text-2xl font-bold">{item.stock}</p>
+                <p className="text-foreground text-2xl font-bold">
+                  {item.stock}
+                </p>
               </div>
               <div>
                 <label className="text-foreground/70 text-sm font-medium">
@@ -186,7 +196,7 @@ export const InventoryEditModal = ({
             onClick={() => onOpenChange(false)}
             disabled={isSaving}
           >
-            Dong
+            Đóng
           </Button>
           {item.trackInventory !== false && item.variantId ? (
             <Button onClick={handleUpdate} disabled={isSaving}>

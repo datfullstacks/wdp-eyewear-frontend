@@ -40,20 +40,20 @@ export const SendBackModal = ({
     <Dialog open={!!order} onOpenChange={handleClose}>
       <DialogContent className="w-[92vw] max-w-md p-4 sm:p-5">
         <DialogHeader>
-          <DialogTitle>Tra lai sale</DialogTitle>
+          <DialogTitle>Trả lại sale</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <p className="text-foreground/90">
-            Tra lai don <strong>{order.id}</strong> cho sale de xu ly tiep?
+            Trả lại đơn <strong>{order.id}</strong> cho sale để xử lý tiếp?
           </p>
 
           <div>
             <label className="text-sm font-medium text-foreground/80">
-              Ghi chu cho sale *
+              Ghi chú cho sale *
             </label>
             <Textarea
-              placeholder="Nhap ly do tra lai sale..."
+              placeholder="Nhập lý do trả lại sale..."
               value={reason}
               onChange={(event) => setReason(event.target.value)}
               className="mt-1.5"
@@ -62,11 +62,11 @@ export const SendBackModal = ({
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={handleClose}>
-              Huy
+              Hủy
             </Button>
             <Button onClick={handleConfirm} disabled={!reason.trim()}>
               <Send className="mr-2 h-4 w-4" />
-              Xac nhan tra lai
+              Xác nhận trả lại
             </Button>
           </div>
         </div>

@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import { XCircle } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -6,9 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { XCircle } from 'lucide-react';
 import { PendingOrder } from '@/types/pending';
-import { useState } from 'react';
 
 interface RejectModalProps {
   order: PendingOrder | null;
@@ -37,7 +38,7 @@ export const RejectModal = ({
 
   return (
     <Dialog open={!!order} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md w-[92vw] p-4 sm:p-5">
+      <DialogContent className="w-[92vw] max-w-md p-4 sm:p-5">
         <DialogHeader>
           <DialogTitle>Từ chối đơn hàng</DialogTitle>
         </DialogHeader>
@@ -53,7 +54,7 @@ export const RejectModal = ({
             <Textarea
               placeholder="Nhập lý do từ chối đơn hàng..."
               value={reason}
-              onChange={(e) => setReason(e.target.value)}
+              onChange={(event) => setReason(event.target.value)}
               className="mt-1.5"
             />
           </div>

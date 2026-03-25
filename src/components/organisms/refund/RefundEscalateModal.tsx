@@ -41,15 +41,15 @@ export const RefundEscalateModal = ({
 
   const isSendBack = mode === 'send_back';
   const Icon = isSendBack ? CornerUpLeft : AlertTriangle;
-  const title = isSendBack ? 'Tra lai staff' : 'Chuyen manager';
+  const title = isSendBack ? 'Trả lại staff' : 'Chuyển manager';
   const description = isSendBack
-    ? `Tra case ${refund?.id || ''} ve staff de kiem tra them`
-    : `Chuyen case ${refund?.id || ''} len manager phe duyet`;
-  const label = isSendBack ? 'Ly do tra lai *' : 'Ly do escalate *';
+    ? `Trả case ${refund?.id || ''} về staff để kiểm tra thêm`
+    : `Chuyển case ${refund?.id || ''} lên manager phê duyệt`;
+  const label = isSendBack ? 'Lý do trả lại *' : 'Lý do chuyển manager *';
   const placeholder = isSendBack
-    ? 'Nhap ly do can staff bo sung xac minh...'
-    : 'Nhap ly do can manager can thiep...';
-  const confirmLabel = isSendBack ? 'Tra ve staff' : 'Chuyen manager';
+    ? 'Nhập lý do cần staff bổ sung xác minh...'
+    : 'Nhập lý do cần manager can thiệp...';
+  const confirmLabel = isSendBack ? 'Trả về staff' : 'Chuyển manager';
 
   const handleSubmit = async () => {
     const trimmed = note.trim();
@@ -76,17 +76,17 @@ export const RefundEscalateModal = ({
                 <Icon className="h-5 w-5" />
                 <span className="font-medium">
                   {isSendBack
-                    ? 'Case can bo sung'
-                    : 'Case can exception approval'}
+                    ? 'Case cần bổ sung'
+                    : 'Case cần exception approval'}
                 </span>
               </div>
               <p className="text-sm text-slate-700">
-                So tien:{' '}
+                Số tiền:{' '}
                 <span className="font-semibold">
                   {formatCurrency(refund.amount)}
                 </span>
               </p>
-              <p className="text-sm text-slate-700">Don: {refund.orderId}</p>
+              <p className="text-sm text-slate-700">Đơn: {refund.orderId}</p>
             </div>
 
             <div>
@@ -107,14 +107,14 @@ export const RefundEscalateModal = ({
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
           >
-            Huy
+            Hủy
           </Button>
           <Button
             onClick={() => void handleSubmit()}
             disabled={isSubmitting || !note.trim()}
           >
             <Icon className="mr-2 h-4 w-4" />
-            {isSubmitting ? 'Dang xu ly...' : confirmLabel}
+            {isSubmitting ? 'Đang xử lý...' : confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

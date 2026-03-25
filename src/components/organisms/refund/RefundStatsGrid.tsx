@@ -32,31 +32,31 @@ export const RefundStatsGrid = ({
     scope === 'operation'
       ? [
           {
-            label: 'San sang payout',
+            label: 'Sẵn sàng payout',
             value: String(stats.approved),
             icon: CreditCard,
             isAmount: false,
           },
           {
-            label: 'Cho nhan hang',
+            label: 'Chờ nhận hàng',
             value: String(stats.returnPending),
             icon: PackageCheck,
             isAmount: false,
           },
           {
-            label: 'Dang payout',
+            label: 'Đang payout',
             value: String(stats.processing),
             icon: Clock,
             isAmount: false,
           },
           {
-            label: 'Hoan thanh',
+            label: 'Hoàn thành',
             value: String(stats.completed),
             icon: CheckCircle,
             isAmount: false,
           },
           {
-            label: 'Tong can chi',
+            label: 'Tổng cần chi',
             value: formatCurrency(stats.totalAmount),
             icon: TrendingDown,
             isAmount: true,
@@ -64,37 +64,37 @@ export const RefundStatsGrid = ({
         ]
       : [
           {
-            label: 'Dang xu ly',
+            label: 'Đang xử lý',
             value: String(stats.open),
             icon: Clock,
             isAmount: false,
           },
           {
-            label: 'Cho KH bo sung',
+            label: 'Chờ KH bổ sung',
             value: String(stats.waitingCustomer),
             icon: Eye,
             isAmount: false,
           },
           {
-            label: 'Can manager',
+            label: 'Cần quản lý',
             value: String(stats.escalated),
             icon: CreditCard,
             isAmount: false,
           },
           {
-            label: 'Da duyet',
+            label: 'Đã duyệt',
             value: String(stats.approved),
             icon: CreditCard,
             isAmount: false,
           },
           {
-            label: 'Hoan thanh',
+            label: 'Hoàn thành',
             value: String(stats.completed),
             icon: CheckCircle,
             isAmount: false,
           },
           {
-            label: 'Tong can hoan',
+            label: 'Tổng cần hoàn',
             value: formatCurrency(stats.totalAmount),
             icon: TrendingDown,
             isAmount: true,

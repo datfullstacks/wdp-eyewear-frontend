@@ -1,13 +1,41 @@
 import type { PaymentStatus, PendingOrder } from '@/types/pending';
 
 export const PENDING_ORDER_APPROVAL_MESSAGE =
-  'Chi don da thanh toan day du moi duoc duyet.';
+  'Chỉ đơn đã thanh toán đầy đủ mới được duyệt.';
 export const PENDING_ORDER_MANAGER_MESSAGE =
-  'Case nay can manager xac nhan.';
+  'Case này cần manager xác nhận.';
 export const PENDING_ORDER_MANAGER_APPROVAL_MESSAGE =
-  'Manager chi duoc duyet don da thanh toan day du hoac COD.';
+  'Manager chỉ được duyệt đơn đã thanh toán đầy đủ hoặc COD.';
 export const PENDING_ORDER_SENT_BACK_MESSAGE =
-  'Manager da tra lai sale de xu ly tiep.';
+  'Manager đã trả lại sale để xử lý tiếp.';
+
+const PENDING_ORDER_TYPE_LABELS: Record<string, string> = {
+  ready_stock: 'Hàng có sẵn',
+  pre_order: 'Đặt trước',
+  preorder: 'Đặt trước',
+  prescription: 'Làm theo đơn',
+  made_to_order: 'Làm theo đơn',
+  'made-to-order': 'Làm theo đơn',
+  custom: 'Làm theo đơn',
+};
+
+export function getPendingOrderTypeLabel(
+  order: Pick<PendingOrder, 'orderType' | 'hasPrescription'>
+): string {
+  const normalized = String(order.orderType || '')
+    .trim()
+    .toLowerCase();
+
+  if (normalized && PENDING_ORDER_TYPE_LABELS[normalized]) {
+    return PENDING_ORDER_TYPE_LABELS[normalized];
+  }
+
+  if (order.hasPrescription) {
+    return 'Làm theo đơn';
+  }
+
+  return order.orderType || '-';
+}
 
 export function canApprovePendingPaymentStatus(
   paymentStatus: PaymentStatus
