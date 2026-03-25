@@ -162,8 +162,29 @@ interface BackendItemCustomization {
   };
 }
 
+interface BackendProductRef {
+  _id?: string;
+  id?: string;
+  fulfillment?: {
+    supplier?: string;
+  };
+  variants?: Array<{
+    _id?: string;
+    id?: string;
+    warehouseLocation?: string;
+  }>;
+}
+
+interface BackendStoreRef {
+  _id?: string;
+  id?: string;
+  name?: string;
+}
+
 interface BackendOrderItem {
   _id?: string;
+  productId?: string | BackendProductRef;
+  variantId?: string;
   name?: string;
   type?: string;
   quantity?: number;
@@ -238,6 +259,7 @@ interface BackendOrderRefund {
 interface BackendOrder {
   _id?: string;
   id?: string;
+  storeId?: string | BackendStoreRef | null;
   paymentCode?: string;
   items?: BackendOrderItem[];
   total?: number;
@@ -272,12 +294,16 @@ interface BackendShippingInfo {
 
 export interface OrderItem {
   id: string;
+  productId: string;
+  variantId: string;
   name: string;
   type: string;
   quantity: number;
   unitPrice: number;
   lineTotal: number;
   variant: string;
+  supplier: string;
+  warehouseLocation: string;
   preOrder: boolean;
   hasPrescription: boolean;
   prescriptionMode: PrescriptionMode;
@@ -445,6 +471,8 @@ export interface OrderRefund {
 export interface OrderRecord {
   id: string;
   code: string;
+  storeId: string;
+  storeName: string;
   status: UiOrderStatus;
   rawStatus: string;
   opsStage?: OrderOpsStage;
@@ -841,6 +869,15 @@ function toAddressLabel(address?: BackendShippingAddress): string {
   return parts.join(', ');
 }
 
+function toEntityId(value: unknown): string {
+  if (typeof value === 'string') return value.trim();
+  if (isRecord(value)) {
+    const id = value._id || value.id;
+    return typeof id === 'string' ? id.trim() : '';
+  }
+  return '';
+}
+
 function mapOrderItem(raw: BackendOrderItem): OrderItem {
   const mode = String(raw?.customization?.prescription?.mode || 'none')
     .trim()
@@ -861,9 +898,20 @@ function mapOrderItem(raw: BackendOrderItem): OrderItem {
     : [];
   const hasPrescription =
     normalizedMode === 'manual' || normalizedMode === 'upload';
+  const productRef = isRecord(raw?.productId)
+    ? (raw.productId as BackendProductRef)
+    : undefined;
+  const variantId = toEntityId(raw?.variantId);
+  const matchedVariant = Array.isArray(productRef?.variants)
+    ? productRef?.variants.find((variant) => toEntityId(variant) === variantId)
+    : undefined;
+  const supplier = String(productRef?.fulfillment?.supplier || '').trim();
+  const warehouseLocation = String(matchedVariant?.warehouseLocation || '').trim();
 
   return {
     id: String(raw?._id || '').trim(),
+    productId: toEntityId(raw?.productId),
+    variantId,
     name: String(raw?.name || '').trim() || 'Sản phẩm',
     type: String(raw?.type || '')
       .trim()
@@ -872,6 +920,8 @@ function mapOrderItem(raw: BackendOrderItem): OrderItem {
     unitPrice: Number(raw?.unitPrice || 0),
     lineTotal: Number(raw?.lineTotal || 0),
     variant: toVariantLabel(raw),
+    supplier,
+    warehouseLocation,
     preOrder: Boolean(raw?.preOrder),
     hasPrescription,
     prescriptionMode: normalizedMode,
@@ -905,11 +955,18 @@ function mapOrderItem(raw: BackendOrderItem): OrderItem {
 function mapBackendOrder(raw: BackendOrder): OrderRecord {
   const id = String(raw._id || raw.id || '').trim();
   const code = String(raw.paymentCode || '').trim() || id;
+  const storeId = toEntityId(raw.storeId);
+  const storeName =
+    isRecord(raw.storeId) && typeof raw.storeId.name === 'string'
+      ? raw.storeId.name.trim()
+      : '';
   const items = (raw.items || []).map(mapOrderItem);
 
   return {
     id,
     code,
+    storeId,
+    storeName,
     status: mapOrderStatus(raw.status),
     rawStatus:
       String(raw.status || '')

@@ -194,9 +194,11 @@ export default function OrdersReadyStock() {
           order.code,
           toPaymentCode(order),
           toInvoiceCode(order),
+          order.storeName,
           order.customerName,
           order.customerPhone,
           ...order.items.map((i) => i.name),
+          ...order.items.map((i) => i.supplier),
         ]
           .join(' ')
           .toLowerCase();

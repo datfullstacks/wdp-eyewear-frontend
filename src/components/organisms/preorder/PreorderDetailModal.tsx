@@ -36,6 +36,13 @@ export const PreorderDetailModal = ({
       {order && (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3 rounded-lg border border-border bg-card p-3 shadow-sm">
+            <div className="col-span-2 flex items-center gap-2">
+              <MapPin className="text-foreground h-4 w-4" />
+              <div>
+                <p className="text-foreground text-sm font-medium">Cửa hàng xử lý</p>
+                <p className="text-foreground font-semibold">{order.storeName || '-'}</p>
+              </div>
+            </div>
             <div className="flex items-center gap-2">
               <User className="text-foreground h-4 w-4" />
               <div>
@@ -74,6 +81,10 @@ export const PreorderDetailModal = ({
                     </div>
                     <p className="text-foreground text-sm">
                       {product.sku} - {product.variant} x{product.quantity}
+                    </p>
+                    <p className="text-foreground/80 text-xs">
+                      Nhà cung cấp: {product.supplier || '-'}
+                      {' • '}Vị trí kho: {product.warehouseLocation || '-'}
                     </p>
                     {product.batchCode && (
                       <div className="mt-1 flex items-center gap-2">
