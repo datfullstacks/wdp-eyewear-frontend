@@ -38,14 +38,14 @@ type TabConfig = {
 
 const TAB_CONFIG: Record<AfterSalesScope, TabConfig[]> = {
   sale: [
-    { value: 'return', label: 'Return', category: 'return' },
-    { value: 'warranty', label: 'Warranty', category: 'warranty' },
+    { value: 'return', label: 'Đổi / trả', category: 'return' },
+    { value: 'warranty', label: 'Bảo hành', category: 'warranty' },
   ],
-  operation: [{ value: 'warranty', label: 'Warranty service', category: 'warranty' }],
+  operation: [{ value: 'warranty', label: 'Xử lý bảo hành', category: 'warranty' }],
   manager: [
-    { value: 'return', label: 'Return', category: 'return' },
-    { value: 'warranty', label: 'Warranty', category: 'warranty' },
-    { value: 'prescription', label: 'Prescription', category: 'prescription' },
+    { value: 'return', label: 'Đổi / trả', category: 'return' },
+    { value: 'warranty', label: 'Bảo hành', category: 'warranty' },
+    { value: 'prescription', label: 'Toa kính', category: 'prescription' },
   ],
 };
 
@@ -54,52 +54,72 @@ const SCOPE_COPY: Record<
   { title: string; subtitle: string; refundHref: string; refundLabel: string }
 > = {
   sale: {
-    title: 'After-sales support',
-    subtitle: 'Live return and warranty console for sales/support staff',
+    title: 'Hỗ trợ hậu mãi',
+    subtitle: 'Theo dõi và xử lý yêu cầu đổi trả, bảo hành cho nhân viên bán hàng',
     refundHref: '/sale/cases/refunds',
-    refundLabel: 'Open refund workspace',
+    refundLabel: 'Mở khu vực hoàn tiền',
   },
   operation: {
-    title: 'Warranty service queue',
-    subtitle: 'Store-scoped warranty servicing owned by operations',
+    title: 'Hàng chờ bảo hành',
+    subtitle: 'Theo dõi và xử lý các yêu cầu bảo hành thuộc bộ phận vận hành',
     refundHref: '/operation/refunds',
-    refundLabel: 'Open refund payout queue',
+    refundLabel: 'Mở hàng chờ chi tiền',
   },
   manager: {
-    title: 'Business support overview',
-    subtitle: 'Cross-store read-only view of return, warranty, and prescription tickets',
+    title: 'Tổng quan hỗ trợ kinh doanh',
+    subtitle: 'Theo dõi liên cửa hàng cho yêu cầu đổi trả, bảo hành và toa kính',
     refundHref: '/manager/refunds/monitoring',
-    refundLabel: 'Open refund monitoring',
+    refundLabel: 'Mở giám sát hoàn tiền',
   },
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  open: 'Open',
-  in_progress: 'In progress',
-  resolved: 'Resolved',
-  closed: 'Closed',
-  requested: 'Requested',
-  under_review: 'Under review',
-  approved: 'Approved',
-  rejected: 'Rejected',
-  in_service: 'In service',
-  completed: 'Completed',
+  open: 'Mới tạo',
+  in_progress: 'Đang xử lý',
+  resolved: 'Đã xử lý',
+  closed: 'Đã đóng',
+  requested: 'Đã gửi yêu cầu',
+  under_review: 'Đang xem xét',
+  approved: 'Đã duyệt',
+  rejected: 'Từ chối',
+  in_service: 'Đang bảo hành',
+  completed: 'Hoàn tất',
 };
 
 const CATEGORY_LABELS: Record<SupportTicketCategory, string> = {
-  general: 'General',
-  order: 'Order',
-  prescription: 'Prescription',
-  shipping: 'Shipping',
-  refund: 'Refund',
-  return: 'Return',
-  warranty: 'Warranty',
+  general: 'Chung',
+  order: 'Đơn hàng',
+  prescription: 'Toa kính',
+  shipping: 'Vận chuyển',
+  refund: 'Hoàn tiền',
+  return: 'Đổi / trả',
+  warranty: 'Bảo hành',
 };
 
 const ELIGIBILITY_LABELS: Record<WarrantyEligibility, string> = {
-  eligible: 'Eligible',
-  expired: 'Expired',
-  not_covered: 'Not covered',
+  eligible: 'Đủ điều kiện',
+  expired: 'Hết hạn',
+  not_covered: 'Không thuộc phạm vi',
+};
+
+const PRIORITY_LABELS: Record<string, string> = {
+  low: 'Thấp',
+  normal: 'Trung bình',
+  high: 'Cao',
+};
+
+const ROLE_LABELS: Record<string, string> = {
+  customer: 'Khách hàng',
+  sales: 'Nhân viên sale',
+  operations: 'Vận hành',
+  manager: 'Quản lý',
+  admin: 'Quản trị viên',
+};
+
+const ORDER_TYPE_LABELS: Record<string, string> = {
+  ready_stock: 'Có sẵn',
+  pre_order: 'Đặt trước',
+  prescription: 'Toa kính',
 };
 
 function formatDateTime(value?: string) {
@@ -181,21 +201,21 @@ function TicketDetailDialog({
         <DialogHeader>
           <DialogTitle>{ticket.subject}</DialogTitle>
           <DialogDescription>
-            {CATEGORY_LABELS[ticket.category]} ticket {ticket.id}
+            Phiếu {CATEGORY_LABELS[ticket.category].toLowerCase()} {ticket.id}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
             <Card className="p-4">
-              <h3 className="text-sm font-semibold text-gray-900">Ticket details</h3>
+              <h3 className="text-sm font-semibold text-gray-900">Thông tin phiếu</h3>
               <dl className="mt-3 space-y-2 text-sm text-gray-600">
                 <div className="flex justify-between gap-3">
-                  <dt>Category</dt>
+                  <dt>Loại</dt>
                   <dd className="font-medium text-gray-900">{CATEGORY_LABELS[ticket.category]}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt>Status</dt>
+                  <dt>Trạng thái</dt>
                   <dd>
                     <span
                       className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getStatusTone(ticket.status)}`}
@@ -205,17 +225,19 @@ function TicketDetailDialog({
                   </dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt>Priority</dt>
-                  <dd className="font-medium text-gray-900">{ticket.priority}</dd>
+                  <dt>Mức ưu tiên</dt>
+                  <dd className="font-medium text-gray-900">
+                    {PRIORITY_LABELS[ticket.priority] || ticket.priority}
+                  </dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt>Customer</dt>
+                  <dt>Khách hàng</dt>
                   <dd className="text-right font-medium text-gray-900">
                     {ticket.user?.name || ticket.email || '-'}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt>Last updated</dt>
+                  <dt>Cập nhật gần nhất</dt>
                   <dd className="text-right font-medium text-gray-900">
                     {formatDateTime(ticket.lastMessageAt || ticket.updatedAt)}
                   </dd>
@@ -224,28 +246,28 @@ function TicketDetailDialog({
             </Card>
 
             <Card className="p-4">
-              <h3 className="text-sm font-semibold text-gray-900">Linked order/store</h3>
+              <h3 className="text-sm font-semibold text-gray-900">Đơn hàng / cửa hàng liên quan</h3>
               <dl className="mt-3 space-y-2 text-sm text-gray-600">
                 <div className="flex justify-between gap-3">
-                  <dt>Order</dt>
+                  <dt>Đơn hàng</dt>
                   <dd className="text-right font-medium text-gray-900">
                     {ticket.order?.paymentCode || ticket.orderId || '-'}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt>Order type</dt>
+                  <dt>Loại đơn</dt>
                   <dd className="text-right font-medium text-gray-900">
-                    {ticket.order?.orderType || '-'}
+                    {ORDER_TYPE_LABELS[ticket.order?.orderType || ''] || ticket.order?.orderType || '-'}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt>Total</dt>
+                  <dt>Tổng tiền</dt>
                   <dd className="text-right font-medium text-gray-900">
                     {ticket.order ? formatCurrency(ticket.order.total) : '-'}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt>Store</dt>
+                  <dt>Cửa hàng</dt>
                   <dd className="text-right font-medium text-gray-900">
                     {ticket.store?.name || ticket.store?.code || '-'}
                   </dd>
@@ -256,37 +278,37 @@ function TicketDetailDialog({
 
           {ticket.warranty ? (
             <Card className="p-4">
-              <h3 className="text-sm font-semibold text-gray-900">Warranty snapshot</h3>
+              <h3 className="text-sm font-semibold text-gray-900">Thông tin bảo hành</h3>
               <dl className="mt-3 grid gap-3 text-sm text-gray-600 md:grid-cols-2">
                 <div>
-                  <dt>Item</dt>
+                  <dt>Sản phẩm</dt>
                   <dd className="font-medium text-gray-900">{ticket.warranty.itemName || '-'}</dd>
                 </div>
                 <div>
-                  <dt>Eligibility</dt>
+                  <dt>Điều kiện</dt>
                   <dd className="font-medium text-gray-900">
                     {ELIGIBILITY_LABELS[ticket.warranty.eligibility]}
                   </dd>
                 </div>
                 <div>
-                  <dt>Warranty months</dt>
+                  <dt>Số tháng bảo hành</dt>
                   <dd className="font-medium text-gray-900">{ticket.warranty.warrantyMonths}</dd>
                 </div>
                 <div>
-                  <dt>Expires at</dt>
+                  <dt>Hết hạn lúc</dt>
                   <dd className="font-medium text-gray-900">
                     {formatDateTime(ticket.warranty.expiresAt)}
                   </dd>
                 </div>
                 {ticket.warranty.decisionNote ? (
                   <div className="md:col-span-2">
-                    <dt>Decision note</dt>
+                    <dt>Ghi chú duyệt</dt>
                     <dd className="font-medium text-gray-900">{ticket.warranty.decisionNote}</dd>
                   </div>
                 ) : null}
                 {ticket.warranty.serviceNote ? (
                   <div className="md:col-span-2">
-                    <dt>Service note</dt>
+                    <dt>Ghi chú xử lý</dt>
                     <dd className="font-medium text-gray-900">{ticket.warranty.serviceNote}</dd>
                   </div>
                 ) : null}
@@ -295,10 +317,10 @@ function TicketDetailDialog({
           ) : null}
 
           <Card className="p-4">
-            <h3 className="text-sm font-semibold text-gray-900">Conversation</h3>
+            <h3 className="text-sm font-semibold text-gray-900">Trao đổi</h3>
             <div className="mt-4 space-y-3">
               {ticket.messages.length === 0 ? (
-                <p className="text-sm text-gray-500">No messages yet.</p>
+                <p className="text-sm text-gray-500">Chưa có tin nhắn nào.</p>
               ) : (
                 ticket.messages.map((message: SupportMessageRecord) => (
                   <div
@@ -311,7 +333,7 @@ function TicketDetailDialog({
                   >
                     <div className="flex items-center justify-between gap-3">
                       <span className="font-medium text-gray-900">
-                        {message.sender === 'staff' ? 'Staff' : 'Customer'}
+                        {message.sender === 'staff' ? 'Nhân viên' : 'Khách hàng'}
                       </span>
                       <span className="text-xs text-gray-500">
                         {formatDateTime(message.createdAt)}
@@ -327,10 +349,10 @@ function TicketDetailDialog({
           {!isReadOnly ? (
             <div className="grid gap-4 lg:grid-cols-2">
               <Card className="p-4">
-                <Label className="text-sm font-semibold text-gray-900">Reply</Label>
+                <Label className="text-sm font-semibold text-gray-900">Phản hồi</Label>
                 <Textarea
                   className="mt-3"
-                  placeholder="Add a staff reply..."
+                  placeholder="Nhập nội dung phản hồi cho khách hàng..."
                   value={replyMessage}
                   onChange={(event) => setReplyMessage(event.target.value)}
                   rows={5}
@@ -340,13 +362,13 @@ function TicketDetailDialog({
                     onClick={() => void onReply(replyMessage)}
                     disabled={isSubmitting || !replyMessage.trim()}
                   >
-                    Send reply
+                    Gửi phản hồi
                   </Button>
                 </div>
               </Card>
 
               <Card className="p-4">
-                <Label className="text-sm font-semibold text-gray-900">Update status</Label>
+                <Label className="text-sm font-semibold text-gray-900">Cập nhật trạng thái</Label>
                 <select
                   value={nextStatus}
                   onChange={(event) =>
@@ -354,7 +376,7 @@ function TicketDetailDialog({
                   }
                   className="mt-3 flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
                 >
-                  <option value="">Select next status</option>
+                  <option value="">Chọn trạng thái tiếp theo</option>
                   {statusOptions.map((status) => (
                     <option key={status} value={status}>
                       {STATUS_LABELS[status] || status}
@@ -365,8 +387,8 @@ function TicketDetailDialog({
                   className="mt-3"
                   placeholder={
                     ticket.category === 'warranty'
-                      ? 'Decision note or service note...'
-                      : 'Optional status note...'
+                      ? 'Nhập ghi chú duyệt hoặc ghi chú xử lý...'
+                      : 'Nhập ghi chú trạng thái nếu cần...'
                   }
                   value={statusNote}
                   onChange={(event) => setStatusNote(event.target.value)}
@@ -381,7 +403,7 @@ function TicketDetailDialog({
                     }}
                     disabled={isSubmitting || !nextStatus}
                   >
-                    Apply status
+                    Áp dụng trạng thái
                   </Button>
                 </div>
               </Card>
@@ -391,7 +413,7 @@ function TicketDetailDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Close
+            Đóng
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -448,7 +470,7 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
       }
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : 'Failed to load support tickets.',
+        error instanceof Error ? error.message : 'Không thể tải danh sách phiếu hỗ trợ.',
       );
     } finally {
       setLoading(false);
@@ -478,7 +500,7 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
       setSelectedTicket(detail);
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : 'Failed to load support ticket detail.',
+        error instanceof Error ? error.message : 'Không thể tải chi tiết phiếu hỗ trợ.',
       );
     } finally {
       setDetailLoading(false);
@@ -497,9 +519,9 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
       setSubmitting(true);
       await supportApi.replyTicket(selectedTicket.id, { message: message.trim() });
       await Promise.all([refreshSelectedTicket(selectedTicket.id), loadTickets()]);
-      setSuccessMessage('Reply sent successfully.');
+      setSuccessMessage('Đã gửi phản hồi thành công.');
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Failed to send reply.');
+      setErrorMessage(error instanceof Error ? error.message : 'Không thể gửi phản hồi.');
     } finally {
       setSubmitting(false);
     }
@@ -519,10 +541,10 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
 
       await supportApi.updateTicketStatus(selectedTicket.id, payload);
       await Promise.all([refreshSelectedTicket(selectedTicket.id), loadTickets()]);
-      setSuccessMessage('Status updated successfully.');
+      setSuccessMessage('Đã cập nhật trạng thái thành công.');
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : 'Failed to update support status.',
+        error instanceof Error ? error.message : 'Không thể cập nhật trạng thái hỗ trợ.',
       );
     } finally {
       setSubmitting(false);
@@ -548,7 +570,7 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
                 href="/sale/orders/prescription-needed"
                 className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
               >
-                Prescription clarification
+                Bổ sung toa kính
                 <ExternalLink className="h-4 w-4" />
               </Link>
             ) : null}
@@ -556,7 +578,7 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
 
           <Button variant="outline" className="gap-2" onClick={() => void loadTickets()}>
             <RefreshCw className="h-4 w-4" />
-            Refresh
+            Tải lại
           </Button>
         </div>
 
@@ -587,7 +609,7 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
               <div className="flex flex-col gap-3 lg:flex-row">
                 <div className="flex-1">
                   <SearchBar
-                    placeholder="Search by order, customer, phone, or ticket subject"
+                    placeholder="Tìm theo đơn hàng, khách hàng, số điện thoại hoặc tiêu đề phiếu"
                     value={searchQuery}
                     onChange={setSearchQuery}
                   />
@@ -598,7 +620,7 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
                     onChange={(event) => setStatusFilter(event.target.value)}
                     className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
                   >
-                    <option value="all">All statuses</option>
+                    <option value="all">Tất cả trạng thái</option>
                     {Object.entries(STATUS_LABELS).map(([value, label]) => (
                       <option key={value} value={value}>
                         {label}
@@ -613,7 +635,7 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
                       onChange={(event) => setEligibilityFilter(event.target.value)}
                       className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
                     >
-                      <option value="all">All eligibility</option>
+                      <option value="all">Tất cả điều kiện</option>
                       {Object.entries(ELIGIBILITY_LABELS).map(([value, label]) => (
                         <option key={value} value={value}>
                           {label}
@@ -634,12 +656,12 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
                     <table className="min-w-full text-sm">
                       <thead className="bg-slate-50 text-left text-gray-500">
                         <tr>
-                          <th className="px-4 py-3">Ticket</th>
-                          <th className="px-4 py-3">Customer</th>
-                          <th className="px-4 py-3">Store</th>
-                          <th className="px-4 py-3">Status</th>
-                          <th className="px-4 py-3">Last update</th>
-                          <th className="px-4 py-3 text-right">Action</th>
+                          <th className="px-4 py-3">Phiếu</th>
+                          <th className="px-4 py-3">Khách hàng</th>
+                          <th className="px-4 py-3">Cửa hàng</th>
+                          <th className="px-4 py-3">Trạng thái</th>
+                          <th className="px-4 py-3">Cập nhật gần nhất</th>
+                          <th className="px-4 py-3 text-right">Thao tác</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -653,7 +675,9 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
                             </td>
                             <td className="px-4 py-3">
                               <div>{ticket.user?.name || ticket.email || '-'}</div>
-                              <div className="text-xs text-gray-500">{ticket.user?.role || '-'}</div>
+                              <div className="text-xs text-gray-500">
+                                {ROLE_LABELS[ticket.user?.role || ''] || ticket.user?.role || '-'}
+                              </div>
                             </td>
                             <td className="px-4 py-3">
                               {ticket.store?.name || ticket.store?.code || '-'}
@@ -675,7 +699,7 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
                             </td>
                             <td className="px-4 py-3 text-right">
                               <Button variant="outline" size="sm" onClick={() => void openTicketDetail(ticket)}>
-                                Open
+                                Mở
                               </Button>
                             </td>
                           </tr>
@@ -683,7 +707,7 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
                         {tickets.length === 0 ? (
                           <tr>
                             <td colSpan={6} className="px-4 py-10 text-center text-sm text-gray-500">
-                              No support tickets match the current filters.
+                              Không có phiếu hỗ trợ nào khớp với bộ lọc hiện tại.
                             </td>
                           </tr>
                         ) : null}
@@ -698,7 +722,7 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
 
         {detailLoading && detailOpen ? (
           <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-            Loading ticket detail...
+            Đang tải chi tiết phiếu...
           </div>
         ) : null}
       </div>

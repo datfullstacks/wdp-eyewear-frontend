@@ -109,7 +109,7 @@ export default function OrdersPending() {
         prev.filter((id) => scoped.some((order) => order.id === id))
       );
     } catch {
-      setErrorMessage('Khong tai duoc danh sach don can xu ly.');
+      setErrorMessage('Không tải được danh sách đơn cần xử lý.');
     } finally {
       setIsLoading(false);
     }
@@ -195,7 +195,7 @@ export default function OrdersPending() {
       setProcessModal(null);
     } catch (error) {
       setErrorMessage(
-        extractApiErrorMessage(error, 'Khong the duyet don hang nay.')
+        extractApiErrorMessage(error, 'Không thể duyệt đơn hàng này.')
       );
     } finally {
       setIsSubmittingAction(false);
@@ -214,15 +214,15 @@ export default function OrdersPending() {
         managerReviewRequestedBy: 'Sales/Support',
         managerReviewReason:
           order.paymentStatus === 'cod'
-            ? 'Don COD can manager xac nhan truoc khi handoff.'
+            ? 'Đơn COD cần manager xác nhận trước khi handoff.'
             : order.paymentStatus === 'partial'
-              ? 'Don thanh toan mot phan can manager xac nhan.'
-              : 'Case pending can manager review.',
+              ? 'Đơn thanh toán một phần cần manager xác nhận.'
+              : 'Case pending cần manager review.',
       });
       await loadPendingOrders();
     } catch (error) {
       setErrorMessage(
-        extractApiErrorMessage(error, 'Khong the chuyen don hang len manager.')
+        extractApiErrorMessage(error, 'Không thể chuyển đơn hàng lên manager.')
       );
     } finally {
       setIsSubmittingAction(false);
@@ -239,13 +239,13 @@ export default function OrdersPending() {
       setIsSubmittingAction(true);
       setErrorMessage(null);
       await orderApi.cancel(rejectModal.orderDbId, {
-        reason: reason || 'Don bi tu choi boi nhan vien',
+        reason: reason || 'Đơn bị từ chối bởi nhân viên',
       });
       await loadPendingOrders();
       setRejectModal(null);
     } catch (error) {
       setErrorMessage(
-        extractApiErrorMessage(error, 'Khong the tu choi don hang nay.')
+        extractApiErrorMessage(error, 'Không thể từ chối đơn hàng này.')
       );
     } finally {
       setIsSubmittingAction(false);
@@ -264,13 +264,13 @@ export default function OrdersPending() {
       await orderApi.updateOpsExecution(sendBackModal.orderDbId, {
         approvalState: 'sent_back_to_sale',
         managerReviewRequestedBy: 'Manager',
-        managerReviewReason: reason || 'Manager yeu cau sale xu ly lai.',
+        managerReviewReason: reason || 'Manager yêu cầu sale xử lý lại.',
       });
       await loadPendingOrders();
       setSendBackModal(null);
     } catch (error) {
       setErrorMessage(
-        extractApiErrorMessage(error, 'Khong the tra lai don hang cho sale.')
+        extractApiErrorMessage(error, 'Không thể trả lại đơn hàng cho sale.')
       );
     } finally {
       setIsSubmittingAction(false);
@@ -313,7 +313,7 @@ export default function OrdersPending() {
       setSelectedOrders([]);
     } catch (error) {
       setErrorMessage(
-        extractApiErrorMessage(error, 'Khong the duyet mot hoac nhieu don hang.')
+        extractApiErrorMessage(error, 'Không thể duyệt một hoặc nhiều đơn hàng.')
       );
     } finally {
       setIsSubmittingAction(false);
@@ -323,11 +323,11 @@ export default function OrdersPending() {
   return (
     <>
       <Header
-        title={scope === 'manager' ? 'Don can manager duyet' : 'Don can xu ly'}
+        title={scope === 'manager' ? 'Đơn cần manager duyệt' : 'Đơn cần xử lý'}
         subtitle={
           scope === 'manager'
-            ? 'Xu ly cac case duoc staff chuyen len manager'
-            : 'Xac nhan va xu ly don hang moi'
+            ? 'Xử lý các case được staff chuyển lên manager'
+            : 'Xác nhận và xử lý đơn hàng mới'
         }
       />
 
@@ -342,7 +342,7 @@ export default function OrdersPending() {
             <div className="flex w-full items-center gap-2 sm:max-w-[360px]">
               <div className="w-full">
                 <SearchBar
-                  placeholder="Tim ma don, ten KH, SDT..."
+                  placeholder="Tìm mã đơn, tên KH, SĐT..."
                   value={searchQuery}
                   onChange={setSearchQuery}
                 />
@@ -358,27 +358,27 @@ export default function OrdersPending() {
                         ? 'border-yellow-400 text-yellow-700 hover:border-yellow-500'
                         : ''
                     }`}
-                    aria-label="Loc theo ngay"
+                    aria-label="Lọc theo ngày"
                   >
                     <Filter className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent align="start" className="w-64">
-                  <DropdownMenuLabel>Loc theo ngay tao</DropdownMenuLabel>
+                  <DropdownMenuLabel>Lọc theo ngày tạo</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => setCreatedDateFilter('')}>
-                    Tat ca
+                    Tất cả
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => setCreatedDateFilter(toLocalIsoDate(new Date()))}
                   >
-                    Hom nay
+                    Hôm nay
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <div className="space-y-2 px-2 py-2">
                     <p className="text-foreground/70 text-xs font-medium">
-                      Chon ngay
+                      Chọn ngày
                     </p>
                     <input
                       type="date"
@@ -397,7 +397,7 @@ export default function OrdersPending() {
               <>
                 {selectedBlockedCount > 0 && (
                   <p className="text-sm font-medium text-amber-700">
-                    {selectedBlockedCount} don chua du dieu kien duyet
+                    {selectedBlockedCount} đơn chưa đủ điều kiện duyệt
                   </p>
                 )}
 
@@ -407,7 +407,7 @@ export default function OrdersPending() {
                   onClick={() => setSelectedOrders([])}
                   disabled={isSubmittingAction}
                 >
-                  Bo chon ({selectedOrders.length})
+                  Bỏ chọn ({selectedOrders.length})
                 </Button>
 
                 <Button
@@ -419,7 +419,9 @@ export default function OrdersPending() {
                   disabled={isSubmittingAction || selectedBlockedCount > 0}
                 >
                   <CheckCircle className="h-4 w-4" />
-                  {scope === 'manager' ? 'Manager duyet loat' : 'Xac nhan hang loat'}
+                  {scope === 'manager'
+                    ? 'Manager duyệt loạt'
+                    : 'Xác nhận hàng loạt'}
                 </Button>
               </>
             )}
@@ -427,7 +429,7 @@ export default function OrdersPending() {
         </div>
 
         {isLoading && (
-          <p className="text-foreground/70 text-sm">Dang tai du lieu don hang...</p>
+          <p className="text-foreground/70 text-sm">Đang tải dữ liệu đơn hàng...</p>
         )}
         {!isLoading && errorMessage && (
           <p className="text-destructive text-sm">{errorMessage}</p>

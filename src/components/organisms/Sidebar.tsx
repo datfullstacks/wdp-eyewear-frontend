@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  AlertTriangle,
   BarChart3,
   Bell,
   ChevronDown,
@@ -72,13 +71,6 @@ const menuItems: MenuItem[] = [
         badgeType: 'warning',
       },
       {
-        icon: AlertTriangle,
-        label: 'Đơn trễ / cảnh báo',
-        path: '/sale/orders/alerts',
-        badgeKey: 'alerts',
-        badgeType: 'error',
-      },
-      {
         icon: FileHeart,
         label: 'Prescription clarification',
         path: '/sale/orders/prescription-needed',
@@ -133,29 +125,6 @@ const menuItems: MenuItem[] = [
         icon: Percent,
         label: 'Vận chuyển / hoàn',
         path: '/sale/reports/shipping',
-      },
-    ],
-  },
-  {
-    icon: Settings,
-    label: 'Thiết lập cá nhân',
-    children: [
-      {
-        icon: Bell,
-        label: 'Thông báo',
-        path: '/sale/settings/notifications',
-        badge: '2',
-        badgeType: 'info',
-      },
-      {
-        icon: ListTodo,
-        label: 'Nhiệm vụ của tôi',
-        path: '/sale/settings/tasks',
-      },
-      {
-        icon: User,
-        label: 'Cài đặt tài khoản',
-        path: '/sale/settings/account',
       },
     ],
   },

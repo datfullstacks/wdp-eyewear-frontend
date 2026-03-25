@@ -14,8 +14,6 @@ import {
   ChevronDown,
   Eye,
   HandCoins,
-  Link2,
-  MessageSquare,
   Package,
   PackageCheck,
   Truck,
@@ -28,8 +26,6 @@ interface PreorderOrderRowProps {
   isSelected: boolean;
   onSelect: (id: string) => void;
   onViewDetail: (order: PreorderOrder) => void;
-  onLinkBatch?: (order: PreorderOrder) => void;
-  onContact?: (order: PreorderOrder) => void;
   onCancel: (order: PreorderOrder) => void;
   onMarkArrived: (order: PreorderOrder) => void;
   onStockIn: (order: PreorderOrder) => void;
@@ -73,8 +69,6 @@ function getStatusMeta(order: PreorderOrder) {
 export const PreorderOrderRow = ({
   order,
   onViewDetail,
-  onLinkBatch,
-  onContact,
   onCancel,
   onMarkArrived,
   onStockIn,
@@ -190,11 +184,6 @@ export const PreorderOrderRow = ({
               {order.trackingCode}
             </span>
           )}
-          {order.shipmentStatus && (
-            <span className="text-foreground/70 text-xs">
-              GHN: {order.shipmentStatus}
-            </span>
-          )}
         </div>
       </TableCell>
 
@@ -267,22 +256,6 @@ export const PreorderOrderRow = ({
             <DropdownMenuItem onClick={() => onViewDetail(order)}>
               <Eye className="mr-2 h-4 w-4" />
               Xem chi tiết
-            </DropdownMenuItem>
-
-            <DropdownMenuItem
-              disabled={!onLinkBatch}
-              onClick={() => onLinkBatch?.(order)}
-            >
-              <Link2 className="mr-2 h-4 w-4" />
-              Liên kết đợt hàng
-            </DropdownMenuItem>
-
-            <DropdownMenuItem
-              disabled={!onContact}
-              onClick={() => onContact?.(order)}
-            >
-              <MessageSquare className="mr-2 h-4 w-4" />
-              Liên hệ khách
             </DropdownMenuItem>
 
             {!isCancelled && (

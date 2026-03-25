@@ -73,13 +73,13 @@ export const RefundTable = ({
       <Table className="text-sm font-normal">
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead>Ma hoan tien</TableHead>
-            <TableHead>Ma don hang</TableHead>
-            <TableHead>Khach hang</TableHead>
-            <TableHead>So tien</TableHead>
-            <TableHead>Phuong thuc</TableHead>
-            <TableHead>Trang thai</TableHead>
-            <TableHead>Ngay tao</TableHead>
+            <TableHead>Mã hoàn tiền</TableHead>
+            <TableHead>Mã đơn hàng</TableHead>
+            <TableHead>Khách hàng</TableHead>
+            <TableHead>Số tiền</TableHead>
+            <TableHead>Phương thức</TableHead>
+            <TableHead>Trạng thái</TableHead>
+            <TableHead>Ngày tạo</TableHead>
             <TableHead className="w-[60px]"></TableHead>
           </TableRow>
         </TableHeader>
@@ -90,7 +90,7 @@ export const RefundTable = ({
                 colSpan={8}
                 className="text-muted-foreground py-8 text-center text-sm"
               >
-                Khong co yeu cau hoan tien phu hop.
+                Không có yêu cầu hoàn tiền phù hợp.
               </TableCell>
             </TableRow>
           )}
@@ -190,7 +190,7 @@ export const RefundTable = ({
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => onDetail(refund)}>
                         <Eye className="mr-2 h-4 w-4" />
-                        Xem chi tiet
+                        Xem chi tiết
                       </DropdownMenuItem>
 
                       {(canSaleApprove || canManagerDecide) && (
@@ -201,7 +201,7 @@ export const RefundTable = ({
                             disabled={actionsDisabled}
                           >
                             <CheckCircle className="text-success mr-2 h-4 w-4" />
-                            Duyet
+                            Duyệt
                           </DropdownMenuItem>
                         </>
                       )}
@@ -213,7 +213,7 @@ export const RefundTable = ({
                             disabled={actionsDisabled}
                           >
                             <XCircle className="text-destructive mr-2 h-4 w-4" />
-                            Tu choi
+                            Từ chối
                           </DropdownMenuItem>
                         </>
                       )}
@@ -226,7 +226,7 @@ export const RefundTable = ({
                             disabled={actionsDisabled}
                           >
                             <AlertTriangle className="mr-2 h-4 w-4 text-amber-600" />
-                            Chuyen manager
+                            Chuyển manager
                           </DropdownMenuItem>
                         </>
                       )}
@@ -239,7 +239,7 @@ export const RefundTable = ({
                             disabled={actionsDisabled}
                           >
                             <MessageSquareWarning className="mr-2 h-4 w-4" />
-                            Yeu cau bo sung
+                            Yêu cầu bổ sung
                           </DropdownMenuItem>
                         </>
                       )}
@@ -252,7 +252,7 @@ export const RefundTable = ({
                             disabled={actionsDisabled}
                           >
                             <RotateCcw className="mr-2 h-4 w-4" />
-                            Tiep tuc review
+                            Tiếp tục review
                           </DropdownMenuItem>
                         </>
                       )}
@@ -265,7 +265,7 @@ export const RefundTable = ({
                             disabled={actionsDisabled}
                           >
                             <CornerUpLeft className="mr-2 h-4 w-4" />
-                            Tra lai staff
+                            Trả lại staff
                           </DropdownMenuItem>
                         </>
                       )}
@@ -278,7 +278,7 @@ export const RefundTable = ({
                             disabled={actionsDisabled}
                           >
                             <PackageCheck className="mr-2 h-4 w-4 text-blue-600" />
-                            Xac nhan da nhan hang
+                            Xác nhận đã nhận hàng
                           </DropdownMenuItem>
                         </>
                       )}
@@ -290,7 +290,7 @@ export const RefundTable = ({
                             disabled={actionsDisabled}
                           >
                             <AlertTriangle className="mr-2 h-4 w-4 text-amber-600" />
-                            QC fail / tra lai review
+                            QC fail / trả lại review
                           </DropdownMenuItem>
                         </>
                       )}
@@ -303,7 +303,7 @@ export const RefundTable = ({
                             disabled={actionsDisabled}
                           >
                             <CreditCard className="mr-2 h-4 w-4 text-amber-600" />
-                            Bat dau payout
+                            Bắt đầu payout
                           </DropdownMenuItem>
                         </>
                       )}
@@ -316,7 +316,7 @@ export const RefundTable = ({
                             disabled={actionsDisabled}
                           >
                             <Banknote className="mr-2 h-4 w-4 text-emerald-600" />
-                            Xac nhan da chuyen tien
+                            Xác nhận đã chuyển tiền
                           </DropdownMenuItem>
                         </>
                       )}

@@ -5,6 +5,22 @@ export type InventoryStatus =
   | 'overstock'
   | 'not_tracked';
 
+export type InventoryDisplayStatus = 'in_stock' | 'out_of_stock';
+
+export const INVENTORY_STATUS_LABELS: Record<InventoryStatus, string> = {
+  in_stock: 'Còn hàng',
+  low_stock: 'Còn hàng',
+  out_of_stock: 'Hết hàng',
+  overstock: 'Còn hàng',
+  not_tracked: 'Còn hàng',
+};
+
+export function toInventoryDisplayStatus(
+  status: InventoryStatus
+): InventoryDisplayStatus {
+  return status === 'out_of_stock' ? 'out_of_stock' : 'in_stock';
+}
+
 export type AdjustmentReason =
   | 'adjust'
   | 'import'
@@ -42,6 +58,5 @@ export interface InventoryHistoryEntry {
 export interface InventoryStats {
   total: number;
   inStock: number;
-  lowStock: number;
   outOfStock: number;
 }

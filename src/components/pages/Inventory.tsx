@@ -29,7 +29,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { InventoryItem } from '@/types/inventory';
+import {
+  INVENTORY_STATUS_LABELS,
+  InventoryItem,
+  toInventoryDisplayStatus,
+} from '@/types/inventory';
 
 const PAGE_SIZE_OPTIONS = [20, 50, 100] as const;
 
@@ -91,7 +95,8 @@ const Inventory = () => {
         item.sku.toLowerCase().includes(normalizedSearch) ||
         item.brand.toLowerCase().includes(normalizedSearch);
       const matchesStatus =
-        statusFilter === 'all' || item.status === statusFilter;
+        statusFilter === 'all' ||
+        toInventoryDisplayStatus(item.status) === statusFilter;
       const matchesCategory =
         categoryFilter === 'all' || item.category === categoryFilter;
 
@@ -102,12 +107,11 @@ const Inventory = () => {
   const stats = useMemo(
     () => ({
       total: items.length,
-      inStock: items.filter((item) => item.trackInventory !== false && item.status === 'in_stock')
-        .length,
-      lowStock: items.filter((item) => item.trackInventory !== false && item.status === 'low_stock')
-        .length,
+      inStock: items.filter(
+        (item) => toInventoryDisplayStatus(item.status) === 'in_stock'
+      ).length,
       outOfStock: items.filter(
-        (item) => item.trackInventory !== false && item.status === 'out_of_stock'
+        (item) => toInventoryDisplayStatus(item.status) === 'out_of_stock'
       )
         .length,
     }),
@@ -216,28 +220,19 @@ const Inventory = () => {
               </DropdownMenuTrigger>
 
               <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuLabel>Trang thai</DropdownMenuLabel>
+                <DropdownMenuLabel>Trạng thái</DropdownMenuLabel>
                 <DropdownMenuRadioGroup
                   value={statusFilter}
                   onValueChange={setStatusFilter}
                 >
                   <DropdownMenuRadioItem value="all">
-                    Tat ca trang thai
+                    Tất cả trạng thái
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="in_stock">
-                    Con hang
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="low_stock">
-                    Sap het
+                    {INVENTORY_STATUS_LABELS.in_stock}
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="out_of_stock">
-                    Het hang
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="overstock">
-                    Ton nhieu
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="not_tracked">
-                    Khong theo doi ton
+                    {INVENTORY_STATUS_LABELS.out_of_stock}
                   </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
 
@@ -277,7 +272,7 @@ const Inventory = () => {
                 <p>
                   Trang <span className="font-semibold">{currentPage}</span>/{totalPages}{' '}
                   <span className="text-slate-500">
-                    ({filteredInventory.length} dong ton kho)
+                    ({filteredInventory.length} dòng tồn kho)
                   </span>
                 </p>
 
@@ -306,7 +301,7 @@ const Inventory = () => {
                     onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
                     disabled={currentPage <= 1}
                   >
-                    Trang truoc
+                    Trang trước
                   </Button>
                   <Button
                     variant="outline"

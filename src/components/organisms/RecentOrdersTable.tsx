@@ -36,9 +36,9 @@ const ITEMS_PER_PAGE = 10;
 
 function orderTypeLabel(orderType: string): string {
   const normalized = String(orderType || '').trim().toLowerCase();
-  if (normalized === 'ready_stock') return 'Hang co san';
+  if (normalized === 'ready_stock') return 'Hàng có sẵn';
   if (normalized === 'pre_order' || normalized === 'preorder')
-    return 'Dat truoc';
+    return 'Đặt trước';
   return orderType || '-';
 }
 
@@ -138,13 +138,13 @@ export const RecentOrdersTable = ({
       <Table className="text-sm font-normal">
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead className="w-[140px] whitespace-nowrap">Ma don</TableHead>
-            <TableHead>Khach hang</TableHead>
-            <TableHead>San pham</TableHead>
-            <TableHead className="text-right">Tong tien</TableHead>
-            <TableHead className="text-center">Ngay</TableHead>
-            <TableHead className="whitespace-nowrap">Loai don</TableHead>
-            <TableHead>Trang thai</TableHead>
+            <TableHead className="w-[140px] whitespace-nowrap">Mã đơn</TableHead>
+            <TableHead>Khách hàng</TableHead>
+            <TableHead>Sản phẩm</TableHead>
+            <TableHead className="text-right">Tổng tiền</TableHead>
+            <TableHead className="text-center">Ngày</TableHead>
+            <TableHead className="whitespace-nowrap">Loại đơn</TableHead>
+            <TableHead>Trạng thái</TableHead>
             <TableHead className="w-[60px]" />
           </TableRow>
         </TableHeader>

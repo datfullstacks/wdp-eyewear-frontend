@@ -60,7 +60,7 @@ export const PreorderTable = ({
             <TableHead>Ngày dự kiến</TableHead>
             <TableHead>Thanh toán</TableHead>
             <TableHead>Trạng thái</TableHead>
-            <TableHead className="w-[190px] text-right font-semibold text-foreground">
+            <TableHead className="w-[190px] text-right">
               Thao tác chính
             </TableHead>
           </TableRow>

@@ -50,7 +50,7 @@ export const InventoryEditModal = ({
 
     const nextStock = Number.parseInt(editStock, 10);
     if (!Number.isFinite(nextStock) || Number.isNaN(nextStock) || nextStock < 0) {
-      setError('So luong moi khong hop le.');
+      setError('Số lượng mới không hợp lệ.');
       return;
     }
 
@@ -64,7 +64,7 @@ export const InventoryEditModal = ({
         (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data
           ?.message ||
         (err as { message?: string })?.message ||
-        'Khong the cap nhat ton kho. Vui long thu lai.';
+        'Không thể cập nhật tồn kho. Vui lòng thử lại.';
       setError(message);
     } finally {
       setIsSaving(false);
@@ -78,7 +78,7 @@ export const InventoryEditModal = ({
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="text-foreground">
-            {item.trackInventory !== false ? 'Cap nhat ton kho' : 'Khong theo doi ton'}
+            {item.trackInventory !== false ? 'Cập nhật tồn kho' : 'Không theo dõi tồn'}
           </DialogTitle>
           <DialogDescription className="text-foreground/90">
             {item.name} ({item.sku})
@@ -90,13 +90,13 @@ export const InventoryEditModal = ({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-foreground/70 text-sm font-medium">
-                  Ton kho hien tai
+                  Tồn kho hiện tại
                 </label>
                 <p className="text-foreground text-2xl font-bold">{item.stock}</p>
               </div>
               <div>
                 <label className="text-foreground/70 text-sm font-medium">
-                  So luong moi
+                  Số lượng mới
                 </label>
                 <Input
                   type="number"
@@ -108,7 +108,7 @@ export const InventoryEditModal = ({
             </div>
             <div>
               <label className="text-foreground/70 text-sm font-medium">
-                Ly do dieu chinh
+                Lý do điều chỉnh
               </label>
               <Select value={reason} onValueChange={setReason}>
                 <SelectTrigger className="mt-1">
@@ -127,8 +127,8 @@ export const InventoryEditModal = ({
           </div>
         ) : (
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-            San pham nay dang tat <code>inventory.track</code>, nen he thong khong
-            tru ton va cung khong cho sua ton kho tai day.
+            Sản phẩm này đang tắt <code>inventory.track</code>, nên hệ thống không
+            trừ tồn và cũng không cho sửa tồn kho tại đây.
           </div>
         )}
 
@@ -138,11 +138,15 @@ export const InventoryEditModal = ({
             onClick={() => onOpenChange(false)}
             disabled={isSaving}
           >
-            Dong
+            Đóng
           </Button>
           {item.trackInventory !== false ? (
-            <Button onClick={handleUpdate} disabled={isSaving}>
-              {isSaving ? 'Dang cap nhat...' : 'Cap nhat'}
+            <Button
+              onClick={handleUpdate}
+              disabled={isSaving}
+              className="bg-yellow-400 text-yellow-950 shadow-sm hover:bg-yellow-500"
+            >
+              {isSaving ? 'Đang cập nhật...' : 'Cập nhật'}
             </Button>
           ) : null}
         </DialogFooter>

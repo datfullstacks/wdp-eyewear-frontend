@@ -1,6 +1,10 @@
 import { StatusBadge } from '@/components/atoms/StatusBadge';
 import { cn } from '@/lib/utils';
-import { InventoryStatus } from '@/types/inventory';
+import {
+  INVENTORY_STATUS_LABELS,
+  InventoryStatus,
+  toInventoryDisplayStatus,
+} from '@/types/inventory';
 
 interface InventoryStatusBadgeProps {
   status: InventoryStatus;
@@ -12,11 +16,11 @@ const statusConfig: Record<
   InventoryStatus,
   { type: 'success' | 'warning' | 'error' | 'info'; label: string }
 > = {
-  in_stock: { type: 'success', label: 'Con hang' },
-  low_stock: { type: 'warning', label: 'Sap het' },
-  out_of_stock: { type: 'error', label: 'Het hang' },
-  overstock: { type: 'info', label: 'Ton nhieu' },
-  not_tracked: { type: 'info', label: 'Khong theo doi ton' },
+  in_stock: { type: 'success', label: INVENTORY_STATUS_LABELS.in_stock },
+  low_stock: { type: 'success', label: INVENTORY_STATUS_LABELS.low_stock },
+  out_of_stock: { type: 'error', label: INVENTORY_STATUS_LABELS.out_of_stock },
+  overstock: { type: 'success', label: INVENTORY_STATUS_LABELS.overstock },
+  not_tracked: { type: 'success', label: INVENTORY_STATUS_LABELS.not_tracked },
 };
 
 export const InventoryStatusBadge = ({
@@ -24,7 +28,11 @@ export const InventoryStatusBadge = ({
   variant = 'ghost',
   className,
 }: InventoryStatusBadgeProps) => {
-  const config = statusConfig[status];
+  const normalizedStatus = toInventoryDisplayStatus(status);
+  const config =
+    normalizedStatus === 'out_of_stock'
+      ? statusConfig.out_of_stock
+      : statusConfig.in_stock;
 
   return (
     <StatusBadge

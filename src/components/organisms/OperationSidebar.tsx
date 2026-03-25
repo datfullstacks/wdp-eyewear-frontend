@@ -55,32 +55,32 @@ type MenuItem = {
 const menuItems: MenuItem[] = [
   {
     icon: ShoppingCart,
-    label: 'Don hang',
+    label: 'Đơn hàng',
     children: [
       {
         icon: PackageCheck,
-        label: 'Don co san',
+        label: 'Đơn có sẵn',
         path: '/operation/orders/ready-stock',
         badgeKey: 'readyStock',
         badgeType: 'info',
       },
       {
         icon: Package,
-        label: 'Don pre-order',
+        label: 'Đơn đặt trước',
         path: '/operation/orders/preorder',
         badgeKey: 'preorder',
         badgeType: 'info',
       },
       {
         icon: Glasses,
-        label: 'Don prescription',
+        label: 'Đơn có toa',
         path: '/operation/orders/prescription',
         badgeKey: 'prescription',
         badgeType: 'info',
       },
       {
         icon: Wrench,
-        label: 'Don dang gia cong',
+        label: 'Đơn đang gia công',
         path: '/operation/orders/processing',
         badgeKey: 'processing',
         badgeType: 'info',
@@ -89,105 +89,82 @@ const menuItems: MenuItem[] = [
   },
   {
     icon: Truck,
-    label: 'Van hanh giao van',
+    label: 'Giao vận',
     children: [
       {
         icon: Printer,
-        label: 'Tao van don / In nhan',
+        label: 'Tạo vận đơn / In nhãn',
         path: '/operation/shipping/create',
       },
       {
         icon: MapPin,
-        label: 'Tracking / Doi soat',
+        label: 'Theo dõi / Đối soát',
         path: '/operation/shipping/tracking',
       },
       {
         icon: PackageCheck,
-        label: 'Ban giao van chuyen',
+        label: 'Bàn giao vận chuyển',
         path: '/operation/shipping/handover',
       },
     ],
   },
   {
     icon: CreditCard,
-    label: 'After-sales',
+    label: 'Hậu mãi',
     children: [
       {
         icon: FileText,
-        label: 'Warranty service',
+        label: 'Bảo hành',
         path: '/operation/cases/warranties',
       },
       {
         icon: CreditCard,
-        label: 'Payout queue',
+        label: 'Hàng đợi hoàn tiền',
         path: '/operation/refunds',
       },
     ],
   },
   {
     icon: Wrench,
-    label: 'Gia cong kinh',
+    label: 'Gia công kính',
     children: [
       {
         icon: ClipboardList,
-        label: 'Hang doi gia cong',
+        label: 'Hàng đợi gia công',
         path: '/operation/lab/queue',
         badge: '8',
         badgeType: 'info',
       },
       {
         icon: ClipboardCheck,
-        label: 'Thong so lap trong / QC',
+        label: 'Thông số lắp tròng / QC',
         path: '/operation/lab/specs',
       },
       {
         icon: CheckSquare,
-        label: 'Ket qua QC & dong goi',
+        label: 'Kết quả QC và đóng gói',
         path: '/operation/lab/qc-results',
       },
     ],
   },
   {
     icon: Warehouse,
-    label: 'San pham & kho',
+    label: 'Sản phẩm và kho',
     children: [
       {
         icon: Search,
-        label: 'Tra cuu san pham',
+        label: 'Tra cứu sản phẩm',
         path: '/operation/products',
       },
       {
         icon: FileSearch,
-        label: 'Ton kho / tinh trang',
+        label: 'Tồn kho / Tình trạng',
         path: '/operation/inventory/stock',
       },
       {
         icon: Package,
-        label: 'Nhap hang pre-order',
+        label: 'Nhập hàng đặt trước',
         path: '/operation/inventory/import',
-      },
-    ],
-  },
-  {
-    icon: Settings,
-    label: 'Thiet lap ca nhan',
-    children: [
-      {
-        icon: Bell,
-        label: 'Thong bao',
-        path: '/operation/settings/notifications',
-        badge: '2',
-        badgeType: 'info',
-      },
-      {
-        icon: ListTodo,
-        label: 'Nhiem vu cua toi',
-        path: '/operation/settings/tasks',
-      },
-      {
-        icon: User,
-        label: 'Cai dat tai khoan',
-        path: '/operation/settings/account',
       },
     ],
   },
@@ -344,7 +321,7 @@ export const OperationSidebar: React.FC = () => {
               <span className="font-display text-lg font-semibold text-gray-900">
                 Eyes Dream
               </span>
-              <div className="text-xs text-gray-500">Operations</div>
+              <div className="text-xs text-gray-500">Vận hành</div>
             </div>
           </div>
         ) : (
@@ -360,7 +337,7 @@ export const OperationSidebar: React.FC = () => {
         type="button"
         onClick={() => setCollapsed((value) => !value)}
         className="absolute top-20 -right-3 h-6 w-6 rounded-full border border-gray-200 bg-gray-100 p-0 shadow-sm hover:bg-gray-200"
-        aria-label={collapsed ? 'Mo sidebar' : 'Thu gon sidebar'}
+        aria-label={collapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
       >
         {collapsed ? (
           <ChevronRight className="h-4 w-4" />
@@ -481,8 +458,8 @@ export const OperationSidebar: React.FC = () => {
 
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <p className="truncate font-medium text-gray-900">Nhan vien</p>
-              <p className="truncate text-xs text-gray-500">Operations</p>
+              <p className="truncate font-medium text-gray-900">Nhân viên</p>
+              <p className="truncate text-xs text-gray-500">Vận hành</p>
             </div>
           )}
 

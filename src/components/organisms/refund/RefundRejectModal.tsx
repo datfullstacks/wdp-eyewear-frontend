@@ -53,12 +53,12 @@ export const RefundRejectModal = ({
 
   const title =
     scope === 'manager'
-      ? 'Manager tu choi refund'
-      : 'Tu choi yeu cau hoan tien';
+      ? 'Manager từ chối refund'
+      : 'Từ chối yêu cầu hoàn tiền';
   const description =
     scope === 'manager'
-      ? `Tu choi case ${refund?.id || ''}`
-      : `Tu choi yeu cau hoan tien ${refund?.id || ''}`;
+      ? `Từ chối case ${refund?.id || ''}`
+      : `Từ chối yêu cầu hoàn tiền ${refund?.id || ''}`;
 
   const handleSubmit = async () => {
     const parts = [rejectReason, detail.trim()].filter(Boolean);
@@ -86,35 +86,35 @@ export const RefundRejectModal = ({
           <div className="rounded-lg border border-red-200 bg-red-50 p-3">
             <div className="mb-2 flex items-center gap-2 text-red-700">
               <AlertCircle className="h-5 w-5" />
-              <span className="font-medium">Xac nhan tu choi hoan tien</span>
+              <span className="font-medium">Xác nhận từ chối hoàn tiền</span>
             </div>
             <p className="text-sm text-slate-700">
-              So tien: {refund && formatCurrency(refund.amount)}
+              Số tiền: {refund && formatCurrency(refund.amount)}
             </p>
           </div>
 
           <div>
-            <Label className="text-foreground/80">Ly do tu choi *</Label>
+            <Label className="text-foreground/80">Lý do từ chối *</Label>
             <Select value={rejectReason} onValueChange={setRejectReason}>
               <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Chon ly do tu choi" />
+                <SelectValue placeholder="Chọn lý do từ chối" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="expired">Qua thoi han hoan tien</SelectItem>
-                <SelectItem value="used">San pham da qua su dung</SelectItem>
+                <SelectItem value="expired">Quá thời hạn hoàn tiền</SelectItem>
+                <SelectItem value="used">Sản phẩm đã qua sử dụng</SelectItem>
                 <SelectItem value="damaged">
-                  San pham bi hu hong do khach hang
+                  Sản phẩm bị hư hỏng do khách hàng
                 </SelectItem>
-                <SelectItem value="invalid">Yeu cau khong hop le</SelectItem>
-                <SelectItem value="other">Ly do khac</SelectItem>
+                <SelectItem value="invalid">Yêu cầu không hợp lệ</SelectItem>
+                <SelectItem value="other">Lý do khác</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div>
-            <Label className="text-foreground/80">Chi tiet ly do</Label>
+            <Label className="text-foreground/80">Chi tiết lý do</Label>
             <Textarea
-              placeholder="Nhap chi tiet ly do tu choi..."
+              placeholder="Nhập chi tiết lý do từ chối..."
               className="mt-1"
               value={detail}
               onChange={(event) => setDetail(event.target.value)}
@@ -128,7 +128,7 @@ export const RefundRejectModal = ({
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
           >
-            Huy
+            Hủy
           </Button>
           <Button
             variant="destructive"
@@ -136,7 +136,7 @@ export const RefundRejectModal = ({
             disabled={isSubmitting || !rejectReason}
           >
             <XCircle className="mr-2 h-4 w-4" />
-            {isSubmitting ? 'Dang xu ly...' : 'Tu choi'}
+            {isSubmitting ? 'Đang xử lý...' : 'Từ chối'}
           </Button>
         </DialogFooter>
       </DialogContent>

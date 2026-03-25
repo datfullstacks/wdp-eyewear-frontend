@@ -37,6 +37,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { getCustomerShippingStatusMeta } from '@/lib/customerOrderStatus';
 import {
   createDefaultReadyStockOpsState,
   createDefaultReadyStockItemState,
@@ -291,6 +292,11 @@ export function ReadyStockOrderDetailModal({
       resolvedOps.trackingCode ||
       ''
   ).trim();
+  const shippingStatusMeta = getCustomerShippingStatusMeta({
+    shipment: latestShipment || undefined,
+    opsStage: order.opsStage,
+    rawStatus: order.rawStatus,
+  });
   const hasShipment = Boolean(trackingCode);
   const canCreateShipment = Boolean(shippingInfo?.permissions.create_shipment);
   const canSyncShipment = Boolean(shippingInfo?.permissions.sync_shipment);
@@ -623,7 +629,7 @@ export function ReadyStockOrderDetailModal({
                 <StatusBadge status={payment.type}>
                   {'Thanh to\u00e1n: '} {payment.label}
                 </StatusBadge>
-                <StatusBadge status="default">
+                <StatusBadge status="warning">
                   {'Lo\u1ea1i: \u0110\u01a1n c\u00f3 s\u1eb5n'}
                 </StatusBadge>
               </div>
@@ -929,7 +935,6 @@ export function ReadyStockOrderDetailModal({
                   const picked = Boolean(state?.picked);
                   const issueType = state?.issueType || null;
                   const location = state?.warehouseLocation || '';
-                  const internalNote = state?.internalNote || '';
                   const issueNote = state?.issueNote || '';
 
                   return (
@@ -1040,47 +1045,18 @@ export function ReadyStockOrderDetailModal({
                         </div>
                       </div>
 
-                      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div className="space-y-1">
                           <Label>{'V\u1ecb tr\u00ed kho / kho x\u1eed l\u00fd (m\u1eabu)'}</Label>
                           <Input
                             value={location}
-                            onChange={(e) =>
-                              setItemState(order.id, key, {
-                                warehouseLocation: e.target.value,
-                              })
-                            }
-                            onBlur={() => {
-                              void handleSaveItemPatch(
-                                key,
-                                { warehouseLocation: location },
-                                'Kh\u00f4ng th\u1ec3 l\u01b0u v\u1ecb tr\u00ed kho c\u1ee7a s\u1ea3n ph\u1ea9m.'
-                              );
-                            }}
+                            readOnly
+                            className="bg-slate-50 text-slate-700"
                             placeholder="VD: KHO-HCM-FRAME-A1"
                           />
                         </div>
-                        <div className="space-y-1 sm:col-span-2">
-                          <Label>{'Ghi ch\u00fa n\u1ed9i b\u1ed9 item'}</Label>
-                          <Input
-                            value={internalNote}
-                            onChange={(e) =>
-                              setItemState(order.id, key, {
-                                internalNote: e.target.value,
-                              })
-                            }
-                            onBlur={() => {
-                              void handleSaveItemPatch(
-                                key,
-                                { internalNote },
-                                'Kh\u00f4ng th\u1ec3 l\u01b0u ghi ch\u00fa s\u1ea3n ph\u1ea9m.'
-                              );
-                            }}
-                            placeholder="Ghi ch\u00fa cho Ops (kh\u00f4ng g\u1eedi kh\u00e1ch)..."
-                          />
-                        </div>
                         {issueType && (
-                          <div className="space-y-1 sm:col-span-3">
+                          <div className="space-y-1 sm:col-span-2">
                             <Label>{'Chi ti\u1ebft l\u1ed7i'}</Label>
                             <Textarea
                               value={issueNote}
@@ -1111,8 +1087,17 @@ export function ReadyStockOrderDetailModal({
           {/* Sidebar */}
           <div className="lg:order-4 lg:col-span-3">
             <div className="border-border rounded-xl border p-4">
-              <div className="text-foreground mb-3 font-semibold">
-                {'V\u1eadn \u0111\u01a1n GHN'}
+              <div className="mb-3 space-y-2">
+                <div className="text-foreground font-semibold">
+                  {'V\u1eadn \u0111\u01a1n GHN'}
+                </div>
+                {shippingStatusMeta ? (
+                  <StatusBadge status={shippingStatusMeta.type}>
+                    {shippingStatusMeta.label}
+                  </StatusBadge>
+                ) : (
+                  <div className="text-sm font-semibold">-</div>
+                )}
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <div className="space-y-1">
@@ -1124,14 +1109,6 @@ export function ReadyStockOrderDetailModal({
                 <div className="space-y-1 sm:col-span-2 xl:col-span-1">
                   <Label>{'M\u00e3 v\u1eadn \u0111\u01a1n'}</Label>
                   <div className="font-mono text-sm">{trackingCode || '-'}</div>
-                </div>
-                <div className="space-y-1">
-                  <Label>{'Tr\u1ea1ng th\u00e1i GHN'}</Label>
-                  <div className="text-sm font-semibold">
-                    {latestShipment?.latestStatus ||
-                      latestShipment?.state ||
-                      '-'}
-                  </div>
                 </div>
                 <div className="space-y-1 sm:col-span-2 xl:col-span-1">
                   <Label>{'D\u1ecbch v\u1ee5'}</Label>
@@ -1187,27 +1164,6 @@ export function ReadyStockOrderDetailModal({
 
           </div>
 
-          <div className="lg:order-5 lg:col-span-3">
-            <div className="border-border rounded-xl border p-4">
-              <div className="text-foreground mb-3 font-semibold">
-                {'Ghi ch\u00fa n\u1ed9i b\u1ed9 (Ops)'}
-              </div>
-              <Textarea
-                value={resolvedOps.internalNote || ''}
-                onChange={(e) =>
-                  upsertOps(order.id, { internalNote: e.target.value })
-                }
-                onBlur={() => {
-                  void persistOpsExecutionPatch(
-                    { internalNote: resolvedOps.internalNote || '' },
-                    'Kh\u00f4ng th\u1ec3 l\u01b0u ghi ch\u00fa v\u1eadn h\u00e0nh.'
-                  );
-                }}
-                placeholder="Ghi ch\u00fa v\u1eadn h\u00e0nh, checklist, l\u01b0u \u00fd \u0111\u00f3ng g\u00f3i..."
-                rows={4}
-              />
-            </div>
-          </div>
         </div>
 
         <DialogFooter className="gap-2">

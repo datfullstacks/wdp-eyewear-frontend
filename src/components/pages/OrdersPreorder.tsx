@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Filter } from 'lucide-react';
+import { CalendarDays, Filter } from 'lucide-react';
 
 import { orderApi } from '@/api';
 import type {
@@ -28,10 +28,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  priorityFilterOptions,
-  statusFilterOptions,
-} from '@/data/preorderData';
+import { statusFilterOptions } from '@/data/preorderData';
 import { useStatusRealtimeReload } from '@/hooks/useStatusRealtime';
 import { toPreorderOrder } from '@/lib/orderAdapters';
 import { hasOperationHandoff, isPreorderOrder } from '@/lib/orderWorkflow';
@@ -52,13 +49,22 @@ function extractApiErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
+function formatFilterDate(value: string) {
+  const parts = value.split('-');
+  if (parts.length !== 3) return value;
+
+  const [year, month, day] = parts;
+  return `${day}/${month}/${year}`;
+}
+
 const OrdersPreorder = () => {
   const [orders, setOrders] = useState<PreorderOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [orderDateFrom, setOrderDateFrom] = useState('');
+  const [orderDateTo, setOrderDateTo] = useState('');
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [detailOrder, setDetailOrder] = useState<PreorderOrder | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -133,14 +139,13 @@ const OrdersPreorder = () => {
             .toLowerCase()
             .includes(searchQuery.toLowerCase()) ||
           order.customerPhone.includes(searchQuery);
-        const matchesStatus =
-          statusFilter === 'all' || order.status === statusFilter;
-        const matchesPriority =
-          priorityFilter === 'all' || order.priority === priorityFilter;
+        const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+        const matchesDateFrom = !orderDateFrom || order.orderDate >= orderDateFrom;
+        const matchesDateTo = !orderDateTo || order.orderDate <= orderDateTo;
 
-        return matchesSearch && matchesStatus && matchesPriority;
+        return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo;
       }),
-    [orders, priorityFilter, searchQuery, statusFilter]
+    [orderDateFrom, orderDateTo, orders, searchQuery, statusFilter]
   );
 
   const stats = useMemo(
@@ -297,17 +302,69 @@ const OrdersPreorder = () => {
                   ))}
                 </DropdownMenuRadioGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel>Độ ưu tiên</DropdownMenuLabel>
-                <DropdownMenuRadioGroup
-                  value={priorityFilter}
-                  onValueChange={setPriorityFilter}
-                >
-                  {priorityFilterOptions.map((opt) => (
-                    <DropdownMenuRadioItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
+                <div className="space-y-3 p-2">
+                  <div className="text-sm font-medium text-foreground">
+                    Ngày tạo đơn
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-foreground/80">
+                      Từ ngày
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="date"
+                        value={orderDateFrom}
+                        onChange={(event) => setOrderDateFrom(event.target.value)}
+                        aria-label="Từ ngày"
+                        className="absolute inset-0 z-10 cursor-pointer opacity-0"
+                      />
+                      <div className="flex h-9 items-center rounded-md border border-input bg-white px-3 pr-10 text-sm font-medium text-gray-900 shadow-sm">
+                        {orderDateFrom ? (
+                          formatFilterDate(orderDateFrom)
+                        ) : (
+                          <span className="text-gray-400">dd/mm/yyyy</span>
+                        )}
+                      </div>
+                      <CalendarDays className="pointer-events-none absolute right-3 top-1/2 z-20 h-4 w-4 -translate-y-1/2 text-foreground/70" />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-foreground/80">
+                      Đến ngày
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="date"
+                        value={orderDateTo}
+                        onChange={(event) => setOrderDateTo(event.target.value)}
+                        aria-label="Đến ngày"
+                        className="absolute inset-0 z-10 cursor-pointer opacity-0"
+                      />
+                      <div className="flex h-9 items-center rounded-md border border-input bg-white px-3 pr-10 text-sm font-medium text-gray-900 shadow-sm">
+                        {orderDateTo ? (
+                          formatFilterDate(orderDateTo)
+                        ) : (
+                          <span className="text-gray-400">dd/mm/yyyy</span>
+                        )}
+                      </div>
+                      <CalendarDays className="pointer-events-none absolute right-3 top-1/2 z-20 h-4 w-4 -translate-y-1/2 text-foreground/70" />
+                    </div>
+                  </div>
+                  {(orderDateFrom || orderDateTo) && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-full justify-center text-sm"
+                      onClick={() => {
+                        setOrderDateFrom('');
+                        setOrderDateTo('');
+                      }}
+                    >
+                      Đặt lại ngày
+                    </Button>
+                  )}
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
