@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 import { AlertCircle, AlertTriangle, FileText, Loader2, Shield } from 'lucide-react';
 
 import { Header } from '@/components/organisms/Header';
+import { RuntimeFeatureBlockedPage } from '@/components/pages/RuntimeFeatureBlockedPage';
 import { StatCard } from '@/components/molecules/StatCard';
 import { PolicyTable } from '@/components/organisms/manager';
 import { Input } from '@/components/atoms/Input';
+import { useRuntimeSystemConfig } from '@/hooks/useRuntimeSystemConfig';
 import policyApi, { type PolicyRecord } from '@/api/policies';
 
 type StatusFilter = 'all' | 'active' | 'inactive' | 'draft';
@@ -22,6 +24,11 @@ type CategoryFilter =
 
 export default function PoliciesPage() {
   const router = useRouter();
+  const {
+    config: runtimeConfig,
+    loading: loadingRuntimeConfig,
+    error: runtimeConfigError,
+  } = useRuntimeSystemConfig();
   const [policies, setPolicies] = useState<PolicyRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState('');
@@ -30,6 +37,18 @@ export default function PoliciesPage() {
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
 
   useEffect(() => {
+    if (loadingRuntimeConfig) {
+      return undefined;
+    }
+    if (
+      runtimeConfigError ||
+      runtimeConfig?.maintenanceMode ||
+      runtimeConfig?.featureFlags?.managerPolicyEditorEnabled === false
+    ) {
+      setLoading(false);
+      return undefined;
+    }
+
     let active = true;
 
     const load = async () => {
@@ -56,7 +75,61 @@ export default function PoliciesPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [
+    loadingRuntimeConfig,
+    runtimeConfig,
+    runtimeConfigError,
+  ]);
+
+  if (loadingRuntimeConfig) {
+    return (
+      <>
+        <Header title="Policy Management" subtitle="Loading runtime policy access..." />
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        </div>
+      </>
+    );
+  }
+
+  if (runtimeConfigError) {
+    return (
+      <RuntimeFeatureBlockedPage
+        title="Policy Management"
+        subtitle="Unable to load runtime system config"
+        heading="Cannot verify policy editor availability"
+        message={runtimeConfigError}
+        primaryHref="/manager"
+        primaryLabel="Back to manager"
+      />
+    );
+  }
+
+  if (runtimeConfig?.maintenanceMode) {
+    return (
+      <RuntimeFeatureBlockedPage
+        title="Policy Management"
+        subtitle="System maintenance is active"
+        heading="Policy editing is temporarily unavailable"
+        message="Admin has enabled maintenance mode, so manager policy actions are paused until the system is reopened."
+        primaryHref="/manager"
+        primaryLabel="Back to manager"
+      />
+    );
+  }
+
+  if (runtimeConfig?.featureFlags?.managerPolicyEditorEnabled === false) {
+    return (
+      <RuntimeFeatureBlockedPage
+        title="Policy Management"
+        subtitle="Manager policy editor is disabled"
+        heading="Policy editing is currently locked"
+        message="Admin has turned off manager access for policy governance. You can still ask an admin to update the rule set."
+        primaryHref="/manager"
+        primaryLabel="Back to manager"
+      />
+    );
+  }
 
   const filteredPolicies = useMemo(() => {
     return policies.filter((policy) => {
