@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { signOut } from 'next-auth/react';
 import { useLocale, useTranslations } from 'next-intl';
 import {
@@ -329,24 +329,28 @@ export const ManagerSidebar: React.FC = () => {
     return initialState;
   });
 
-  useMemo(() => {
+  useEffect(() => {
     setOpenGroups((previous) => {
+      let changed = false;
       const next = { ...previous };
 
       for (const item of menuItems) {
         if (!item.children) continue;
-        const shouldOpen = item.children.some((child) =>
-          isActivePath(pathname, child.path, child.exact)
-        );
+        const shouldOpen =
+          defaultOpenMap.get(item.key) ||
+          item.children.some((child) =>
+            isActivePath(pathname, child.path, child.exact)
+          );
 
-        if (shouldOpen) {
+        if (shouldOpen && !previous[item.key]) {
           next[item.key] = true;
+          changed = true;
         }
       }
 
-      return next;
+      return changed ? next : previous;
     });
-  }, [menuItems, pathname]);
+  }, [defaultOpenMap, menuItems, pathname]);
 
   return (
     <aside
