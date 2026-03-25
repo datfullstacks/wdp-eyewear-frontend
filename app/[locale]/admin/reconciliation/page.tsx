@@ -16,6 +16,11 @@ import analyticsApi, {
   type RefundReconciliationRow,
 } from '@/api/analytics';
 import { Button } from '@/components/atoms';
+import {
+  DistributionBars,
+  DonutBreakdown,
+  type ChartDatum,
+} from '@/components/analytics/ChartPrimitives';
 import { Header } from '@/components/organisms/Header';
 import { SystemScopeBlockedPage } from '@/components/pages/SystemScopeBlockedPage';
 import { Card } from '@/components/ui/card';
@@ -53,6 +58,21 @@ function formatMatchStatus(status: RefundReconciliationRow['matchStatus']) {
       return { label: 'Closed', className: 'bg-slate-100 text-slate-700' };
     default:
       return { label: 'Pending', className: 'bg-blue-50 text-blue-700' };
+  }
+}
+
+function formatOwner(owner: string) {
+  switch (owner) {
+    case 'sales':
+      return 'Sale/Staff';
+    case 'manager':
+      return 'Manager';
+    case 'operations':
+      return 'Operations';
+    case 'customer':
+      return 'Customer';
+    default:
+      return 'Closed';
   }
 }
 
@@ -149,6 +169,70 @@ export function RefundReconciliationWorkspace() {
     { label: 'Mismatches', value: String(report?.summary.mismatchedCases || 0) },
     { label: 'Awaiting payout', value: String(report?.summary.awaitingPayoutCases || 0) },
   ];
+  const rows = report?.rows || [];
+  const matchStatusCounts = rows.reduce<Record<string, number>>((accumulator, row) => {
+    const key = String(row.matchStatus || 'pending');
+    accumulator[key] = Number(accumulator[key] || 0) + 1;
+    return accumulator;
+  }, {});
+  const matchStatusChartData: ChartDatum[] = Object.entries(matchStatusCounts).map(
+    ([matchKey, count], index) => ({
+      label: formatMatchStatus(matchKey as RefundReconciliationRow['matchStatus']).label,
+      value: count,
+      color: ['#16a34a', '#d97706', '#dc2626', '#2563eb', '#64748b'][index % 5],
+      hint: 'Current filtered page',
+    }),
+  );
+  const settlementFlowData: ChartDatum[] = [
+    {
+      label: 'Settled',
+      value: report?.summary.settledTotal || 0,
+      color: '#16a34a',
+      hint: 'Already reconciled and paid out',
+    },
+    {
+      label: 'Approved not settled',
+      value: report?.summary.outstandingTotal || 0,
+      color: '#d97706',
+      hint: 'Approved but still outstanding',
+    },
+    {
+      label: 'Not yet approved',
+      value: Math.max(
+        0,
+        Number(report?.summary.requestedTotal || 0) - Number(report?.summary.approvedTotal || 0),
+      ),
+      color: '#64748b',
+      hint: 'Gap between requested and approved amounts',
+    },
+  ];
+  const proofCoverageData: ChartDatum[] = [
+    {
+      label: 'With payout proof',
+      value: rows.filter((row) => Boolean(row.payoutProofUrl)).length,
+      color: '#2563eb',
+      hint: 'Current filtered page',
+    },
+    {
+      label: 'Missing payout proof',
+      value: rows.filter((row) => !row.payoutProofUrl).length,
+      color: '#be123c',
+      hint: 'Current filtered page',
+    },
+  ];
+  const ownerMixCounts = rows.reduce<Record<string, number>>((accumulator, row) => {
+    const key = String(row.currentOwnerRole || 'none');
+    accumulator[key] = Number(accumulator[key] || 0) + 1;
+    return accumulator;
+  }, {});
+  const ownerMixData: ChartDatum[] = Object.entries(ownerMixCounts).map(
+    ([ownerKey, count], index) => ({
+      label: formatOwner(ownerKey),
+      value: count,
+      color: ['#0f766e', '#d97706', '#2563eb', '#7c3aed', '#64748b'][index % 5],
+      hint: 'Current filtered page',
+    }),
+  );
 
   const totalPages = report?.pagination.totalPages || 1;
 
@@ -323,6 +407,54 @@ export function RefundReconciliationWorkspace() {
                   <div className="mt-2 text-xl font-semibold text-gray-900">{card.value}</div>
                 </Card>
               ))}
+            </section>
+
+            <section className="grid gap-6 xl:grid-cols-[1.2fr_1.2fr_1.5fr]">
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900">Settlement flow</h3>
+                <p className="mt-1 text-sm text-gray-600">
+                  Splits requested refund money into settled, outstanding, and not-yet-approved.
+                </p>
+                <div className="mt-6">
+                  <DonutBreakdown
+                    data={settlementFlowData}
+                    centerLabel="Requested value"
+                    valueFormatter={formatCurrency}
+                    emptyLabel="No reconciliation money flow."
+                  />
+                </div>
+              </Card>
+
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900">Match status mix</h3>
+                <p className="mt-1 text-sm text-gray-600">
+                  Reflects the current filtered page of reconciliation rows.
+                </p>
+                <div className="mt-6">
+                  <DonutBreakdown
+                    data={matchStatusChartData}
+                    centerLabel="Match status"
+                    emptyLabel="No match status rows."
+                  />
+                </div>
+              </Card>
+
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900">Readiness checks</h3>
+                <p className="mt-1 text-sm text-gray-600">
+                  Tracks proof coverage and owner concentration for the filtered slice.
+                </p>
+                <div className="mt-6 space-y-6">
+                  <DistributionBars
+                    data={proofCoverageData}
+                    emptyLabel="No payout proof data."
+                  />
+                  <DistributionBars
+                    data={ownerMixData}
+                    emptyLabel="No owner distribution."
+                  />
+                </div>
+              </Card>
             </section>
 
             <Card className="p-6">
