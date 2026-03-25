@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Input } from '@/components/atoms/Input';
 import { Button } from '@/components/atoms';
 import { MAX_TRY_ON_MODELS } from '@/lib/productHelpers';
@@ -199,6 +200,7 @@ export function ProductForm({
       formData.tryOnGravity,
       formData.tryOnCut,
     ].some((value) => Boolean(String(value || '').trim())) || formData.tryOnUsePhysics;
+  const [isTryOnAdvancedOpen, setIsTryOnAdvancedOpen] = useState(hasTryOnAdvancedSettings);
   const tryOnStatusOptions = availableTryOnStatuses?.length
     ? TRY_ON_STATUS_OPTIONS.filter((option) => availableTryOnStatuses.includes(option.value))
     : TRY_ON_STATUS_OPTIONS;
@@ -206,6 +208,12 @@ export function ProductForm({
     (variant) => Boolean(String(variant.glbUrl || '').trim())
   ).length;
   const tryOnModelLimitReached = mappedTryOnModelCount >= MAX_TRY_ON_MODELS;
+
+  useEffect(() => {
+    if (hasTryOnAdvancedSettings) {
+      setIsTryOnAdvancedOpen(true);
+    }
+  }, [hasTryOnAdvancedSettings]);
 
   const updateVariant = (
     index: number,
@@ -1300,13 +1308,23 @@ export function ProductForm({
               </p>
             ) : null}
 
-            <details open={hasTryOnAdvancedSettings} className="rounded-md border border-dashed border-gray-300 bg-white px-4 py-3">
+            <details
+              open={isTryOnAdvancedOpen}
+              onToggle={(event) =>
+                setIsTryOnAdvancedOpen((event.currentTarget as HTMLDetailsElement).open)
+              }
+              className="rounded-md border border-dashed border-gray-300 bg-white px-4 py-3"
+            >
               <summary className="cursor-pointer text-sm font-medium text-gray-700">
                 Cai dat try-on nang cao (tuy chon)
               </summary>
 
               <p className="mt-3 rounded-md border border-gray-200 bg-white p-3 text-xs text-gray-600">
                 Neu chi dung GLB theo tung bien the, ban co the de trong toan bo nhom field ben duoi.
+              </p>
+              <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+                Moi gia tri nhap o day se ghi de runtime mac dinh. Neu model dang hien thi binh thuong, hay de trong.
+                Khong nen bat physics neu chua cau hinh collider.
               </p>
 
               <div className="mt-4 grid grid-cols-2 gap-4">
@@ -1384,7 +1402,7 @@ export function ProductForm({
                       tryOnRotation: event.target.value,
                     }))
                   }
-                  placeholder="270 0 0"
+                  placeholder="-90 0 0"
                 />
                 <Input
                   label="Prefab scale (tuy chon)"
@@ -1395,7 +1413,7 @@ export function ProductForm({
                       tryOnScale: event.target.value,
                     }))
                   }
-                  placeholder="0.019 0.019 0.01"
+                  placeholder="1 1 1"
                 />
                 <Input
                   label="Prefab translation (tuy chon)"
