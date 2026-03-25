@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Button, Input } from '@/components/atoms';
-import { adjustmentReasons } from '@/data/inventoryData';
 import {
   Dialog,
   DialogContent,
@@ -17,12 +16,21 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { InventoryItem } from '@/types/inventory';
+import { Textarea } from '@/components/ui/textarea';
 
 interface InventoryEditModalProps {
   item: InventoryItem | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdate: (item: InventoryItem, newStock: number, reason: string) => Promise<void>;
+  onUpdate: (
+    item: InventoryItem,
+    payload: {
+      quantity: number;
+      supplier: string;
+      warehouseLocation?: string;
+      note?: string;
+    }
+  ) => Promise<void>;
 }
 
 export const InventoryEditModal = ({
@@ -31,40 +39,54 @@ export const InventoryEditModal = ({
   onOpenChange,
   onUpdate,
 }: InventoryEditModalProps) => {
-  const [editStock, setEditStock] = useState('');
-  const [reason, setReason] = useState('adjust');
+  const [receiveQty, setReceiveQty] = useState('1');
+  const [supplier, setSupplier] = useState('');
+  const [warehouseLocation, setWarehouseLocation] = useState('');
+  const [note, setNote] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen && item) {
-      setEditStock(item.stock.toString());
-      setReason('adjust');
+      setReceiveQty('1');
+      setSupplier('');
+      setWarehouseLocation(item.location && item.location !== '-' ? item.location : '');
+      setNote('');
       setError(null);
     }
     onOpenChange(isOpen);
   };
 
   const handleUpdate = async () => {
-    if (!item || item.trackInventory === false) return;
+    if (!item || item.trackInventory === false || !item.variantId) return;
 
-    const nextStock = Number.parseInt(editStock, 10);
-    if (!Number.isFinite(nextStock) || Number.isNaN(nextStock) || nextStock < 0) {
-      setError('So luong moi khong hop le.');
+    const quantity = Number.parseInt(receiveQty, 10);
+    if (!Number.isFinite(quantity) || Number.isNaN(quantity) || quantity < 1) {
+      setError('So luong nhap kho khong hop le.');
+      return;
+    }
+
+    if (!supplier.trim()) {
+      setError('Nha cung cap la bat buoc.');
       return;
     }
 
     setIsSaving(true);
     setError(null);
     try {
-      await onUpdate(item, nextStock, reason);
+      await onUpdate(item, {
+        quantity,
+        supplier: supplier.trim(),
+        warehouseLocation: warehouseLocation.trim() || undefined,
+        note: note.trim() || undefined,
+      });
       onOpenChange(false);
     } catch (err) {
       const message =
         (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data
           ?.message ||
         (err as { message?: string })?.message ||
-        'Khong the cap nhat ton kho. Vui long thu lai.';
+        'Khong the nhap kho. Vui long thu lai.';
       setError(message);
     } finally {
       setIsSaving(false);
@@ -78,14 +100,14 @@ export const InventoryEditModal = ({
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="text-foreground">
-            {item.trackInventory !== false ? 'Cap nhat ton kho' : 'Khong theo doi ton'}
+            {item.trackInventory !== false ? 'Nhap kho cho bien the' : 'Khong theo doi ton'}
           </DialogTitle>
           <DialogDescription className="text-foreground/90">
             {item.name} ({item.sku})
           </DialogDescription>
         </DialogHeader>
 
-        {item.trackInventory !== false ? (
+        {item.trackInventory !== false && item.variantId ? (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -96,39 +118,57 @@ export const InventoryEditModal = ({
               </div>
               <div>
                 <label className="text-foreground/70 text-sm font-medium">
-                  So luong moi
+                  So luong nhap
                 </label>
                 <Input
                   type="number"
-                  value={editStock}
-                  onChange={(e) => setEditStock(e.target.value)}
+                  min={1}
+                  value={receiveQty}
+                  onChange={(e) => setReceiveQty(e.target.value)}
                   className="mt-1"
                 />
               </div>
             </div>
             <div>
               <label className="text-foreground/70 text-sm font-medium">
-                Ly do dieu chinh
+                Nha cung cap
               </label>
-              <Select value={reason} onValueChange={setReason}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {adjustmentReasons.map((entry) => (
-                    <SelectItem key={entry.value} value={entry.value}>
-                      {entry.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                value={supplier}
+                onChange={(e) => setSupplier(e.target.value)}
+                className="mt-1"
+                placeholder="Vi du: Nha cung cap ABC"
+              />
+            </div>
+            <div>
+              <label className="text-foreground/70 text-sm font-medium">
+                Vi tri kho
+              </label>
+              <Input
+                value={warehouseLocation}
+                onChange={(e) => setWarehouseLocation(e.target.value)}
+                className="mt-1"
+                placeholder="Vi du: Ke A1-02"
+              />
+            </div>
+            <div>
+              <label className="text-foreground/70 text-sm font-medium">
+                Ghi chu
+              </label>
+              <Textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                className="mt-1"
+                placeholder="Nhap ghi chu cho phieu nhap kho..."
+              />
             </div>
             {error ? <p className="text-sm text-rose-600">{error}</p> : null}
           </div>
         ) : (
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-            San pham nay dang tat <code>inventory.track</code>, nen he thong khong
-            tru ton va cung khong cho sua ton kho tai day.
+            {item.trackInventory === false
+              ? 'San pham nay dang tat inventory.track, nen he thong khong nhap kho tai day.'
+              : 'Bien the nay khong co variantId hop le, nen chua the tao phieu nhap kho.'}
           </div>
         )}
 
@@ -140,9 +180,9 @@ export const InventoryEditModal = ({
           >
             Dong
           </Button>
-          {item.trackInventory !== false ? (
+          {item.trackInventory !== false && item.variantId ? (
             <Button onClick={handleUpdate} disabled={isSaving}>
-              {isSaving ? 'Dang cap nhat...' : 'Cap nhat'}
+              {isSaving ? 'Dang nhap kho...' : 'Xac nhan nhap kho'}
             </Button>
           ) : null}
         </DialogFooter>
