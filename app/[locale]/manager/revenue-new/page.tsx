@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { AlertTriangle, Loader2 } from 'lucide-react';
+import { useLocale } from 'next-intl';
 
 import { Header } from '@/components/organisms/Header';
 import { Card } from '@/components/ui/card';
@@ -15,9 +16,38 @@ const formatCurrency = (value: number) =>
   }).format(value || 0);
 
 export default function RevenueNewPage() {
+  const locale = useLocale();
   const [summary, setSummary] = useState<RevenueSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const copy =
+    locale === 'vi'
+      ? {
+          loadError: 'Không thể tải báo cáo doanh thu chi tiết.',
+          title: 'Thống kê chi tiết',
+          subtitle: 'Phân tích hiệu quả theo loại đơn hàng và phương thức thanh toán',
+          byOrderType: 'Theo loại đơn hàng',
+          byPaymentMethod: 'Theo phương thức thanh toán',
+          type: 'Loại',
+          revenue: 'Doanh thu',
+          orders: 'Đơn hàng',
+          method: 'Phương thức',
+          payNow: 'Trả ngay',
+          payLater: 'Trả sau',
+        }
+      : {
+          loadError: 'Failed to load detailed revenue report.',
+          title: 'Detailed Revenue Report',
+          subtitle: 'Break down performance by order type and payment method',
+          byOrderType: 'By order type',
+          byPaymentMethod: 'By payment method',
+          type: 'Type',
+          revenue: 'Revenue',
+          orders: 'Orders',
+          method: 'Method',
+          payNow: 'Pay now',
+          payLater: 'Pay later',
+        };
 
   useEffect(() => {
     let active = true;
@@ -32,7 +62,7 @@ export default function RevenueNewPage() {
         }
       } catch (err) {
         if (active) {
-          setError(err instanceof Error ? err.message : 'Failed to load detailed revenue report.');
+          setError(err instanceof Error ? err.message : copy.loadError);
         }
       } finally {
         if (active) {
@@ -46,13 +76,13 @@ export default function RevenueNewPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [copy.loadError]);
 
   return (
     <>
       <Header
-        title="Detailed Revenue Report"
-        subtitle="Break down performance by order type and payment method"
+        title={copy.title}
+        subtitle={copy.subtitle}
       />
 
       <div className="space-y-6 p-6">
@@ -70,14 +100,14 @@ export default function RevenueNewPage() {
         ) : (
           <div className="grid gap-6 xl:grid-cols-2">
             <Card className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900">By order type</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{copy.byOrderType}</h3>
               <div className="mt-4 overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200 text-left text-gray-500">
-                      <th className="pb-3 pr-4">Type</th>
-                      <th className="pb-3 pr-4">Revenue</th>
-                      <th className="pb-3">Orders</th>
+                      <th className="pb-3 pr-4">{copy.type}</th>
+                      <th className="pb-3 pr-4">{copy.revenue}</th>
+                      <th className="pb-3">{copy.orders}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -94,15 +124,15 @@ export default function RevenueNewPage() {
             </Card>
 
             <Card className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900">By payment method</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{copy.byPaymentMethod}</h3>
               <div className="mt-4 overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200 text-left text-gray-500">
-                      <th className="pb-3 pr-4">Method</th>
-                      <th className="pb-3 pr-4">Revenue</th>
-                      <th className="pb-3 pr-4">Pay now</th>
-                      <th className="pb-3">Pay later</th>
+                      <th className="pb-3 pr-4">{copy.method}</th>
+                      <th className="pb-3 pr-4">{copy.revenue}</th>
+                      <th className="pb-3 pr-4">{copy.payNow}</th>
+                      <th className="pb-3">{copy.payLater}</th>
                     </tr>
                   </thead>
                   <tbody>

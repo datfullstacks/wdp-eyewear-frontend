@@ -18,7 +18,10 @@ export default function LanguageSelector({
   };
 
   return (
-    <div className={`flex gap-2 ${className}`} style={{ display: 'flex', gap: '8px' }}>
+    <div
+      className={`flex gap-2 ${className}`}
+      style={{ display: 'flex', gap: '8px' }}
+    >
       <button
         onClick={() => handleLanguageChange('en')}
         disabled={isPending}
