@@ -24,6 +24,8 @@ interface InventoryTableProps {
   onEditStock: (item: InventoryItem) => void;
   onViewHistory: (item: InventoryItem) => void;
   historyEnabled?: boolean;
+  stockEditEnabled?: boolean;
+  stockEditLabel?: string;
 }
 
 export const InventoryTable = ({
@@ -32,6 +34,8 @@ export const InventoryTable = ({
   onEditStock,
   onViewHistory,
   historyEnabled = true,
+  stockEditEnabled = true,
+  stockEditLabel,
 }: InventoryTableProps) => {
   return (
     <div className="glass-card overflow-hidden rounded-xl">
@@ -95,12 +99,14 @@ export const InventoryTable = ({
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => onEditStock(item)}
-                      disabled={item.trackInventory === false}
+                      disabled={item.trackInventory === false || !stockEditEnabled}
                     >
                       <Edit className="mr-2 h-4 w-4" />
-                      {item.trackInventory !== false
-                        ? 'Cap nhat ton kho'
-                        : 'Khong theo doi ton'}
+                      {item.trackInventory === false
+                        ? 'Khong theo doi ton'
+                        : stockEditEnabled
+                          ? stockEditLabel || 'Cap nhat ton kho'
+                          : stockEditLabel || 'Nhap kho tai man pre-order'}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem

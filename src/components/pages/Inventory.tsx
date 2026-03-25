@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Filter } from 'lucide-react';
 import inventoryApi from '@/api/inventory';
@@ -32,6 +33,7 @@ import {
 import { InventoryItem } from '@/types/inventory';
 
 const PAGE_SIZE_OPTIONS = [20, 50, 100] as const;
+const STOCK_EDIT_ENABLED = false;
 
 const Inventory = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -138,6 +140,7 @@ const Inventory = () => {
   };
 
   const handleEditStock = (item: InventoryItem) => {
+    if (!STOCK_EDIT_ENABLED) return;
     setSelectedItem(item);
     setIsEditOpen(true);
   };
@@ -175,11 +178,26 @@ const Inventory = () => {
     <>
       <Header
         title="Ton kho va tinh trang hang"
-        subtitle="Quan ly va theo doi ton kho san pham"
+        subtitle="Operation xem ton kho hien tai. Nhap kho thuc hien qua batch pre-order."
       />
 
       <div className="space-y-6 p-6">
         <InventoryStatsGrid stats={stats} />
+
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <p className="font-medium">Trang nay chi de theo doi ton kho.</p>
+          <p className="mt-1">
+            Role operation khong duoc sua stock truc tiep qua san pham. Neu can
+            nhap hang, hay dung luong{' '}
+            <Link
+              href="/operation/inventory/import"
+              className="font-semibold underline underline-offset-4"
+            >
+              Nhap hang pre-order
+            </Link>
+            .
+          </p>
+        </div>
 
         {isLoading ? (
           <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-6 text-sm text-slate-600">
@@ -270,6 +288,8 @@ const Inventory = () => {
               onEditStock={handleEditStock}
               onViewHistory={handleViewHistory}
               historyEnabled={false}
+              stockEditEnabled={STOCK_EDIT_ENABLED}
+              stockEditLabel="Nhap kho tai man pre-order"
             />
 
             {filteredInventory.length > 0 && totalPages > 1 ? (
@@ -328,12 +348,14 @@ const Inventory = () => {
           onOpenChange={setIsDetailOpen}
         />
 
-        <InventoryEditModal
-          item={selectedItem}
-          open={isEditOpen}
-          onOpenChange={setIsEditOpen}
-          onUpdate={handleUpdateStock}
-        />
+        {STOCK_EDIT_ENABLED ? (
+          <InventoryEditModal
+            item={selectedItem}
+            open={isEditOpen}
+            onOpenChange={setIsEditOpen}
+            onUpdate={handleUpdateStock}
+          />
+        ) : null}
 
         <InventoryHistoryModal
           item={selectedItem}

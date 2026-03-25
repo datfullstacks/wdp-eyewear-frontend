@@ -140,7 +140,7 @@ interface ProductFormProps {
   onUploadGallery: (files: FileList | null) => Promise<void>;
   onUploadVariantAsset: (
     file: File,
-    variantIndex: number,
+    variantId: string,
     field: 'imageUrl' | 'posterUrl' | 'glbUrl'
   ) => Promise<void>;
   onRemoveGallery: (index: number) => void;
@@ -164,6 +164,10 @@ export function ProductForm({
   onSubmit,
   submitLabel = 'Save',
 }: ProductFormProps) {
+  const getVariantUploadKey = (
+    variantId: string,
+    suffix: 'image' | 'poster' | 'glb'
+  ) => `variant-${variantId || 'unknown'}-${suffix}`;
   const priceValue = Number(formData.price || 0);
   const previewBasePrice = Number.isFinite(priceValue) ? Math.max(0, priceValue) : 0;
   const previewDepositPercent = formData.preOrderEnabled
@@ -616,10 +620,13 @@ export function ProductForm({
                   <input
                     type="file"
                     accept="image/*"
-                    disabled={isSubmitting || uploadingKey === `variant-${index}-image`}
+                    disabled={
+                      isSubmitting ||
+                      uploadingKey === getVariantUploadKey(variant.id, 'image')
+                    }
                     onChange={(event) => {
                       const file = event.target.files?.[0];
-                      if (file) void onUploadVariantAsset(file, index, 'imageUrl');
+                      if (file) void onUploadVariantAsset(file, variant.id, 'imageUrl');
                     }}
                     className="block w-full text-sm text-gray-600"
                   />
@@ -651,10 +658,13 @@ export function ProductForm({
                   <input
                     type="file"
                     accept="image/*"
-                    disabled={isSubmitting || uploadingKey === `variant-${index}-poster`}
+                    disabled={
+                      isSubmitting ||
+                      uploadingKey === getVariantUploadKey(variant.id, 'poster')
+                    }
                     onChange={(event) => {
                       const file = event.target.files?.[0];
-                      if (file) void onUploadVariantAsset(file, index, 'posterUrl');
+                      if (file) void onUploadVariantAsset(file, variant.id, 'posterUrl');
                     }}
                     className="block w-full text-sm text-gray-600"
                   />
@@ -681,10 +691,13 @@ export function ProductForm({
                   <input
                     type="file"
                     accept=".glb,.gltf,model/gltf-binary,model/gltf+json"
-                    disabled={isSubmitting || uploadingKey === `variant-${index}-glb`}
+                    disabled={
+                      isSubmitting ||
+                      uploadingKey === getVariantUploadKey(variant.id, 'glb')
+                    }
                     onChange={(event) => {
                       const file = event.target.files?.[0];
-                      if (file) void onUploadVariantAsset(file, index, 'glbUrl');
+                      if (file) void onUploadVariantAsset(file, variant.id, 'glbUrl');
                     }}
                     className="block w-full text-sm text-gray-600"
                   />
