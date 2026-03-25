@@ -17,11 +17,13 @@ import { Header } from '@/components/organisms/Header';
 import { Card } from '@/components/ui/card';
 import { StatCard } from '@/components/molecules/StatCard';
 import { userApi, type UserStatsResponse } from '@/api/users';
-import storeApi from '@/api/stores';
+import storeApi, { type StoreRecord } from '@/api/stores';
 import systemConfigApi, { type SystemConfig } from '@/api/systemConfig';
+import { AdminSystemInsights } from '@/components/analytics/AdminSystemInsights';
 
 export default function AdminDashboardPage() {
   const [userStats, setUserStats] = useState<UserStatsResponse | null>(null);
+  const [stores, setStores] = useState<StoreRecord[]>([]);
   const [storeTotal, setStoreTotal] = useState(0);
   const [systemConfig, setSystemConfig] = useState<SystemConfig | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,7 +38,7 @@ export default function AdminDashboardPage() {
         setError('');
         const [users, stores, config] = await Promise.allSettled([
           userApi.getStats(),
-          storeApi.getAll({ page: 1, limit: 1, status: 'all' }),
+          storeApi.getAll({ page: 1, limit: 200, status: 'all' }),
           systemConfigApi.get(),
         ]);
 
@@ -54,8 +56,10 @@ export default function AdminDashboardPage() {
         }
 
         if (stores.status === 'fulfilled') {
+          setStores(stores.value.stores);
           setStoreTotal(stores.value.total);
         } else {
+          setStores([]);
           setStoreTotal(0);
           errors.push(
             stores.reason instanceof Error ? stores.reason.message : 'Failed to load stores.'
@@ -144,6 +148,12 @@ export default function AdminDashboardPage() {
                 <StatCard key={stat.title} {...stat} />
               ))}
             </section>
+
+            <AdminSystemInsights
+              userStats={userStats}
+              stores={stores}
+              systemConfig={systemConfig}
+            />
 
             <section className="grid gap-4 xl:grid-cols-[2fr_1fr]">
               <Card className="border-red-100 p-6">

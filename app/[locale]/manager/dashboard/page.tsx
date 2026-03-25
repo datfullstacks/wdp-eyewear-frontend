@@ -14,7 +14,11 @@ import {
 import { Header } from '@/components/organisms/Header';
 import { StatCard } from '@/components/molecules/StatCard';
 import { Card } from '@/components/ui/card';
-import analyticsApi, { type ManagerOverview } from '@/api/analytics';
+import analyticsApi, {
+  type ManagerOverview,
+  type RevenueSummary,
+} from '@/api/analytics';
+import { ManagerRevenueInsights } from '@/components/analytics/ManagerRevenueInsights';
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('vi-VN', {
@@ -25,6 +29,7 @@ const formatCurrency = (value: number) =>
 
 export default function ManagerDashboardPage() {
   const [overview, setOverview] = useState<ManagerOverview | null>(null);
+  const [revenueSummary, setRevenueSummary] = useState<RevenueSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -35,9 +40,36 @@ export default function ManagerDashboardPage() {
       try {
         setLoading(true);
         setError('');
-        const data = await analyticsApi.getManagerOverview();
+        const [overviewResult, revenueResult] = await Promise.allSettled([
+          analyticsApi.getManagerOverview(),
+          analyticsApi.getRevenueSummary(),
+        ]);
         if (active) {
-          setOverview(data);
+          const errors: string[] = [];
+
+          if (overviewResult.status === 'fulfilled') {
+            setOverview(overviewResult.value);
+          } else {
+            setOverview(null);
+            errors.push(
+              overviewResult.reason instanceof Error
+                ? overviewResult.reason.message
+                : 'Failed to load manager overview.',
+            );
+          }
+
+          if (revenueResult.status === 'fulfilled') {
+            setRevenueSummary(revenueResult.value);
+          } else {
+            setRevenueSummary(null);
+            errors.push(
+              revenueResult.reason instanceof Error
+                ? revenueResult.reason.message
+                : 'Failed to load revenue summary.',
+            );
+          }
+
+          setError(errors.join(' '));
         }
       } catch (err) {
         if (active) {
@@ -126,6 +158,12 @@ export default function ManagerDashboardPage() {
                 <StatCard key={stat.title} {...stat} />
               ))}
             </section>
+
+            <ManagerRevenueInsights
+              summary={revenueSummary}
+              title="Manager analytics"
+              subtitle="Live revenue, collection, and channel mix for recent business performance."
+            />
 
             {overview ? (
               <section className="grid gap-4 lg:grid-cols-3">
