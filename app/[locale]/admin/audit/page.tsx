@@ -11,6 +11,12 @@ import {
 
 import analyticsApi, { type RefundAuditFilters, type RefundAuditTrail } from '@/api/analytics';
 import { Button } from '@/components/atoms';
+import {
+  DistributionBars,
+  DonutBreakdown,
+  TrendComparisonChart,
+  type ChartDatum,
+} from '@/components/analytics/ChartPrimitives';
 import { Header } from '@/components/organisms/Header';
 import { SystemScopeBlockedPage } from '@/components/pages/SystemScopeBlockedPage';
 import { Card } from '@/components/ui/card';
@@ -36,6 +42,16 @@ function formatToken(value: string) {
     .filter(Boolean)
     .map((part) => part[0].toUpperCase() + part.slice(1))
     .join(' ');
+}
+
+function formatEventDate(value?: string | null) {
+  if (!value) return '--';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '--';
+  return new Intl.DateTimeFormat('vi-VN', {
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
 }
 
 export function RefundAuditWorkspace() {
@@ -99,6 +115,29 @@ export function RefundAuditWorkspace() {
   }, [filters, page]);
 
   const totalPages = audit?.pagination.totalPages || 1;
+  const actionChartData: ChartDatum[] = (audit?.byAction || []).slice(0, 8).map((bucket, index) => ({
+    label: formatToken(bucket.action),
+    value: bucket.count,
+    color: ['#2563eb', '#0f766e', '#ea580c', '#7c3aed', '#be123c', '#16a34a'][index % 6],
+  }));
+  const actorChartData: ChartDatum[] = (audit?.byActorRole || []).map((bucket, index) => ({
+    label: formatToken(bucket.role),
+    value: bucket.count,
+    color: ['#0f766e', '#d97706', '#2563eb', '#7c3aed', '#64748b'][index % 5],
+  }));
+  const eventsByDate = (audit?.rows || []).reduce<Record<string, number>>((accumulator, row) => {
+    const key = formatEventDate(row.createdAt);
+    accumulator[key] = Number(accumulator[key] || 0) + 1;
+    return accumulator;
+  }, {});
+  const eventTrendLabels = Object.keys(eventsByDate).sort((left, right) => {
+    const [leftMonth, leftDay] = left.split('/').map(Number);
+    const [rightMonth, rightDay] = right.split('/').map(Number);
+    const leftKey = leftMonth * 100 + leftDay;
+    const rightKey = rightMonth * 100 + rightDay;
+    return leftKey - rightKey;
+  });
+  const eventTrendValues = eventTrendLabels.map((label) => eventsByDate[label] || 0);
 
   return (
     <>
@@ -276,6 +315,55 @@ export function RefundAuditWorkspace() {
                 <div className="text-sm text-gray-500">Top actor role</div>
                 <div className="mt-2 text-lg font-semibold text-gray-900">
                   {formatToken(audit?.byActorRole?.[0]?.role || '')}
+                </div>
+              </Card>
+            </section>
+
+            <section className="grid gap-6 xl:grid-cols-[1.5fr_1.1fr_1.1fr]">
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900">Event density</h3>
+                <p className="mt-1 text-sm text-gray-600">
+                  Event volume over the currently filtered audit rows.
+                </p>
+                <div className="mt-6">
+                  <TrendComparisonChart
+                    labels={eventTrendLabels}
+                    series={[
+                      {
+                        label: 'Events',
+                        color: '#2563eb',
+                        values: eventTrendValues,
+                        fill: true,
+                      },
+                    ]}
+                  />
+                </div>
+              </Card>
+
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900">Action mix</h3>
+                <p className="mt-1 text-sm text-gray-600">
+                  Most frequent refund workflow actions in the current filter.
+                </p>
+                <div className="mt-6">
+                  <DistributionBars
+                    data={actionChartData}
+                    emptyLabel="No action buckets."
+                  />
+                </div>
+              </Card>
+
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900">Actor mix</h3>
+                <p className="mt-1 text-sm text-gray-600">
+                  Shows which role is driving most refund activity.
+                </p>
+                <div className="mt-6">
+                  <DonutBreakdown
+                    data={actorChartData}
+                    centerLabel="Actor role"
+                    emptyLabel="No actor role buckets."
+                  />
                 </div>
               </Card>
             </section>
