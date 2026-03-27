@@ -8,9 +8,11 @@ import { Card } from '@/components/ui/card';
 import { productApi, storeApi, uploadApi, type ProductMediaAsset, type StoreRecord } from '@/api';
 import { buildUpsertPayload, EMPTY_PRODUCT_FORM } from '@/lib/productHelpers';
 import { AlertTriangle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export default function CreateProductPage() {
   const router = useRouter();
+  const t = useTranslations('manager.productForm');
   const [formData, setFormData] = useState<ProductFormState>(EMPTY_PRODUCT_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingKey, setUploadingKey] = useState('');
@@ -137,8 +139,8 @@ export default function CreateProductPage() {
   return (
     <>
       <Header
-        title="Tạo sản phẩm mới"
-        subtitle="Thêm sản phẩm mới vào hệ thống"
+        title={t('createTitle')}
+        subtitle={t('createSubtitle')}
       />
 
       <div className="space-y-6 p-6">
@@ -163,7 +165,7 @@ export default function CreateProductPage() {
             onRemoveGallery={handleRemoveGallery}
             onCancel={() => router.back()}
             onSubmit={handleSubmit}
-            submitLabel="Tạo sản phẩm"
+            submitLabel={t('createSubmitLabel')}
           />
         </Card>
       </div>

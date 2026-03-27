@@ -1,4 +1,5 @@
 import { Package } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { PendingOrderRow } from '@/components/molecules/PendingOrderRow';
 import { PendingOrder } from '@/types/pending';
@@ -36,19 +37,21 @@ export const PendingOrderTable = ({
   onEscalate,
   onSendBack,
 }: PendingOrderTableProps) => {
+  const t = useTranslations('manager.pending');
+
   return (
     <div className="glass-card overflow-hidden rounded-xl">
       <Table className="text-sm font-normal">
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead>Mã đơn</TableHead>
-            <TableHead>Khách hàng</TableHead>
-            <TableHead>Sản phẩm</TableHead>
-            <TableHead>Tổng tiền</TableHead>
-            <TableHead>Thanh toán</TableHead>
-            <TableHead>Loại đơn</TableHead>
-            <TableHead>Thời gian</TableHead>
-            <TableHead className="text-right">Thao tác</TableHead>
+            <TableHead>{t('table.code')}</TableHead>
+            <TableHead>{t('table.customer')}</TableHead>
+            <TableHead>{t('table.products')}</TableHead>
+            <TableHead>{t('table.total')}</TableHead>
+            <TableHead>{t('table.payment')}</TableHead>
+            <TableHead>{t('table.orderType')}</TableHead>
+            <TableHead>{t('table.time')}</TableHead>
+            <TableHead className="text-right">{t('table.actions')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -73,7 +76,7 @@ export const PendingOrderTable = ({
         <div className="p-12 text-center">
           <Package className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
           <p className="text-muted-foreground">
-            Không có đơn hàng nào cần xử lý
+            {t('table.noData')}
           </p>
         </div>
       )}

@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { orderApi } from '@/api';
 import type { OrderRecord } from '@/api/orders';
@@ -34,14 +35,6 @@ type OrderStatus = 'pending' | 'processing' | 'completed' | 'cancelled';
 
 const ITEMS_PER_PAGE = 10;
 
-function orderTypeLabel(orderType: string): string {
-  const normalized = String(orderType || '').trim().toLowerCase();
-  if (normalized === 'ready_stock') return 'Hàng có sẵn';
-  if (normalized === 'pre_order' || normalized === 'preorder')
-    return 'Đặt trước';
-  return orderType || '-';
-}
-
 type RecentOrdersTableProps = {
   limit?: number;
   searchTerm?: string;
@@ -51,12 +44,14 @@ type RecentOrdersTableProps = {
 };
 
 export const RecentOrdersTable = ({
-  limit = 100, // Fetch more to allow client-side filtering
+  limit = 100,
   searchTerm = '',
   statusFilter = 'all',
   filter,
-  emptyMessage = 'Chua co don hang nao.',
+  emptyMessage,
 }: RecentOrdersTableProps) => {
+  const t = useTranslations('manager.orders');
+
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -77,7 +72,7 @@ export const RecentOrdersTable = ({
         const result = await orderApi.getAll({ page: 1, limit });
         if (isMounted) setOrders(result.orders);
       } catch {
-        if (isMounted) setErrorMessage('Khong tai duoc don hang gan day.');
+        if (isMounted) setErrorMessage(t('table.loading'));
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -138,13 +133,13 @@ export const RecentOrdersTable = ({
       <Table className="text-sm font-normal">
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead className="w-[140px] whitespace-nowrap">Mã đơn</TableHead>
-            <TableHead>Khách hàng</TableHead>
-            <TableHead>Sản phẩm</TableHead>
-            <TableHead className="text-right">Tổng tiền</TableHead>
-            <TableHead className="text-center">Ngày</TableHead>
-            <TableHead className="whitespace-nowrap">Loại đơn</TableHead>
-            <TableHead>Trạng thái</TableHead>
+            <TableHead className="w-[140px] whitespace-nowrap">{t('table.code')}</TableHead>
+            <TableHead>{t('table.customer')}</TableHead>
+            <TableHead>{t('table.products')}</TableHead>
+            <TableHead className="text-right">{t('table.total')}</TableHead>
+            <TableHead className="text-center">{t('table.date')}</TableHead>
+            <TableHead className="whitespace-nowrap">{t('table.orderType')}</TableHead>
+            <TableHead>{t('table.status')}</TableHead>
             <TableHead className="w-[60px]" />
           </TableRow>
         </TableHeader>
@@ -152,7 +147,7 @@ export const RecentOrdersTable = ({
           {isLoading && (
             <TableRow>
               <TableCell colSpan={8} className="text-foreground/70 py-10 text-center">
-                Dang tai don hang...
+                {t('table.loading')}
               </TableCell>
             </TableRow>
           )}
@@ -168,7 +163,7 @@ export const RecentOrdersTable = ({
           {!isLoading && !errorMessage && visibleOrders.length === 0 && (
             <TableRow>
               <TableCell colSpan={8} className="text-foreground/70 py-10 text-center">
-                {emptyMessage}
+                {emptyMessage ?? t('table.noData')}
               </TableCell>
             </TableRow>
           )}
@@ -199,7 +194,7 @@ export const RecentOrdersTable = ({
                           {dashboard.customerName}
                         </p>
                         <p className="text-foreground/80 text-xs">
-                          {dashboard.products.length} san pham
+                          {dashboard.products.length} {t('table.items')}
                         </p>
                       </div>
                     </div>
@@ -219,7 +214,12 @@ export const RecentOrdersTable = ({
                     {dashboard.date}
                   </TableCell>
                   <TableCell className="text-foreground/80 text-sm whitespace-nowrap">
-                    {orderTypeLabel(order.orderType)}
+                    {(() => {
+                      const normalized = String(order.orderType || '').trim().toLowerCase();
+                      if (normalized === 'ready_stock') return t('table.orderTypeReadyStock');
+                      if (normalized === 'pre_order' || normalized === 'preorder') return t('table.orderTypePreorder');
+                      return order.orderType || '-';
+                    })()}
                   </TableCell>
                   <TableCell>
                     <div className="space-y-1">
@@ -247,7 +247,7 @@ export const RecentOrdersTable = ({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleOpenDetail(order)}>
-                            Xem chi tiet
+                            {t('table.viewDetail')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

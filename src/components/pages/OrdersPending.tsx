@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { CheckCircle, Filter } from 'lucide-react';
 import axios from 'axios';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { Header } from '@/components/organisms/Header';
 import { SearchBar } from '@/components/molecules/SearchBar';
@@ -71,6 +72,7 @@ function extractApiErrorMessage(error: unknown, fallback: string) {
 
 export default function OrdersPending() {
   const pathname = usePathname();
+  const t = useTranslations('manager.pending');
   const scope: 'sale' | 'manager' = pathname?.includes('/manager/')
     ? 'manager'
     : 'sale';
@@ -109,7 +111,7 @@ export default function OrdersPending() {
         prev.filter((id) => scoped.some((order) => order.id === id))
       );
     } catch {
-      setErrorMessage('Không tải được danh sách đơn cần xử lý.');
+      setErrorMessage(t('loadError'));
     } finally {
       setIsLoading(false);
     }
@@ -323,11 +325,11 @@ export default function OrdersPending() {
   return (
     <>
       <Header
-        title={scope === 'manager' ? 'Đơn cần manager duyệt' : 'Đơn cần xử lý'}
+        title={scope === 'manager' ? t('managerTitle') : t('saleTitle')}
         subtitle={
           scope === 'manager'
-            ? 'Xử lý các case được staff chuyển lên manager'
-            : 'Xác nhận và xử lý đơn hàng mới'
+            ? t('managerSubtitle')
+            : t('saleSubtitle')
         }
       />
 
@@ -342,7 +344,7 @@ export default function OrdersPending() {
             <div className="flex w-full items-center gap-2 sm:max-w-[360px]">
               <div className="w-full">
                 <SearchBar
-                  placeholder="Tìm mã đơn, tên KH, SĐT..."
+                  placeholder={t('searchPlaceholder')}
                   value={searchQuery}
                   onChange={setSearchQuery}
                 />
@@ -358,27 +360,27 @@ export default function OrdersPending() {
                         ? 'border-yellow-400 text-yellow-700 hover:border-yellow-500'
                         : ''
                     }`}
-                    aria-label="Lọc theo ngày"
+                    aria-label={t('filterLabel')}
                   >
                     <Filter className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent align="start" className="w-64">
-                  <DropdownMenuLabel>Lọc theo ngày tạo</DropdownMenuLabel>
+                  <DropdownMenuLabel>{t('filterByDate')}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => setCreatedDateFilter('')}>
-                    Tất cả
+                    {t('all')}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => setCreatedDateFilter(toLocalIsoDate(new Date()))}
                   >
-                    Hôm nay
+                    {t('today')}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <div className="space-y-2 px-2 py-2">
                     <p className="text-foreground/70 text-xs font-medium">
-                      Chọn ngày
+                      {t('selectDate')}
                     </p>
                     <input
                       type="date"
@@ -397,7 +399,7 @@ export default function OrdersPending() {
               <>
                 {selectedBlockedCount > 0 && (
                   <p className="text-sm font-medium text-amber-700">
-                    {selectedBlockedCount} đơn chưa đủ điều kiện duyệt
+                    {t('blockedCount', { count: selectedBlockedCount })}
                   </p>
                 )}
 
@@ -407,7 +409,7 @@ export default function OrdersPending() {
                   onClick={() => setSelectedOrders([])}
                   disabled={isSubmittingAction}
                 >
-                  Bỏ chọn ({selectedOrders.length})
+                  {t('deselect', { count: selectedOrders.length })}
                 </Button>
 
                 <Button
@@ -420,8 +422,8 @@ export default function OrdersPending() {
                 >
                   <CheckCircle className="h-4 w-4" />
                   {scope === 'manager'
-                    ? 'Manager duyệt loạt'
-                    : 'Xác nhận hàng loạt'}
+                    ? t('managerBulkApprove')
+                    : t('saleBulkApprove')}
                 </Button>
               </>
             )}
@@ -429,7 +431,7 @@ export default function OrdersPending() {
         </div>
 
         {isLoading && (
-          <p className="text-foreground/70 text-sm">Đang tải dữ liệu đơn hàng...</p>
+          <p className="text-foreground/70 text-sm">{t('loading')}</p>
         )}
         {!isLoading && errorMessage && (
           <p className="text-destructive text-sm">{errorMessage}</p>

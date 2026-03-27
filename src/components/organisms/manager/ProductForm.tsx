@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Input } from '@/components/atoms/Input';
 import { Button } from '@/components/atoms';
 import { MAX_TRY_ON_MODELS } from '@/lib/productHelpers';
@@ -93,11 +94,11 @@ export interface ProductFormState {
 }
 
 export const CATEGORY_OPTIONS = [
-  { value: 'sunglasses', label: 'Kinh mat' },
-  { value: 'frame', label: 'Gong kinh' },
-  { value: 'lens', label: 'Trong kinh' },
-  { value: 'accessory', label: 'Phu kien' },
-  { value: 'other', label: 'Khac' },
+  { value: 'sunglasses' },
+  { value: 'frame' },
+  { value: 'lens' },
+  { value: 'accessory' },
+  { value: 'other' },
 ];
 
 const PREORDER_SHIPPING_TIMING_OPTIONS: Array<{
@@ -110,11 +111,11 @@ const PREORDER_SHIPPING_TIMING_OPTIONS: Array<{
 
 const TRY_ON_STATUS_OPTIONS: Array<{ value: ProductTryOnStatus; label: string }> = [
   { value: 'draft', label: 'Draft' },
-  { value: 'pending_review', label: 'Cho review' },
-  { value: 'approved', label: 'Da duyet' },
-  { value: 'published', label: 'Dang hien thi' },
-  { value: 'rejected', label: 'Tu choi' },
-  { value: 'archived', label: 'Luu tru' },
+  { value: 'pending_review', label: 'Pending review' },
+  { value: 'approved', label: 'Approved' },
+  { value: 'published', label: 'Published' },
+  { value: 'rejected', label: 'Rejected' },
+  { value: 'archived', label: 'Archived' },
 ];
 
 const GENDER_OPTIONS = [
@@ -162,8 +163,9 @@ export function ProductForm({
   onRemoveGallery,
   onCancel,
   onSubmit,
-  submitLabel = 'Save',
+  submitLabel,
 }: ProductFormProps) {
+  const t = useTranslations('manager.productForm');
   const getVariantUploadKey = (
     variantId: string,
     suffix: 'image' | 'poster' | 'glb'
@@ -267,32 +269,32 @@ export function ProductForm({
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-2.5">
           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-[10px] font-bold text-slate-900">1</span>
-          <span className="text-sm font-semibold text-gray-800">Thong tin co ban</span>
+          <span className="text-sm font-semibold text-gray-800">{t('section1')}</span>
         </div>
         <div className="space-y-4 p-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <Input
-                label="Ten san pham *"
+                label={t('nameLabel')}
                 value={formData.name}
                 onChange={(event) =>
                   onChange((prev) => ({ ...prev, name: event.target.value }))
                 }
-                placeholder="Nhap ten san pham"
+                placeholder={t('namePlaceholder')}
                 required
               />
             </div>
             <Input
-              label="Thuong hieu"
+              label={t('brandLabel')}
               value={formData.brand}
               onChange={(event) =>
                 onChange((prev) => ({ ...prev, brand: event.target.value }))
               }
-              placeholder="VD: WDP, RayBan..."
+              placeholder={t('brandPlaceholder')}
             />
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                Danh muc
+                {t('categoryLabel')}
               </label>
               <Select
                 value={formData.category}
@@ -308,19 +310,19 @@ export function ProductForm({
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Chon danh muc" />
+                  <SelectValue placeholder={t('categoryPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {CATEGORY_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                      {t(`categories.${option.value}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <Input
-              label="Gia (VND) *"
+              label={t('priceLabel')}
               type="number"
               value={formData.price}
               onChange={(event) =>
@@ -329,7 +331,7 @@ export function ProductForm({
               placeholder="0"
             />
             <Input
-              label="Ton kho *"
+              label={t('stockLabel')}
               type="number"
               value={formData.stock}
               onChange={(event) =>
@@ -339,7 +341,7 @@ export function ProductForm({
             />
             <div className="col-span-2">
               <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                Mo ta
+                {t('descriptionLabel')}
               </label>
               <textarea
                 value={formData.description}
@@ -348,7 +350,7 @@ export function ProductForm({
                 }
                 rows={3}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100 resize-none"
-                placeholder="Mo ta san pham (khong bat buoc)"
+                placeholder={t('descriptionPlaceholder')}
               />
             </div>
           </div>
@@ -359,7 +361,7 @@ export function ProductForm({
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-2.5">
           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-[10px] font-bold text-slate-900">2</span>
-          <span className="text-sm font-semibold text-gray-800">Hinh anh san pham</span>
+          <span className="text-sm font-semibold text-gray-800">{t('section2')}</span>
         </div>
         <div className="grid grid-cols-2 gap-4 p-4">
           <div className="flex flex-col gap-2">
@@ -370,7 +372,7 @@ export function ProductForm({
               ) : (
                 <div className="flex flex-col items-center py-6 text-gray-400">
                   <Upload className="h-6 w-6 mb-1" />
-                  <span className="text-xs">Tai len</span>
+                  <span className="text-xs">{uploadingKey === 'hero' ? t('uploadingLabel') : t('uploadLabel')}</span>
                 </div>
               )}
               <input
@@ -391,7 +393,7 @@ export function ProductForm({
               ) : (
                 <div className="flex flex-col items-center py-6 text-gray-400">
                   <Upload className="h-6 w-6 mb-1" />
-                  <span className="text-xs">Tai len</span>
+                  <span className="text-xs">{uploadingKey === 'thumbnail' ? t('uploadingLabel') : t('uploadLabel')}</span>
                 </div>
               )}
               <input
@@ -408,7 +410,7 @@ export function ProductForm({
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Gallery</p>
             <label className="relative flex cursor-pointer items-center gap-3 rounded-lg border-2 border-dashed border-gray-200 px-4 py-3 hover:border-amber-300 hover:bg-amber-50 transition">
               <Upload className="h-4 w-4 text-gray-400 shrink-0" />
-              <span className="text-xs text-gray-500">Chon nhieu anh de them vao gallery</span>
+              <span className="text-xs text-gray-500">{t('galleryLabel')}</span>
               <input
                 type="file" accept="image/*" multiple
                 disabled={isSubmitting || uploadingKey === 'gallery'}
@@ -436,7 +438,7 @@ export function ProductForm({
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-2.5">
           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-[10px] font-bold text-slate-900">3</span>
-          <span className="text-sm font-semibold text-gray-800">Phan phoi cua hang</span>
+          <span className="text-sm font-semibold text-gray-800">{t('section3')}</span>
           <span className="ml-auto text-xs text-gray-400">Store network</span>
         </div>
         <div className="p-4 space-y-3">
@@ -456,8 +458,8 @@ export function ProductForm({
               >
                 <SelectTrigger><SelectValue placeholder="Chon pham vi" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Ban o tat ca cua hang</SelectItem>
-                  <SelectItem value="selected">Chi ban o cua hang duoc chon</SelectItem>
+                  <SelectItem value="all">{t('storeScope.allStores')}</SelectItem>
+                  <SelectItem value="selected">{t('storeScope.selectedStores')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -540,12 +542,12 @@ export function ProductForm({
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-2.5">
           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-[10px] font-bold text-slate-900">4</span>
-          <span className="text-sm font-semibold text-gray-800">Bien the &amp; Asset</span>
+          <span className="text-sm font-semibold text-gray-800">{t('section4')}</span>
           <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
             {mappedTryOnModelCount}/{MAX_TRY_ON_MODELS} 3D
           </span>
           <Button type="button" variant="outline" size="sm" onClick={addVariant} className="ml-auto">
-            + Them bien the
+            + {t('variant.addButton')}
           </Button>
         </div>
         <div className="divide-y divide-gray-100">
@@ -559,17 +561,17 @@ export function ProductForm({
                 </div>
                 {variantRows.length > 1 && (
                   <button type="button" onClick={() => removeVariant(index)} className="text-xs text-red-500 hover:text-red-700 hover:underline">
-                    Xoa
+                    {t('variant.removeButton')}
                   </button>
                 )}
               </div>
               <div className="grid grid-cols-3 gap-3">
-                <Input label="SKU" value={variant.sku} onChange={(e) => updateVariant(index, (c) => ({ ...c, sku: e.target.value }))} placeholder="SKU-BLK-M" />
-                <Input label="Mau" value={variant.color} onChange={(e) => updateVariant(index, (c) => ({ ...c, color: e.target.value }))} placeholder="Black" />
-                <Input label="Size" value={variant.size} onChange={(e) => updateVariant(index, (c) => ({ ...c, size: e.target.value }))} placeholder="M" />
-                <Input label="Gia (VND)" type="number" value={variant.price} onChange={(e) => updateVariant(index, (c) => ({ ...c, price: e.target.value }))} placeholder={formData.price || '0'} />
-                <Input label="Ton kho" type="number" value={variant.stock} onChange={(e) => updateVariant(index, (c) => ({ ...c, stock: e.target.value }))} placeholder="0" />
-                <Input label="Vi tri kho" value={variant.warehouseLocation} onChange={(e) => updateVariant(index, (c) => ({ ...c, warehouseLocation: e.target.value }))} placeholder="HCM-01" />
+                <Input label={t('variant.skuLabel')} value={variant.sku} onChange={(e) => updateVariant(index, (c) => ({ ...c, sku: e.target.value }))} placeholder="SKU-BLK-M" />
+                <Input label={t('variant.colorLabel')} value={variant.color} onChange={(e) => updateVariant(index, (c) => ({ ...c, color: e.target.value }))} placeholder="Black" />
+                <Input label={t('variant.sizeLabel')} value={variant.size} onChange={(e) => updateVariant(index, (c) => ({ ...c, size: e.target.value }))} placeholder="M" />
+                <Input label={t('variant.priceLabel')} type="number" value={variant.price} onChange={(e) => updateVariant(index, (c) => ({ ...c, price: e.target.value }))} placeholder={formData.price || '0'} />
+                <Input label={t('variant.stockLabel')} type="number" value={variant.stock} onChange={(e) => updateVariant(index, (c) => ({ ...c, stock: e.target.value }))} placeholder="0" />
+                <Input label={t('variant.warehouseLabel')} value={variant.warehouseLocation} onChange={(e) => updateVariant(index, (c) => ({ ...c, warehouseLocation: e.target.value }))} placeholder="HCM-01" />
               </div>
               <div className="mt-3 grid grid-cols-3 gap-3">
                 <div className="space-y-1">
@@ -667,10 +669,10 @@ export function ProductForm({
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-2.5">
           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-[10px] font-bold text-slate-900">{supportsTryOn ? '6' : '5'}</span>
-          <span className="text-sm font-semibold text-gray-800">Cau hinh Pre-order</span>
+          <span className="text-sm font-semibold text-gray-800">{t('preorder.enableLabel')}</span>
           <label className="ml-auto flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
             <input type="checkbox" checked={formData.preOrderEnabled} onChange={(e) => onChange((prev) => ({ ...prev, preOrderEnabled: e.target.checked }))} className="accent-amber-500" />
-            Bat pre-order
+            {t('preorder.enableLabel')}
           </label>
         </div>
         {formData.preOrderEnabled ? (
@@ -728,7 +730,7 @@ export function ProductForm({
           {supportsTryOn && (
             <label className="ml-auto flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
               <input type="checkbox" checked={formData.tryOnEnabled} disabled={!supportsTryOn} onChange={(e) => onChange((prev) => ({ ...prev, tryOnEnabled: e.target.checked }))} className="accent-amber-500" />
-              Bat try-on
+              {t('tryOn.enableLabel')}
             </label>
           )}
         </div>
@@ -855,12 +857,12 @@ export function ProductForm({
         <div className="flex justify-end gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting} className="min-w-[80px]">
-              Huy
+              {t('cancelButton')}
             </Button>
           )}
           {onSubmit && (
             <Button type="button" onClick={onSubmit} disabled={isSubmitting} className="min-w-[100px] bg-amber-400 text-slate-900 hover:bg-amber-500 font-semibold">
-              {isSubmitting ? 'Dang luu...' : submitLabel}
+              {isSubmitting ? '...' : (submitLabel ?? t('saveButton'))}
             </Button>
           )}
         </div>

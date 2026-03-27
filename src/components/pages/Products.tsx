@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { Header } from '@/components/organisms/Header';
 import {
   ProductGrid,
@@ -9,6 +9,7 @@ import { SearchBar } from '@/components/molecules/SearchBar';
 import { Filter, Grid, List } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/atoms';
 import productApi, { Product, ProductDetail } from '@/api/products';
 import { ProductDetailModalContent } from './ProductDetailModalContent';
@@ -36,17 +37,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-type CategoryFilter = {
-  label: string;
-  type: string;
-};
-
-const categoryFilters: CategoryFilter[] = [
-  { label: 'Tất cả', type: 'all' },
-  { label: 'Kính mát', type: 'sunglasses' },
-  { label: 'Gọng kính', type: 'frame' },
-  { label: 'Tròng kính', type: 'lens' },
-  { label: 'Phụ kiện', type: 'accessory' },
+const categoryFilterKeys = [
+  { type: 'all', key: 'all' },
+  { type: 'sunglasses', key: 'sunglasses' },
+  { type: 'frame', key: 'frame' },
+  { type: 'lens', key: 'lens' },
+  { type: 'accessory', key: 'accessory' },
 ];
 
 const typeLabels: Record<string, string> = {
@@ -64,6 +60,7 @@ const typeLabels: Record<string, string> = {
 const PAGE_SIZE_OPTIONS = [20, 50, 100] as const;
 
 const Products = () => {
+  const t = useTranslations('manager.products');
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -189,10 +186,10 @@ const Products = () => {
   return (
     <>
       <Header
-        title="Sản phẩm"
-        subtitle="Quản lý kho hàng mắt kính"
+        title={t('title')}
+        subtitle={t('subtitle')}
         showAddButton
-        addButtonLabel="Thêm sản phẩm"
+        addButtonLabel={t('addProduct')}
         titleClassName="text-black"
         subtitleClassName="text-black"
       />
@@ -201,7 +198,7 @@ const Products = () => {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="w-full sm:max-w-[320px]">
             <SearchBar
-              placeholder="Tìm theo tên sản phẩm..."
+              placeholder={t('searchPlaceholder')}
               onChange={setSearchTerm}
             />
           </div>
@@ -215,18 +212,18 @@ const Products = () => {
                   className="gradient-gold gap-2 text-black hover:opacity-90"
                 >
                   <Filter className="h-4 w-4" />
-                  Bộ lọc
+                  {t('filterButton')}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Danh mục</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('filters.category')}</DropdownMenuLabel>
                 <DropdownMenuRadioGroup
                   value={activeCategory}
                   onValueChange={setActiveCategory}
                 >
-                  {categoryFilters.map((cat) => (
+                  {categoryFilterKeys.map((cat) => (
                     <DropdownMenuRadioItem key={cat.type} value={cat.type}>
-                      {cat.label}
+                      {t(`categoryFilters.${cat.key}` as Parameters<typeof t>[0])}
                     </DropdownMenuRadioItem>
                   ))}
                 </DropdownMenuRadioGroup>
@@ -237,7 +234,7 @@ const Products = () => {
 
         {isLoading ? (
           <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-6 text-sm text-slate-600">
-            Đang tải sản phẩm...
+            {t('loading')}
           </div>
         ) : error ? (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-600">
@@ -245,7 +242,7 @@ const Products = () => {
           </div>
         ) : filteredProducts.length === 0 ? (
           <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-6 text-sm text-slate-600">
-            Không có sản phẩm phù hợp.
+            {t('noProducts')}
           </div>
         ) : (
           <>
@@ -258,10 +255,10 @@ const Products = () => {
             {totalPages > 1 ? (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/70 bg-white/90 p-4 text-sm text-slate-700">
                 <p>
-                  Trang <span className="font-semibold">{currentPage}</span>/
+                  {t('page')} <span className="font-semibold">{currentPage}</span>/
                   {totalPages}{' '}
                   <span className="text-slate-500">
-                    ({filteredProducts.length} sản phẩm)
+                    ({filteredProducts.length} {t('pagination.products')})
                   </span>
                 </p>
 
@@ -278,7 +275,7 @@ const Products = () => {
                     <SelectContent>
                       {PAGE_SIZE_OPTIONS.map((option) => (
                         <SelectItem key={option} value={String(option)}>
-                          {option} / trang
+                          {option} {t('perPage')}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -289,7 +286,7 @@ const Products = () => {
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage <= 1}
                   >
-                    Trang trước
+                    {t('prevPage')}
                   </Button>
                   <Button
                     variant="outline"
@@ -299,7 +296,7 @@ const Products = () => {
                     }
                     disabled={currentPage >= totalPages}
                   >
-                    Trang sau
+                    {t('nextPage')}
                   </Button>
                 </div>
               </div>
@@ -320,15 +317,15 @@ const Products = () => {
       >
         <DialogContent className="sm:max-w-5xl">
           <DialogHeader>
-            <DialogTitle>Chi tiết sản phẩm</DialogTitle>
+            <DialogTitle>{t('detailTitle')}</DialogTitle>
             <DialogDescription>
-              Thông tin chi tiết theo dữ liệu hệ thống.
+              {t('detailDescription')}
             </DialogDescription>
           </DialogHeader>
 
           {detailLoadingId && !detailProduct ? (
             <div className="rounded-lg border border-slate-200/70 bg-white/90 p-4 text-sm text-slate-600">
-              Đang tải chi tiết sản phẩm...
+              {t('loadingDetail')}
             </div>
           ) : detailError ? (
             <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-600">
@@ -344,7 +341,7 @@ const Products = () => {
               onClick={() => setDetailOpen(false)}
               className="text-black"
             >
-              Đóng
+              {t('close')}
             </Button>
           </DialogFooter>
         </DialogContent>

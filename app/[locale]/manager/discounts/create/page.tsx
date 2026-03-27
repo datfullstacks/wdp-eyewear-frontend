@@ -8,6 +8,7 @@ import { AlertTriangle, ArrowLeft, Percent } from 'lucide-react';
 import { Header } from '@/components/organisms/Header';
 import { DiscountForm, type DiscountFormData } from '@/components/organisms/manager';
 import promotionApi from '@/api/promotions';
+import { useTranslations } from 'next-intl';
 
 const EMPTY_FORM: DiscountFormData = {
   code: '',
@@ -26,6 +27,7 @@ const EMPTY_FORM: DiscountFormData = {
 
 export default function CreateDiscountPage() {
   const router = useRouter();
+  const t = useTranslations('manager.discountForm');
   const [formData, setFormData] = useState<DiscountFormData>(EMPTY_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState('');
@@ -51,8 +53,8 @@ export default function CreateDiscountPage() {
   return (
     <>
       <Header
-        title="Create Promotion"
-        subtitle="Define voucher rules, validity windows, and usage limits"
+        title={t('createTitle')}
+        subtitle={t('createSubtitle')}
       />
 
       <div className="space-y-6 p-6">
@@ -61,7 +63,7 @@ export default function CreateDiscountPage() {
           className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition-colors hover:text-amber-600"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to promotions
+          {t('backToPromotions')}
         </Link>
 
         {apiError ? (
@@ -74,12 +76,12 @@ export default function CreateDiscountPage() {
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
           <h4 className="mb-2 flex items-center gap-2 font-semibold text-blue-900">
             <Percent className="h-5 w-5" />
-            Promotion notes
+            {t('notesTitle')}
           </h4>
           <ul className="space-y-1 text-sm text-blue-800">
-            <li>Use short voucher codes that sales and customers can read easily.</li>
-            <li>Percentage promotions should always have a max discount cap.</li>
-            <li>Set usage limit to `0` when the campaign should stay uncapped.</li>
+            <li>{t('note1')}</li>
+            <li>{t('note2')}</li>
+            <li>{t('note3')}</li>
           </ul>
         </div>
 
@@ -89,7 +91,7 @@ export default function CreateDiscountPage() {
           onSubmit={handleSubmit}
           onCancel={() => router.push('/manager/discounts')}
           isSubmitting={isSubmitting}
-          submitLabel="Create promotion"
+          submitLabel={t('createSubmitLabel')}
         />
       </div>
     </>

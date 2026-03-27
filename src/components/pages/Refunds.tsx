@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Filter } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { orderApi, type OrderRecord, type RefundBreakdown } from '@/api';
 import { SearchBar } from '@/components/molecules/SearchBar';
@@ -159,6 +160,7 @@ function getApprovalBreakdown(refund: RefundRequest): Partial<RefundBreakdown> {
 }
 
 const Refunds = ({ scope = 'sale' }: RefundsProps) => {
+  const t = useTranslations('manager.refunds');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [methodFilter, setMethodFilter] = useState<string>('all');
@@ -376,16 +378,16 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
 
   const title =
     scope === 'manager'
-      ? 'Hàng chờ manager duyệt'
+      ? t('managerTitle')
       : scope === 'operation'
-        ? 'Hàng chờ chi tiền'
-        : 'Quản lý hoàn tiền';
+        ? t('operationTitle')
+        : t('saleTitle');
   const subtitle =
     scope === 'manager'
-      ? 'Case do staff chuyển lên chờ manager phê duyệt'
+      ? t('managerSubtitle')
       : scope === 'operation'
-        ? 'Operations tiếp nhận case đã duyệt và thực hiện chi tiền'
-        : 'Xử lý các yêu cầu hoàn tiền từ khách hàng';
+        ? t('operationSubtitle')
+        : t('saleSubtitle');
   const afterSalesHref =
     scope === 'manager'
       ? '/manager/cases/support'
@@ -393,7 +395,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
         ? '/operation/cases/warranties'
         : '/sale/cases/returns';
   const afterSalesLabel =
-    scope === 'operation' ? 'Hàng chờ bảo hành' : 'Mở hỗ trợ hậu mãi';
+    scope === 'operation' ? t('warrantyQueueLabel') : t('afterSalesLabel');
   const statusFilterOptions =
     scope === 'operation'
       ? operationStatusFilterOptions
@@ -421,7 +423,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
           <div className="w-full sm:max-w-[280px]">
             <SearchBar
-              placeholder="Tìm theo mã refund, mã đơn, tên KH, SĐT..."
+              placeholder={t('searchPlaceholder')}
               value={searchTerm}
               onChange={setSearchTerm}
             />
@@ -439,7 +441,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
                 <Button
                   variant="outline"
                   size="icon"
-                  aria-label="Bộ lọc"
+                  aria-label={t('filterLabel')}
                   className="text-foreground/80 hover:text-foreground"
                 >
                   <Filter />
@@ -448,7 +450,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
               <DropdownMenuContent align="end" className="w-64">
                 {scope !== 'manager' && (
                   <>
-                    <DropdownMenuLabel>Trạng thái</DropdownMenuLabel>
+                    <DropdownMenuLabel>{t('statusLabel')}</DropdownMenuLabel>
                     <DropdownMenuRadioGroup
                       value={statusFilter}
                       onValueChange={setStatusFilter}
@@ -466,7 +468,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
                   </>
                 )}
 
-                <DropdownMenuLabel>Phương thức</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('methodLabel')}</DropdownMenuLabel>
                 <DropdownMenuRadioGroup
                   value={methodFilter}
                   onValueChange={setMethodFilter}
@@ -489,7 +491,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
                 onClick={() => void refreshRefunds()}
                 disabled={isLoading || isRefreshing || isSubmittingAction}
               >
-                {isRefreshing ? 'Đang tải...' : 'Tải lại'}
+                {isRefreshing ? t('refreshing') : t('refresh')}
               </Button>
             )}
           </div>
@@ -498,9 +500,9 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
         {scope === 'sale' && (
           <div className="flex flex-wrap gap-2">
             {[
-              { value: 'needs_action', label: 'Cần xử lý' },
-              { value: 'waiting_customer', label: 'Chờ khách bổ sung' },
-              { value: 'tracking', label: 'Đang theo dõi' },
+              { value: 'needs_action', label: t('queueNeedsAction') },
+              { value: 'waiting_customer', label: t('queueWaiting') },
+              { value: 'tracking', label: t('queueTracking') },
             ].map((option) => {
               const active = saleQueueView === option.value;
               return (
@@ -533,7 +535,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
 
         {isLoading ? (
           <div className="text-muted-foreground rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm">
-            Đang tải danh sách refund...
+            {t('loading')}
           </div>
         ) : (
           <RefundTable
