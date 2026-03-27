@@ -7,7 +7,7 @@ export default function SalePendingOrderDetailPage() {
     <PendingOrderDetailPage
       scope="sale"
       backHref="/sale/orders/pending"
-      backLabel="Quay lại danh sách đơn pending"
+      backLabel="Quay lại danh sách đơn"
     />
   );
 }

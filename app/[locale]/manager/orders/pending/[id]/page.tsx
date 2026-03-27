@@ -7,7 +7,7 @@ export default function ManagerPendingOrderDetailPage() {
     <PendingOrderDetailPage
       scope="manager"
       backHref="/manager/orders/pending"
-      backLabel="Quay lại danh sách đơn pending"
+      backLabel="Quay lại danh sách đơn"
     />
   );
 }

@@ -19,7 +19,7 @@ interface RxApproveModalProps {
 
 function getSourceLabel(source: PrescriptionOrder['source']) {
   if (source === 'customer_upload') return 'Khach upload toa';
-  if (source === 'store_input') return 'Store nhap Rx';
+  if (source === 'customer_input') return 'Khach tu nhap thong so';
   return 'Dang cho Rx';
 }
 

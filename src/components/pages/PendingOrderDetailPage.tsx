@@ -7,7 +7,6 @@ import { AlertTriangle, ArrowLeft, Loader2 } from 'lucide-react';
 import axios from 'axios';
 
 import { orderApi } from '@/api';
-import { Header } from '@/components/organisms/Header';
 import {
   PendingDetailContent,
   ProcessModal,
@@ -243,21 +242,13 @@ export function PendingOrderDetailPage({
 
   return (
     <>
-      <Header
-        title={
-          scope === 'manager'
-            ? 'Chi tiết đơn cần manager duyệt'
-            : 'Chi tiết đơn cần xử lý'
-        }
-        subtitle={
-          order
-            ? `Đơn ${order.id}`
-            : 'Theo dõi thông tin đơn hàng trong danh sách pending'
-        }
-      />
-
-      <div className="space-y-6 p-6">
-        <Button variant="outline" asChild>
+      <div className="space-y-4 p-4 sm:p-5">
+        <Button
+          variant="outline"
+          size="sm"
+          className="border-slate-300 bg-white text-slate-900 shadow-sm hover:bg-slate-100 hover:text-slate-950"
+          asChild
+        >
           <Link href={backHref}>
             <ArrowLeft className="h-4 w-4" />
             {backLabel}
@@ -265,7 +256,7 @@ export function PendingOrderDetailPage({
         </Button>
 
         {isLoading ? (
-          <Card className="flex min-h-[320px] items-center justify-center p-6">
+          <Card className="flex min-h-[240px] items-center justify-center p-5">
             <div className="flex items-center gap-3 text-sm text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
               Đang tải chi tiết đơn cần xử lý...
@@ -274,7 +265,7 @@ export function PendingOrderDetailPage({
         ) : null}
 
         {!isLoading && errorMessage ? (
-          <Card className="p-6">
+          <Card className="p-5">
             <div className="flex items-start gap-3 text-sm text-destructive">
               <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
               <div className="space-y-3">
@@ -288,18 +279,16 @@ export function PendingOrderDetailPage({
         ) : null}
 
         {!isLoading && !errorMessage && order ? (
-          <Card className="overflow-hidden border-0 p-0 shadow-xl">
-            <PendingDetailContent
-              scope={scope}
-              order={order}
-              onReject={setRejectModal}
-              onEscalate={(nextOrder) => {
-                void handleEscalateOrder(nextOrder);
-              }}
-              onSendBack={setSendBackModal}
-              onProcess={setProcessModal}
-            />
-          </Card>
+          <PendingDetailContent
+            scope={scope}
+            order={order}
+            onReject={setRejectModal}
+            onEscalate={(nextOrder) => {
+              void handleEscalateOrder(nextOrder);
+            }}
+            onSendBack={setSendBackModal}
+            onProcess={setProcessModal}
+          />
         ) : null}
       </div>
 

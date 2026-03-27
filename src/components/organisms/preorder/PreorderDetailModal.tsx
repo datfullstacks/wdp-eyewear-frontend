@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   PreorderOrderStatusBadge,
   PreorderPaymentBadge,
@@ -18,9 +19,11 @@ import { formatCurrency, formatDate } from '@/data/preorderData';
 import { cn } from '@/lib/utils';
 import type { PreorderOpsStatus, PreorderOrder } from '@/types/preorder';
 import {
+  Check,
   CalendarDays,
   CircleDollarSign,
   ClipboardList,
+  Copy,
   MapPin,
   Phone,
   Truck,
@@ -124,6 +127,75 @@ function getStatusTextClass(
   }
 }
 
+function CopyableCode({
+  value,
+  placeholder = '-',
+  copyLabel,
+}: {
+  value?: string | null;
+  placeholder?: string;
+  copyLabel: string;
+}) {
+  const [copied, setCopied] = useState(false);
+  const resetTimerRef = useRef<number | null>(null);
+  const trimmedValue = String(value || '').trim();
+  const hasValue = Boolean(trimmedValue);
+
+  const handleCopy = useCallback(async () => {
+    if (!hasValue) return;
+
+    try {
+      await navigator.clipboard.writeText(trimmedValue);
+      setCopied(true);
+
+      if (resetTimerRef.current) {
+        window.clearTimeout(resetTimerRef.current);
+      }
+
+      resetTimerRef.current = window.setTimeout(() => {
+        setCopied(false);
+        resetTimerRef.current = null;
+      }, 1500);
+    } catch {
+      // noop
+    }
+  }, [hasValue, trimmedValue]);
+
+  useEffect(() => {
+    return () => {
+      if (resetTimerRef.current) {
+        window.clearTimeout(resetTimerRef.current);
+      }
+    };
+  }, []);
+
+  if (!hasValue) {
+    return (
+      <div className="inline-flex min-h-9 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-500">
+        {placeholder}
+      </div>
+    );
+  }
+
+  return (
+    <div className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-sky-200 bg-sky-50 px-2 py-1 text-sky-950 shadow-sm">
+      <span className="px-1 font-mono text-sm font-semibold">{trimmedValue}</span>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7 rounded-md text-sky-700 hover:bg-sky-100 hover:text-sky-950"
+        aria-label={copyLabel}
+        onClick={() => {
+          void handleCopy();
+        }}
+      >
+        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+      </Button>
+    </div>
+  );
+}
+
 export const PreorderDetailModal = ({
   order,
   open,
@@ -211,9 +283,10 @@ export const PreorderDetailModal = ({
                       <ClipboardList className="h-4 w-4" />
                       Mã đơn
                     </Label>
-                    <div className="text-foreground font-mono text-sm font-semibold">
-                      {order.orderCode}
-                    </div>
+                    <CopyableCode
+                      value={order.orderCode}
+                      copyLabel="Sao chép mã đơn"
+                    />
                   </div>
                 ) : null}
                 {order.orderDate ? (
@@ -247,15 +320,15 @@ export const PreorderDetailModal = ({
               </div>
             </div>
 
-            <div>
-              <h4 className="text-foreground mb-3 font-semibold">
+            <div className={`${sectionClass} lg:col-span-3`}>
+              <div className={sectionTitleClass}>
                 Sản phẩm đặt trước
-              </h4>
+              </div>
               <div className="space-y-3">
                 {order.products.map((product, idx) => (
                   <div
                     key={idx}
-                    className="border-border bg-card flex items-center justify-between rounded-lg border p-3 shadow-sm"
+                    className="border-border bg-background flex items-center justify-between rounded-lg border p-3 shadow-sm"
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
@@ -265,9 +338,22 @@ export const PreorderDetailModal = ({
                         <PreorderProductStatusBadge status={product.status} />
                       </div>
 
-                      <p className="text-foreground text-sm">
-                        {product.sku} - {product.variant} x{product.quantity}
-                      </p>
+                      <div className="text-foreground/90 text-xs">
+                        Biến thể: {product.variant || '-'} • SL: {product.quantity}
+                      </div>
+                      <div className="text-foreground/90 text-xs">
+                        SKU:{' '}
+                        <CopyableCode
+                          value={product.sku}
+                          copyLabel={`Sao chép SKU ${product.name}`}
+                        />
+                      </div>
+                      <div className="text-foreground/90 text-xs">
+                        Nhà cung cấp: {product.supplier || '-'}
+                      </div>
+                      <div className="text-foreground/90 text-xs">
+                        Vị trí kho: {product.warehouseLocation || '-'}
+                      </div>
 
                       {product.batchCode && (
                         <div className="mt-1 flex items-center gap-2">
@@ -298,9 +384,10 @@ export const PreorderDetailModal = ({
                 </div>
                 <div className="space-y-1">
                   <Label className={labelClass}>Mã giao vận</Label>
-                  <div className="text-foreground font-mono text-sm font-semibold">
-                    {order.trackingCode || '-'}
-                  </div>
+                  <CopyableCode
+                    value={order.trackingCode}
+                    copyLabel="Sao chép mã giao vận"
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className={labelClass}>Trạng thái GHN</Label>

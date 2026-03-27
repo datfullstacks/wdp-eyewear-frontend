@@ -11,6 +11,7 @@ function item(
     id,
     productId: '',
     variantId: '',
+    sku: '',
     name,
     type: 'frame',
     quantity,

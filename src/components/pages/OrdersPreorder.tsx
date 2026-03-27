@@ -4,8 +4,10 @@ import axios from 'axios';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CalendarDays, Filter } from 'lucide-react';
 
-import { orderApi } from '@/api';
+import { orderApi, productApi, type ProductDetail } from '@/api';
 import type {
+  OrderItem,
+  OrderRecord,
   OrderShippingInfo,
   OrderShippingTestStatus,
 } from '@/api/orders';
@@ -37,6 +39,87 @@ import { useDetailRoute } from '@/hooks/useDetailRoute';
 import { toPreorderOrder } from '@/lib/orderAdapters';
 import { hasOperationHandoff, isPreorderOrder } from '@/lib/orderWorkflow';
 import type { PreorderOrder } from '@/types/preorder';
+
+type ProductVariant = NonNullable<ProductDetail['variants']>[number];
+
+function normalizeVariantKey(value: string): string {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function toProductVariantLabel(variant?: ProductVariant): string {
+  const color = String(
+    variant?.options?.color ||
+      variant?.options?.Colour ||
+      variant?.options?.colour ||
+      ''
+  ).trim();
+  const size = String(variant?.options?.size || variant?.options?.Size || '').trim();
+  if (color && size) return `${color} - ${size}`;
+  return color || size || 'Mac dinh';
+}
+
+function matchProductVariant(
+  item: OrderItem,
+  product?: ProductDetail | null
+): ProductVariant | null {
+  const variants = Array.isArray(product?.variants) ? product.variants : [];
+  if (variants.length === 0) return null;
+
+  const variantId = String(item.variantId || '').trim();
+  if (variantId) {
+    const matchedById =
+      variants.find((variant) => String(variant?._id || '').trim() === variantId) ||
+      null;
+    if (matchedById) return matchedById;
+  }
+
+  const sku = String(item.sku || '').trim().toLowerCase();
+  if (sku) {
+    const matchedBySku =
+      variants.find((variant) => String(variant?.sku || '').trim().toLowerCase() === sku) ||
+      null;
+    if (matchedBySku) return matchedBySku;
+  }
+
+  const normalizedVariant = normalizeVariantKey(item.variant);
+  if (!normalizedVariant) return null;
+
+  return (
+    variants.find(
+      (variant) =>
+        normalizeVariantKey(toProductVariantLabel(variant)) === normalizedVariant
+    ) || null
+  );
+}
+
+function hydrateOrderItemsWithProductData(
+  orders: OrderRecord[],
+  productDetailsById: Record<string, ProductDetail>
+): OrderRecord[] {
+  return orders.map((order) => ({
+    ...order,
+    items: order.items.map((item) => {
+      const productId = String(item.productId || '').trim();
+      const product = productDetailsById[productId];
+      const matchedVariant = matchProductVariant(item, product);
+
+      if (!matchedVariant) return item;
+
+      return {
+        ...item,
+        sku: String(matchedVariant.sku || '').trim() || item.sku,
+        warehouseLocation: String(matchedVariant.warehouseLocation || '').trim(),
+      };
+    }),
+  }));
+}
 
 function extractApiErrorMessage(error: unknown, fallback: string) {
   if (axios.isAxiosError(error)) {
@@ -91,15 +174,44 @@ const OrdersPreorder = () => {
     string | null
   >(null);
 
+  const hydratePreorderOrders = useCallback(async (input: OrderRecord[]) => {
+    const productIds = Array.from(
+      new Set(
+        input
+          .flatMap((order) =>
+            order.items.map((item) => String(item.productId || '').trim())
+          )
+          .filter(Boolean)
+      )
+    );
+
+    if (productIds.length === 0) return input;
+
+    const results = await Promise.allSettled(
+      productIds.map((productId) => productApi.getById(productId))
+    );
+    const productDetailsById: Record<string, ProductDetail> = {};
+
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        productDetailsById[productIds[index]] = result.value;
+      }
+    });
+
+    return hydrateOrderItemsWithProductData(input, productDetailsById);
+  }, []);
+
   const loadPreorderOrders = useCallback(async () => {
     setIsLoading(true);
     setErrorMessage(null);
 
     try {
       const result = await orderApi.getAll({ page: 1, limit: 200 });
-      const mapped = result.orders
-        .filter((order) => isPreorderOrder(order) && hasOperationHandoff(order))
-        .map(toPreorderOrder);
+      const relevantOrders = result.orders.filter(
+        (order) => isPreorderOrder(order) && hasOperationHandoff(order)
+      );
+      const hydratedOrders = await hydratePreorderOrders(relevantOrders);
+      const mapped = hydratedOrders.map(toPreorderOrder);
 
       setOrders(mapped);
       setSelectedOrders((prev) =>
@@ -110,11 +222,23 @@ const OrdersPreorder = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [hydratePreorderOrders]);
 
   useEffect(() => {
     void loadPreorderOrders();
   }, [loadPreorderOrders]);
+
+  useEffect(() => {
+    setDetailOrder((current) =>
+      current ? orders.find((order) => order.id === current.id) || current : null
+    );
+    setCancelOrder((current) =>
+      current ? orders.find((order) => order.id === current.id) || current : null
+    );
+    setShipmentOrder((current) =>
+      current ? orders.find((order) => order.id === current.id) || current : null
+    );
+  }, [orders]);
 
   useStatusRealtimeReload({
     domains: ['order', 'shipping'],
@@ -168,7 +292,7 @@ const OrdersPreorder = () => {
             .includes(searchValue) ||
           order.customerPhone.includes(searchQuery) ||
           order.products.some((product) =>
-            [product.name, product.supplier, product.warehouseLocation]
+            [product.name, product.sku, product.supplier, product.warehouseLocation]
               .join(' ')
               .toLowerCase()
               .includes(searchValue)
