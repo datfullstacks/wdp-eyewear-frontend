@@ -283,6 +283,13 @@ function getRxItems(order: OrderRecord): OrderItem[] {
   return order.items.filter(requiresPrescription);
 }
 
+function getFirstPrescriptionAttachmentUrl(
+  rxItems: OrderItem[]
+): string | undefined {
+  return rxItems.find((item) => (item.prescription?.attachmentUrls || []).length > 0)
+    ?.prescription?.attachmentUrls?.[0];
+}
+
 function toProductFrame(item: OrderItem): string {
   const value = String(item.variant || '').trim();
   return value || 'Mặc định';
@@ -518,6 +525,7 @@ export function toPrescriptionOrder(
   const source = resolveRxSource(rxItems);
   const itemForPrescription =
     rxItems.find((item) => item.prescriptionMode !== 'none') || rxItems[0];
+  const attachmentUrl = getFirstPrescriptionAttachmentUrl(rxItems);
   const rxItemIds = rxItems.map((item) => item.id).filter(Boolean);
 
   return {
@@ -542,6 +550,7 @@ export function toPrescriptionOrder(
     dueDate: plusDaysIso(createdDate, 3),
     notes: order.note || '',
     source,
+    attachmentUrl,
     workflowStage,
     trackingCode: order.shipment?.trackingCode || undefined,
     shipmentStatus: order.shipment?.latestStatus || undefined,
@@ -553,7 +562,12 @@ export function toPrescriptionOrder(
 export function toSupplementOrder(order: OrderRecord): SupplementOrder | null {
   const rxOrder = toPrescriptionOrder(order);
   if (!rxOrder) return null;
-  if (rxOrder.prescriptionStatus === 'approved') return null;
+  if (
+    rxOrder.prescriptionStatus === 'approved' ||
+    rxOrder.prescriptionStatus === 'pending_review'
+  ) {
+    return null;
+  }
 
   const rxItems = getRxItems(order);
   const primaryItem = rxItems[0];
@@ -583,7 +597,7 @@ export function toSupplementOrder(order: OrderRecord): SupplementOrder | null {
     ];
   }
 
-  const attachmentUrl = primaryItem?.prescription?.attachmentUrls?.[0];
+  const attachmentUrl = getFirstPrescriptionAttachmentUrl(rxItems);
 
   return {
     id: rxOrder.id,

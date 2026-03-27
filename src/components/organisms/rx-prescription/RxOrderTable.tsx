@@ -18,7 +18,6 @@ import { PrescriptionOrder } from '@/types/rxPrescription';
 import {
   CheckCircle2,
   Eye,
-  FileText,
   MoreHorizontal,
   Package,
   Phone,
@@ -136,10 +135,16 @@ function canSyncShipment(order: PrescriptionOrder) {
   ].includes(order.workflowStage);
 }
 
+function getSourceLabel(source: PrescriptionOrder['source']) {
+  if (source === 'customer_upload') return 'Khach upload toa';
+  if (source === 'store_input') return 'Store nhap Rx';
+  return 'Dang cho Rx';
+}
+
 export const RxOrderTable = ({
   orders,
   onViewDetail,
-  onInputPrescription,
+  onInputPrescription: _onInputPrescription,
   onContact,
   onApprove,
   onAdvanceWorkflow,
@@ -188,7 +193,12 @@ export const RxOrderTable = ({
                   </div>
                 </TableCell>
                 <TableCell>
-                  <span className={rxStatus.className}>{rxStatus.label}</span>
+                  <div className="flex flex-col gap-1">
+                    <span className={rxStatus.className}>{rxStatus.label}</span>
+                    <span className="text-foreground/60 text-xs">
+                      {getSourceLabel(order.source)}
+                    </span>
+                  </div>
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-col gap-1">
@@ -231,24 +241,13 @@ export const RxOrderTable = ({
                         Xem chi tiet
                       </DropdownMenuItem>
 
-                      {(order.prescriptionStatus === 'missing' ||
-                        order.prescriptionStatus === 'incomplete') && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => onInputPrescription(order)}>
-                            <FileText className="mr-2 h-4 w-4" />
-                            Nhap Rx
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onContact(order)}>
-                            <Phone className="mr-2 h-4 w-4" />
-                            Lien he khach
-                          </DropdownMenuItem>
-                        </>
-                      )}
-
                       {order.prescriptionStatus === 'pending_review' && (
                         <>
                           <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => onContact(order)}>
+                            <Phone className="mr-2 h-4 w-4" />
+                            Yeu cau xac nhan them
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onApprove(order)}>
                             <CheckCircle2 className="mr-2 h-4 w-4 text-success" />
                             Duyet va vao gia cong

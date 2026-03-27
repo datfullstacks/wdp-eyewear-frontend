@@ -20,11 +20,11 @@ import { buildDetailPath } from '@/hooks/useDetailRoute';
 import { isProcessingPrescriptionOrder } from '@/lib/orderWorkflow';
 
 const statusFilters = [
-  { key: 'all', label: 'Tất cả' },
-  { key: 'pending', label: 'Cần xử lý' },
-  { key: 'processing', label: 'Đã xử lý' },
-  { key: 'completed', label: 'Hoàn thành' },
-  { key: 'cancelled', label: 'Đã hủy' },
+  { key: 'all', label: 'Tat ca' },
+  { key: 'pending', label: 'Can xu ly' },
+  { key: 'processing', label: 'Da xu ly' },
+  { key: 'completed', label: 'Hoan thanh' },
+  { key: 'cancelled', label: 'Da huy' },
 ] as const;
 
 export default function OrdersProcessing() {
@@ -37,15 +37,15 @@ export default function OrdersProcessing() {
   return (
     <>
       <Header
-        title="Đơn đang gia công"
-        subtitle="Tập con của đơn Prescription: prescription hợp lệ và đang ở trạng thái confirmed/processing"
+        title="Don dang gia cong"
+        subtitle="Cac don prescription dang o cac stage waiting_lab, lens_processing, lens_fitting hoac qc_check"
       />
 
       <div className="space-y-6 p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
           <div className="w-full sm:max-w-[240px]">
             <SearchBar
-              placeholder="Tìm theo mã đơn, khách hàng..."
+              placeholder="Tim theo ma don, khach hang..."
               value={searchTerm}
               onChange={setSearchTerm}
             />
@@ -56,14 +56,14 @@ export default function OrdersProcessing() {
                 <Button
                   variant="outline"
                   size="icon"
-                  aria-label="Bộ lọc"
+                  aria-label="Bo loc"
                   className="text-foreground/80 hover:text-foreground"
                 >
                   <Filter />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Trạng thái</DropdownMenuLabel>
+                <DropdownMenuLabel>Trang thai</DropdownMenuLabel>
                 <DropdownMenuRadioGroup
                   value={statusFilter}
                   onValueChange={(value) => setStatusFilter(value as typeof statusFilter)}
@@ -85,7 +85,7 @@ export default function OrdersProcessing() {
           statusFilter={statusFilter}
           filter={isProcessingPrescriptionOrder}
           detailHref={(order) => buildDetailPath(pathname, order.id)}
-          emptyMessage="Không có đơn nào đang gia công."
+          emptyMessage="Khong co don nao dang gia cong."
         />
       </div>
     </>

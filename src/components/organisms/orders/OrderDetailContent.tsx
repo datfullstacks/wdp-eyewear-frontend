@@ -62,6 +62,12 @@ function PrescriptionSummary({
   order: NonNullable<ReturnType<typeof toPrescriptionOrder>>;
 }) {
   const prescription = order.prescription;
+  const sourceLabel =
+    order.source === 'customer_upload'
+      ? 'Khach upload toa'
+      : order.source === 'store_input'
+        ? 'Store nhap Rx'
+        : 'Dang cho Rx';
 
   return (
     <div className="space-y-4">
@@ -69,7 +75,7 @@ function PrescriptionSummary({
         <div className="space-y-1">
           <Label>Trang thai Rx</Label>
           <Value>{order.prescriptionStatus}</Value>
-          <p className="text-foreground/60 text-xs">Nguon: {order.source}</p>
+          <p className="text-foreground/60 text-xs">Nguon: {sourceLabel}</p>
         </div>
         <div className="space-y-1">
           <Label>Loai trong</Label>
@@ -120,6 +126,27 @@ function PrescriptionSummary({
               </p>
             </div>
           ) : null}
+        </div>
+      ) : null}
+
+      {order.attachmentUrl ? (
+        <div className="bg-muted/20 rounded-lg border p-3">
+          <div className="flex items-center justify-between gap-3">
+            <Label>Toa upload</Label>
+            <a
+              href={order.attachmentUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary text-sm underline"
+            >
+              Mo anh goc
+            </a>
+          </div>
+          <img
+            src={order.attachmentUrl}
+            alt={`Prescription ${order.orderId}`}
+            className="mt-3 max-h-96 w-full rounded-lg border object-contain"
+          />
         </div>
       ) : null}
     </div>
