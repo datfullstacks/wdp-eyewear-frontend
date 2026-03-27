@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Filter } from 'lucide-react';
 
 import { Header } from '@/components/organisms/Header';
@@ -15,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { RecentOrdersTable } from '@/components/organisms/RecentOrdersTable';
+import { buildDetailPath } from '@/hooks/useDetailRoute';
 import { isProcessingPrescriptionOrder } from '@/lib/orderWorkflow';
 
 const statusFilters = [
@@ -26,6 +28,7 @@ const statusFilters = [
 ] as const;
 
 export default function OrdersProcessing() {
+  const pathname = usePathname();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<
     'all' | 'pending' | 'processing' | 'completed' | 'cancelled'
@@ -81,6 +84,7 @@ export default function OrdersProcessing() {
           searchTerm={searchTerm}
           statusFilter={statusFilter}
           filter={isProcessingPrescriptionOrder}
+          detailHref={(order) => buildDetailPath(pathname, order.id)}
           emptyMessage="Không có đơn nào đang gia công."
         />
       </div>

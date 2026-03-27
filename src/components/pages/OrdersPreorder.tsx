@@ -33,6 +33,7 @@ import {
   statusFilterOptions,
 } from '@/data/preorderData';
 import { useStatusRealtimeReload } from '@/hooks/useStatusRealtime';
+import { useDetailRoute } from '@/hooks/useDetailRoute';
 import { toPreorderOrder } from '@/lib/orderAdapters';
 import { hasOperationHandoff, isPreorderOrder } from '@/lib/orderWorkflow';
 import type { PreorderOrder } from '@/types/preorder';
@@ -61,6 +62,7 @@ function formatFilterDate(value: string) {
 }
 
 const OrdersPreorder = () => {
+  const { detailId, openDetail, closeDetail } = useDetailRoute();
   const [orders, setOrders] = useState<PreorderOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -118,6 +120,26 @@ const OrdersPreorder = () => {
     domains: ['order', 'shipping'],
     reload: loadPreorderOrders,
   });
+
+  useEffect(() => {
+    if (!detailId) {
+      setIsDetailOpen(false);
+      setDetailOrder(null);
+      return;
+    }
+
+    const matchedOrder = orders.find((order) => order.id === detailId);
+    if (matchedOrder) {
+      setDetailOrder(matchedOrder);
+      setIsDetailOpen(true);
+      return;
+    }
+
+    if (!isLoading) {
+      setDetailOrder(null);
+      setIsDetailOpen(false);
+    }
+  }, [detailId, isLoading, orders]);
 
   const patchOrder = useCallback(
     (orderId: string, updater: (current: PreorderOrder) => PreorderOrder) => {
@@ -408,10 +430,7 @@ const OrdersPreorder = () => {
           showEmptyState={!isLoading && !errorMessage}
           onSelectOrder={handleSelectOrder}
           onSelectAll={handleSelectAll}
-          onViewDetail={(order) => {
-            setDetailOrder(order);
-            setIsDetailOpen(true);
-          }}
+          onViewDetail={(order) => openDetail(order.id)}
           onCancel={(order) => {
             setCancelOrder(order);
             setCancelReason('');
@@ -439,7 +458,15 @@ const OrdersPreorder = () => {
         <PreorderDetailModal
           order={detailOrder}
           open={isDetailOpen}
-          onOpenChange={setIsDetailOpen}
+          onOpenChange={(open) => {
+            setIsDetailOpen(open);
+            if (open) return;
+            if (detailId) {
+              closeDetail();
+              return;
+            }
+            setDetailOrder(null);
+          }}
         />
         <CancelModal
           order={cancelOrder}

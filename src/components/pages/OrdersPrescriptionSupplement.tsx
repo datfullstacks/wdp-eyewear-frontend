@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { contactTemplates } from '@/data/prescriptionData';
+import { useDetailRoute } from '@/hooks/useDetailRoute';
 import { useStatusRealtimeReload } from '@/hooks/useStatusRealtime';
 import { toSupplementOrder } from '@/lib/orderAdapters';
 import { canOperationHandlePrescription } from '@/lib/orderWorkflow';
@@ -159,6 +160,7 @@ function pickLatestTicketByOrder(tickets: SupportTicketRecord[]) {
 }
 
 export default function OrdersPrescriptionSupplement() {
+  const { detailId, openDetail, closeDetail } = useDetailRoute();
   const [orders, setOrders] = useState<SupplementOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -240,6 +242,25 @@ export default function OrdersPrescriptionSupplement() {
     domains: ['order', 'support'],
     reload: loadOrders,
   });
+
+  useEffect(() => {
+    if (!detailId) {
+      setDetailOpen(false);
+      return;
+    }
+
+    const matchedOrder = orders.find((order) => order.id === detailId);
+    if (matchedOrder) {
+      setSelectedOrder(matchedOrder);
+      setDetailOpen(true);
+      return;
+    }
+
+    if (!isLoading) {
+      setSelectedOrder(null);
+      setDetailOpen(false);
+    }
+  }, [detailId, isLoading, orders]);
 
   const filteredOrders = useMemo(
     () =>
@@ -484,7 +505,7 @@ export default function OrdersPrescriptionSupplement() {
               )}
               onSelectOrder={handleSelectOrder}
               onSelectAll={handleSelectAll}
-              onViewDetail={(order) => handleOpenModal(order, setDetailOpen)}
+              onViewDetail={(order) => openDetail(order.id)}
               onContact={(order) => handleOpenModal(order, setContactOpen)}
               onViewHistory={(order) => handleOpenModal(order, setHistoryOpen)}
               onUploadImage={(order) => handleOpenModal(order, setUploadImageOpen)}
@@ -503,7 +524,7 @@ export default function OrdersPrescriptionSupplement() {
               )}
               onSelectOrder={handleSelectOrder}
               onSelectAll={handleSelectAll}
-              onViewDetail={(order) => handleOpenModal(order, setDetailOpen)}
+              onViewDetail={(order) => openDetail(order.id)}
               onContact={(order) => handleOpenModal(order, setContactOpen)}
               onViewHistory={(order) => handleOpenModal(order, setHistoryOpen)}
               onUploadImage={(order) => handleOpenModal(order, setUploadImageOpen)}
@@ -513,7 +534,15 @@ export default function OrdersPrescriptionSupplement() {
 
         <OrderDetailModal
           open={detailOpen}
-          onOpenChange={setDetailOpen}
+          onOpenChange={(open) => {
+            setDetailOpen(open);
+            if (open) return;
+            if (detailId) {
+              closeDetail();
+              return;
+            }
+            setSelectedOrder(null);
+          }}
           order={selectedOrder}
           onContact={() => {
             if (!selectedOrder) return;

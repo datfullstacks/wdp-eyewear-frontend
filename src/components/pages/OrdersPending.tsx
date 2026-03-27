@@ -21,6 +21,7 @@ import { orderApi } from '@/api';
 import { PendingOrder } from '@/types/pending';
 import { toPendingOrder } from '@/lib/orderAdapters';
 import { useStatusRealtimeReload } from '@/hooks/useStatusRealtime';
+import { useDetailRoute } from '@/hooks/useDetailRoute';
 import { needsActionOrder } from '@/lib/orderWorkflow';
 import {
   canManagerApprovePendingOrder,
@@ -71,6 +72,7 @@ function extractApiErrorMessage(error: unknown, fallback: string) {
 
 export default function OrdersPending() {
   const pathname = usePathname();
+  const { detailId, openDetail, closeDetail } = useDetailRoute();
   const scope: 'sale' | 'manager' = pathname?.includes('/manager/')
     ? 'manager'
     : 'sale';
@@ -146,6 +148,23 @@ export default function OrdersPending() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, createdDateFilter]);
+
+  useEffect(() => {
+    if (!detailId) {
+      setDetailModal(null);
+      return;
+    }
+
+    const matchedOrder = orders.find((order) => order.id === detailId);
+    if (matchedOrder) {
+      setDetailModal(matchedOrder);
+      return;
+    }
+
+    if (!isLoading) {
+      setDetailModal(null);
+    }
+  }, [detailId, isLoading, orders]);
 
   const visibleSelectedCount = selectedOrders.filter((id) =>
     paginatedOrders.some((order) => order.id === id)
@@ -442,7 +461,7 @@ export default function OrdersPending() {
           showEmptyState={!isLoading && !errorMessage}
           onSelectAll={handleSelectAll}
           onSelectOrder={handleSelectOrder}
-          onViewDetail={setDetailModal}
+          onViewDetail={(order) => openDetail(order.id)}
           onProcess={setProcessModal}
           onReject={setRejectModal}
           onEscalate={(order) => {
@@ -467,7 +486,13 @@ export default function OrdersPending() {
       <PendingDetailModal
         scope={scope}
         order={detailModal}
-        onClose={() => setDetailModal(null)}
+        onClose={() => {
+          if (detailId) {
+            closeDetail();
+            return;
+          }
+          setDetailModal(null);
+        }}
         onProcess={setProcessModal}
         onReject={setRejectModal}
         onEscalate={(order) => {
