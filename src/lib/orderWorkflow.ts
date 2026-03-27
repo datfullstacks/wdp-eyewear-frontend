@@ -32,6 +32,12 @@ const OPERATION_PRESCRIPTION_RAW_STATUSES = new Set([
   'processing',
   'shipped',
 ]);
+const ACTIVE_PRESCRIPTION_LAB_STAGES = new Set([
+  'waiting_lab',
+  'lens_processing',
+  'lens_fitting',
+  'qc_check',
+]);
 
 function toTimestamp(dateValue?: string): number | null {
   if (!dateValue) return null;
@@ -90,6 +96,18 @@ export function canOperationHandlePrescription(order: OrderRecord): boolean {
   return OPERATION_PRESCRIPTION_RAW_STATUSES.has(normalizeRawOrderStatus(order));
 }
 
+export function isOperationsPrescriptionOrder(order: OrderRecord): boolean {
+  if (!canOperationHandlePrescription(order)) return false;
+
+  const rx = toPrescriptionOrder(order);
+  if (!rx) return false;
+
+  return (
+    rx.prescriptionStatus === 'pending_review' ||
+    rx.prescriptionStatus === 'approved'
+  );
+}
+
 export function isReadyStockOrder(order: OrderRecord): boolean {
   const orderType = String(order.orderType || '').toLowerCase();
   if (orderType !== 'ready_stock') return false;
@@ -101,13 +119,13 @@ export function isReadyStockOrder(order: OrderRecord): boolean {
 }
 
 export function isProcessingPrescriptionOrder(order: OrderRecord): boolean {
-  if (!canOperationHandlePrescription(order)) return false;
+  if (!isOperationsPrescriptionOrder(order)) return false;
 
   const rx = toPrescriptionOrder(order);
   if (!rx) return false;
   if (rx.prescriptionStatus !== 'approved') return false;
 
-  return normalizeRawOrderStatus(order) === 'processing';
+  return ACTIVE_PRESCRIPTION_LAB_STAGES.has(rx.workflowStage);
 }
 
 export function needsActionOrder(order: OrderRecord): boolean {
@@ -295,7 +313,7 @@ export function computeOrderMenuCounts(orders: OrderRecord[]): OrderMenuCounts {
     if (needsActionOrder(order)) counts.needsAction += 1;
     if (isReadyStockOrder(order)) counts.readyStock += 1;
     if (isPreorderOrder(order) && hasOperationHandoff(order)) counts.preorder += 1;
-    if (canOperationHandlePrescription(order)) counts.prescription += 1;
+    if (isOperationsPrescriptionOrder(order)) counts.prescription += 1;
     if (canOperationHandlePrescription(order) && needsPrescriptionSupplement(order)) {
       counts.prescriptionNeeded += 1;
     }
