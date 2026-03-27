@@ -57,6 +57,7 @@ export interface PrescriptionOrder {
   notes?: string;
   source: 'customer_upload' | 'customer_input' | 'pending';
   paymentStatus: 'paid' | 'partial' | 'pending' | 'cod';
+  attachmentUrl?: string;
   workflowStage: PrescriptionWorkflowStage;
   trackingCode?: string;
   shipmentStatus?: string;

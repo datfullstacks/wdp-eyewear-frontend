@@ -13,6 +13,7 @@ import {
   type RefundRequest,
 } from '@/types/refund';
 import supportApi from '@/api/support';
+import { useDetailRoute } from '@/hooks/useDetailRoute';
 
 function formatOwner(owner: string) {
   switch (owner) {
@@ -49,6 +50,7 @@ function formatNextAction(code: string) {
 }
 
 export default function CustomerHistoryPage() {
+  const { detailId, openDetail, closeDetail } = useDetailRoute();
   const [refunds, setRefunds] = useState<RefundRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -93,6 +95,41 @@ export default function CustomerHistoryPage() {
       active = false;
     };
   }, [page, search]);
+
+  useEffect(() => {
+    if (!detailId) {
+      setSelectedRefund(null);
+      return;
+    }
+
+    const matchedRefund = refunds.find((refund) => refund.id === detailId);
+    if (matchedRefund) {
+      setSelectedRefund(matchedRefund);
+      return;
+    }
+
+    let active = true;
+
+    void supportApi
+      .getRefundCases({ page: 1, limit: 200, q: detailId })
+      .then((response) => {
+        if (!active) return;
+        setSelectedRefund(
+          response.items.find((refund) => refund.id === detailId) || null
+        );
+      })
+      .catch((err) => {
+        if (!active) return;
+        setError(
+          err instanceof Error ? err.message : 'Failed to load refund detail.'
+        );
+        setSelectedRefund(null);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [detailId, refunds]);
 
   return (
     <>
@@ -204,7 +241,7 @@ export default function CustomerHistoryPage() {
                           <Button
                             type="button"
                             variant="outline"
-                            onClick={() => setSelectedRefund(refund)}
+                            onClick={() => openDetail(refund.id)}
                           >
                             Chi tiet
                           </Button>
@@ -229,6 +266,10 @@ export default function CustomerHistoryPage() {
           open={Boolean(selectedRefund)}
           onOpenChange={(open) => {
             if (!open) {
+              if (detailId) {
+                closeDetail();
+                return;
+              }
               setSelectedRefund(null);
             }
           }}

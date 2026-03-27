@@ -35,6 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useDetailRoute } from '@/hooks/useDetailRoute';
 
 type CategoryFilter = {
   label: string;
@@ -64,6 +65,7 @@ const typeLabels: Record<string, string> = {
 const PAGE_SIZE_OPTIONS = [20, 50, 100] as const;
 
 const Products = () => {
+  const { detailId, openDetail, closeDetail } = useDetailRoute();
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -150,6 +152,44 @@ const Products = () => {
     setCurrentPage((p) => Math.min(Math.max(1, p), totalPages));
   }, [totalPages]);
 
+  useEffect(() => {
+    if (!detailId) {
+      setDetailOpen(false);
+      setDetailProduct(null);
+      setDetailError(null);
+      setDetailLoadingId(null);
+      return;
+    }
+
+    let mounted = true;
+
+    const loadDetail = async () => {
+      setDetailOpen(true);
+      setDetailError(null);
+      setDetailLoadingId(detailId);
+
+      try {
+        const detail = await productApi.getById(detailId);
+        if (!mounted) return;
+        setDetailProduct(detail);
+      } catch {
+        if (!mounted) return;
+        setDetailProduct(null);
+        setDetailError('Không thể tải chi tiết sản phẩm. Vui lòng thử lại.');
+      } finally {
+        if (mounted) {
+          setDetailLoadingId(null);
+        }
+      }
+    };
+
+    void loadDetail();
+
+    return () => {
+      mounted = false;
+    };
+  }, [detailId]);
+
   const paginatedProducts = useMemo(() => {
     if (filteredProducts.length === 0) return [];
     const start = (currentPage - 1) * pageSize;
@@ -172,18 +212,7 @@ const Products = () => {
 
   const handlePreviewProduct = async (productId: string) => {
     if (!productId) return;
-    setDetailOpen(true);
-    setDetailProduct(null);
-    setDetailError(null);
-    setDetailLoadingId(productId);
-    try {
-      const detail = await productApi.getById(productId);
-      setDetailProduct(detail);
-    } catch (err) {
-      setDetailError('Không thể tải chi tiết sản phẩm. Vui lòng thử lại.');
-    } finally {
-      setDetailLoadingId(null);
-    }
+    openDetail(productId);
   };
 
   return (
@@ -312,10 +341,13 @@ const Products = () => {
         open={detailOpen}
         onOpenChange={(open) => {
           setDetailOpen(open);
-          if (!open) {
-            setDetailProduct(null);
-            setDetailError(null);
+          if (open) return;
+          if (detailId) {
+            closeDetail();
+            return;
           }
+          setDetailProduct(null);
+          setDetailError(null);
         }}
       >
         <DialogContent className="sm:max-w-5xl">

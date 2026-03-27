@@ -514,6 +514,28 @@ export const RxDetailModal = ({
                   </div>
                 </div>
               </div>
+            ) : order.attachmentUrl ? (
+              <div className={`${sectionClass} lg:col-span-3`}>
+                <div className={sectionTitleClass}>Toa upload</div>
+                <div className="space-y-3 rounded-lg border border-border/70 bg-background p-4 shadow-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <Label className={labelClass}>Ảnh toa khách đã tải lên</Label>
+                    <a
+                      href={order.attachmentUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary text-sm underline"
+                    >
+                      Mở ảnh gốc
+                    </a>
+                  </div>
+                  <img
+                    src={order.attachmentUrl}
+                    alt={`Prescription ${order.orderId}`}
+                    className="max-h-96 w-full rounded-lg border border-border/70 object-contain"
+                  />
+                </div>
+              </div>
             ) : (
               <div className={`${sectionClass} lg:col-span-3`}>
                 <div className={sectionTitleClass}>Thông số mắt (Rx)</div>
@@ -533,6 +555,30 @@ export const RxDetailModal = ({
                 </div>
               </div>
             )}
+
+            {order.prescription && order.attachmentUrl ? (
+              <div className={`${sectionClass} lg:col-span-3`}>
+                <div className={sectionTitleClass}>Toa upload</div>
+                <div className="space-y-3 rounded-lg border border-border/70 bg-background p-4 shadow-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <Label className={labelClass}>Ảnh toa khách đã tải lên</Label>
+                    <a
+                      href={order.attachmentUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary text-sm underline"
+                    >
+                      Mở ảnh gốc
+                    </a>
+                  </div>
+                  <img
+                    src={order.attachmentUrl}
+                    alt={`Prescription ${order.orderId}`}
+                    className="max-h-96 w-full rounded-lg border border-border/70 object-contain"
+                  />
+                </div>
+              </div>
+            ) : null}
 
             {order.notes ? (
               <div className="border-warning/30 bg-warning/10 rounded-xl border p-4 shadow-sm lg:col-span-3">

@@ -24,6 +24,7 @@ import {
 } from '@/components/organisms/ready-stock';
 import { Button } from '@/components/ui/button';
 import { isReadyStockOrder } from '@/lib/orderWorkflow';
+import { useDetailRoute } from '@/hooks/useDetailRoute';
 import { useStatusRealtimeReload } from '@/hooks/useStatusRealtime';
 import {
   createDefaultReadyStockOpsState,
@@ -169,6 +170,11 @@ function extractApiErrorMessage(error: unknown, fallback: string) {
 }
 
 export default function OrdersReadyStock() {
+  const {
+    detailId,
+    openDetail: openDetailRoute,
+    closeDetail,
+  } = useDetailRoute();
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -292,6 +298,27 @@ export default function OrdersReadyStock() {
     reload: loadOrders,
   });
 
+  useEffect(() => {
+    if (!detailId) {
+      setDetailOpen(false);
+      setDetailOrder(null);
+      return;
+    }
+
+    const matchedOrder = orders.find((order) => order.id === detailId);
+    if (matchedOrder) {
+      ensureOps(matchedOrder);
+      setDetailOrder(matchedOrder);
+      setDetailOpen(true);
+      return;
+    }
+
+    if (!isLoading) {
+      setDetailOrder(null);
+      setDetailOpen(false);
+    }
+  }, [detailId, ensureOps, isLoading, orders]);
+
   const assigneeOptions = useMemo(() => {
     const names = new Set<string>();
     Object.values(opsByOrderId).forEach((ops) => {
@@ -391,10 +418,9 @@ export default function OrdersReadyStock() {
   const openDetail = useCallback(
     (order: OrderRecord) => {
       ensureOps(order);
-      setDetailOrder(order);
-      setDetailOpen(true);
+      openDetailRoute(order.id);
     },
-    [ensureOps]
+    [ensureOps, openDetailRoute]
   );
 
   const openHold = useCallback(
@@ -617,7 +643,12 @@ export default function OrdersReadyStock() {
         open={detailOpen}
         onOpenChange={(open) => {
           setDetailOpen(open);
-          if (!open) setDetailOrder(null);
+          if (open) return;
+          if (detailId) {
+            closeDetail();
+            return;
+          }
+          setDetailOrder(null);
         }}
         order={detailOrder}
         onReload={loadOrders}

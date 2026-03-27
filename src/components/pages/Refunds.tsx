@@ -39,6 +39,7 @@ import {
   sortRefundsByCreatedAt,
   toRefundRequest,
 } from '@/types/refund';
+import { useDetailRoute } from '@/hooks/useDetailRoute';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -56,11 +57,7 @@ const SALE_FETCH_STATUSES = [
 ] as const;
 
 const OPERATION_FETCH_STATUSES = [
-  'approved',
   'return_pending',
-  'return_received',
-  'processing',
-  'completed',
 ] as const;
 
 type RefundPageScope = 'sale' | 'manager' | 'operation';
@@ -159,6 +156,7 @@ function getApprovalBreakdown(refund: RefundRequest): Partial<RefundBreakdown> {
 }
 
 const Refunds = ({ scope = 'sale' }: RefundsProps) => {
+  const { detailId, openDetail, closeDetail } = useDetailRoute();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [methodFilter, setMethodFilter] = useState<string>('all');
@@ -279,6 +277,25 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
     [filteredRefunds, currentPage]
   );
 
+  useEffect(() => {
+    if (!detailId) {
+      setIsDetailOpen(false);
+      return;
+    }
+
+    const matchedRefund = refunds.find((refund) => refund.id === detailId);
+    if (matchedRefund) {
+      setSelectedRefund(matchedRefund);
+      setIsDetailOpen(true);
+      return;
+    }
+
+    if (!isLoading) {
+      setSelectedRefund(null);
+      setIsDetailOpen(false);
+    }
+  }, [detailId, isLoading, refunds]);
+
   const resetActionModals = () => {
     setIsApproveOpen(false);
     setIsRejectOpen(false);
@@ -363,7 +380,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
           ? 'Refund đã được phê duyệt và chuyển sang hàng chờ nhận hàng hoàn.'
           : scope === 'manager'
             ? 'Manager đã phê duyệt refund exception.'
-            : 'Refund đã được staff phê duyệt.'
+            : 'Refund đã được sale phê duyệt.'
       );
     } catch (error) {
       setErrorMessage(toErrorMessage(error, 'Không thể phê duyệt refund.'));
@@ -376,13 +393,13 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
     scope === 'manager'
       ? 'Hàng chờ manager duyệt'
       : scope === 'operation'
-        ? 'Hàng chờ chi tiền'
+        ? 'Hàng chờ nhận hàng hoàn'
         : 'Quản lý hoàn tiền';
   const subtitle =
     scope === 'manager'
-      ? 'Case do staff chuyển lên chờ manager phê duyệt'
+      ? 'Case do sale chuyển lên chờ manager phê duyệt'
       : scope === 'operation'
-        ? 'Operations tiếp nhận case đã duyệt và thực hiện chi tiền'
+        ? 'Operations chỉ xử lý bước nhận hàng hoàn và QC'
         : 'Xử lý các yêu cầu hoàn tiền từ khách hàng';
   const afterSalesHref =
     scope === 'manager'
@@ -396,10 +413,16 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
     scope === 'operation'
       ? operationStatusFilterOptions
       : saleStatusFilterOptions;
+  const pageTitle =
+    scope === 'operation' ? 'Hàng chờ nhận hàng hoàn' : title;
+  const pageSubtitle =
+    scope === 'operation'
+      ? 'Operations chỉ xử lý bước nhận hàng hoàn và QC'
+      : subtitle;
 
   return (
     <>
-      <Header title={title} subtitle={subtitle} />
+      <Header title={pageTitle} subtitle={pageSubtitle} />
 
       <div className="space-y-6 p-6">
         <RefundStatsGrid stats={stats} scope={scope} />
@@ -539,7 +562,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
           <RefundTable
             refunds={paginatedRefunds}
             scope={scope}
-            onDetail={(refund) => openModal(refund, setIsDetailOpen)}
+            onDetail={(refund) => openDetail(refund.id)}
             onApprove={(refund) => openModal(refund, setIsApproveOpen)}
             onReject={(refund) => openModal(refund, setIsRejectOpen)}
             onEscalate={(refund) => openModal(refund, setIsEscalateOpen)}
@@ -587,7 +610,15 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
       <RefundDetailModal
         refund={selectedRefund}
         open={isDetailOpen}
-        onOpenChange={setIsDetailOpen}
+        onOpenChange={(open) => {
+          setIsDetailOpen(open);
+          if (open) return;
+          if (detailId) {
+            closeDetail();
+            return;
+          }
+          setSelectedRefund(null);
+        }}
       />
 
       <RefundApproveModal
@@ -651,7 +682,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
               action: 'send_back_to_staff',
               decisionNote: note,
             },
-            'Case đã được trả lại staff để xác minh thêm.'
+            'Case đã được trả lại sale để xác minh thêm.'
           )
         }
       />
