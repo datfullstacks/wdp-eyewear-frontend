@@ -55,6 +55,7 @@ export interface PrescriptionOrder {
   dueDate: string;
   notes?: string;
   source: 'customer_upload' | 'store_input' | 'pending';
+  attachmentUrl?: string;
   workflowStage: PrescriptionWorkflowStage;
   trackingCode?: string;
   shipmentStatus?: string;
