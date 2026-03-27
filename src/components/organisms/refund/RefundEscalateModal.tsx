@@ -41,15 +41,15 @@ export const RefundEscalateModal = ({
 
   const isSendBack = mode === 'send_back';
   const Icon = isSendBack ? CornerUpLeft : AlertTriangle;
-  const title = isSendBack ? 'Trả lại staff' : 'Chuyển manager';
+  const title = isSendBack ? 'Trả lại sale' : 'Chuyển manager';
   const description = isSendBack
-    ? `Trả case ${refund?.id || ''} về staff để kiểm tra thêm`
+    ? `Trả case ${refund?.id || ''} về sale để kiểm tra thêm`
     : `Chuyển case ${refund?.id || ''} lên manager phê duyệt`;
   const label = isSendBack ? 'Lý do trả lại *' : 'Lý do chuyển manager *';
   const placeholder = isSendBack
-    ? 'Nhập lý do cần staff bổ sung xác minh...'
+    ? 'Nhập lý do cần sale bổ sung xác minh...'
     : 'Nhập lý do cần manager can thiệp...';
-  const confirmLabel = isSendBack ? 'Trả về staff' : 'Chuyển manager';
+  const confirmLabel = isSendBack ? 'Trả về sale' : 'Chuyển manager';
 
   const handleSubmit = async () => {
     const trimmed = note.trim();

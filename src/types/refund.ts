@@ -107,11 +107,7 @@ export const operationStatusFilterOptions: Array<{
   label: string;
 }> = [
   { value: 'all', label: 'Tất cả trạng thái' },
-  { value: 'approved', label: statusConfig.approved.label },
   { value: 'return_pending', label: statusConfig.return_pending.label },
-  { value: 'return_received', label: statusConfig.return_received.label },
-  { value: 'processing', label: statusConfig.processing.label },
-  { value: 'completed', label: statusConfig.completed.label },
 ];
 
 export const refundMethodFilterOptions: Array<{

@@ -97,8 +97,12 @@ export const RefundTable = ({
 
           {refunds.map((refund) => {
             const MethodIcon = methodConfig[refund.method].icon;
+            const isOwnedBySales = refund.currentOwnerRole === 'sales';
+            const isOwnedByManager = refund.currentOwnerRole === 'manager';
+            const isOwnedByOperations = refund.currentOwnerRole === 'operations';
             const canSaleApprove =
               scope === 'sale' &&
+              isOwnedBySales &&
               (refund.status === 'requested' || refund.status === 'reviewing');
             const canSaleReject =
               scope === 'sale' &&
@@ -107,26 +111,35 @@ export const RefundTable = ({
                 refund.status === 'waiting_customer_info');
             const canSaleEscalate =
               scope === 'sale' &&
+              isOwnedBySales &&
               (refund.status === 'requested' || refund.status === 'reviewing');
             const canSaleRequestInfo =
               scope === 'sale' &&
+              isOwnedBySales &&
               (refund.status === 'requested' || refund.status === 'reviewing');
             const canResumeReview =
               scope === 'sale' && refund.status === 'waiting_customer_info';
             const canManagerDecide =
-              scope === 'manager' && refund.status === 'escalated_to_manager';
+              scope === 'manager' &&
+              isOwnedByManager &&
+              refund.status === 'escalated_to_manager';
             const canOperationConfirmReturn =
-              scope === 'operation' && refund.status === 'return_pending';
+              scope === 'operation' &&
+              isOwnedByOperations &&
+              refund.status === 'return_pending';
             const canOperationFailInspection =
               scope === 'operation' &&
-              (refund.status === 'return_pending' ||
-                refund.status === 'return_received');
-            const canOperationStartProcessing =
-              scope === 'operation' &&
+              isOwnedByOperations &&
+              refund.status === 'return_pending';
+            const canSaleStartProcessing =
+              scope === 'sale' &&
+              isOwnedBySales &&
               (refund.status === 'return_received' ||
                 (refund.status === 'approved' && !refund.requiresReturn));
-            const canOperationComplete =
-              scope === 'operation' && refund.status === 'processing';
+            const canSaleComplete =
+              scope === 'sale' &&
+              isOwnedBySales &&
+              refund.status === 'processing';
 
             return (
               <TableRow key={refund.id} className="hover:bg-muted/30">
@@ -265,7 +278,7 @@ export const RefundTable = ({
                             disabled={actionsDisabled}
                           >
                             <CornerUpLeft className="mr-2 h-4 w-4" />
-                            Trả lại staff
+                            Trả lại sale
                           </DropdownMenuItem>
                         </>
                       )}
@@ -295,7 +308,7 @@ export const RefundTable = ({
                         </>
                       )}
 
-                      {canOperationStartProcessing && (
+                      {canSaleStartProcessing && (
                         <>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
@@ -308,7 +321,7 @@ export const RefundTable = ({
                         </>
                       )}
 
-                      {canOperationComplete && (
+                      {canSaleComplete && (
                         <>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem

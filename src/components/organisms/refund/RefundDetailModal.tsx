@@ -42,7 +42,7 @@ export const RefundDetailModal = ({
     : refund?.requestedBreakdown;
   const ownerLabel =
     refund?.currentOwnerRole === 'sales'
-      ? 'Sale/Staff'
+      ? 'Sale'
       : refund?.currentOwnerRole === 'operations'
         ? 'Operations'
         : refund?.currentOwnerRole === 'manager'
@@ -58,12 +58,27 @@ export const RefundDetailModal = ({
         : refund?.nextActionCode === 'confirm_return_received'
           ? 'Chờ operations nhận/QC hàng hoàn'
           : refund?.nextActionCode === 'start_processing'
-            ? 'Chờ operations bắt đầu payout'
+            ? 'Chờ sale bắt đầu payout'
             : refund?.nextActionCode === 'complete'
-              ? 'Chờ operations xác nhận đã chuyển tiền'
+              ? 'Chờ sale xác nhận đã chuyển tiền'
               : refund?.nextActionCode === 'start_review'
-                ? 'Chờ staff review'
+                ? 'Chờ sale review'
                 : '-';
+
+  const displayOwnerLabel =
+    refund?.currentOwnerRole === 'sales'
+      ? 'Sale'
+      : refund?.currentOwnerRole === 'operations'
+        ? 'Operations'
+        : ownerLabel;
+  const displayNextActionLabel =
+    refund?.nextActionCode === 'start_processing'
+      ? 'Chờ sale bắt đầu payout'
+      : refund?.nextActionCode === 'complete'
+        ? 'Chờ sale xác nhận đã chuyển tiền'
+        : refund?.nextActionCode === 'start_review'
+          ? 'Chờ sale review'
+          : nextActionLabel;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -221,13 +236,13 @@ export const RefundDetailModal = ({
               <div className={fieldCardClass}>
                 <Label className={labelClass}>Người xử lý hiện tại</Label>
                 <p className={valueClass}>
-                  {ownerLabel}
+                  {displayOwnerLabel}
                 </p>
               </div>
               <div className={fieldCardClass}>
                 <Label className={labelClass}>Bước tiếp theo</Label>
                 <p className={valueClass}>
-                  {nextActionLabel}
+                  {displayNextActionLabel}
                 </p>
               </div>
             </div>
