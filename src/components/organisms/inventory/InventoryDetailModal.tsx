@@ -84,7 +84,7 @@ export const InventoryDetailModal = ({
             <div className="min-w-0">
               <DialogTitle>Chi tiết tồn kho</DialogTitle>
               <DialogDescription className="text-foreground/90 mt-1 flex items-center gap-2">
-                <span className="font-mono text-sm">{item.sku}</span>
+                <span className="font-mono text-sm">Mã SKU: {item.sku}</span>
                 <Button
                   type="button"
                   variant="ghost"
@@ -118,8 +118,12 @@ export const InventoryDetailModal = ({
               <div>
                 {item.trackInventory !== false ? (
                   <>
-                    <p className="text-foreground text-3xl font-bold">{item.stock}</p>
-                    <p className="text-foreground/70 text-xs">Tồn kho hiện tại</p>
+                    <p className="text-foreground text-3xl font-bold">
+                      {item.stock}
+                    </p>
+                    <p className="text-foreground/70 text-xs">
+                      Tồn kho hiện tại
+                    </p>
                   </>
                 ) : (
                   <>
@@ -144,18 +148,23 @@ export const InventoryDetailModal = ({
           <div className="grid grid-cols-2 gap-3 rounded-xl border border-slate-200/70 bg-white/80 p-3">
             <InfoItem
               label="Tồn tối thiểu"
-              value={item.trackInventory !== false ? String(item.minStock) : '-'}
+              value={
+                item.trackInventory !== false ? String(item.minStock) : '-'
+              }
             />
             <InfoItem
               label="Tồn tối đa"
-              value={item.trackInventory !== false ? String(item.maxStock) : '-'}
+              value={
+                item.trackInventory !== false ? String(item.maxStock) : '-'
+              }
             />
             <InfoItem label="Vị trí kho" value={item.location} />
             <InfoItem
               label="Trạng thái"
               value={
-                INVENTORY_STATUS_LABELS[toInventoryDisplayStatus(item.status)] ||
-                item.status
+                INVENTORY_STATUS_LABELS[
+                  toInventoryDisplayStatus(item.status)
+                ] || item.status
               }
             />
           </div>

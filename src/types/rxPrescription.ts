@@ -47,6 +47,7 @@ export interface PrescriptionOrder {
     name: string;
     sku: string;
     frame: string;
+    warehouseLocation: string;
     quantity: number;
   }[];
   prescriptionStatus: 'missing' | 'incomplete' | 'pending_review' | 'approved';
@@ -54,7 +55,8 @@ export interface PrescriptionOrder {
   priority: 'normal' | 'high' | 'urgent';
   dueDate: string;
   notes?: string;
-  source: 'customer_upload' | 'store_input' | 'pending';
+  source: 'customer_upload' | 'customer_input' | 'pending';
+  paymentStatus: 'paid' | 'partial' | 'pending' | 'cod';
   workflowStage: PrescriptionWorkflowStage;
   trackingCode?: string;
   shipmentStatus?: string;

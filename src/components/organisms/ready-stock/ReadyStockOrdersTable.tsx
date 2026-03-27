@@ -22,7 +22,6 @@ import {
 import {
   formatCurrencyVnd,
   getReadyStockItemKey,
-  getReadyStockWarnings,
   READY_STOCK_OPS_STATUS_LABEL,
   summarizeItems,
 } from '@/lib/readyStockOps';
@@ -31,7 +30,6 @@ import type {
   ReadyStockOpsStatus,
 } from '@/types/readyStockOps';
 import {
-  AlertTriangle,
   ChevronDown,
   Eye,
   Hand,
@@ -83,29 +81,6 @@ function paymentBadge(order: OrderRecord, ops: ReadyStockOrderOpsState) {
   return { label: 'Chờ thanh toán', type: 'warning' as const };
 }
 
-function warningLabel(
-  key: ReturnType<typeof getReadyStockWarnings>[number]
-): string {
-  switch (key) {
-    case 'missing_address':
-      return 'Địa chỉ thiếu/không rõ';
-    case 'payment_pending':
-      return 'Chờ thanh toán';
-    case 'payment_failed':
-      return 'Thanh toán thất bại';
-    case 'special_note':
-      return 'Có note đặc biệt';
-    case 'item_issue':
-      return 'Có sản phẩm thiếu/lỗi';
-    case 'order_issue':
-      return 'Có lỗi/ngoại lệ';
-    case 'hold':
-      return 'Đang tạm giữ';
-    default:
-      return key;
-  }
-}
-
 function nextActionHint(
   status: ReadyStockOpsStatus,
   allPicked: boolean,
@@ -128,7 +103,7 @@ function nextActionHint(
   }
 
   if (status === 'shipment_created') {
-    return 'Vận đơn GHN đã được tạo. Bàn giao kiện và đóng bộ GHN khi có cập nhật.';
+    return 'Vận đơn GHN đã được tạo. Bàn giao kiện và đồng bộ GHN khi có cập nhật.';
   }
 
   return null;
@@ -171,6 +146,8 @@ export function ReadyStockOrdersTable({
   onHold: (order: OrderRecord) => void;
   currentUserName: string;
 }) {
+  void currentUserName;
+
   return (
     <div className="glass-card overflow-hidden rounded-xl">
       <div className="border-border flex items-center justify-between gap-2 border-b px-4 py-3">
@@ -215,8 +192,6 @@ export function ReadyStockOrdersTable({
               const ops = resolveOps(order);
               const payment = paymentBadge(order, ops);
               const summary = summarizeItems(order);
-              const warnings = getReadyStockWarnings(order, ops);
-              const hasWarnings = warnings.length > 0;
               const allPicked = order.items.every((item, index) => {
                 const key = getReadyStockItemKey(order.id, item, index);
                 return Boolean(ops.itemStates?.[key]?.picked);
@@ -278,13 +253,19 @@ export function ReadyStockOrdersTable({
                   </TableCell>
 
                   <TableCell className="whitespace-nowrap">
-                    <div className="text-foreground/80" title={order.storeName || '-'}>
+                    <div
+                      className="text-foreground/80"
+                      title={order.storeName || '-'}
+                    >
                       {order.storeName || '-'}
                     </div>
                   </TableCell>
 
                   <TableCell className="whitespace-nowrap">
-                    <div className="text-foreground/80" title={supplierSummary(order)}>
+                    <div
+                      className="text-foreground/80"
+                      title={supplierSummary(order)}
+                    >
                       {supplierSummary(order)}
                     </div>
                   </TableCell>
@@ -330,92 +311,86 @@ export function ReadyStockOrdersTable({
                           variant="outline"
                           size="sm"
                           className="gap-2 border-slate-300 bg-white text-slate-900 shadow-sm hover:border-slate-400 hover:bg-slate-50 hover:text-slate-950"
-                          aria-label="Mo action"
+                          aria-label="Mở thao tác chính"
                         >
                           Thao tác
                           <ChevronDown className="h-4 w-4 text-slate-700" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-80">
-                        <DropdownMenuLabel className="flex items-center gap-2">
-                          <AlertTriangle className="text-warning h-4 w-4" />
-                          Cảnh báo
-                        </DropdownMenuLabel>
-                        {hasWarnings ? (
-                          warnings.map((w) => (
-                            <DropdownMenuItem key={w} disabled>
-                              {warningLabel(w)}
-                            </DropdownMenuItem>
-                          ))
-                        ) : (
-                          <DropdownMenuItem disabled>
-                            Không có cảnh báo
-                          </DropdownMenuItem>
-                        )}
+                        <DropdownMenuLabel>Hoạt động chính</DropdownMenuLabel>
 
-                        <DropdownMenuSeparator />
-                        <DropdownMenuLabel>Hành động chính</DropdownMenuLabel>
+                        <DropdownMenuItem
+                          onClick={() => onAccept(order)}
+                          className="gap-2 border-slate-300 bg-white text-slate-900 shadow-sm hover:border-slate-400 hover:bg-slate-50 hover:text-slate-950"
+                          disabled={!canAccept}
+                          title={
+                            canAccept
+                              ? ''
+                              : 'Chỉ khả dụng khi đơn đang ở trạng thái chờ nhận xử lý.'
+                          }
+                        >
+                          <Hand className="h-4 w-4" />
+                          Nhận xử lý
+                        </DropdownMenuItem>
 
-                        {canAccept && (
-                          <DropdownMenuItem
-                            onClick={() => onAccept(order)}
-                            className="gap-2 border-slate-300 bg-white text-slate-900 shadow-sm hover:border-slate-400 hover:bg-slate-50 hover:text-slate-950"
-                          >
-                            <Hand className="h-4 w-4" />
-                            Nhận xử lý
-                          </DropdownMenuItem>
-                        )}
+                        <DropdownMenuItem
+                          onClick={() => onConfirmPicked(order)}
+                          className="gap-2 border-slate-300 bg-white text-slate-900 shadow-sm hover:border-slate-400 hover:bg-slate-50 hover:text-slate-950"
+                          disabled={!canConfirmPicked || !allPicked}
+                          title={
+                            !canConfirmPicked
+                              ? 'Cần chuyển đơn sang bước lấy hàng trước.'
+                              : !allPicked
+                                ? 'Cần đánh dấu đã lấy đủ tất cả sản phẩm trước.'
+                                : ''
+                          }
+                        >
+                          <ShoppingBag className="h-4 w-4" />
+                          Xác nhận đã lấy đủ
+                        </DropdownMenuItem>
 
-                        {ops.opsStatus === 'picking' && (
-                          <DropdownMenuItem
-                            onClick={() => onConfirmPicked(order)}
-                            className="gap-2 border-slate-300 bg-white text-slate-900 shadow-sm hover:border-slate-400 hover:bg-slate-50 hover:text-slate-950"
-                            disabled={!allPicked}
-                          >
-                            <ShoppingBag className="h-4 w-4" />
-                            Xác nhận đã lấy đủ
-                          </DropdownMenuItem>
-                        )}
+                        <DropdownMenuItem
+                          onClick={() => onPack(order)}
+                          className="gap-2 border-slate-300 bg-white text-slate-900 shadow-sm hover:border-slate-400 hover:bg-slate-50 hover:text-slate-950"
+                          disabled={!canPack}
+                          title={
+                            canPack ? '' : 'Cần hoàn tất bước lấy hàng trước.'
+                          }
+                        >
+                          <Package className="h-4 w-4" />
+                          Xác nhận đã đóng gói
+                        </DropdownMenuItem>
 
-                        {canPack && (
-                          <DropdownMenuItem
-                            onClick={() => onPack(order)}
-                            className="gap-2 border-slate-300 bg-white text-slate-900 shadow-sm hover:border-slate-400 hover:bg-slate-50 hover:text-slate-950"
-                          >
-                            <Package className="h-4 w-4" />
-                            Xác nhận đã đóng gói
-                          </DropdownMenuItem>
-                        )}
+                        <DropdownMenuItem
+                          onClick={() => onCreateShipment(order)}
+                          className="gap-2 border-slate-300 bg-white text-slate-900 shadow-sm hover:border-slate-400 hover:bg-slate-50 hover:text-slate-950"
+                          disabled={!canCreateShipment}
+                          title={
+                            canCreateShipment
+                              ? ''
+                              : hasShipment
+                                ? 'Đơn đã có mã vận đơn.'
+                                : 'Cần xác nhận đã đóng gói trước.'
+                          }
+                        >
+                          <Truck className="h-4 w-4" />
+                          Tạo vận đơn GHN
+                        </DropdownMenuItem>
 
-                        {canCreateShipment && (
-                          <DropdownMenuItem
-                            onClick={() => onCreateShipment(order)}
-                            className="gap-2 border-slate-300 bg-white text-slate-900 shadow-sm hover:border-slate-400 hover:bg-slate-50 hover:text-slate-950"
-                          >
-                            <Truck className="h-4 w-4" />
-                            Tạo vận đơn GHN
-                          </DropdownMenuItem>
-                        )}
-
-                        {canSyncShipment && (
-                          <DropdownMenuItem
-                            onClick={() => onSyncShipment(order)}
-                            className="gap-2 border-slate-300 bg-white text-slate-900 shadow-sm hover:border-slate-400 hover:bg-slate-50 hover:text-slate-950"
-                          >
-                            <Truck className="h-4 w-4" />
-                            Đồng bộ GHN
-                          </DropdownMenuItem>
-                        )}
-
-                        {!canAccept &&
-                          ops.opsStatus !== 'picking' &&
-                          !canPack &&
-                          !canCreateShipment &&
-                          !canSyncShipment && (
-                            <DropdownMenuItem disabled>
-                              Không có thao tác tiếp theo ở trạng thái này.
-                            </DropdownMenuItem>
-                          )}
+                        <DropdownMenuItem
+                          onClick={() => onSyncShipment(order)}
+                          className="gap-2 border-slate-300 bg-white text-slate-900 shadow-sm hover:border-slate-400 hover:bg-slate-50 hover:text-slate-950"
+                          disabled={!canSyncShipment}
+                          title={
+                            canSyncShipment
+                              ? ''
+                              : 'Cần có vận đơn GHN trước khi đồng bộ.'
+                          }
+                        >
+                          <Truck className="h-4 w-4" />
+                          Đồng bộ GHN
+                        </DropdownMenuItem>
 
                         {hint && (
                           <DropdownMenuItem disabled>{hint}</DropdownMenuItem>

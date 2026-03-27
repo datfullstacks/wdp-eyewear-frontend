@@ -401,7 +401,7 @@ function resolveRxSource(rxItems: OrderItem[]): PrescriptionOrder['source'] {
     return 'customer_upload';
   }
   if (rxItems.some((item) => item.prescriptionMode === 'manual')) {
-    return 'store_input';
+    return 'customer_input';
   }
   return 'pending';
 }
@@ -532,8 +532,9 @@ export function toPrescriptionOrder(
     orderDate: createdDate,
     products: rxItems.map((item, index) => ({
       name: item.name,
-      sku: toProductSku(order.id, item, index),
+      sku: String(item.sku || '').trim() || toProductSku(order.id, item, index),
       frame: toProductFrame(item),
+      warehouseLocation: String(item.warehouseLocation || '').trim(),
       quantity: item.quantity,
     })),
     prescriptionStatus,
@@ -542,6 +543,7 @@ export function toPrescriptionOrder(
     dueDate: plusDaysIso(createdDate, 3),
     notes: order.note || '',
     source,
+    paymentStatus: mapPaymentStatus(order.paymentStatus),
     workflowStage,
     trackingCode: order.shipment?.trackingCode || undefined,
     shipmentStatus: order.shipment?.latestStatus || undefined,
@@ -609,7 +611,7 @@ export function toPreorderOrder(order: OrderRecord): PreorderOrder {
   const products: PreorderProduct[] =
     order.items.length > 0
       ? order.items.map((item, index) => ({
-          sku: `${order.id.slice(-6).toUpperCase()}-${index + 1}`,
+          sku: String(item.sku || '').trim() || toProductSku(order.id, item, index),
           name: item.name,
           variant: item.variant,
           supplier: item.supplier || '',

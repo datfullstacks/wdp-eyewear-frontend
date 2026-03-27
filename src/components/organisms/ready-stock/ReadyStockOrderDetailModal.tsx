@@ -125,7 +125,8 @@ function issueTypeLabel(type: ReadyStockIssueType | null): string {
 }
 
 function paymentBadge(order: OrderRecord, paymentFailed: boolean) {
-  if (paymentFailed) return { label: 'Th\u1ea5t b\u1ea1i', type: 'error' as const };
+  if (paymentFailed)
+    return { label: 'Th\u1ea5t b\u1ea1i', type: 'error' as const };
   if (order.paymentStatus === 'paid')
     return { label: '\u0110\u00e3 thanh to\u00e1n', type: 'success' as const };
   if (order.paymentStatus === 'partial')
@@ -192,7 +193,6 @@ export function ReadyStockOrderDetailModal({
   const setTracking = useReadyStockOpsStore((s) => s.setTracking);
   const setHold = useReadyStockOpsStore((s) => s.setHold);
   const setItemState = useReadyStockOpsStore((s) => s.setItemState);
-  const reportIssue = useReadyStockOpsStore((s) => s.reportIssue);
 
   const resolvedOps = useMemo(() => {
     if (!order) return null;
@@ -253,7 +253,9 @@ export function ReadyStockOrderDetailModal({
       .catch(() => {
         if (cancelled) return;
         setShippingInfo(null);
-        setShippingError('Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c th\u00f4ng tin GHN cho \u0111\u01a1n n\u00e0y.');
+        setShippingError(
+          'Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c th\u00f4ng tin GHN cho \u0111\u01a1n n\u00e0y.'
+        );
       })
       .finally(() => {
         if (!cancelled) setShippingLoading(false);
@@ -322,7 +324,9 @@ export function ReadyStockOrderDetailModal({
       setStatus(order.id, 'picking');
       await onReload();
     } catch {
-      setShippingError('Kh\u00f4ng th\u1ec3 nh\u1eadn x\u1eed l\u00fd \u0111\u01a1n h\u00e0ng.');
+      setShippingError(
+        'Kh\u00f4ng th\u1ec3 nh\u1eadn x\u1eed l\u00fd \u0111\u01a1n h\u00e0ng.'
+      );
     }
   }
 
@@ -335,7 +339,9 @@ export function ReadyStockOrderDetailModal({
       setStatus(order.id, 'packing');
       await onReload();
     } catch {
-      setShippingError('Kh\u00f4ng th\u1ec3 x\u00e1c nh\u1eadn \u0111\u00e3 l\u1ea5y \u0111\u1ee7 s\u1ea3n ph\u1ea9m.');
+      setShippingError(
+        'Kh\u00f4ng th\u1ec3 x\u00e1c nh\u1eadn \u0111\u00e3 l\u1ea5y \u0111\u1ee7 s\u1ea3n ph\u1ea9m.'
+      );
     }
   }
 
@@ -348,7 +354,9 @@ export function ReadyStockOrderDetailModal({
       setStatus(order.id, 'ready_to_ship');
       await onReload();
     } catch {
-      setShippingError('Kh\u00f4ng th\u1ec3 x\u00e1c nh\u1eadn \u0111\u00f3ng g\u00f3i \u0111\u01a1n h\u00e0ng.');
+      setShippingError(
+        'Kh\u00f4ng th\u1ec3 x\u00e1c nh\u1eadn \u0111\u00f3ng g\u00f3i \u0111\u01a1n h\u00e0ng.'
+      );
     }
   }
 
@@ -361,7 +369,9 @@ export function ReadyStockOrderDetailModal({
       setStatus(order.id, 'handover_to_carrier');
       await onReload();
     } catch {
-      setShippingError('Kh\u00f4ng th\u1ec3 c\u1eadp nh\u1eadt \u0111\u00e3 b\u00e0n giao cho GHN.');
+      setShippingError(
+        'Kh\u00f4ng th\u1ec3 c\u1eadp nh\u1eadt \u0111\u00e3 b\u00e0n giao cho GHN.'
+      );
     }
   }
 
@@ -425,7 +435,9 @@ export function ReadyStockOrderDetailModal({
       setStatus(order.id, 'packing');
       await onReload();
     } catch {
-      setShippingError('\u0110\u00e3 l\u1ea5y \u0111\u1ee7 h\u00e0ng nh\u01b0ng kh\u00f4ng th\u1ec3 chuy\u1ec3n sang \u0111\u00f3ng g\u00f3i.');
+      setShippingError(
+        '\u0110\u00e3 l\u1ea5y \u0111\u1ee7 h\u00e0ng nh\u01b0ng kh\u00f4ng th\u1ec3 chuy\u1ec3n sang \u0111\u00f3ng g\u00f3i.'
+      );
     } finally {
       setItemSavingKey(null);
     }
@@ -475,7 +487,9 @@ export function ReadyStockOrderDetailModal({
       await orderApi.updateOpsStage(order.id, holdStage);
       await onReload();
     } catch {
-      setShippingError('Kh\u00f4ng th\u1ec3 chuy\u1ec3n \u0111\u01a1n sang tr\u1ea1ng th\u00e1i hold.');
+      setShippingError(
+        'Kh\u00f4ng th\u1ec3 chuy\u1ec3n \u0111\u01a1n sang tr\u1ea1ng th\u00e1i hold.'
+      );
     }
   }
 
@@ -499,7 +513,10 @@ export function ReadyStockOrderDetailModal({
       await onReload();
     } catch (error) {
       setShippingError(
-        extractApiErrorMessage(error, 'Kh\u00f4ng th\u1ec3 t\u1ea1o v\u1eadn \u0111\u01a1n GHN.')
+        extractApiErrorMessage(
+          error,
+          'Kh\u00f4ng th\u1ec3 t\u1ea1o v\u1eadn \u0111\u01a1n GHN.'
+        )
       );
     } finally {
       setShippingSubmitting(false);
@@ -525,7 +542,12 @@ export function ReadyStockOrderDetailModal({
       }
       await onReload();
     } catch (error) {
-      setShippingError(extractApiErrorMessage(error, 'Kh\u00f4ng th\u1ec3 \u0111\u1ed3ng b\u1ed9 GHN.'));
+      setShippingError(
+        extractApiErrorMessage(
+          error,
+          'Kh\u00f4ng th\u1ec3 \u0111\u1ed3ng b\u1ed9 GHN.'
+        )
+      );
     } finally {
       setShippingSubmitting(false);
     }
@@ -579,7 +601,9 @@ export function ReadyStockOrderDetailModal({
         ? 'X\u00e1c nh\u1eadn \u0111\u00e1nh d\u1ea5u \u0111\u00e3 l\u1ea5y h\u00e0ng'
         : 'X\u00e1c nh\u1eadn b\u1ecf l\u1ea5y h\u00e0ng',
       description: `B\u1ea1n c\u00f3 ch\u1eafc mu\u1ed1n ${verb} cho s\u1ea3n ph\u1ea9m "${itemName}" trong \u0111\u01a1n ${invoice}?`,
-      actionLabel: nextPicked ? '\u0110\u00e1nh d\u1ea5u \u0111\u00e3 l\u1ea5y' : 'B\u1ecf l\u1ea5y h\u00e0ng',
+      actionLabel: nextPicked
+        ? '\u0110\u00e1nh d\u1ea5u \u0111\u00e3 l\u1ea5y'
+        : 'B\u1ecf l\u1ea5y h\u00e0ng',
       onConfirm: () => handleTogglePicked(itemKey, nextPicked),
     });
   }
@@ -602,7 +626,6 @@ export function ReadyStockOrderDetailModal({
     });
   }
 
-
   const canStartPicking = resolvedOps.opsStatus === 'pending_operations';
   const canConfirmPicked = resolvedOps.opsStatus === 'picking';
   const canConfirmPacked = resolvedOps.opsStatus === 'packing';
@@ -617,7 +640,10 @@ export function ReadyStockOrderDetailModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="text-foreground max-h-[85vh] w-[96vw] max-w-[980px] overflow-y-auto p-4 shadow-2xl">
         <DialogHeader>
-          <DialogTitle>{'Chi ti\u1ebft \u0111\u01a1n c\u00f3 s\u1eb5n'} {'\u2022'} {order.code}</DialogTitle>
+          <DialogTitle>
+            {'Chi ti\u1ebft \u0111\u01a1n c\u00f3 s\u1eb5n'} {'\u2022'}{' '}
+            {order.code}
+          </DialogTitle>
         </DialogHeader>
 
         {/* Header */}
@@ -629,7 +655,9 @@ export function ReadyStockOrderDetailModal({
               </div>
               <div className="text-foreground font-mono text-sm">{invoice}</div>
               <div className="flex flex-wrap items-center gap-2">
-                <StatusBadge status="info">{'Sales: \u0110\u00e3 duy\u1ec7t'}</StatusBadge>
+                <StatusBadge status="info">
+                  {'Sales: \u0110\u00e3 duy\u1ec7t'}
+                </StatusBadge>
                 <StatusBadge status={opsBadgeType(resolvedOps.opsStatus)}>
                   {'V\u1eadn h\u00e0nh: '}
                   {READY_STOCK_OPS_STATUS_LABEL[resolvedOps.opsStatus]}
@@ -649,7 +677,9 @@ export function ReadyStockOrderDetailModal({
                   onClick={() => {
                     void openStartPickingConfirm();
                   }}
-                  title={'Nh\u1eadn \u0111\u01a1n \u0111\u1ec3 b\u1eaft \u0111\u1ea7u x\u1eed l\u00fd'}
+                  title={
+                    'Nh\u1eadn \u0111\u01a1n \u0111\u1ec3 b\u1eaft \u0111\u1ea7u x\u1eed l\u00fd'
+                  }
                 >
                   {'Nh\u1eadn x\u1eed l\u00fd'}
                 </Button>
@@ -673,11 +703,15 @@ export function ReadyStockOrderDetailModal({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-72">
-                  <DropdownMenuLabel>{'Chuy\u1ec3n b\u01b0\u1edbc'}</DropdownMenuLabel>
+                  <DropdownMenuLabel>
+                    {'Chuy\u1ec3n b\u01b0\u1edbc'}
+                  </DropdownMenuLabel>
 
                   {!hasAnyStatusAction && (
                     <DropdownMenuItem disabled>
-                      {'Kh\u00f4ng c\u00f3 thao t\u00e1c ph\u00f9 h\u1ee3p v\u1edbi tr\u1ea1ng th\u00e1i hi\u1ec7n t\u1ea1i.'}
+                      {
+                        'Kh\u00f4ng c\u00f3 thao t\u00e1c ph\u00f9 h\u1ee3p v\u1edbi tr\u1ea1ng th\u00e1i hi\u1ec7n t\u1ea1i.'
+                      }
                     </DropdownMenuItem>
                   )}
 
@@ -701,7 +735,9 @@ export function ReadyStockOrderDetailModal({
                       }}
                       className="gap-2"
                       title={
-                        !allPicked ? 'C\u1ea7n pick \u0111\u1ee7 t\u1ea5t c\u1ea3 s\u1ea3n ph\u1ea9m tr\u01b0\u1edbc' : ''
+                        !allPicked
+                          ? 'C\u1ea7n pick \u0111\u1ee7 t\u1ea5t c\u1ea3 s\u1ea3n ph\u1ea9m tr\u01b0\u1edbc'
+                          : ''
                       }
                     >
                       <CheckCircle2 className="h-4 w-4" />
@@ -717,7 +753,9 @@ export function ReadyStockOrderDetailModal({
                       className="gap-2"
                     >
                       <CheckCircle2 className="h-4 w-4" />
-                      {'X\u00e1c nh\u1eadn \u0111\u00e3 \u0111\u00f3ng g\u00f3i'}
+                      {
+                        'X\u00e1c nh\u1eadn \u0111\u00e3 \u0111\u00f3ng g\u00f3i'
+                      }
                     </DropdownMenuItem>
                   )}
 
@@ -731,7 +769,9 @@ export function ReadyStockOrderDetailModal({
                         }}
                         className="gap-2"
                         title={
-                          !canHandover ? 'C\u1ea7n c\u00f3 tracking tr\u01b0\u1edbc khi b\u00e0n giao' : ''
+                          !canHandover
+                            ? 'C\u1ea7n c\u00f3 tracking tr\u01b0\u1edbc khi b\u00e0n giao'
+                            : ''
                         }
                       >
                         <Truck className="h-4 w-4" />
@@ -860,7 +900,9 @@ export function ReadyStockOrderDetailModal({
                 </div>
 
                 <div className="space-y-1 sm:col-span-3">
-                  <Label>{'\u0110\u1ecba ch\u1ec9 \u0111\u1ea7y \u0111\u1ee7'}</Label>
+                  <Label>
+                    {'\u0110\u1ecba ch\u1ec9 \u0111\u1ea7y \u0111\u1ee7'}
+                  </Label>
                   <div className="flex items-start justify-between gap-2">
                     <div className="text-foreground text-sm whitespace-pre-wrap">
                       {order.customerAddress || '-'}
@@ -873,19 +915,6 @@ export function ReadyStockOrderDetailModal({
                         onClick={() => copyText(order.customerAddress || '')}
                       >
                         <ClipboardCopy className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          reportIssue(
-                            order.id,
-                            'address_issue',
-                            `\u0110\u1ecba ch\u1ec9 c\u1ea7n b\u1ed5 sung/ki\u1ec3m tra l\u1ea1i: ${order.customerAddress || '-'}`
-                          )
-                        }
-                      >
-                        {'B\u00e1o l\u1ed7i \u0111\u1ecba ch\u1ec9'}
                       </Button>
                     </div>
                   </div>
@@ -957,7 +986,8 @@ export function ReadyStockOrderDetailModal({
                   const state = resolvedOps.itemStates?.[key];
                   const picked = Boolean(state?.picked);
                   const issueType = state?.issueType || null;
-                  const location = state?.warehouseLocation || item.warehouseLocation || '';
+                  const location =
+                    item.warehouseLocation || state?.warehouseLocation || '';
                   const issueNote = state?.issueNote || '';
 
                   return (
@@ -988,14 +1018,20 @@ export function ReadyStockOrderDetailModal({
                           </div>
                           <div className="text-foreground/90 text-xs">
                             {'Lo\u1ea1i: '} {item.type || 'other'} {'\u2022'}{' '}
-                            {'Bi\u1ebfn th\u1ec3: '} {item.variant} {'\u2022'} {'SL: '} {item.quantity}
+                            {'Bi\u1ebfn th\u1ec3: '} {item.variant} {'\u2022'}{' '}
+                            {'SL: '} {item.quantity}
                           </div>
                           <div className="text-foreground/90 text-xs">
-                            {'\u0110\u01a1n gi\u00e1: '} {formatCurrencyVnd(item.unitPrice)} {'\u2022'}{' '}
-                            {'Th\u00e0nh ti\u1ec1n: '} {formatCurrencyVnd(item.lineTotal)}
+                            {'\u0110\u01a1n gi\u00e1: '}{' '}
+                            {formatCurrencyVnd(item.unitPrice)} {'\u2022'}{' '}
+                            {'Th\u00e0nh ti\u1ec1n: '}{' '}
+                            {formatCurrencyVnd(item.lineTotal)}
                           </div>
                           <div className="text-foreground/90 text-xs">
                             {'Nh\u00e0 cung c\u1ea5p: '} {item.supplier || '-'}
+                          </div>
+                          <div className="text-foreground/90 text-xs">
+                            {'SKU: '} {item.sku || '-'}
                           </div>
                         </div>
 
@@ -1073,12 +1109,14 @@ export function ReadyStockOrderDetailModal({
 
                       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div className="space-y-1">
-                          <Label>{'V\u1ecb tr\u00ed kho / kho x\u1eed l\u00fd (m\u1eabu)'}</Label>
+                          <Label>
+                            {'V\u1ecb tr\u00ed kho'}
+                          </Label>
                           <Input
                             value={location}
                             readOnly
                             className="bg-slate-50 text-slate-700"
-                            placeholder="VD: KHO-HCM-FRAME-A1"
+                            placeholder="Ch\u01b0a c\u00f3 v\u1ecb tr\u00ed kho trong data bi\u1ebfn th\u1ec3"
                           />
                         </div>
                         {issueType && (
@@ -1187,9 +1225,7 @@ export function ReadyStockOrderDetailModal({
                 )}
               </div>
             </div>
-
           </div>
-
         </div>
 
         <DialogFooter className="gap-2">
@@ -1234,5 +1270,3 @@ export function ReadyStockOrderDetailModal({
     </Dialog>
   );
 }
-
-

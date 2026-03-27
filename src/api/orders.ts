@@ -171,6 +171,7 @@ interface BackendProductRef {
   variants?: Array<{
     _id?: string;
     id?: string;
+    sku?: string;
     warehouseLocation?: string;
   }>;
 }
@@ -296,6 +297,7 @@ export interface OrderItem {
   id: string;
   productId: string;
   variantId: string;
+  sku: string;
   name: string;
   type: string;
   quantity: number;
@@ -906,12 +908,14 @@ function mapOrderItem(raw: BackendOrderItem): OrderItem {
     ? productRef?.variants.find((variant) => toEntityId(variant) === variantId)
     : undefined;
   const supplier = String(productRef?.fulfillment?.supplier || '').trim();
+  const sku = String(matchedVariant?.sku || '').trim();
   const warehouseLocation = String(matchedVariant?.warehouseLocation || '').trim();
 
   return {
     id: String(raw?._id || '').trim(),
     productId: toEntityId(raw?.productId),
     variantId,
+    sku,
     name: String(raw?.name || '').trim() || 'Sản phẩm',
     type: String(raw?.type || '')
       .trim()
