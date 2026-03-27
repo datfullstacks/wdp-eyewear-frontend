@@ -65,8 +65,8 @@ function PrescriptionSummary({
   const sourceLabel =
     order.source === 'customer_upload'
       ? 'Khach upload toa'
-      : order.source === 'store_input'
-        ? 'Store nhap Rx'
+      : order.source === 'customer_input'
+        ? 'Khach tu nhap thong so'
         : 'Dang cho Rx';
 
   return (

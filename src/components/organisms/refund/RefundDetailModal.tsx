@@ -23,6 +23,63 @@ interface RefundDetailModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+function getHistoryStatusLabel(status?: string) {
+  const normalized = String(status || '').trim();
+  if (!normalized || normalized === 'none') {
+    return 'Chưa có trạng thái';
+  }
+
+  const mapped = (statusConfig as Record<string, { label: string }>)[normalized];
+  return mapped?.label || normalized;
+}
+
+function getHistoryActorLabel(actorName?: string, actorRole?: string) {
+  if (String(actorName || '').trim()) return String(actorName).trim();
+
+  switch (String(actorRole || '').trim()) {
+    case 'sales':
+      return 'Sale/Staff';
+    case 'operations':
+      return 'Vận hành';
+    case 'manager':
+      return 'Quản lý';
+    case 'customer':
+      return 'Khách hàng';
+    default:
+      return 'Hệ thống';
+  }
+}
+
+function getHistoryNoteLabel(note?: string) {
+  const raw = String(note || '').trim();
+  const normalized = raw.toLowerCase();
+
+  if (!raw) return '';
+
+  if (
+    normalized === 'operations bat dau xu ly payout.' ||
+    normalized === 'operations bắt đầu xử lý payout.'
+  ) {
+    return 'Vận hành bắt đầu xử lý hoàn tiền.';
+  }
+
+  if (
+    normalized === 'order cancelled by customer' ||
+    normalized === 'order canceled by customer'
+  ) {
+    return 'Đơn hàng đã bị hủy bởi khách hàng.';
+  }
+
+  if (
+    normalized === 'case đã được trả lại reviewing do qc fail.' ||
+    normalized === 'case da duoc tra lai reviewing do qc fail.'
+  ) {
+    return 'Case đã được trả lại bước xem xét do QC không đạt.';
+  }
+
+  return raw;
+}
+
 export const RefundDetailModal = ({
   refund,
   open,
@@ -97,9 +154,7 @@ export const RefundDetailModal = ({
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <div className={fieldCardClass}>
                 <Label className={labelClass}>Mã đơn hàng</Label>
-                <p className={valueClass}>
-                  {refund.orderId}
-                </p>
+                <p className={valueClass}>{refund.orderId}</p>
               </div>
               <div className={fieldCardClass}>
                 <Label className={labelClass}>Trạng thái</Label>
@@ -111,12 +166,8 @@ export const RefundDetailModal = ({
               </div>
               <div className={fieldCardClass}>
                 <Label className={labelClass}>Khách hàng</Label>
-                <p className={valueClass}>
-                  {refund.customerName}
-                </p>
-                <p className={secondaryValueClass}>
-                  {refund.customerPhone}
-                </p>
+                <p className={valueClass}>{refund.customerName}</p>
+                <p className={secondaryValueClass}>{refund.customerPhone}</p>
               </div>
               <div className={fieldCardClass}>
                 <Label className={labelClass}>Số tiền hoàn</Label>
@@ -128,7 +179,7 @@ export const RefundDetailModal = ({
 
             <div className={sectionCardClass}>
               <Label className={labelClass}>Lý do hoàn tiền</Label>
-              <p className="mt-3 max-w-3xl text-[15px] leading-8 text-slate-900 whitespace-pre-wrap">
+              <p className="mt-3 max-w-3xl text-[15px] leading-8 whitespace-pre-wrap text-slate-900">
                 {refund.reason}
               </p>
             </div>
@@ -142,9 +193,7 @@ export const RefundDetailModal = ({
               </div>
               <div className={fieldCardClass}>
                 <Label className={labelClass}>Ngày tạo yêu cầu</Label>
-                <p className={valueClass}>
-                  {refund.createdAt}
-                </p>
+                <p className={valueClass}>{refund.createdAt}</p>
               </div>
             </div>
 
@@ -153,25 +202,33 @@ export const RefundDetailModal = ({
                 <Label className={labelClass}>Chi tiết khoản hoàn tiền</Label>
                 <div className="mt-4 divide-y divide-slate-200">
                   <div className="flex items-center justify-between gap-4 py-3 first:pt-0">
-                    <span className="font-medium text-slate-700">Tiền hàng</span>
+                    <span className="font-medium text-slate-700">
+                      Tiền hàng
+                    </span>
                     <span className="text-[15px] font-semibold text-slate-950">
                       {formatCurrency(breakdown.itemAmount)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-4 py-3">
-                    <span className="font-medium text-slate-700">Phí giao hàng</span>
+                    <span className="font-medium text-slate-700">
+                      Phí giao hàng
+                    </span>
                     <span className="text-[15px] font-semibold text-slate-950">
                       {formatCurrency(breakdown.shippingFeeAmount)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-4 py-3">
-                    <span className="font-medium text-slate-700">Phí gửi trả</span>
+                    <span className="font-medium text-slate-700">
+                      Phí gửi trả
+                    </span>
                     <span className="text-[15px] font-semibold text-slate-950">
                       {formatCurrency(breakdown.returnShippingFeeAmount)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-4 pt-4">
-                    <span className="text-[15px] font-bold text-slate-950">Tổng</span>
+                    <span className="text-[15px] font-bold text-slate-950">
+                      Tổng
+                    </span>
                     <span className="text-lg font-bold text-slate-950">
                       {formatCurrency(breakdown.total)}
                     </span>
@@ -213,7 +270,9 @@ export const RefundDetailModal = ({
                       <span className="block text-xs font-bold text-slate-700">
                         Ghi chú
                       </span>
-                      <p className={`${bodyTextClass} mt-1`}>{refund.bankInfo.note}</p>
+                      <p className={`${bodyTextClass} mt-1`}>
+                        {refund.bankInfo.note}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -223,9 +282,7 @@ export const RefundDetailModal = ({
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <div className={fieldCardClass}>
                 <Label className={labelClass}>Trách nhiệm</Label>
-                <p className={valueClass}>
-                  {refund.responsibility || '-'}
-                </p>
+                <p className={valueClass}>{refund.responsibility || '-'}</p>
               </div>
               <div className={fieldCardClass}>
                 <Label className={labelClass}>Cần trả hàng</Label>
@@ -269,7 +326,9 @@ export const RefundDetailModal = ({
               refund.returnCarrier ||
               refund.inspectionStatus !== 'not_required') && (
               <div className={sectionCardClass}>
-                <Label className={labelClass}>Thông tin trả hàng / inspection</Label>
+                <Label className={labelClass}>
+                  Thông tin trả hàng / inspection
+                </Label>
                 <div className="mt-3 grid gap-3 rounded-xl border border-slate-300 bg-slate-50 p-4 text-[15px] sm:grid-cols-2">
                   <div>
                     <span className="block text-xs font-bold text-slate-700">
@@ -284,7 +343,9 @@ export const RefundDetailModal = ({
                       <span className="block text-xs font-bold text-slate-700">
                         Ghi chú
                       </span>
-                      <p className={`${bodyTextClass} mt-1`}>{refund.inspectionNote}</p>
+                      <p className={`${bodyTextClass} mt-1`}>
+                        {refund.inspectionNote}
+                      </p>
                     </div>
                   ) : null}
                   {refund.inspectionAt ? (
@@ -343,9 +404,7 @@ export const RefundDetailModal = ({
             {refund.processedAt && (
               <div className={fieldCardClass}>
                 <Label className={labelClass}>Ngày xử lý</Label>
-                <p className={valueClass}>
-                  {refund.processedAt}
-                </p>
+                <p className={valueClass}>{refund.processedAt}</p>
               </div>
             )}
 
@@ -394,21 +453,22 @@ export const RefundDetailModal = ({
                         key={`${entry.createdAt || entry.action}-${index}`}
                         className="relative text-sm"
                       >
-                        <span className="absolute -left-[1.1rem] top-1.5 h-3 w-3 rounded-full border-2 border-white bg-slate-900 shadow-sm" />
+                        <span className="absolute top-1.5 -left-[1.1rem] h-3 w-3 rounded-full border-2 border-white bg-slate-900 shadow-sm" />
                         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                           <span className="text-[15px] font-semibold text-slate-950">
-                            {entry.actorName || entry.actorRole || 'Hệ thống'}
+                            {getHistoryActorLabel(entry.actorName, entry.actorRole)}
                           </span>
                           <span className="text-sm font-medium text-slate-600">
                             {formatDateTime(entry.createdAt)}
                           </span>
                         </div>
                         <p className="mt-2 text-[15px] font-semibold text-slate-900">
-                          {entry.fromStatus} {'->'} {entry.toStatus}
+                          {getHistoryStatusLabel(entry.fromStatus)} {'->'}{' '}
+                          {getHistoryStatusLabel(entry.toStatus)}
                         </p>
                         {entry.note ? (
                           <p className="mt-2 max-w-3xl text-[15px] leading-7 text-slate-700">
-                            {entry.note}
+                            {getHistoryNoteLabel(entry.note)}
                           </p>
                         ) : null}
                       </div>

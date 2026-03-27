@@ -23,11 +23,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, Filter } from 'lucide-react';
 import { preorderApi, productApi, userApi } from '@/api';
-import type {
-  CreatePreorderBatchInput,
-  Product,
-  ProductDetail,
-} from '@/api';
+import type { CreatePreorderBatchInput, Product, ProductDetail } from '@/api';
 import { extractSuppliers, calculateStats } from '@/data/preorderImportData';
 import {
   ImportStatsGrid,
@@ -90,7 +86,7 @@ function buildVariantLabel(variant: ProductVariant) {
     .filter(Boolean);
   if (options.length > 0) return options.join(' / ');
   if (variant?.sku) return variant.sku;
-  return 'Mac dinh';
+  return 'Mặc định';
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -228,7 +224,7 @@ const PreorderImport = () => {
       setPagination(batchResult.pagination);
     } catch (error) {
       setPageError(
-        getErrorMessage(error, 'Khong the tai du lieu nhap hang pre-order.')
+        getErrorMessage(error, 'Không thể tải dữ liệu nhập hàng pre-order.')
       );
     } finally {
       setIsLoading(false);
@@ -243,7 +239,7 @@ const PreorderImport = () => {
       return batch;
     } catch (error) {
       setPageError(
-        getErrorMessage(error, 'Khong the tai chi tiet batch pre-order.')
+        getErrorMessage(error, 'Không thể tải chi tiết batch pre-order.')
       );
       return null;
     }
@@ -264,17 +260,16 @@ const PreorderImport = () => {
         const session = await getSession();
         const currentUserId = String(session?.user?.id || '').trim();
         if (!currentUserId) {
-          throw new Error('Khong xac dinh duoc tai khoan dang nhap.');
+          throw new Error('Không xác định được tài khoản đăng nhập.');
         }
 
         const currentUser = await userApi.getById(currentUserId);
         const scope = currentUser.storeAccess;
-        const nextStoreId =
-          scope?.primaryStoreId || scope?.storeIds?.[0] || '';
+        const nextStoreId = scope?.primaryStoreId || scope?.storeIds?.[0] || '';
 
         if (!nextStoreId) {
           throw new Error(
-            'Tai khoan operation chua duoc gan cua hang de tao dot nhap kho.'
+            'Tài khoản operation chưa được gắn cửa hàng để tạo đợt nhập kho.'
           );
         }
 
@@ -293,7 +288,7 @@ const PreorderImport = () => {
         setStoreScopeError(
           getErrorMessage(
             error,
-            'Khong tai duoc pham vi cua hang cua tai khoan operation.'
+            'Không tải được phạm vi cửa hàng của tài khoản operation.'
           )
         );
       } finally {
@@ -373,7 +368,7 @@ const PreorderImport = () => {
       .filter((item) => item.quantity > 0);
 
     if (payloadItems.length === 0) {
-      setReceiveError('Can chon it nhat mot san pham de nhap kho.');
+      setReceiveError('Cần chọn ít nhất một sản phẩm để nhập kho.');
       return;
     }
 
@@ -390,7 +385,7 @@ const PreorderImport = () => {
       loadPageData(currentPage);
     } catch (error) {
       setReceiveError(
-        getErrorMessage(error, 'Khong the xac nhan nhap kho cho batch nay.')
+        getErrorMessage(error, 'Không thể xác nhận nhập kho cho batch này.')
       );
     } finally {
       setIsSubmittingReceive(false);
@@ -441,9 +436,7 @@ const PreorderImport = () => {
       setCreateDraft((current) => ({
         ...current,
         items: current.items.map((item) =>
-          item.key === itemKey
-            ? { ...item, productId, variantId: '' }
-            : item
+          item.key === itemKey ? { ...item, productId, variantId: '' } : item
         ),
       }));
 
@@ -468,7 +461,10 @@ const PreorderImport = () => {
         }
       } catch (error) {
         setCreateError(
-          getErrorMessage(error, 'Khong the tai danh sach bien the cho san pham.')
+          getErrorMessage(
+            error,
+            'Không thể tải danh sách biến thể cho sản phẩm.'
+          )
         );
       }
       return;
@@ -490,7 +486,8 @@ const PreorderImport = () => {
 
     if (!resolvedStoreId) {
       setCreateError(
-        storeScopeError || 'Tai khoan operation chua duoc gan cua hang de tao dot nhap.'
+        storeScopeError ||
+          'Tài khoản operation chưa được gắn cửa hàng để tạo đợt nhập.'
       );
       return;
     }
@@ -501,12 +498,12 @@ const PreorderImport = () => {
     }
 
     if (!supplier) {
-      setCreateError('Nha cung cap la bat buoc.');
+      setCreateError('Nhà cung cấp là bắt buộc.');
       return;
     }
 
     if (!createDraft.orderDate) {
-      setCreateError('Ngay dat hang la bat buoc.');
+      setCreateError('Ngày đặt hàng là bắt buộc.');
       return;
     }
 
@@ -514,7 +511,9 @@ const PreorderImport = () => {
       (item) => !item.productId || !item.variantId || item.orderedQty < 1
     );
     if (incompleteItem) {
-      setCreateError('Hay chon du san pham, bien the va so luong cho moi dong.');
+      setCreateError(
+        'Hãy chọn đủ sản phẩm, biến thể và số lượng cho mỗi dòng.'
+      );
       return;
     }
 
@@ -531,7 +530,9 @@ const PreorderImport = () => {
           );
 
           if (!detail || !variant || !variant._id) {
-            throw new Error('Khong tim thay bien the hop le cho mot dong san pham.');
+            throw new Error(
+              'Không tìm thấy biến thể hợp lệ cho một dòng sản phẩm.'
+            );
           }
 
           return {
@@ -562,7 +563,7 @@ const PreorderImport = () => {
       loadPageData(1);
     } catch (error) {
       setCreateError(
-        getErrorMessage(error, 'Khong the tao dot hang pre-order moi.')
+        getErrorMessage(error, 'Không thể tạo đợt hàng pre-order mới.')
       );
     } finally {
       setIsSubmittingCreate(false);
@@ -572,25 +573,25 @@ const PreorderImport = () => {
   return (
     <>
       <Header
-        title="Nhap hang Pre-order"
+        title="Nhập hàng Pre-order"
         subtitle={
           resolvedStoreLabel
-            ? `Operation quan ly batch nhap kho cho ${resolvedStoreLabel}`
-            : 'Operation quan ly batch nhap kho va cap nhat hang pre-order ve kho'
+            ? `Operation quản lý batch nhập kho cho ${resolvedStoreLabel}`
+            : 'Operation quản lý batch nhập kho và cập nhật hàng pre-order về kho'
         }
       />
       <div className="space-y-6 p-6">
         <ImportStatsGrid stats={stats} />
 
         {storeScopeError ? (
-          <div className="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          <div className="border-destructive/30 bg-destructive/5 text-destructive rounded-md border px-4 py-3 text-sm">
             {storeScopeError}
           </div>
         ) : resolvedStoreId ? (
           <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-            Dot nhap hang moi se duoc tao cho{' '}
+            Đợt nhập hàng mới sẽ được tạo cho{' '}
             <span className="font-semibold">
-              {resolvedStoreLabel || 'cua hang duoc phan quyen'}
+              {resolvedStoreLabel || 'cửa hàng được phân quyền'}
             </span>
             .
           </div>
@@ -600,7 +601,7 @@ const PreorderImport = () => {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
             <div className="w-full sm:max-w-[240px]">
               <SearchBar
-                placeholder="Tim theo ma dot, nha cung cap..."
+                placeholder="Tìm theo mã đợt, nhà cung cấp..."
                 value={searchTerm}
                 onChange={setSearchTerm}
               />
@@ -611,45 +612,45 @@ const PreorderImport = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    aria-label="Bo loc"
+                    aria-label="Bộ lọc"
                     className="text-foreground/80 hover:text-foreground"
                   >
                     <Filter />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-72">
-                  <DropdownMenuLabel>Trang thai</DropdownMenuLabel>
+                  <DropdownMenuLabel>Trạng thái</DropdownMenuLabel>
                   <DropdownMenuRadioGroup
                     value={statusFilter}
                     onValueChange={setStatusFilter}
                   >
                     <DropdownMenuRadioItem value="all">
-                      Tat ca trang thai
+                      Tất cả trạng thái
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="pending">
-                      Dang xu ly
+                      Đang xử lý
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="in_transit">
-                      Dang van chuyen
+                      Đang vận chuyển
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="partial">
-                      Nhan mot phan
+                      Nhận một phần
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="completed">
-                      Hoan thanh
+                      Hoàn thành
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="delayed">
-                      Tre hang
+                      Trễ hàng
                     </DropdownMenuRadioItem>
                   </DropdownMenuRadioGroup>
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel>Nha cung cap</DropdownMenuLabel>
+                  <DropdownMenuLabel>Nhà cung cấp</DropdownMenuLabel>
                   <DropdownMenuRadioGroup
                     value={supplierFilter}
                     onValueChange={setSupplierFilter}
                   >
                     <DropdownMenuRadioItem value="all">
-                      Tat ca nha cung cap
+                      Tất cả nhà cung cấp
                     </DropdownMenuRadioItem>
                     {suppliers.map((supplier) => (
                       <DropdownMenuRadioItem key={supplier} value={supplier}>
@@ -669,20 +670,22 @@ const PreorderImport = () => {
               disabled={isResolvingStoreScope || !resolvedStoreId}
             >
               <Plus className="h-4 w-4" />
-              {isResolvingStoreScope ? 'Dang tai cua hang...' : 'Tao dot hang moi'}
+              {isResolvingStoreScope
+                ? 'Dang tai cua hang...'
+                : 'Tao dot hang moi'}
             </Button>
           </div>
         </div>
 
         {pageError ? (
-          <div className="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          <div className="border-destructive/30 bg-destructive/5 text-destructive rounded-md border px-4 py-3 text-sm">
             {pageError}
           </div>
         ) : null}
 
         {isLoading ? (
           <div className="text-muted-foreground rounded-xl border bg-white px-4 py-10 text-center text-sm">
-            Dang tai du lieu nhap hang...
+            Đang tải dữ liệu nhập hàng...
           </div>
         ) : (
           <ImportBatchTable
@@ -698,35 +701,37 @@ const PreorderImport = () => {
               Trang <span className="font-semibold">{pagination.page}</span>/
               {pagination.totalPages}{' '}
               <span className="text-slate-500">
-                ({pagination.total} dot hang)
+                ({pagination.total} đợt hàng)
               </span>
             </p>
 
-                <div className="flex items-center gap-2">
-                  <Select
-                    value={String(pageSize)}
-                    onValueChange={(value) =>
-                      setPageSize(Number(value) as (typeof PAGE_SIZE_OPTIONS)[number])
-                    }
-                  >
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue placeholder="20 / trang" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PAGE_SIZE_OPTIONS.map((option) => (
-                        <SelectItem key={option} value={String(option)}>
-                          {option} / trang
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="outline"
-                    size="sm"
+            <div className="flex items-center gap-2">
+              <Select
+                value={String(pageSize)}
+                onValueChange={(value) =>
+                  setPageSize(
+                    Number(value) as (typeof PAGE_SIZE_OPTIONS)[number]
+                  )
+                }
+              >
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="20 / trang" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAGE_SIZE_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={String(option)}>
+                      {option} / trang
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
                 disabled={pagination.page <= 1 || isLoading}
               >
-                Trang truoc
+                Trang trước
               </Button>
               <Button
                 variant="outline"

@@ -174,22 +174,12 @@ export function getReadyStockItemKey(
   return `${orderId}:item:${index + 1}`;
 }
 
-function warehouseLocationForType(itemType: string): string {
-  const t = String(itemType || '')
-    .trim()
-    .toLowerCase();
-  if (t === 'frame') return 'KHO-HCM-FRAME-A1';
-  if (t === 'lens') return 'KHO-HCM-LENS-B2';
-  if (t === 'accessory') return 'KHO-HCM-ACC-C3';
-  return 'KHO-HCM-OTHER-Z9';
-}
-
 export function createDefaultReadyStockItemState(
   item: OrderItem
 ): ReadyStockItemOpsState {
   return {
     picked: false,
-    warehouseLocation: warehouseLocationForType(item.type),
+    warehouseLocation: String(item.warehouseLocation || '').trim(),
     issueType: null,
     issueNote: '',
     internalNote: '',

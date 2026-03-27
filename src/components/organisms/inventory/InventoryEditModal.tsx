@@ -66,12 +66,12 @@ export const InventoryEditModal = ({
 
     const quantity = Number.parseInt(receiveQty, 10);
     if (!Number.isFinite(quantity) || Number.isNaN(quantity) || quantity < 1) {
-      setError('So luong nhap kho khong hop le.');
+      setError('Sớ lượng nhập kho không hợp lệ.');
       return;
     }
 
     if (!supplier.trim()) {
-      setError('Nha cung cap la bat buoc.');
+      setError('Nhà cung cấp là bắt buộc.');
       return;
     }
 
@@ -94,7 +94,7 @@ export const InventoryEditModal = ({
           }
         )?.response?.data?.message ||
         (err as { message?: string })?.message ||
-        'Khong the nhap kho. Vui long thu lai.';
+        'Không thể nhập kho. Vui lòng thử lại.';
       setError(message);
     } finally {
       setIsSaving(false);
@@ -109,8 +109,8 @@ export const InventoryEditModal = ({
         <DialogHeader>
           <DialogTitle className="text-foreground">
             {item.trackInventory !== false
-              ? 'Nhap kho cho bien the'
-              : 'Khong theo doi ton'}
+              ? 'Nhập kho cho biến thể'
+              : 'Không theo dõi tồn'}
           </DialogTitle>
           <DialogDescription className="text-foreground/90">
             {item.name} ({item.sku})
@@ -130,7 +130,7 @@ export const InventoryEditModal = ({
               </div>
               <div>
                 <label className="text-foreground/70 text-sm font-medium">
-                  So luong nhap
+                  Số lượng nhập
                 </label>
                 <Input
                   type="number"
@@ -143,24 +143,24 @@ export const InventoryEditModal = ({
             </div>
             <div>
               <label className="text-foreground/70 text-sm font-medium">
-                Cua hang
+                Cửa hàng
               </label>
               <Input value={storeLabel || '-'} className="mt-1" disabled />
             </div>
             <div>
               <label className="text-foreground/70 text-sm font-medium">
-                Nha cung cap
+                Nhà cung cấp
               </label>
               <Input
                 value={supplier}
                 onChange={(e) => setSupplier(e.target.value)}
                 className="mt-1"
-                placeholder="Vi du: Nha cung cap ABC"
+                placeholder="Ví dụ: Nhà cung cấp ABC"
               />
             </div>
             <div>
               <label className="text-foreground/70 text-sm font-medium">
-                Vi tri kho
+                Vị trí kho
               </label>
               <Input
                 value={warehouseLocation}
@@ -171,13 +171,13 @@ export const InventoryEditModal = ({
             </div>
             <div>
               <label className="text-foreground/70 text-sm font-medium">
-                Ghi chu
+                Ghi chú
               </label>
               <Textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 className="mt-1"
-                placeholder="Nhap ghi chu cho phieu nhap kho..."
+                placeholder="Nhập ghi chú cho phiếu nhập kho..."
               />
             </div>
             {error ? <p className="text-sm text-rose-600">{error}</p> : null}
@@ -185,8 +185,8 @@ export const InventoryEditModal = ({
         ) : (
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
             {item.trackInventory === false
-              ? 'San pham nay dang tat inventory.track, nen he thong khong nhap kho tai day.'
-              : 'Bien the nay khong co variantId hop le, nen chua the tao phieu nhap kho.'}
+              ? 'Sản phẩm này đang tắt inventory.track, nên hệ thống không nhập kho tại đây.'
+              : 'Biến thể này không có variantId hợp lệ, nên chưa thể tạo phiếu nhập kho.'}
           </div>
         )}
 
@@ -199,8 +199,12 @@ export const InventoryEditModal = ({
             Đóng
           </Button>
           {item.trackInventory !== false && item.variantId ? (
-            <Button onClick={handleUpdate} disabled={isSaving}>
-              {isSaving ? 'Dang nhap kho...' : 'Xac nhan nhap kho'}
+            <Button
+              onClick={handleUpdate}
+              disabled={isSaving}
+              className="bg-none bg-yellow-400 text-yellow-950 shadow-lg shadow-yellow-400/30 hover:bg-yellow-500 hover:text-yellow-950 hover:shadow-xl hover:shadow-yellow-400/40 focus-visible:ring-yellow-500"
+            >
+              {isSaving ? 'Đang nhập kho...' : 'Xác nhận nhập kho'}
             </Button>
           ) : null}
         </DialogFooter>

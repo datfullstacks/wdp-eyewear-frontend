@@ -109,12 +109,12 @@ export const InventoryTable = ({
                     >
                       <Edit className="mr-2 h-4 w-4" />
                       {item.trackInventory === false
-                        ? 'Khong theo doi ton'
+                        ? 'Không theo dõi tồn'
                         : !item.variantId
-                          ? 'Khong co bien the nhap kho'
+                          ? 'Không có biến thể nhập kho'
                           : stockEditEnabled
-                            ? stockEditLabel || 'Nhap kho'
-                            : stockEditLabel || 'Chua co quyen nhap kho'}
+                            ? stockEditLabel || 'Nhập kho'
+                            : stockEditLabel || 'Chưa có quyền nhập kho'}
                     </DropdownMenuItem>
                     {historyEnabled ? (
                       <>
