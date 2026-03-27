@@ -140,20 +140,34 @@ export default function AdminSettingsPage() {
                     <span className="mb-2 block text-gray-700">Pay-now gateway</span>
                     <select
                       value={config.payments.payNowGateway}
-                      onChange={(event) =>
-                        updateNested('payments', 'payNowGateway', event.target.value)
-                      }
-                      className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2"
+                      disabled
+                      className="flex h-10 w-full cursor-not-allowed rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-600"
                     >
                       <option value="sepay">SePay</option>
                     </select>
+                    <p className="mt-2 text-xs text-gray-500">
+                      Runtime hiện chỉ hỗ trợ một cổng pay-now là SePay.
+                    </p>
                   </label>
                 </div>
               </Card>
 
               <Card className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900">Shipping</h3>
-                <div className="mt-4 space-y-3 text-sm">
+                <div className="mt-4 space-y-4 text-sm">
+                  <label className="block">
+                    <span className="mb-2 block text-gray-700">Default carrier</span>
+                    <select
+                      value={config.shipping.defaultCarrier}
+                      disabled
+                      className="flex h-10 w-full cursor-not-allowed rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-600"
+                    >
+                      <option value="ghn">GHN</option>
+                    </select>
+                    <p className="mt-2 text-xs text-gray-500">
+                      Runtime hiện chỉ hỗ trợ một carrier là GHN.
+                    </p>
+                  </label>
                   <label className="flex items-center justify-between gap-3">
                     <span>GHN enabled</span>
                     <input
@@ -185,24 +199,44 @@ export default function AdminSettingsPage() {
 
               <Card className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900">Notifications & maintenance</h3>
-                <div className="mt-4 space-y-3 text-sm">
-                  {[
-                    ['emailEnabled', 'Email notifications'],
-                    ['pushEnabled', 'Push notifications'],
-                    ['smsEnabled', 'SMS notifications'],
-                  ].map(([key, label]) => (
-                    <label key={key} className="flex items-center justify-between gap-3">
-                      <span>{label}</span>
-                      <input
-                        type="checkbox"
-                        checked={Boolean(config.notifications[key as keyof typeof config.notifications])}
-                        onChange={(event) =>
-                          updateNested('notifications', key, event.target.checked)
-                        }
-                        className="h-4 w-4"
-                      />
-                    </label>
-                  ))}
+                <div className="mt-4 space-y-4 text-sm">
+                  <label className="flex items-center justify-between gap-3">
+                    <span>Push notifications</span>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(config.notifications.pushEnabled)}
+                      onChange={(event) =>
+                        updateNested('notifications', 'pushEnabled', event.target.checked)
+                      }
+                      className="h-4 w-4"
+                    />
+                  </label>
+
+                  <div className="rounded-md border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600">
+                    <div className="font-medium text-gray-800">
+                      Email và SMS chưa được nối vào runtime trong đợt này.
+                    </div>
+                    <div className="mt-2 grid gap-2">
+                      <label className="flex items-center justify-between gap-3">
+                        <span>Email notifications</span>
+                        <input
+                          type="checkbox"
+                          checked={Boolean(config.notifications.emailEnabled)}
+                          disabled
+                          className="h-4 w-4"
+                        />
+                      </label>
+                      <label className="flex items-center justify-between gap-3">
+                        <span>SMS notifications</span>
+                        <input
+                          type="checkbox"
+                          checked={Boolean(config.notifications.smsEnabled)}
+                          disabled
+                          className="h-4 w-4"
+                        />
+                      </label>
+                    </div>
+                  </div>
 
                   <label className="flex items-center justify-between gap-3">
                     <span>Maintenance mode</span>

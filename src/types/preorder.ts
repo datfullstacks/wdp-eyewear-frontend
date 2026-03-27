@@ -2,6 +2,8 @@ export interface PreorderProduct {
   sku: string;
   name: string;
   variant: string;
+  supplier: string;
+  warehouseLocation: string;
   quantity: number;
   batchCode: string | null;
   batchExpectedDate: string | null;
@@ -20,6 +22,8 @@ export interface PreorderOrder {
   id: string;
   rawOrderStatus?: string;
   orderCode: string;
+  storeId: string;
+  storeName: string;
   customerName: string;
   customerPhone: string;
   customerAddress: string;

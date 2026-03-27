@@ -1,3 +1,7 @@
+import { Package } from 'lucide-react';
+
+import { PendingOrderRow } from '@/components/molecules/PendingOrderRow';
+import { PendingOrder } from '@/types/pending';
 import {
   Table,
   TableBody,
@@ -5,9 +9,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Package } from 'lucide-react';
-import { PendingOrder } from '@/types/pending';
-import { PendingOrderRow } from '@/components/molecules/PendingOrderRow';
 
 interface PendingOrderTableProps {
   orders: PendingOrder[];
@@ -45,6 +46,7 @@ export const PendingOrderTable = ({
             <TableHead>Sản phẩm</TableHead>
             <TableHead>Tổng tiền</TableHead>
             <TableHead>Thanh toán</TableHead>
+            <TableHead>Loại đơn</TableHead>
             <TableHead>Thời gian</TableHead>
             <TableHead className="text-right">Thao tác</TableHead>
           </TableRow>

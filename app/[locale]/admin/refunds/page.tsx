@@ -15,6 +15,11 @@ import { Header } from '@/components/organisms/Header';
 import { SystemScopeBlockedPage } from '@/components/pages/SystemScopeBlockedPage';
 import { Card } from '@/components/ui/card';
 import {
+  DistributionBars,
+  DonutBreakdown,
+  type ChartDatum,
+} from '@/components/analytics/ChartPrimitives';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -93,6 +98,25 @@ function formatNextAction(code: string) {
     default:
       return '--';
   }
+}
+
+function buildBucketChartData(
+  buckets: Array<{ status?: string; owner?: string; count: number }>,
+  kind: 'status' | 'owner',
+): ChartDatum[] {
+  const palette =
+    kind === 'status'
+      ? ['#be123c', '#ea580c', '#2563eb', '#7c3aed', '#16a34a', '#475569']
+      : ['#0f766e', '#d97706', '#2563eb', '#7c3aed', '#64748b'];
+
+  return (Array.isArray(buckets) ? buckets : []).map((bucket, index) => ({
+    label:
+      kind === 'status'
+        ? formatStatus(String(bucket.status || ''))
+        : formatOwner(String(bucket.owner || '')),
+    value: Number(bucket.count || 0),
+    color: palette[index % palette.length],
+  }));
 }
 
 function CaseTable({
@@ -265,6 +289,46 @@ export function RefundMonitoringWorkspace() {
     { label: 'Payout pending', value: overview?.summary.payoutPending || 0 },
     { label: 'Flagged', value: overview?.summary.flaggedCases || 0 },
   ];
+  const statusChartData = buildBucketChartData(overview?.byStatus || [], 'status');
+  const ownerChartData = buildBucketChartData(overview?.byOwner || [], 'owner');
+  const pressureData: ChartDatum[] = [
+    {
+      label: 'Flagged cases',
+      value: overview?.summary.flaggedCases || 0,
+      color: '#be123c',
+      hint: 'Require manual intervention',
+    },
+    {
+      label: 'Payout pending',
+      value: overview?.summary.payoutPending || 0,
+      color: '#d97706',
+      hint: 'Approved but not fully settled',
+    },
+    {
+      label: 'Escalated',
+      value: overview?.summary.escalated || 0,
+      color: '#ea580c',
+      hint: 'Waiting manager decision',
+    },
+    {
+      label: 'Waiting customer',
+      value: overview?.summary.waitingCustomer || 0,
+      color: '#2563eb',
+      hint: 'Blocked on customer follow-up',
+    },
+    {
+      label: 'Completed this month',
+      value: overview?.summary.completedThisMonth || 0,
+      color: '#16a34a',
+      hint: 'Closed successfully in current month',
+    },
+    {
+      label: 'Rejected this month',
+      value: overview?.summary.rejectedThisMonth || 0,
+      color: '#64748b',
+      hint: 'Rejected in current month',
+    },
+  ];
 
   return (
     <>
@@ -393,6 +457,49 @@ export function RefundMonitoringWorkspace() {
                   <div className="mt-2 text-2xl font-semibold text-gray-900">{stat.value}</div>
                 </Card>
               ))}
+            </section>
+
+            <section className="grid gap-6 xl:grid-cols-[1.1fr_1.1fr_1.4fr]">
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900">Status mix</h3>
+                <p className="mt-1 text-sm text-gray-600">
+                  Current refund workload grouped by state.
+                </p>
+                <div className="mt-6">
+                  <DonutBreakdown
+                    data={statusChartData}
+                    centerLabel="Refund states"
+                    emptyLabel="No refund status data."
+                  />
+                </div>
+              </Card>
+
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900">Owner distribution</h3>
+                <p className="mt-1 text-sm text-gray-600">
+                  Shows where refund accountability is currently sitting.
+                </p>
+                <div className="mt-6">
+                  <DonutBreakdown
+                    data={ownerChartData}
+                    centerLabel="Current owner"
+                    emptyLabel="No owner distribution."
+                  />
+                </div>
+              </Card>
+
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900">Pressure snapshot</h3>
+                <p className="mt-1 text-sm text-gray-600">
+                  Highlights where the refund queue is under the most pressure.
+                </p>
+                <div className="mt-6">
+                  <DistributionBars
+                    data={pressureData}
+                    emptyLabel="No pressure indicators."
+                  />
+                </div>
+              </Card>
             </section>
 
             <section className="grid gap-6 xl:grid-cols-[2fr_1fr]">

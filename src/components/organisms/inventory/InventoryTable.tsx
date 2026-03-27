@@ -1,5 +1,5 @@
-import { Button } from '@/components/ui/button';
 import { InventoryStatusBadge } from '@/components/atoms/InventoryStatusBadge';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +24,8 @@ interface InventoryTableProps {
   onEditStock: (item: InventoryItem) => void;
   onViewHistory: (item: InventoryItem) => void;
   historyEnabled?: boolean;
+  stockEditEnabled?: boolean;
+  stockEditLabel?: string;
 }
 
 export const InventoryTable = ({
@@ -32,18 +34,20 @@ export const InventoryTable = ({
   onEditStock,
   onViewHistory,
   historyEnabled = true,
+  stockEditEnabled = true,
+  stockEditLabel,
 }: InventoryTableProps) => {
   return (
     <div className="glass-card overflow-hidden rounded-xl">
       <Table className="text-sm font-normal">
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead>San pham</TableHead>
-            <TableHead>Thuong hieu</TableHead>
-            <TableHead>Bien the</TableHead>
-            <TableHead className="text-center">Ton kho</TableHead>
-            <TableHead>Vi tri</TableHead>
-            <TableHead>Trang thai</TableHead>
+            <TableHead>Sản phẩm</TableHead>
+            <TableHead>Thương hiệu</TableHead>
+            <TableHead>Biến thể</TableHead>
+            <TableHead className="text-center">Tồn kho</TableHead>
+            <TableHead>Vị trí</TableHead>
+            <TableHead>Trạng thái</TableHead>
             <TableHead className="w-[60px]"></TableHead>
           </TableRow>
         </TableHeader>
@@ -64,10 +68,12 @@ export const InventoryTable = ({
               </TableCell>
               <TableCell className="text-center">
                 {item.trackInventory !== false ? (
-                  <span className="text-foreground font-normal">{item.stock}</span>
+                  <span className="text-foreground font-normal">
+                    {item.stock}
+                  </span>
                 ) : (
-                  <span className="text-foreground/70 text-xs font-medium uppercase tracking-wide">
-                    Khong theo doi
+                  <span className="text-foreground/70 text-xs font-medium tracking-wide uppercase">
+                    Không theo dõi
                   </span>
                 )}
               </TableCell>
@@ -91,25 +97,34 @@ export const InventoryTable = ({
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => onViewDetail(item)}>
                       <Eye className="mr-2 h-4 w-4" />
-                      Xem chi tiet
+                      Xem chi tiết
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => onEditStock(item)}
-                      disabled={item.trackInventory === false}
+                      disabled={
+                        item.trackInventory === false ||
+                        !item.variantId ||
+                        !stockEditEnabled
+                      }
                     >
                       <Edit className="mr-2 h-4 w-4" />
-                      {item.trackInventory !== false
-                        ? 'Cap nhat ton kho'
-                        : 'Khong theo doi ton'}
+                      {item.trackInventory === false
+                        ? 'Khong theo doi ton'
+                        : !item.variantId
+                          ? 'Khong co bien the nhap kho'
+                          : stockEditEnabled
+                            ? stockEditLabel || 'Nhap kho'
+                            : stockEditLabel || 'Chua co quyen nhap kho'}
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => onViewHistory(item)}
-                      disabled={!historyEnabled}
-                    >
-                      <History className="mr-2 h-4 w-4" />
-                      {historyEnabled ? 'Lich su xuat nhap' : 'Lich su chua co API'}
-                    </DropdownMenuItem>
+                    {historyEnabled ? (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => onViewHistory(item)}>
+                          <History className="mr-2 h-4 w-4" />
+                          Lịch sử xuất nhập
+                        </DropdownMenuItem>
+                      </>
+                    ) : null}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>

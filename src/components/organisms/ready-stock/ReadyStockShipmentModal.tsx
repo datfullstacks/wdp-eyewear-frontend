@@ -5,6 +5,7 @@ import type {
   OrderShippingInfo,
   OrderShippingTestStatus,
 } from '@/api/orders';
+import { getCustomerShippingStatusMeta } from '@/lib/customerOrderStatus';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -57,6 +58,11 @@ export function ReadyStockShipmentModal({
 
   const isCreate = mode === 'create';
   const shipment = shippingInfo?.shipment;
+  const shippingStatusMeta = getCustomerShippingStatusMeta({
+    shipment: shipment || order.shipment || undefined,
+    opsStage: shippingInfo?.opsStage ?? order.opsStage,
+    rawStatus: shippingInfo?.orderStatus || order.rawStatus,
+  });
   const canSubmit = isCreate
     ? Boolean(shippingInfo?.permissions.create_shipment)
     : Boolean(shippingInfo?.permissions.sync_shipment);
@@ -108,9 +114,9 @@ export function ReadyStockShipmentModal({
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <Label>Trang thai GHN</Label>
+                  <Label>Trạng thái GHN</Label>
                   <div className="text-sm font-semibold">
-                    {shipment?.latestStatus || shipment?.state || '-'}
+                    {shippingStatusMeta?.label || '-'}
                   </div>
                 </div>
                 <div className="space-y-1">

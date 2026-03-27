@@ -133,7 +133,7 @@ export default function ProductDetailPage() {
   const handleUploadVariantAsset = useCallback(
     async (
       file: File,
-      variantIndex: number,
+      variantId: string,
       field: 'imageUrl' | 'posterUrl' | 'glbUrl'
     ) => {
       const uploadSuffix =
@@ -142,7 +142,7 @@ export default function ProductDetailPage() {
           : field === 'posterUrl'
             ? 'poster'
             : 'glb';
-      const uploadKey = `variant-${variantIndex}-${uploadSuffix}`;
+      const uploadKey = `variant-${variantId || 'unknown'}-${uploadSuffix}`;
       setUploadingKey(uploadKey);
       setApiError('');
       try {
@@ -150,7 +150,9 @@ export default function ProductDetailPage() {
         setFormData((prev) => ({
           ...prev,
           variants: prev.variants.map((variant, index) =>
-            index === variantIndex ? { ...variant, [field]: result.url } : variant
+            variant.id === variantId
+              ? { ...variant, [field]: result.url }
+              : variant
           ),
         }));
       } catch (error) {

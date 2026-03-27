@@ -127,9 +127,9 @@ export const pendingOrders: PendingOrder[] = [
 ];
 
 export const paymentStatusConfig: Record<string, PaymentStatusConfig> = {
-  paid: { label: 'Da thanh toan', color: 'success' },
-  pending: { label: 'Chua thanh toan', color: 'warning' },
-  partial: { label: 'Thanh toan mot phan', color: 'info' },
+  paid: { label: 'Đã thanh toán', color: 'success' },
+  pending: { label: 'Chưa thanh toán', color: 'warning' },
+  partial: { label: 'Thanh toán một phần', color: 'info' },
   cod: { label: 'COD', color: 'default' },
 };
 

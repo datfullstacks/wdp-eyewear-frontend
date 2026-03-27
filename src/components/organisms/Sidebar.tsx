@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  AlertTriangle,
   BarChart3,
   Bell,
   ChevronDown,
@@ -72,13 +71,6 @@ const menuItems: MenuItem[] = [
         badgeType: 'warning',
       },
       {
-        icon: AlertTriangle,
-        label: 'Đơn trễ / cảnh báo',
-        path: '/sale/orders/alerts',
-        badgeKey: 'alerts',
-        badgeType: 'error',
-      },
-      {
         icon: FileHeart,
         label: 'Prescription clarification',
         path: '/sale/orders/prescription-needed',
@@ -113,11 +105,6 @@ const menuItems: MenuItem[] = [
         label: 'Lịch sử đơn & ghi chú',
         path: '/sale/customers/history',
       },
-      {
-        icon: FileHeart,
-        label: 'Hồ sơ Prescription',
-        path: '/sale/customers/prescriptions',
-      },
     ],
   },
   {
@@ -133,29 +120,6 @@ const menuItems: MenuItem[] = [
         icon: Percent,
         label: 'Vận chuyển / hoàn',
         path: '/sale/reports/shipping',
-      },
-    ],
-  },
-  {
-    icon: Settings,
-    label: 'Thiết lập cá nhân',
-    children: [
-      {
-        icon: Bell,
-        label: 'Thông báo',
-        path: '/sale/settings/notifications',
-        badge: '2',
-        badgeType: 'info',
-      },
-      {
-        icon: ListTodo,
-        label: 'Nhiệm vụ của tôi',
-        path: '/sale/settings/tasks',
-      },
-      {
-        icon: User,
-        label: 'Cài đặt tài khoản',
-        path: '/sale/settings/account',
       },
     ],
   },
@@ -255,17 +219,26 @@ export const Sidebar: React.FC = () => {
     return obj;
   });
 
-  useMemo(() => {
+  useEffect(() => {
     setOpenGroups((prev) => {
+      let changed = false;
       const next = { ...prev };
+
       for (const item of resolvedMenuItems) {
         if (!item.children) continue;
-        const shouldOpen = item.children.some((c) => isActivePath(pathname, c.path, c.exact));
-        if (shouldOpen) next[item.label] = true;
+        const shouldOpen =
+          defaultOpenMap.get(item.label) ||
+          item.children.some((c) => isActivePath(pathname, c.path, c.exact));
+
+        if (shouldOpen && !prev[item.label]) {
+          next[item.label] = true;
+          changed = true;
+        }
       }
-      return next;
+
+      return changed ? next : prev;
     });
-  }, [pathname, resolvedMenuItems]);
+  }, [defaultOpenMap, pathname, resolvedMenuItems]);
 
   return (
     <aside

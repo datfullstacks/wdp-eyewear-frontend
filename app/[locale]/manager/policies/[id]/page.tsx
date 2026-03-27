@@ -6,9 +6,11 @@ import { useParams, useRouter } from 'next/navigation';
 import { AlertTriangle, ArrowLeft, Edit, Loader2, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/atoms';
+import { RuntimeFeatureBlockedPage } from '@/components/pages/RuntimeFeatureBlockedPage';
 import { Header } from '@/components/organisms/Header';
 import { Card } from '@/components/ui/card';
 import { PolicyForm, type PolicyFormData } from '@/components/organisms/manager';
+import { useRuntimeSystemConfig } from '@/hooks/useRuntimeSystemConfig';
 import policyApi, { type PolicyRecord } from '@/api/policies';
 
 function toFormData(policy: PolicyRecord): PolicyFormData {
@@ -28,6 +30,11 @@ export default function PolicyDetailPage() {
   const router = useRouter();
   const params = useParams();
   const policyId = params.id as string;
+  const {
+    config: runtimeConfig,
+    loading: loadingRuntimeConfig,
+    error: runtimeConfigError,
+  } = useRuntimeSystemConfig();
 
   const [policy, setPolicy] = useState<PolicyRecord | null>(null);
   const [formData, setFormData] = useState<PolicyFormData | null>(null);
@@ -51,8 +58,69 @@ export default function PolicyDetailPage() {
   }, [policyId]);
 
   useEffect(() => {
+    if (loadingRuntimeConfig) {
+      return;
+    }
+    if (
+      runtimeConfigError ||
+      runtimeConfig?.maintenanceMode ||
+      runtimeConfig?.featureFlags?.managerPolicyEditorEnabled === false
+    ) {
+      setLoading(false);
+      return;
+    }
     void loadPolicy();
-  }, [loadPolicy]);
+  }, [loadPolicy, loadingRuntimeConfig, runtimeConfig, runtimeConfigError]);
+
+  if (loadingRuntimeConfig) {
+    return (
+      <>
+        <Header title="Policy Detail" subtitle="Loading runtime policy access..." />
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        </div>
+      </>
+    );
+  }
+
+  if (runtimeConfigError) {
+    return (
+      <RuntimeFeatureBlockedPage
+        title="Policy Detail"
+        subtitle="Unable to load runtime system config"
+        heading="Cannot verify policy editor availability"
+        message={runtimeConfigError}
+        primaryHref="/manager/policies"
+        primaryLabel="Back to policies"
+      />
+    );
+  }
+
+  if (runtimeConfig?.maintenanceMode) {
+    return (
+      <RuntimeFeatureBlockedPage
+        title="Policy Detail"
+        subtitle="System maintenance is active"
+        heading="Policy editing is temporarily unavailable"
+        message="Admin has enabled maintenance mode, so manager policy actions are paused until the system is reopened."
+        primaryHref="/manager/policies"
+        primaryLabel="Back to policies"
+      />
+    );
+  }
+
+  if (runtimeConfig?.featureFlags?.managerPolicyEditorEnabled === false) {
+    return (
+      <RuntimeFeatureBlockedPage
+        title="Policy Detail"
+        subtitle="Manager policy editor is disabled"
+        heading="Policy editing is currently locked"
+        message="Admin has turned off manager access for policy governance. Ask an admin if this policy needs to change."
+        primaryHref="/manager/policies"
+        primaryLabel="Back to policies"
+      />
+    );
+  }
 
   const handleSave = async () => {
     if (!formData) return;

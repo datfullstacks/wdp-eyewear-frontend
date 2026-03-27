@@ -134,6 +134,20 @@ function nextActionHint(
   return null;
 }
 
+function supplierSummary(order: OrderRecord): string {
+  const suppliers = Array.from(
+    new Set(
+      order.items
+        .map((item) => item.supplier)
+        .map((value) => String(value || '').trim())
+        .filter(Boolean)
+    )
+  );
+  if (suppliers.length === 0) return '-';
+  if (suppliers.length === 1) return suppliers[0];
+  return `${suppliers[0]} +${suppliers.length - 1}`;
+}
+
 export function ReadyStockOrdersTable({
   orders,
   resolveOps,
@@ -166,7 +180,7 @@ export function ReadyStockOrdersTable({
       </div>
 
       <div className="overflow-x-auto">
-        <Table className="min-w-[1080px] text-sm font-normal">
+        <Table className="min-w-[1260px] text-sm font-normal">
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="w-[170px] whitespace-nowrap">
@@ -179,6 +193,12 @@ export function ReadyStockOrdersTable({
               <TableHead className="w-[120px] whitespace-nowrap">
                 Số lượng
               </TableHead>
+              <TableHead className="w-[220px] whitespace-nowrap">
+                Cửa hàng
+              </TableHead>
+              <TableHead className="w-[220px] whitespace-nowrap">
+                Nhà cung cấp
+              </TableHead>
               <TableHead className="w-[280px]">Sản phẩm chính</TableHead>
               <TableHead className="whitespace-nowrap">Thanh toán</TableHead>
               <TableHead className="text-right whitespace-nowrap">
@@ -186,7 +206,7 @@ export function ReadyStockOrdersTable({
               </TableHead>
               <TableHead className="whitespace-nowrap">Trạng thái</TableHead>
               <TableHead className="w-[190px] text-right whitespace-nowrap">
-                Action
+                Thao tác
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -201,14 +221,13 @@ export function ReadyStockOrdersTable({
                 const key = getReadyStockItemKey(order.id, item, index);
                 return Boolean(ops.itemStates?.[key]?.picked);
               });
-              const hasShipment = Boolean(
-                String(
-                  order.shipment?.orderCode ||
-                    order.shipment?.trackingCode ||
-                    ops.trackingCode ||
-                    ''
-                ).trim()
-              );
+              const shippingCode = String(
+                order.shipment?.orderCode ||
+                  order.shipment?.trackingCode ||
+                  ops.trackingCode ||
+                  ''
+              ).trim();
+              const hasShipment = Boolean(shippingCode);
               const isClosed =
                 ops.opsStatus === 'delivered' ||
                 ops.opsStatus === 'closed' ||
@@ -258,6 +277,18 @@ export function ReadyStockOrdersTable({
                     <div className="text-foreground">{summary.totalItems}</div>
                   </TableCell>
 
+                  <TableCell className="whitespace-nowrap">
+                    <div className="text-foreground/80" title={order.storeName || '-'}>
+                      {order.storeName || '-'}
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="whitespace-nowrap">
+                    <div className="text-foreground/80" title={supplierSummary(order)}>
+                      {supplierSummary(order)}
+                    </div>
+                  </TableCell>
+
                   <TableCell className="min-w-0">
                     <div
                       className="text-foreground truncate"
@@ -284,14 +315,9 @@ export function ReadyStockOrdersTable({
                       <StatusBadge status={opsBadgeType(ops.opsStatus)}>
                         {READY_STOCK_OPS_STATUS_LABEL[ops.opsStatus]}
                       </StatusBadge>
-                      {order.shipment?.latestStatus && (
-                        <div className="text-foreground/70 text-xs">
-                          GHN: {order.shipment.latestStatus}
-                        </div>
-                      )}
-                      {order.shipment?.orderCode && (
+                      {shippingCode && (
                         <div className="text-foreground/70 font-mono text-xs">
-                          {order.shipment.orderCode}
+                          {shippingCode}
                         </div>
                       )}
                     </div>

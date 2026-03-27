@@ -1,8 +1,11 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { getSession } from 'next-auth/react';
 import { Filter } from 'lucide-react';
 import inventoryApi from '@/api/inventory';
+import { userApi } from '@/api/users';
 import { SearchBar } from '@/components/molecules/SearchBar';
 import { Header } from '@/components/organisms/Header';
 import {
@@ -29,7 +32,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { InventoryItem } from '@/types/inventory';
+import {
+  INVENTORY_STATUS_LABELS,
+  InventoryItem,
+  toInventoryDisplayStatus,
+} from '@/types/inventory';
 
 const PAGE_SIZE_OPTIONS = [20, 50, 100] as const;
 
@@ -47,6 +54,13 @@ const Inventory = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [availableStores, setAvailableStores] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
+  const [resolvedStoreId, setResolvedStoreId] = useState('');
+  const [resolvedStoreLabel, setResolvedStoreLabel] = useState('');
+  const [storeScopeError, setStoreScopeError] = useState('');
+  const [isResolvingStoreScope, setIsResolvingStoreScope] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -78,6 +92,83 @@ const Inventory = () => {
     };
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+
+    const loadStoreScope = async () => {
+      setIsResolvingStoreScope(true);
+      setStoreScopeError('');
+
+      try {
+        const session = await getSession();
+        const currentUserId = String(session?.user?.id || '').trim();
+        if (!currentUserId) {
+          throw new Error('Khong xac dinh duoc tai khoan dang nhap.');
+        }
+
+        const currentUser = await userApi.getById(currentUserId);
+        const scope = currentUser.storeAccess;
+        const scopeStores = Array.isArray(scope?.stores)
+          ? scope.stores
+              .map((store) => ({
+                id: String(store?.id || '').trim(),
+                name: String(store?.name || '').trim() || String(store?.id || '').trim(),
+              }))
+              .filter((store) => store.id)
+          : [];
+
+        const storesById = new Map(scopeStores.map((store) => [store.id, store]));
+        const primaryStoreId = String(scope?.primaryStoreId || '').trim();
+        const primaryStoreName = String(scope?.primaryStore?.name || '').trim();
+        if (primaryStoreId && !storesById.has(primaryStoreId)) {
+          storesById.set(primaryStoreId, {
+            id: primaryStoreId,
+            name: primaryStoreName || primaryStoreId,
+          });
+        }
+
+        const stores = Array.from(storesById.values());
+        const nextStoreId =
+          primaryStoreId ||
+          String(scope?.storeIds?.[0] || '').trim() ||
+          stores[0]?.id ||
+          '';
+
+        if (!nextStoreId) {
+          throw new Error(
+            'Tai khoan operation chua duoc gan cua hang de nhap kho.'
+          );
+        }
+
+        const nextStoreLabel = storesById.get(nextStoreId)?.name || '';
+
+        if (!mounted) return;
+        setAvailableStores(stores);
+        setResolvedStoreId(nextStoreId);
+        setResolvedStoreLabel(nextStoreLabel);
+      } catch (err) {
+        if (!mounted) return;
+        setAvailableStores([]);
+        setResolvedStoreId('');
+        setResolvedStoreLabel('');
+        const message =
+          (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data
+            ?.message ||
+          (err as { message?: string })?.message ||
+          'Khong tai duoc pham vi cua hang cua tai khoan operation.';
+        setStoreScopeError(message);
+      } finally {
+        if (mounted) setIsResolvingStoreScope(false);
+      }
+    };
+
+    void loadStoreScope();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const inventoryCategories = useMemo(() => {
     const categories = new Set(items.map((item) => item.category).filter(Boolean));
     return Array.from(categories).sort((a, b) => a.localeCompare(b));
@@ -91,7 +182,8 @@ const Inventory = () => {
         item.sku.toLowerCase().includes(normalizedSearch) ||
         item.brand.toLowerCase().includes(normalizedSearch);
       const matchesStatus =
-        statusFilter === 'all' || item.status === statusFilter;
+        statusFilter === 'all' ||
+        toInventoryDisplayStatus(item.status) === statusFilter;
       const matchesCategory =
         categoryFilter === 'all' || item.category === categoryFilter;
 
@@ -102,12 +194,11 @@ const Inventory = () => {
   const stats = useMemo(
     () => ({
       total: items.length,
-      inStock: items.filter((item) => item.trackInventory !== false && item.status === 'in_stock')
-        .length,
-      lowStock: items.filter((item) => item.trackInventory !== false && item.status === 'low_stock')
-        .length,
+      inStock: items.filter(
+        (item) => toInventoryDisplayStatus(item.status) === 'in_stock'
+      ).length,
       outOfStock: items.filter(
-        (item) => item.trackInventory !== false && item.status === 'out_of_stock'
+        (item) => toInventoryDisplayStatus(item.status) === 'out_of_stock'
       )
         .length,
     }),
@@ -138,6 +229,7 @@ const Inventory = () => {
   };
 
   const handleEditStock = (item: InventoryItem) => {
+    if (!resolvedStoreId) return;
     setSelectedItem(item);
     setIsEditOpen(true);
   };
@@ -154,18 +246,41 @@ const Inventory = () => {
 
   const handleUpdateStock = async (
     item: InventoryItem,
-    newStock: number,
-    reason: string
+    payload: {
+      quantity: number;
+      supplier: string;
+      warehouseLocation?: string;
+      note?: string;
+    }
   ) => {
     if (item.trackInventory === false) {
       throw new Error('San pham nay khong theo doi ton kho.');
     }
 
-    await inventoryApi.updateVariantStock({
-      rowId: item.id,
-      sku: item.sku,
-      stock: newStock,
-      reason,
+    if (!resolvedStoreId) {
+      throw new Error(
+        storeScopeError || 'Tai khoan operation chua duoc gan cua hang de nhap kho.'
+      );
+    }
+
+    if (!item.productId || !item.variantId) {
+      throw new Error('Khong tim thay bien the hop le de tao phieu nhap kho.');
+    }
+
+    await inventoryApi.createReceipt({
+      storeId: resolvedStoreId,
+      supplier: payload.supplier,
+      warehouseLocation: payload.warehouseLocation,
+      note: payload.note,
+      items: [
+        {
+          productId: item.productId,
+          variantId: item.variantId,
+          quantity: payload.quantity,
+          sku: item.sku,
+          variantLabel: item.variant,
+        },
+      ],
     });
 
     await reloadItems();
@@ -175,11 +290,35 @@ const Inventory = () => {
     <>
       <Header
         title="Ton kho va tinh trang hang"
-        subtitle="Quan ly va theo doi ton kho san pham"
+        subtitle="Operation theo doi ton kho va tao phieu nhap kho cho tung bien the."
       />
 
       <div className="space-y-6 p-6">
         <InventoryStatsGrid stats={stats} />
+
+        {storeScopeError ? (
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+            {storeScopeError}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+            <p className="font-medium">
+              {resolvedStoreLabel
+                ? `Phieu nhap kho se duoc tao cho ${resolvedStoreLabel}.`
+                : 'Operation co the nhap kho truc tiep tu man nay.'}
+            </p>
+            <p className="mt-1">
+              Hang nhap theo batch pre-order van co the xu ly tai{' '}
+              <Link
+                href="/operation/inventory/import"
+                className="font-semibold underline underline-offset-4"
+              >
+                Nhap hang pre-order
+              </Link>
+              .
+            </p>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-6 text-sm text-slate-600">
@@ -193,7 +332,7 @@ const Inventory = () => {
           </div>
         ) : null}
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-start">
           <div className="w-full sm:max-w-[240px]">
             <SearchBar
               placeholder="Tim theo ten, SKU, thuong hieu..."
@@ -201,6 +340,30 @@ const Inventory = () => {
               onChange={setSearchTerm}
             />
           </div>
+
+          {availableStores.length > 1 ? (
+            <Select
+              value={resolvedStoreId}
+              onValueChange={(value) => {
+                setResolvedStoreId(value);
+                setResolvedStoreLabel(
+                  availableStores.find((store) => store.id === value)?.name || ''
+                );
+              }}
+              disabled={isResolvingStoreScope}
+            >
+              <SelectTrigger className="w-full sm:w-[260px]">
+                <SelectValue placeholder="Chon cua hang" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableStores.map((store) => (
+                  <SelectItem key={store.id} value={store.id}>
+                    {store.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : null}
 
           <div className="flex justify-start">
             <DropdownMenu>
@@ -216,28 +379,19 @@ const Inventory = () => {
               </DropdownMenuTrigger>
 
               <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuLabel>Trang thai</DropdownMenuLabel>
+                <DropdownMenuLabel>Trạng thái</DropdownMenuLabel>
                 <DropdownMenuRadioGroup
                   value={statusFilter}
                   onValueChange={setStatusFilter}
                 >
                   <DropdownMenuRadioItem value="all">
-                    Tat ca trang thai
+                    Tất cả trạng thái
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="in_stock">
-                    Con hang
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="low_stock">
-                    Sap het
+                    {INVENTORY_STATUS_LABELS.in_stock}
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="out_of_stock">
-                    Het hang
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="overstock">
-                    Ton nhieu
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="not_tracked">
-                    Khong theo doi ton
+                    {INVENTORY_STATUS_LABELS.out_of_stock}
                   </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
 
@@ -270,6 +424,8 @@ const Inventory = () => {
               onEditStock={handleEditStock}
               onViewHistory={handleViewHistory}
               historyEnabled={false}
+              stockEditEnabled={Boolean(resolvedStoreId) && !isResolvingStoreScope}
+              stockEditLabel="Nhap kho"
             />
 
             {filteredInventory.length > 0 && totalPages > 1 ? (
@@ -277,7 +433,7 @@ const Inventory = () => {
                 <p>
                   Trang <span className="font-semibold">{currentPage}</span>/{totalPages}{' '}
                   <span className="text-slate-500">
-                    ({filteredInventory.length} dong ton kho)
+                    ({filteredInventory.length} dòng tồn kho)
                   </span>
                 </p>
 
@@ -306,7 +462,7 @@ const Inventory = () => {
                     onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
                     disabled={currentPage <= 1}
                   >
-                    Trang truoc
+                    Trang trước
                   </Button>
                   <Button
                     variant="outline"
@@ -332,6 +488,7 @@ const Inventory = () => {
           item={selectedItem}
           open={isEditOpen}
           onOpenChange={setIsEditOpen}
+          storeLabel={resolvedStoreLabel}
           onUpdate={handleUpdateStock}
         />
 

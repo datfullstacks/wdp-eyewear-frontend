@@ -1,4 +1,14 @@
-import { TableCell, TableRow } from '@/components/ui/table';
+import {
+  CheckCircle,
+  Eye,
+  FileText,
+  MoreHorizontal,
+  Printer,
+  Send,
+  XCircle,
+} from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -6,24 +16,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import {
-  MoreHorizontal,
-  Eye,
-  CheckCircle,
-  XCircle,
-  FileText,
-  Send,
-  Printer,
-} from 'lucide-react';
-
-import { cn } from '@/lib/utils';
-import { PendingOrder } from '@/types/pending';
-import { paymentStatusConfig, formatCurrency } from '@/data/pendingData';
+import { TableCell, TableRow } from '@/components/ui/table';
+import { formatCurrency, paymentStatusConfig } from '@/data/pendingData';
 import {
   canManagerApprovePendingOrder,
-  canManagerHandlePendingOrder,
   canSaleHandlePendingOrder,
+  getPendingOrderTypeLabel,
   needsManagerReview,
   PENDING_ORDER_APPROVAL_MESSAGE,
   PENDING_ORDER_MANAGER_APPROVAL_MESSAGE,
@@ -31,6 +29,8 @@ import {
   PENDING_ORDER_SENT_BACK_MESSAGE,
   wasSentBackToSale,
 } from '@/lib/pendingOrders';
+import { cn } from '@/lib/utils';
+import { PendingOrder } from '@/types/pending';
 
 interface PendingOrderRowProps {
   order: PendingOrder;
@@ -63,6 +63,7 @@ export const PendingOrderRow = ({
   };
 
   const paymentColor = paymentStatusConfig[order.paymentStatus].color;
+  const orderTypeLabel = getPendingOrderTypeLabel(order);
   const isEscalated = needsManagerReview(order);
   const isSentBack = wasSentBackToSale(order);
   const canApprove =
@@ -77,7 +78,7 @@ export const PendingOrderRow = ({
           : order.managerReviewReason || PENDING_ORDER_MANAGER_APPROVAL_MESSAGE
         : ''
       : isEscalated
-        ? 'Da chuyen manager xu ly.'
+        ? 'Đã chuyển manager xử lý.'
         : isSentBack
           ? order.managerReviewReason || PENDING_ORDER_SENT_BACK_MESSAGE
           : !canApprove
@@ -111,7 +112,7 @@ export const PendingOrderRow = ({
           </p>
           {order.products.length > 1 && (
             <p className="text-foreground/80 text-sm">
-              +{order.products.length - 1} san pham khac
+              +{order.products.length - 1} sản phẩm khác
             </p>
           )}
         </div>
@@ -137,6 +138,10 @@ export const PendingOrderRow = ({
         </div>
       </TableCell>
 
+      <TableCell className="text-foreground/90 whitespace-nowrap text-sm font-medium">
+        {orderTypeLabel}
+      </TableCell>
+
       <TableCell className="text-foreground/90 text-sm">
         {order.createdAt}
       </TableCell>
@@ -156,7 +161,7 @@ export const PendingOrderRow = ({
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => onViewDetail(order)}>
               <Eye className="mr-2 h-4 w-4" />
-              Xem chi tiet
+              Xem chi tiết
             </DropdownMenuItem>
 
             <DropdownMenuItem
@@ -167,41 +172,41 @@ export const PendingOrderRow = ({
               onClick={() => onProcess(order)}
             >
               <CheckCircle className="text-success mr-2 h-4 w-4" />
-              {scope === 'manager' ? 'Manager xac nhan' : 'Xac nhan xu ly'}
+              {scope === 'manager' ? 'Manager xác nhận' : 'Xác nhận xử lý'}
             </DropdownMenuItem>
 
             {scope === 'sale' && !canApprove && !isEscalated && (
               <DropdownMenuItem onClick={() => onEscalate(order)}>
                 <Send className="mr-2 h-4 w-4" />
-                Chuyen manager
+                Chuyển manager
               </DropdownMenuItem>
             )}
 
             {scope === 'manager' && isEscalated && (
               <DropdownMenuItem onClick={() => onSendBack(order)}>
                 <Send className="mr-2 h-4 w-4" />
-                Tra lai sale
+                Trả lại sale
               </DropdownMenuItem>
             )}
 
             <DropdownMenuItem onClick={() => onReject(order)}>
               <XCircle className="text-destructive mr-2 h-4 w-4" />
-              Tu choi
+              Từ chối
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
 
             <DropdownMenuItem>
               <FileText className="mr-2 h-4 w-4" />
-              Xem don thuoc
+              Xem đơn thuốc
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Printer className="mr-2 h-4 w-4" />
-              In don hang
+              In đơn hàng
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Send className="mr-2 h-4 w-4" />
-              Gui thong bao
+              Gửi thông báo
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

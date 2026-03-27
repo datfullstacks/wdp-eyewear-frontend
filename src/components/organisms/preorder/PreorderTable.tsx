@@ -51,16 +51,18 @@ export const PreorderTable = ({
       </div>
     )}
     <div className="overflow-x-auto">
-      <Table className="min-w-[980px] text-sm font-normal">
+      <Table className="min-w-[1220px] text-sm font-normal">
         <TableHeader>
           <TableRow className="bg-muted/50">
             <TableHead>Mã đơn</TableHead>
             <TableHead>Khách hàng</TableHead>
+            <TableHead>Cửa hàng</TableHead>
+            <TableHead>Nhà cung cấp</TableHead>
             <TableHead>Sản phẩm</TableHead>
             <TableHead>Ngày dự kiến</TableHead>
             <TableHead>Thanh toán</TableHead>
             <TableHead>Trạng thái</TableHead>
-            <TableHead className="w-[190px] text-right font-semibold text-foreground">
+            <TableHead className="w-[190px] text-right">
               Thao tác chính
             </TableHead>
           </TableRow>

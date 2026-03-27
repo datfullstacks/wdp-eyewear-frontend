@@ -40,11 +40,11 @@ export const RefundApproveModal = ({
   }, [open]);
 
   const title =
-    scope === 'manager' ? 'Phe duyet case refund' : 'Duyet yeu cau hoan tien';
+    scope === 'manager' ? 'Phê duyệt case refund' : 'Duyệt yêu cầu hoàn tiền';
   const description =
     scope === 'manager'
-      ? `Phe duyet case exception ${refund?.id || ''}`
-      : `Xac nhan duyet yeu cau hoan tien ${refund?.id || ''}`;
+      ? `Phê duyệt case exception ${refund?.id || ''}`
+      : `Xác nhận duyệt yêu cầu hoàn tiền ${refund?.id || ''}`;
 
   const handleSubmit = async () => {
     await onSubmit({ note: note.trim() });
@@ -67,23 +67,23 @@ export const RefundApproveModal = ({
             <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
               <div className="mb-2 flex items-center gap-2 text-emerald-700">
                 <CheckCircle className="h-5 w-5" />
-                <span className="font-medium">Xac nhan duyet hoan tien</span>
+                <span className="font-medium">Xác nhận duyệt hoàn tiền</span>
               </div>
               <p className="text-sm text-slate-700">
-                So tien:{' '}
+                Số tiền:{' '}
                 <span className="font-bold">
                   {formatCurrency(refund.amount)}
                 </span>
               </p>
               <p className="text-sm text-slate-700">
-                Phuong thuc: {methodConfig[refund.method].label}
+                Phương thức: {methodConfig[refund.method].label}
               </p>
             </div>
 
             <div>
-              <Label className="text-foreground/80">Ghi chu (tuy chon)</Label>
+              <Label className="text-foreground/80">Ghi chú (tùy chọn)</Label>
               <Textarea
-                placeholder="Nhap ghi chu neu co..."
+                placeholder="Nhập ghi chú nếu có..."
                 className="mt-1"
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
@@ -98,7 +98,7 @@ export const RefundApproveModal = ({
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
           >
-            Huy
+            Hủy
           </Button>
           <Button
             className="bg-success hover:bg-success/90"
@@ -106,7 +106,7 @@ export const RefundApproveModal = ({
             disabled={isSubmitting}
           >
             <CheckCircle className="mr-2 h-4 w-4" />
-            {isSubmitting ? 'Dang xu ly...' : 'Duyet yeu cau'}
+            {isSubmitting ? 'Đang xử lý...' : 'Duyệt yêu cầu'}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -57,33 +57,33 @@ export const statusConfig: Record<
   RefundRequest['status'],
   { label: string; type: StatusTone }
 > = {
-  requested: { label: 'Moi tao', type: 'warning' },
-  reviewing: { label: 'Dang xem xet', type: 'info' },
-  waiting_customer_info: { label: 'Cho KH bo sung', type: 'warning' },
-  escalated_to_manager: { label: 'Can manager', type: 'error' },
-  approved: { label: 'Da duyet', type: 'success' },
-  return_pending: { label: 'Cho tra hang', type: 'warning' },
-  return_received: { label: 'Da nhan hang', type: 'info' },
-  processing: { label: 'Dang hoan tien', type: 'info' },
-  completed: { label: 'Hoan tat', type: 'success' },
-  rejected: { label: 'Tu choi', type: 'error' },
+  requested: { label: 'Mới tạo', type: 'warning' },
+  reviewing: { label: 'Đang xem xét', type: 'info' },
+  waiting_customer_info: { label: 'Chờ KH bổ sung', type: 'warning' },
+  escalated_to_manager: { label: 'Cần quản lý', type: 'error' },
+  approved: { label: 'Đã duyệt', type: 'success' },
+  return_pending: { label: 'Chờ trả hàng', type: 'warning' },
+  return_received: { label: 'Đã nhận hàng', type: 'info' },
+  processing: { label: 'Đang hoàn tiền', type: 'info' },
+  completed: { label: 'Hoàn tất', type: 'success' },
+  rejected: { label: 'Từ chối', type: 'error' },
 };
 
 export const methodConfig: Record<
   RefundMethod,
   { label: string; icon: typeof CreditCard }
 > = {
-  bank_transfer: { label: 'Chuyen khoan', icon: Banknote },
-  card: { label: 'The', icon: CreditCard },
-  cash: { label: 'Tien mat', icon: DollarSign },
-  wallet: { label: 'Vi dien tu', icon: CreditCard },
+  bank_transfer: { label: 'Chuyển khoản', icon: Banknote },
+  card: { label: 'Thẻ', icon: CreditCard },
+  cash: { label: 'Tiền mặt', icon: DollarSign },
+  wallet: { label: 'Ví điện tử', icon: CreditCard },
 };
 
 export const saleStatusFilterOptions: Array<{
   value: 'all' | RefundRequest['status'];
   label: string;
 }> = [
-  { value: 'all', label: 'Tat ca trang thai' },
+  { value: 'all', label: 'Tất cả trạng thái' },
   { value: 'requested', label: statusConfig.requested.label },
   { value: 'reviewing', label: statusConfig.reviewing.label },
   {
@@ -106,7 +106,7 @@ export const operationStatusFilterOptions: Array<{
   value: 'all' | RefundRequest['status'];
   label: string;
 }> = [
-  { value: 'all', label: 'Tat ca trang thai' },
+  { value: 'all', label: 'Tất cả trạng thái' },
   { value: 'approved', label: statusConfig.approved.label },
   { value: 'return_pending', label: statusConfig.return_pending.label },
   { value: 'return_received', label: statusConfig.return_received.label },
@@ -118,7 +118,7 @@ export const refundMethodFilterOptions: Array<{
   value: 'all' | RefundMethod;
   label: string;
 }> = [
-  { value: 'all', label: 'Tat ca PT' },
+  { value: 'all', label: 'Tất cả PT' },
   { value: 'bank_transfer', label: methodConfig.bank_transfer.label },
   { value: 'card', label: methodConfig.card.label },
   { value: 'cash', label: methodConfig.cash.label },
@@ -223,7 +223,7 @@ export function toRefundRequest(order: OrderRecord): RefundRequest | null {
     customerName: order.customerName,
     customerPhone: order.customerPhone,
     amount,
-    reason: refund.reason || 'Khach yeu cau hoan tien',
+    reason: refund.reason || 'Khách yêu cầu hoàn tiền',
     method: resolveRefundMethod(order.paymentMethod, bankInfo),
     paymentMethod: order.paymentMethod,
     status: refund.status,

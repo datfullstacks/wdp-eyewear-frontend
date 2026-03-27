@@ -199,7 +199,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
       } catch (error) {
         if (!mounted) return;
         setErrorMessage(
-          toErrorMessage(error, 'Khong the tai danh sach refund luc nay.')
+          toErrorMessage(error, 'Không thể tải danh sách hoàn tiền lúc này.')
         );
       } finally {
         if (mounted) {
@@ -227,7 +227,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
       setRefunds(nextRefunds);
     } catch (error) {
       setErrorMessage(
-        toErrorMessage(error, 'Khong the tai lai danh sach refund.')
+        toErrorMessage(error, 'Không thể tải lại danh sách hoàn tiền.')
       );
     } finally {
       setIsRefreshing(false);
@@ -327,7 +327,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
       setSuccessMessage(successText);
     } catch (error) {
       setErrorMessage(
-        toErrorMessage(error, 'Khong the cap nhat workflow refund.')
+        toErrorMessage(error, 'Không thể cập nhật quy trình hoàn tiền.')
       );
     } finally {
       setIsSubmittingAction(false);
@@ -353,7 +353,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
       if (selectedRefund.requiresReturn) {
         await orderApi.updateRefund(selectedRefund.orderInternalId, {
           action: 'mark_return_pending',
-          note: 'Chuyen sang queue return verification cho operations.',
+          note: 'Chuyển sang hàng chờ xác nhận hàng hoàn cho operations.',
         });
       }
 
@@ -362,13 +362,13 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
       setSelectedRefund(null);
       setSuccessMessage(
         selectedRefund.requiresReturn
-          ? 'Refund da duoc phe duyet va chuyen sang queue nhan hang hoan.'
+          ? 'Refund đã được phê duyệt và chuyển sang hàng chờ nhận hàng hoàn.'
           : scope === 'manager'
-            ? 'Manager da phe duyet refund exception.'
-            : 'Refund da duoc staff phe duyet.'
+            ? 'Manager đã phê duyệt refund exception.'
+            : 'Refund đã được staff phê duyệt.'
       );
     } catch (error) {
-      setErrorMessage(toErrorMessage(error, 'Khong the phe duyet refund.'));
+      setErrorMessage(toErrorMessage(error, 'Không thể phê duyệt refund.'));
     } finally {
       setIsSubmittingAction(false);
     }
@@ -376,16 +376,16 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
 
   const title =
     scope === 'manager'
-      ? 'Refund exception queue'
+      ? 'Hàng chờ manager duyệt'
       : scope === 'operation'
-        ? 'Refund payout queue'
-        : 'Quan ly Hoan tien';
+        ? 'Hàng chờ chi tiền'
+        : 'Quản lý hoàn tiền';
   const subtitle =
     scope === 'manager'
-      ? 'Case escalated tu staff cho manager phe duyet'
+      ? 'Case do staff chuyển lên chờ manager phê duyệt'
       : scope === 'operation'
-        ? 'Operations tiep nhan case da duoc duyet va thuc hien payout'
-        : 'Xu ly cac yeu cau hoan tien tu khach hang';
+        ? 'Operations tiếp nhận case đã duyệt và thực hiện chi tiền'
+        : 'Xử lý các yêu cầu hoàn tiền từ khách hàng';
   const afterSalesHref =
     scope === 'manager'
       ? '/manager/cases/support'
@@ -393,7 +393,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
         ? '/operation/cases/warranties'
         : '/sale/cases/returns';
   const afterSalesLabel =
-    scope === 'operation' ? 'Warranty service queue' : 'Open after-sales support';
+    scope === 'operation' ? 'Hàng chờ bảo hành' : 'Mở hỗ trợ hậu mãi';
   const statusFilterOptions =
     scope === 'operation'
       ? operationStatusFilterOptions
@@ -421,7 +421,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
           <div className="w-full sm:max-w-[280px]">
             <SearchBar
-              placeholder="Tim theo ma refund, ma don, ten KH, SDT..."
+              placeholder="Tìm theo mã refund, mã đơn, tên KH, SĐT..."
               value={searchTerm}
               onChange={setSearchTerm}
             />
@@ -439,7 +439,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
                 <Button
                   variant="outline"
                   size="icon"
-                  aria-label="Bo loc"
+                  aria-label="Bộ lọc"
                   className="text-foreground/80 hover:text-foreground"
                 >
                   <Filter />
@@ -448,7 +448,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
               <DropdownMenuContent align="end" className="w-64">
                 {scope !== 'manager' && (
                   <>
-                    <DropdownMenuLabel>Trang thai</DropdownMenuLabel>
+                    <DropdownMenuLabel>Trạng thái</DropdownMenuLabel>
                     <DropdownMenuRadioGroup
                       value={statusFilter}
                       onValueChange={setStatusFilter}
@@ -466,7 +466,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
                   </>
                 )}
 
-                <DropdownMenuLabel>Phuong thuc</DropdownMenuLabel>
+                <DropdownMenuLabel>Phương thức</DropdownMenuLabel>
                 <DropdownMenuRadioGroup
                   value={methodFilter}
                   onValueChange={setMethodFilter}
@@ -483,22 +483,24 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button
-              variant="outline"
-              onClick={() => void refreshRefunds()}
-              disabled={isLoading || isRefreshing || isSubmittingAction}
-            >
-              {isRefreshing ? 'Dang tai...' : 'Tai lai'}
-            </Button>
+            {scope !== 'sale' && (
+              <Button
+                variant="outline"
+                onClick={() => void refreshRefunds()}
+                disabled={isLoading || isRefreshing || isSubmittingAction}
+              >
+                {isRefreshing ? 'Đang tải...' : 'Tải lại'}
+              </Button>
+            )}
           </div>
         </div>
 
         {scope === 'sale' && (
           <div className="flex flex-wrap gap-2">
             {[
-              { value: 'needs_action', label: 'Can xu ly' },
-              { value: 'waiting_customer', label: 'Cho khach bo sung' },
-              { value: 'tracking', label: 'Dang theo doi' },
+              { value: 'needs_action', label: 'Cần xử lý' },
+              { value: 'waiting_customer', label: 'Chờ khách bổ sung' },
+              { value: 'tracking', label: 'Đang theo dõi' },
             ].map((option) => {
               const active = saleQueueView === option.value;
               return (
@@ -521,7 +523,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
 
         {!isLoading && filteredRefunds.length > 0 && (
           <div className="text-muted-foreground text-sm">
-            Dang hien thi {filteredRefunds.length} refund, tong can xu ly{' '}
+            Đang hiển thị {filteredRefunds.length} refund, tổng cần xử lý{' '}
             <span className="text-foreground font-medium">
               {formatCurrency(stats.totalAmount)}
             </span>
@@ -531,7 +533,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
 
         {isLoading ? (
           <div className="text-muted-foreground rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm">
-            Dang tai danh sach refund...
+            Đang tải danh sách refund...
           </div>
         ) : (
           <RefundTable
@@ -545,8 +547,8 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
             onResumeReview={(refund) =>
               void executeRefundAction(
                 refund,
-                { action: 'start_review', note: 'Staff tiep tuc xu ly' },
-                'Refund da duoc dua lai ve trang thai reviewing.'
+                { action: 'start_review', note: 'Staff tiếp tục xử lý' },
+                'Refund đã được đưa lại về trạng thái đang xem xét.'
               )
             }
             onSendBack={(refund) => openModal(refund, setIsSendBackOpen)}
@@ -559,9 +561,9 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
                 refund,
                 {
                   action: 'start_processing',
-                  note: 'Operations bat dau xu ly payout.',
+                  note: 'Operations bắt đầu xử lý payout.',
                 },
-                'Refund da chuyen sang trang thai processing.'
+                'Refund đã chuyển sang trạng thái đang hoàn tiền.'
               )
             }
             onComplete={(refund) => openModal(refund, setIsProcessOpen)}
@@ -612,8 +614,8 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
               decisionNote: note,
             },
             scope === 'manager'
-              ? 'Manager da tu choi refund exception.'
-              : 'Refund da bi tu choi.'
+              ? 'Manager đã từ chối refund exception.'
+              : 'Refund đã bị từ chối.'
           )
         }
       />
@@ -631,7 +633,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
               escalateReason: note,
               decisionNote: note,
             },
-            'Refund da duoc chuyen len manager.'
+            'Refund đã được chuyển lên manager.'
           )
         }
       />
@@ -649,7 +651,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
               action: 'send_back_to_staff',
               decisionNote: note,
             },
-            'Case da duoc tra lai staff de xac minh them.'
+            'Case đã được trả lại staff để xác minh thêm.'
           )
         }
       />
@@ -668,7 +670,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
               contactChannels: ['phone'],
               contactNote: note,
             },
-            'Refund da chuyen sang cho khach bo sung thong tin.'
+            'Refund đã chuyển sang chờ khách bổ sung thông tin.'
           )
         }
       />
@@ -687,7 +689,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
               payoutProofUrl,
               note,
             },
-            'Refund da duoc danh dau hoan tat payout.'
+            'Refund đã được đánh dấu hoàn tất payout.'
           )
         }
       />
@@ -712,8 +714,8 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
               note,
             },
             inspectionMode === 'pass'
-              ? 'Da xac nhan nhan hang hoan va QC pass.'
-              : 'Case da duoc tra lai reviewing do QC fail.'
+              ? 'Đã xác nhận nhận hàng hoàn và QC pass.'
+              : 'Case đã được trả lại reviewing do QC fail.'
           )
         }
       />

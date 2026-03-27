@@ -2,11 +2,13 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Calendar, DollarSign, Loader2, ShoppingCart, Wallet } from 'lucide-react';
+import { useLocale } from 'next-intl';
 
 import { Header } from '@/components/organisms/Header';
 import { StatCard } from '@/components/molecules/StatCard';
 import { Card } from '@/components/ui/card';
 import analyticsApi, { type RevenueSummary } from '@/api/analytics';
+import { ManagerRevenueInsights } from '@/components/analytics/ManagerRevenueInsights';
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('vi-VN', {
@@ -16,9 +18,36 @@ const formatCurrency = (value: number) =>
   }).format(value || 0);
 
 export default function RevenuePage() {
+  const locale = useLocale();
   const [summary, setSummary] = useState<RevenueSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const copy =
+    locale === 'vi'
+      ? {
+          title: 'Tổng quan doanh thu',
+          subtitle: 'Theo dõi doanh thu, tiền đã thu và hiệu quả đơn hàng 6 tháng gần nhất',
+          analyticsTitle: 'Thống kê doanh thu',
+          analyticsSubtitle:
+            'Xu hướng theo tháng, chất lượng thu tiền và cơ cấu kênh thanh toán từ dữ liệu đơn hàng thực.',
+          trendTitle: 'Xu hướng gần đây',
+          month: 'Tháng',
+          revenue: 'Doanh thu',
+          collected: 'Đã thu',
+          orders: 'Đơn hàng',
+        }
+      : {
+          title: 'Revenue Overview',
+          subtitle: 'Monitor booked revenue, collected cash, and the last six months of order performance',
+          analyticsTitle: 'Revenue analytics',
+          analyticsSubtitle:
+            'Monthly trend, collection quality, and channel mix built from live order data.',
+          trendTitle: 'Recent monthly trend',
+          month: 'Month',
+          revenue: 'Revenue',
+          collected: 'Collected',
+          orders: 'Orders',
+        };
 
   useEffect(() => {
     let active = true;
@@ -85,8 +114,8 @@ export default function RevenuePage() {
   return (
     <>
       <Header
-        title="Revenue Overview"
-        subtitle="Monitor booked revenue, collected cash, and the last six months of order performance"
+        title={copy.title}
+        subtitle={copy.subtitle}
       />
 
       <div className="space-y-6 p-6">
@@ -109,16 +138,22 @@ export default function RevenuePage() {
               ))}
             </section>
 
+            <ManagerRevenueInsights
+              summary={summary}
+              title={copy.analyticsTitle}
+              subtitle={copy.analyticsSubtitle}
+            />
+
             <Card className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900">Recent monthly trend</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{copy.trendTitle}</h3>
               <div className="mt-4 overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200 text-left text-gray-500">
-                      <th className="pb-3 pr-4">Month</th>
-                      <th className="pb-3 pr-4">Revenue</th>
-                      <th className="pb-3 pr-4">Collected</th>
-                      <th className="pb-3">Orders</th>
+                      <th className="pb-3 pr-4">{copy.month}</th>
+                      <th className="pb-3 pr-4">{copy.revenue}</th>
+                      <th className="pb-3 pr-4">{copy.collected}</th>
+                      <th className="pb-3">{copy.orders}</th>
                     </tr>
                   </thead>
                   <tbody>

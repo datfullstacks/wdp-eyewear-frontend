@@ -1,4 +1,4 @@
-import { Package, CheckCircle } from 'lucide-react';
+import { CheckCircle, Package } from 'lucide-react';
 
 interface PendingStatsGridProps {
   totalCount: number;

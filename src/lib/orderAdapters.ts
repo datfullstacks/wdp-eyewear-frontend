@@ -116,6 +116,39 @@ function mapPaymentStatus(status: OrderRecord['paymentStatus']): PaymentStatus {
   return 'pending';
 }
 
+function resolvePendingOrderType(order: OrderRecord): string {
+  const normalized = String(order.orderType || '')
+    .trim()
+    .toLowerCase();
+
+  if (normalized === 'pre_order' || normalized === 'preorder') {
+    return 'pre_order';
+  }
+
+  if (normalized === 'ready_stock') {
+    return 'ready_stock';
+  }
+
+  if (
+    normalized === 'prescription' ||
+    normalized === 'made_to_order' ||
+    normalized === 'made-to-order' ||
+    normalized === 'custom'
+  ) {
+    return 'prescription';
+  }
+
+  if (order.items.some((item) => item.preOrder)) {
+    return 'pre_order';
+  }
+
+  if (order.items.some(requiresPrescription)) {
+    return 'prescription';
+  }
+
+  return normalized;
+}
+
 function getRawOrderStatus(order: Pick<OrderRecord, 'rawStatus'>): string {
   return String(order.rawStatus || '')
     .trim()
@@ -451,6 +484,7 @@ export function toPendingOrder(order: OrderRecord): PendingOrder {
     products,
     total: order.total,
     status: order.rawStatus || 'pending',
+    orderType: resolvePendingOrderType(order),
     createdAt: formatDateTime(order.createdAt),
     note: order.note || '',
     hasPrescription: order.items.some(requiresPrescription),
@@ -578,6 +612,8 @@ export function toPreorderOrder(order: OrderRecord): PreorderOrder {
           sku: `${order.id.slice(-6).toUpperCase()}-${index + 1}`,
           name: item.name,
           variant: item.variant,
+          supplier: item.supplier || '',
+          warehouseLocation: item.warehouseLocation || '',
           quantity: item.quantity,
           batchCode: null,
           batchExpectedDate: null,
@@ -588,6 +624,8 @@ export function toPreorderOrder(order: OrderRecord): PreorderOrder {
             sku: `${order.id.slice(-6).toUpperCase()}-1`,
             name: 'Sản phẩm',
             variant: 'Mặc định',
+            supplier: '',
+            warehouseLocation: '',
             quantity: 1,
             batchCode: null,
             batchExpectedDate: null,
@@ -599,6 +637,8 @@ export function toPreorderOrder(order: OrderRecord): PreorderOrder {
     id: order.id,
     rawOrderStatus: order.rawStatus,
     orderCode: order.code,
+    storeId: order.storeId,
+    storeName: order.storeName,
     customerName: order.customerName,
     customerPhone: order.customerPhone || '-',
     customerAddress: order.customerAddress || '-',

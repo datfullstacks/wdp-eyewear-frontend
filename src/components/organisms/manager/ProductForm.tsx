@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Input } from '@/components/atoms/Input';
 import { Button } from '@/components/atoms';
 import { MAX_TRY_ON_MODELS } from '@/lib/productHelpers';
@@ -107,7 +108,10 @@ const PREORDER_SHIPPING_TIMING_OPTIONS: Array<{
   { value: 'on_delivery', label: 'Collect on delivery' },
 ];
 
-const TRY_ON_STATUS_OPTIONS: Array<{ value: ProductTryOnStatus; label: string }> = [
+const TRY_ON_STATUS_OPTIONS: Array<{
+  value: ProductTryOnStatus;
+  label: string;
+}> = [
   { value: 'draft', label: 'Draft' },
   { value: 'pending_review', label: 'Cho review' },
   { value: 'approved', label: 'Da duyet' },
@@ -135,11 +139,14 @@ interface ProductFormProps {
   isSubmitting: boolean;
   uploadingKey: string;
   onChange: (updater: (prev: ProductFormState) => ProductFormState) => void;
-  onUploadSingle: (file: File, role: ProductMediaAsset['role']) => Promise<void>;
+  onUploadSingle: (
+    file: File,
+    role: ProductMediaAsset['role']
+  ) => Promise<void>;
   onUploadGallery: (files: FileList | null) => Promise<void>;
   onUploadVariantAsset: (
     file: File,
-    variantIndex: number,
+    variantId: string,
     field: 'imageUrl' | 'posterUrl' | 'glbUrl'
   ) => Promise<void>;
   onRemoveGallery: (index: number) => void;
@@ -163,8 +170,14 @@ export function ProductForm({
   onSubmit,
   submitLabel = 'Save',
 }: ProductFormProps) {
+  const getVariantUploadKey = (
+    variantId: string,
+    suffix: 'image' | 'poster' | 'glb'
+  ) => `variant-${variantId || 'unknown'}-${suffix}`;
   const priceValue = Number(formData.price || 0);
-  const previewBasePrice = Number.isFinite(priceValue) ? Math.max(0, priceValue) : 0;
+  const previewBasePrice = Number.isFinite(priceValue)
+    ? Math.max(0, priceValue)
+    : 0;
   const previewDepositPercent = formData.preOrderEnabled
     ? Math.max(0, Math.min(100, Number(formData.preOrderDepositPercent || 0)))
     : 100;
@@ -198,14 +211,26 @@ export function ProductForm({
       formData.tryOnTranslation,
       formData.tryOnGravity,
       formData.tryOnCut,
-    ].some((value) => Boolean(String(value || '').trim())) || formData.tryOnUsePhysics;
+    ].some((value) => Boolean(String(value || '').trim())) ||
+    formData.tryOnUsePhysics;
+  const [isTryOnAdvancedOpen, setIsTryOnAdvancedOpen] = useState(
+    hasTryOnAdvancedSettings
+  );
   const tryOnStatusOptions = availableTryOnStatuses?.length
-    ? TRY_ON_STATUS_OPTIONS.filter((option) => availableTryOnStatuses.includes(option.value))
+    ? TRY_ON_STATUS_OPTIONS.filter((option) =>
+        availableTryOnStatuses.includes(option.value)
+      )
     : TRY_ON_STATUS_OPTIONS;
-  const mappedTryOnModelCount = variantRows.filter(
-    (variant) => Boolean(String(variant.glbUrl || '').trim())
+  const mappedTryOnModelCount = variantRows.filter((variant) =>
+    Boolean(String(variant.glbUrl || '').trim())
   ).length;
   const tryOnModelLimitReached = mappedTryOnModelCount >= MAX_TRY_ON_MODELS;
+
+  useEffect(() => {
+    if (hasTryOnAdvancedSettings) {
+      setIsTryOnAdvancedOpen(true);
+    }
+  }, [hasTryOnAdvancedSettings]);
 
   const updateVariant = (
     index: number,
@@ -244,7 +269,9 @@ export function ProductForm({
     if (variantRows.length <= 1) return;
     onChange((prev) => ({
       ...prev,
-      variants: prev.variants.filter((_, variantIndex) => variantIndex !== index),
+      variants: prev.variants.filter(
+        (_, variantIndex) => variantIndex !== index
+      ),
     }));
   };
 
@@ -339,7 +366,8 @@ export function ProductForm({
         <div className="mb-4">
           <p className="text-sm font-medium text-gray-700">Store network</p>
           <p className="mt-1 text-xs text-gray-500">
-            Gan san pham vao cua hang de van hanh theo mo hinh chuoi. Mobile se co the loc san pham theo cua hang nay.
+            Gan san pham vao cua hang de van hanh theo mo hinh chuoi. Mobile se
+            co the loc san pham theo cua hang nay.
           </p>
         </div>
 
@@ -354,14 +382,9 @@ export function ProductForm({
                 onChange((prev) => ({
                   ...prev,
                   storeScopeMode: value === 'selected' ? 'selected' : 'all',
-                  storeIds:
-                    value === 'selected'
-                      ? prev.storeIds
-                      : [],
+                  storeIds: value === 'selected' ? prev.storeIds : [],
                   primaryStoreId:
-                    value === 'selected'
-                      ? prev.primaryStoreId
-                      : '',
+                    value === 'selected' ? prev.primaryStoreId : '',
                 }))
               }
             >
@@ -370,7 +393,9 @@ export function ProductForm({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Ban o tat ca cua hang</SelectItem>
-                <SelectItem value="selected">Chi ban o cua hang duoc chon</SelectItem>
+                <SelectItem value="selected">
+                  Chi ban o cua hang duoc chon
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -390,8 +415,8 @@ export function ProductForm({
 
         {formData.storeScopeMode === 'all' ? (
           <p className="mt-3 rounded-md border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900">
-            San pham nay se duoc coi la ban o tat ca cua hang. Neu ban muon gioi han theo chi nhanh, hay chuyen sang
-            "Chi ban o cua hang duoc chon".
+            San pham nay se duoc coi la ban o tat ca cua hang. Neu ban muon gioi
+            han theo chi nhanh, hay chuyen sang "Chi ban o cua hang duoc chon".
           </p>
         ) : (
           <div className="mt-4 space-y-4">
@@ -430,10 +455,13 @@ export function ProductForm({
             </div>
 
             <div>
-              <p className="mb-2 text-sm font-medium text-gray-700">Danh sach cua hang ap dung</p>
+              <p className="mb-2 text-sm font-medium text-gray-700">
+                Danh sach cua hang ap dung
+              </p>
               {storeOptions.length === 0 ? (
                 <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-                  Chua co cua hang nao trong he thong. Hay tao cua hang truoc roi quay lai gan vao san pham.
+                  Chua co cua hang nao trong he thong. Hay tao cua hang truoc
+                  roi quay lai gan vao san pham.
                 </p>
               ) : (
                 <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
@@ -450,10 +478,13 @@ export function ProductForm({
                           onChange={(event) =>
                             onChange((prev) => {
                               const nextStoreIds = event.target.checked
-                                ? Array.from(new Set([...prev.storeIds, store.id]))
+                                ? Array.from(
+                                    new Set([...prev.storeIds, store.id])
+                                  )
                                 : prev.storeIds.filter((id) => id !== store.id);
                               const nextPrimary =
-                                prev.primaryStoreId === store.id && !event.target.checked
+                                prev.primaryStoreId === store.id &&
+                                !event.target.checked
                                   ? ''
                                   : prev.primaryStoreId;
                               return {
@@ -469,7 +500,9 @@ export function ProductForm({
                             {store.name} ({store.code})
                           </div>
                           <div className="mt-1 text-xs text-gray-500">
-                            {[store.addressLine1, store.district, store.city].filter(Boolean).join(', ') || 'Chua co dia chi'}
+                            {[store.addressLine1, store.district, store.city]
+                              .filter(Boolean)
+                              .join(', ') || 'Chua co dia chi'}
                           </div>
                         </div>
                       </label>
@@ -489,10 +522,13 @@ export function ProductForm({
               Variants and asset mapping
             </p>
             <p className="mt-1 text-xs text-gray-500">
-              Map image and GLB per color or size so mobile can switch assets correctly when the customer changes variant.
+              Map image and GLB per color or size so mobile can switch assets
+              correctly when the customer changes variant.
             </p>
             <p className="mt-2 text-xs font-medium text-amber-800">
-              Try-on supports up to {MAX_TRY_ON_MODELS} mapped models per product. Current mapped models: {mappedTryOnModelCount}/{MAX_TRY_ON_MODELS}
+              Try-on supports up to {MAX_TRY_ON_MODELS} mapped models per
+              product. Current mapped models: {mappedTryOnModelCount}/
+              {MAX_TRY_ON_MODELS}
             </p>
           </div>
           <Button type="button" variant="outline" onClick={addVariant}>
@@ -608,10 +644,14 @@ export function ProductForm({
                   <input
                     type="file"
                     accept="image/*"
-                    disabled={isSubmitting || uploadingKey === `variant-${index}-image`}
+                    disabled={
+                      isSubmitting ||
+                      uploadingKey === getVariantUploadKey(variant.id, 'image')
+                    }
                     onChange={(event) => {
                       const file = event.target.files?.[0];
-                      if (file) void onUploadVariantAsset(file, index, 'imageUrl');
+                      if (file)
+                        void onUploadVariantAsset(file, variant.id, 'imageUrl');
                     }}
                     className="block w-full text-sm text-gray-600"
                   />
@@ -643,10 +683,18 @@ export function ProductForm({
                   <input
                     type="file"
                     accept="image/*"
-                    disabled={isSubmitting || uploadingKey === `variant-${index}-poster`}
+                    disabled={
+                      isSubmitting ||
+                      uploadingKey === getVariantUploadKey(variant.id, 'poster')
+                    }
                     onChange={(event) => {
                       const file = event.target.files?.[0];
-                      if (file) void onUploadVariantAsset(file, index, 'posterUrl');
+                      if (file)
+                        void onUploadVariantAsset(
+                          file,
+                          variant.id,
+                          'posterUrl'
+                        );
                     }}
                     className="block w-full text-sm text-gray-600"
                   />
@@ -673,10 +721,14 @@ export function ProductForm({
                   <input
                     type="file"
                     accept=".glb,.gltf,model/gltf-binary,model/gltf+json"
-                    disabled={isSubmitting || uploadingKey === `variant-${index}-glb`}
+                    disabled={
+                      isSubmitting ||
+                      uploadingKey === getVariantUploadKey(variant.id, 'glb')
+                    }
                     onChange={(event) => {
                       const file = event.target.files?.[0];
-                      if (file) void onUploadVariantAsset(file, index, 'glbUrl');
+                      if (file)
+                        void onUploadVariantAsset(file, variant.id, 'glbUrl');
                     }}
                     className="block w-full text-sm text-gray-600"
                   />
@@ -705,13 +757,19 @@ export function ProductForm({
               Frame and mobile fit specs (optional)
             </p>
             <p className="mt-1 text-xs text-gray-500">
-              Chi nhap khi da co thong so that. Co the de trong va bo sung sau, manager khong can doan de luu san pham.
+              Chi nhap khi da co thong so that. Co the de trong va bo sung sau,
+              manager khong can doan de luu san pham.
             </p>
           </div>
 
-          <details open={hasFrameSpecs} className="rounded-md border border-dashed border-gray-300 bg-gray-50 px-4 py-3">
+          <details
+            open={hasFrameSpecs}
+            className="rounded-md border border-dashed border-gray-300 bg-gray-50 px-4 py-3"
+          >
             <summary className="cursor-pointer text-sm font-medium text-gray-700">
-              {hasFrameSpecs ? 'Dang co thong so da nhap' : 'Them thong so khi da xac nhan duoc'}
+              {hasFrameSpecs
+                ? 'Dang co thong so da nhap'
+                : 'Them thong so khi da xac nhan duoc'}
             </summary>
 
             <div className="mt-4 grid grid-cols-2 gap-4">
@@ -719,7 +777,10 @@ export function ProductForm({
                 label="Shape"
                 value={formData.frameShape}
                 onChange={(event) =>
-                  onChange((prev) => ({ ...prev, frameShape: event.target.value }))
+                  onChange((prev) => ({
+                    ...prev,
+                    frameShape: event.target.value,
+                  }))
                 }
                 placeholder="rectangle"
               />
@@ -783,7 +844,8 @@ export function ProductForm({
                   onValueChange={(value) =>
                     onChange((prev) => ({
                       ...prev,
-                      frameHingeType: value as ProductFormState['frameHingeType'],
+                      frameHingeType:
+                        value as ProductFormState['frameHingeType'],
                     }))
                   }
                 >
@@ -914,9 +976,13 @@ export function ProductForm({
       <div className="rounded-md border border-gray-200 p-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-gray-700">Pre-order config</p>
+            <p className="text-sm font-medium text-gray-700">
+              Pre-order config
+            </p>
             <p className="mt-1 text-xs text-gray-500">
-              Manager-owned business config for deposit, split payment, and shipping collection timing. Cac moc thoi gian co the de trong neu chua chot.
+              Manager-owned business config for deposit, split payment, and
+              shipping collection timing. Cac moc thoi gian co the de trong neu
+              chua chot.
             </p>
           </div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -1017,7 +1083,8 @@ export function ProductForm({
             </div>
 
             <p className="text-xs text-gray-500">
-              Neu chua biet lich giao du kien, co the de trong Ship from va Ship to roi cap nhat sau.
+              Neu chua biet lich giao du kien, co the de trong Ship from va Ship
+              to roi cap nhat sau.
             </p>
 
             <div className="grid grid-cols-2 gap-4">
@@ -1088,17 +1155,23 @@ export function ProductForm({
                 Payment preview for one product
               </p>
               <div className="mt-2 grid grid-cols-2 gap-2 text-sm text-amber-900">
-                <div>Base price: {previewBasePrice.toLocaleString('vi-VN')} VND</div>
+                <div>
+                  Base price: {previewBasePrice.toLocaleString('vi-VN')} VND
+                </div>
                 <div>Deposit: {previewDepositPercent}%</div>
                 <div>Pay now: {previewPayNow.toLocaleString('vi-VN')} VND</div>
-                <div>COD later: {previewPayLater.toLocaleString('vi-VN')} VND</div>
+                <div>
+                  COD later: {previewPayLater.toLocaleString('vi-VN')} VND
+                </div>
               </div>
               <p className="mt-2 text-xs text-amber-800">
-                Shipping is shown separately to customers and will be collected based on the selected timing.
+                Shipping is shown separately to customers and will be collected
+                based on the selected timing.
               </p>
               {!formData.preOrderAllowCod && previewPayLater > 0 ? (
                 <p className="mt-2 text-xs font-semibold text-red-700">
-                  V1 currently collects the pay-later leg as COD. Keep this enabled if deposit percent is below 100%.
+                  V1 currently collects the pay-later leg as COD. Keep this
+                  enabled if deposit percent is below 100%.
                 </p>
               ) : null}
             </div>
@@ -1192,10 +1265,12 @@ export function ProductForm({
       <div className="rounded-md border border-gray-200 p-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-gray-700">Mobile try-on config</p>
+            <p className="text-sm font-medium text-gray-700">
+              Mobile try-on config
+            </p>
             <p className="mt-1 text-xs text-gray-500">
-              Phan nay chi cau hinh workflow va runtime cho try-on tren mobile. File poster va GLB
-              duoc upload theo tung bien the o phia tren.
+              Phan nay chi cau hinh workflow va runtime cho try-on tren mobile.
+              File poster va GLB duoc upload theo tung bien the o phia tren.
             </p>
           </div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -1216,7 +1291,8 @@ export function ProductForm({
 
         {!supportsTryOn ? (
           <p className="mt-3 text-xs font-medium text-amber-700">
-            Try-on chi ap dung cho san pham thuoc category frame hoac sunglasses trong mobile app hien tai.
+            Try-on chi ap dung cho san pham thuoc category frame hoac sunglasses
+            trong mobile app hien tai.
           </p>
         ) : null}
 
@@ -1224,14 +1300,23 @@ export function ProductForm({
           <div className="mt-4 space-y-4">
             <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900">
               <p className="font-semibold">Manager can nho:</p>
-              <p className="mt-1">Moi bien the muon thu kinh nen co image, poster va GLB rieng.</p>
-              <p className="mt-1">Toi da {MAX_TRY_ON_MODELS} bien the duoc map try-on trong 1 san pham.</p>
-              <p className="mt-1">Effect path la tuy chon nang cao. Da so truong hop co the de trong.</p>
+              <p className="mt-1">
+                Moi bien the muon thu kinh nen co image, poster va GLB rieng.
+              </p>
+              <p className="mt-1">
+                Toi da {MAX_TRY_ON_MODELS} bien the duoc map try-on trong 1 san
+                pham.
+              </p>
+              <p className="mt-1">
+                Effect path la tuy chon nang cao. Da so truong hop co the de
+                trong.
+              </p>
             </div>
 
             {mappedTryOnModelCount > MAX_TRY_ON_MODELS ? (
               <p className="rounded-md border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700">
-                Giam so bien the da map try-on xuong {MAX_TRY_ON_MODELS} hoac it hon truoc khi luu san pham try-on.
+                Giam so bien the da map try-on xuong {MAX_TRY_ON_MODELS} hoac it
+                hon truoc khi luu san pham try-on.
               </p>
             ) : null}
 
@@ -1284,29 +1369,45 @@ export function ProductForm({
             {(formData.tryOnStatus === 'approved' ||
               formData.tryOnStatus === 'published') && (
               <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs font-medium text-amber-800">
-                Neu trang thai la Da duyet hoac Dang hien thi, moi bien the da map try-on phai co GLB.
+                Neu trang thai la Da duyet hoac Dang hien thi, moi bien the da
+                map try-on phai co GLB.
               </p>
             )}
 
             <p className="rounded-md border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700">
-              Asset try-on duoc upload theo tung bien the o ben tren. Phan nay chi dieu khien trang thai,
-              scene, URL fallback va cac thong so prefab dung chung.
+              Asset try-on duoc upload theo tung bien the o ben tren. Phan nay
+              chi dieu khien trang thai, scene, URL fallback va cac thong so
+              prefab dung chung.
             </p>
 
             {tryOnModelLimitReached ? (
               <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs font-medium text-amber-800">
-                San pham da dat gioi han {MAX_TRY_ON_MODELS} model try-on. Muon them model moi, hay go asset 3D
-                o mot bien the khac truoc.
+                San pham da dat gioi han {MAX_TRY_ON_MODELS} model try-on. Muon
+                them model moi, hay go asset 3D o mot bien the khac truoc.
               </p>
             ) : null}
 
-            <details open={hasTryOnAdvancedSettings} className="rounded-md border border-dashed border-gray-300 bg-white px-4 py-3">
+            <details
+              open={isTryOnAdvancedOpen}
+              onToggle={(event) =>
+                setIsTryOnAdvancedOpen(
+                  (event.currentTarget as HTMLDetailsElement).open
+                )
+              }
+              className="rounded-md border border-dashed border-gray-300 bg-white px-4 py-3"
+            >
               <summary className="cursor-pointer text-sm font-medium text-gray-700">
                 Cai dat try-on nang cao (tuy chon)
               </summary>
 
               <p className="mt-3 rounded-md border border-gray-200 bg-white p-3 text-xs text-gray-600">
-                Neu chi dung GLB theo tung bien the, ban co the de trong toan bo nhom field ben duoi.
+                Neu chi dung GLB theo tung bien the, ban co the de trong toan bo
+                nhom field ben duoi.
+              </p>
+              <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+                Moi gia tri nhap o day se ghi de runtime mac dinh. Neu model
+                dang hien thi binh thuong, hay de trong. Khong nen bat physics
+                neu chua cau hinh collider.
               </p>
 
               <div className="mt-4 grid grid-cols-2 gap-4">
@@ -1378,11 +1479,11 @@ export function ProductForm({
               <div className="mt-4 overflow-hidden rounded-md border border-gray-200">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      <th className="px-3 py-2 text-left w-1/4">Thuộc tính</th>
-                      <th className="px-3 py-2 text-center w-1/4">X</th>
-                      <th className="px-3 py-2 text-center w-1/4">Y</th>
-                      <th className="px-3 py-2 text-center w-1/4">Z</th>
+                    <tr className="bg-gray-50 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                      <th className="w-1/4 px-3 py-2 text-left">Thuộc tính</th>
+                      <th className="w-1/4 px-3 py-2 text-center">X</th>
+                      <th className="w-1/4 px-3 py-2 text-center">Y</th>
+                      <th className="w-1/4 px-3 py-2 text-center">Z</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -1421,17 +1522,24 @@ export function ProductForm({
                       const buildValue = (x: string, y: string, z: string) =>
                         [x, y, z].join(' ');
                       return (
-                        <tr key={key} className="hover:bg-gray-50 transition-colors">
+                        <tr
+                          key={key}
+                          className="transition-colors hover:bg-gray-50"
+                        >
                           <td className="px-3 py-2">
-                            <span className="font-medium text-gray-700">{label}</span>
-                            <span className="ml-1 text-xs text-gray-400">{hint}</span>
+                            <span className="font-medium text-gray-700">
+                              {label}
+                            </span>
+                            <span className="ml-1 text-xs text-gray-400">
+                              {hint}
+                            </span>
                           </td>
                           {(['x', 'y', 'z'] as const).map((axis, axisIdx) => {
                             const axisVal = [xVal, yVal, zVal][axisIdx];
                             return (
                               <td key={axis} className="px-2 py-2">
                                 <div className="flex items-center gap-1">
-                                  <span className="text-xs font-bold text-gray-400 w-3 shrink-0 uppercase">
+                                  <span className="w-3 shrink-0 text-xs font-bold text-gray-400 uppercase">
                                     {axis}
                                   </span>
                                   <input
@@ -1444,10 +1552,14 @@ export function ProductForm({
                                       newParts[axisIdx] = event.target.value;
                                       onChange((prev) => ({
                                         ...prev,
-                                        [key]: buildValue(newParts[0], newParts[1], newParts[2]),
+                                        [key]: buildValue(
+                                          newParts[0],
+                                          newParts[1],
+                                          newParts[2]
+                                        ),
                                       }));
                                     }}
-                                    className="w-full rounded border border-gray-200 px-2 py-1 text-sm text-center focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-300"
+                                    className="w-full rounded border border-gray-200 px-2 py-1 text-center text-sm focus:border-amber-400 focus:ring-1 focus:ring-amber-300 focus:outline-none"
                                   />
                                 </div>
                               </td>

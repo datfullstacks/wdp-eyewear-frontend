@@ -14,8 +14,6 @@ import {
   ChevronDown,
   Eye,
   HandCoins,
-  Link2,
-  MessageSquare,
   Package,
   PackageCheck,
   Truck,
@@ -28,8 +26,6 @@ interface PreorderOrderRowProps {
   isSelected: boolean;
   onSelect: (id: string) => void;
   onViewDetail: (order: PreorderOrder) => void;
-  onLinkBatch?: (order: PreorderOrder) => void;
-  onContact?: (order: PreorderOrder) => void;
   onCancel: (order: PreorderOrder) => void;
   onMarkArrived: (order: PreorderOrder) => void;
   onStockIn: (order: PreorderOrder) => void;
@@ -73,8 +69,6 @@ function getStatusMeta(order: PreorderOrder) {
 export const PreorderOrderRow = ({
   order,
   onViewDetail,
-  onLinkBatch,
-  onContact,
   onCancel,
   onMarkArrived,
   onStockIn,
@@ -116,6 +110,19 @@ export const PreorderOrderRow = ({
     (order.opsStatus === 'shipment_created' ||
       Boolean(String(order.carrierId || '').trim()) ||
       Boolean(String(order.trackingCode || '').trim()));
+  const suppliers = Array.from(
+    new Set(
+      order.products
+        .map((product) => String(product.supplier || '').trim())
+        .filter(Boolean)
+    )
+  );
+  const supplierSummary =
+    suppliers.length === 0
+      ? '-'
+      : suppliers.length === 1
+        ? suppliers[0]
+        : `${suppliers[0]} +${suppliers.length - 1}`;
 
   return (
     <TableRow className="hover:bg-muted/30">
@@ -137,6 +144,14 @@ export const PreorderOrderRow = ({
             {order.customerPhone}
           </span>
         </div>
+      </TableCell>
+
+      <TableCell>
+        <span className="text-foreground/90">{order.storeName || '-'}</span>
+      </TableCell>
+
+      <TableCell>
+        <span className="text-foreground/90">{supplierSummary}</span>
       </TableCell>
 
       <TableCell>
@@ -188,11 +203,6 @@ export const PreorderOrderRow = ({
           {order.trackingCode && (
             <span className="text-foreground/70 font-mono text-xs">
               {order.trackingCode}
-            </span>
-          )}
-          {order.shipmentStatus && (
-            <span className="text-foreground/70 text-xs">
-              GHN: {order.shipmentStatus}
             </span>
           )}
         </div>
@@ -267,22 +277,6 @@ export const PreorderOrderRow = ({
             <DropdownMenuItem onClick={() => onViewDetail(order)}>
               <Eye className="mr-2 h-4 w-4" />
               Xem chi tiết
-            </DropdownMenuItem>
-
-            <DropdownMenuItem
-              disabled={!onLinkBatch}
-              onClick={() => onLinkBatch?.(order)}
-            >
-              <Link2 className="mr-2 h-4 w-4" />
-              Liên kết đợt hàng
-            </DropdownMenuItem>
-
-            <DropdownMenuItem
-              disabled={!onContact}
-              onClick={() => onContact?.(order)}
-            >
-              <MessageSquare className="mr-2 h-4 w-4" />
-              Liên hệ khách
             </DropdownMenuItem>
 
             {!isCancelled && (

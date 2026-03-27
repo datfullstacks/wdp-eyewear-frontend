@@ -1,5 +1,6 @@
 import { CheckCircle, MapPin, Phone, ShoppingBag, User, XCircle } from 'lucide-react';
 
+import { StatusBadge } from '@/components/atoms/StatusBadge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -7,12 +8,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { StatusBadge } from '@/components/atoms/StatusBadge';
-import { PendingOrder } from '@/types/pending';
-import { paymentStatusConfig, formatCurrency } from '@/data/pendingData';
+import { formatCurrency, paymentStatusConfig } from '@/data/pendingData';
 import {
   canManagerApprovePendingOrder,
   canSaleHandlePendingOrder,
+  getPendingOrderTypeLabel,
   needsManagerReview,
   PENDING_ORDER_APPROVAL_MESSAGE,
   PENDING_ORDER_MANAGER_APPROVAL_MESSAGE,
@@ -20,6 +20,7 @@ import {
   PENDING_ORDER_SENT_BACK_MESSAGE,
   wasSentBackToSale,
 } from '@/lib/pendingOrders';
+import { PendingOrder } from '@/types/pending';
 
 interface PendingDetailModalProps {
   scope?: 'sale' | 'manager';
@@ -42,6 +43,7 @@ export const PendingDetailModal = ({
 }: PendingDetailModalProps) => {
   if (!order) return null;
 
+  const orderTypeLabel = getPendingOrderTypeLabel(order);
   const isEscalated = needsManagerReview(order);
   const isSentBack = wasSentBackToSale(order);
   const canApprove =
@@ -56,7 +58,7 @@ export const PendingDetailModal = ({
           : order.managerReviewReason || PENDING_ORDER_MANAGER_APPROVAL_MESSAGE
         : ''
       : isEscalated
-        ? 'Da chuyen manager xu ly.'
+        ? 'Đã chuyển manager xử lý.'
         : isSentBack
           ? order.managerReviewReason || PENDING_ORDER_SENT_BACK_MESSAGE
           : !canApprove
@@ -70,7 +72,7 @@ export const PendingDetailModal = ({
           <DialogHeader className="space-y-1">
             <DialogTitle className="text-slate-950">
               <span className="text-xs font-semibold tracking-[0.25em] text-slate-950/60">
-                DON HANG
+                ĐƠN HÀNG
               </span>
               <span className="mt-1 block text-lg font-extrabold leading-tight tracking-tight">
                 {order.id}
@@ -78,13 +80,16 @@ export const PendingDetailModal = ({
             </DialogTitle>
           </DialogHeader>
 
-          <div className="mt-2 flex items-center gap-2">
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             <StatusBadge
               status={paymentStatusConfig[order.paymentStatus].color}
               className="border-slate-950/15 bg-slate-950/10 text-slate-950"
             >
               {paymentStatusConfig[order.paymentStatus].label}
             </StatusBadge>
+            <span className="inline-flex items-center rounded-full border border-slate-950/15 bg-slate-950/10 px-2.5 py-1 text-xs font-semibold text-slate-950">
+              Loại đơn: {orderTypeLabel}
+            </span>
           </div>
         </div>
 
@@ -92,17 +97,17 @@ export const PendingDetailModal = ({
           <section className="bg-muted/20 border-border rounded-xl border p-4">
             <div className="text-muted-foreground flex items-center gap-2 text-xs font-semibold tracking-[0.18em]">
               <User className="h-4 w-4 text-yellow-600" />
-              THONG TIN KHACH HANG
+              THÔNG TIN KHÁCH HÀNG
             </div>
 
             <div className="mt-4 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
               <div>
-                <p className="text-muted-foreground text-xs font-medium">Ho ten</p>
+                <p className="text-muted-foreground text-xs font-medium">Họ tên</p>
                 <p className="text-foreground mt-1 font-semibold">{order.customer}</p>
               </div>
               <div>
                 <p className="text-muted-foreground text-xs font-medium">
-                  So dien thoai
+                  Số điện thoại
                 </p>
                 <p className="text-foreground mt-1 flex items-center gap-2 font-semibold">
                   <Phone className="h-4 w-4 text-yellow-600" />
@@ -111,7 +116,7 @@ export const PendingDetailModal = ({
               </div>
               <div className="sm:col-span-2">
                 <p className="text-muted-foreground text-xs font-medium">
-                  Dia chi giao hang
+                  Địa chỉ giao hàng
                 </p>
                 <p className="text-foreground mt-1 flex items-center gap-2 font-semibold">
                   <MapPin className="h-4 w-4 text-rose-500" />
@@ -124,7 +129,7 @@ export const PendingDetailModal = ({
           <section className="bg-muted/20 border-border rounded-xl border p-4">
             <div className="text-muted-foreground flex items-center gap-2 text-xs font-semibold tracking-[0.18em]">
               <ShoppingBag className="h-4 w-4 text-yellow-600" />
-              SAN PHAM DAT MUA
+              SẢN PHẨM ĐẶT MUA
             </div>
 
             <div className="mt-4 space-y-3">
@@ -142,7 +147,7 @@ export const PendingDetailModal = ({
                       {product.name}
                     </p>
                     <span className="bg-muted text-muted-foreground mt-1 inline-flex rounded-full px-2 py-0.5 text-xs font-medium">
-                      {product.variant || 'Mac dinh'}
+                      {product.variant || 'Mặc định'}
                     </span>
                   </div>
 
@@ -151,7 +156,7 @@ export const PendingDetailModal = ({
                       {formatCurrency(product.price)}
                     </p>
                     <p className="text-muted-foreground text-xs font-medium">
-                      So luong: {product.qty}
+                      Số lượng: {product.qty}
                     </p>
                   </div>
                 </div>
@@ -159,7 +164,7 @@ export const PendingDetailModal = ({
             </div>
 
             <div className="border-border mt-4 flex items-end justify-between border-t pt-4">
-              <p className="text-muted-foreground text-sm font-medium">Tong cong</p>
+              <p className="text-muted-foreground text-sm font-medium">Tổng cộng</p>
               <p className="text-foreground text-2xl font-extrabold tracking-tight">
                 {formatCurrency(order.total)}
               </p>
@@ -169,7 +174,7 @@ export const PendingDetailModal = ({
           {order.note && (
             <section className="rounded-xl border border-yellow-400/25 bg-yellow-400/10 p-4">
               <p className="text-xs font-semibold tracking-[0.18em] text-yellow-700">
-                GHI CHU
+                GHI CHÚ
               </p>
               <p className="text-foreground mt-2 text-sm font-medium">
                 {order.note}
@@ -190,7 +195,7 @@ export const PendingDetailModal = ({
               }}
             >
               <XCircle className="h-4 w-4" />
-              Tu choi
+              Từ chối
             </Button>
 
             {scope === 'sale' && !canApprove && !isEscalated && (
@@ -203,7 +208,7 @@ export const PendingDetailModal = ({
                 }}
               >
                 <CheckCircle className="h-4 w-4" />
-                Chuyen manager
+                Chuyển manager
               </Button>
             )}
 
@@ -217,7 +222,7 @@ export const PendingDetailModal = ({
                 }}
               >
                 <CheckCircle className="h-4 w-4" />
-                Tra lai sale
+                Trả lại sale
               </Button>
             )}
 
@@ -230,7 +235,7 @@ export const PendingDetailModal = ({
               }}
             >
               <CheckCircle className="h-4 w-4" />
-              {scope === 'manager' ? 'Manager xac nhan' : 'Xac nhan xu ly'}
+              {scope === 'manager' ? 'Manager xác nhận' : 'Xác nhận xử lý'}
             </Button>
           </div>
         </div>

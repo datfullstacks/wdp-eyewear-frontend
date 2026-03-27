@@ -4,6 +4,7 @@ import type { InventoryItem, InventoryStatus } from '@/types/inventory';
 const PRODUCTS_MAX_LIMIT = 100;
 
 type BackendProductVariant = {
+  _id?: string;
   sku?: string;
   stock?: number;
   options?: Record<string, string>;
@@ -149,6 +150,8 @@ function toInventoryRows(product: BackendProduct): InventoryItem[] {
     return [
       {
         id: productId || sku,
+        productId,
+        variantId: '',
         sku,
         name,
         brand,
@@ -173,6 +176,8 @@ function toInventoryRows(product: BackendProduct): InventoryItem[] {
     const location = variant.warehouseLocation || defaultLocation;
     return {
       id: `${productId || sku}:${variant.sku || idx}`,
+      productId,
+      variantId: String(variant._id || ''),
       sku,
       name,
       brand,
@@ -315,6 +320,24 @@ export const inventoryApi = {
     variants[targetIndex] = { ...variants[targetIndex], stock: args.stock };
 
     await apiClient.put(`/api/products/${productId}`, { variants });
+  },
+
+  createReceipt: async (payload: {
+    storeId: string;
+    supplier: string;
+    warehouseLocation?: string;
+    note?: string;
+    receivedAt?: string;
+    items: Array<{
+      productId: string;
+      variantId: string;
+      quantity: number;
+      sku?: string;
+      variantLabel?: string;
+      note?: string;
+    }>;
+  }): Promise<void> => {
+    await apiClient.post('/api/inventory/receipts', payload);
   },
 };
 

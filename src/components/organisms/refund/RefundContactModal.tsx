@@ -48,10 +48,10 @@ export const RefundContactModal = ({
       <DialogContent className="w-[92vw] max-w-md p-4 sm:p-5">
         <DialogHeader>
           <DialogTitle className="text-foreground text-base font-semibold">
-            Yeu cau bo sung thong tin
+            Yêu cầu bổ sung thông tin
           </DialogTitle>
           <DialogDescription className="text-foreground/70">
-            Chuyen refund {refund?.id} sang trang thai cho khach bo sung
+            Chuyển refund {refund?.id} sang trạng thái chờ khách bổ sung
           </DialogDescription>
         </DialogHeader>
 
@@ -63,14 +63,14 @@ export const RefundContactModal = ({
             </div>
 
             <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-slate-700">
-              Ghi ro thong tin staff dang can khach hang bo sung: ly do, hinh
-              anh, tai khoan nhan tien, hoac xac nhan tinh trang don.
+              Ghi rõ thông tin staff đang cần khách hàng bổ sung: lý do, hình
+              ảnh, tài khoản nhận tiền, hoặc xác nhận tình trạng đơn.
             </div>
 
             <div>
-              <Label className="text-foreground/80">Noi dung yeu cau *</Label>
+              <Label className="text-foreground/80">Nội dung yêu cầu *</Label>
               <Textarea
-                placeholder="Nhap noi dung staff can khach hang bo sung..."
+                placeholder="Nhập nội dung staff cần khách hàng bổ sung..."
                 className="mt-1"
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
@@ -85,14 +85,14 @@ export const RefundContactModal = ({
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
           >
-            Dong
+            Đóng
           </Button>
           <Button
             onClick={() => void handleSubmit()}
             disabled={isSubmitting || !note.trim()}
           >
             <MessageSquareWarning className="mr-2 h-4 w-4" />
-            {isSubmitting ? 'Dang gui...' : 'Gui yeu cau'}
+            {isSubmitting ? 'Đang gửi...' : 'Gửi yêu cầu'}
           </Button>
         </DialogFooter>
       </DialogContent>
