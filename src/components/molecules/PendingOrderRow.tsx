@@ -196,18 +196,24 @@ export const PendingOrderRow = ({
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem>
-              <FileText className="mr-2 h-4 w-4" />
-              Xem đơn thuốc
-            </DropdownMenuItem>
+            {scope !== 'sale' && (
+              <DropdownMenuItem>
+                <FileText className="mr-2 h-4 w-4" />
+                Xem đơn thuốc
+              </DropdownMenuItem>
+            )}
+
             <DropdownMenuItem>
               <Printer className="mr-2 h-4 w-4" />
               In đơn hàng
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Send className="mr-2 h-4 w-4" />
-              Gửi thông báo
-            </DropdownMenuItem>
+
+            {scope !== 'sale' && (
+              <DropdownMenuItem>
+                <Send className="mr-2 h-4 w-4" />
+                Gửi thông báo
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </TableCell>
