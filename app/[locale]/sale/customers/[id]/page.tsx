@@ -1,7 +1,12 @@
 'use client';
 
-import Customers from '@/components/pages/Customers';
+import { CustomerDetailPage } from '@/components/pages/CustomerDetailPage';
 
 export default function SaleCustomerDetailPage() {
-  return <Customers />;
+  return (
+    <CustomerDetailPage
+      backHref="/sale/customers"
+      backLabel="Quay lại danh sách khách hàng"
+    />
+  );
 }
