@@ -6,6 +6,7 @@ import LanguageSelector from '@/components/atoms/LanguageSelector';
 export default function Page() {
   const locale = useLocale();
   const t = useTranslations('landing');
+  const policyLabel = locale === 'vi' ? 'Chính sách' : 'Policies';
 
   return (
     <div style={{ backgroundColor: '#ffffff' }}>
@@ -309,6 +310,18 @@ export default function Page() {
           borderTop: '1px solid #333',
           paddingTop: '24px',
         }}>
+          <p>
+            <a
+              href={`/${locale}/policies`}
+              style={{
+                color: '#b8a368',
+                textDecoration: 'none',
+                fontWeight: 600,
+              }}
+            >
+              {policyLabel}
+            </a>
+          </p>
           <p>{t('footer.copyright')}</p>
           <p style={{ marginTop: '12px' }}>{t('footer.tagline')}</p>
         </div>

@@ -1,7 +1,7 @@
 export interface Policy {
   id: string;
   title: string;
-  category: 'purchase' | 'return' | 'warranty' | 'shipping';
+  category: 'purchase' | 'return' | 'refund' | 'warranty' | 'shipping';
   description: string;
   details: string;
   active: boolean;

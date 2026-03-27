@@ -9,11 +9,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Shield, FileText, Truck, ShoppingCart, Lock, ScrollText } from 'lucide-react';
+import {
+  Banknote,
+  Shield,
+  FileText,
+  Truck,
+  ShoppingCart,
+  Lock,
+  ScrollText,
+} from 'lucide-react';
 
 export interface PolicyFormData {
   title: string;
-  category: 'warranty' | 'return' | 'shipping' | 'purchase' | 'privacy' | 'terms';
+  category:
+    | 'warranty'
+    | 'return'
+    | 'refund'
+    | 'shipping'
+    | 'purchase'
+    | 'privacy'
+    | 'terms';
   summary: string;
   content: string;
   effectiveDate: string;
@@ -34,6 +49,7 @@ interface PolicyFormProps {
 const CATEGORY_OPTIONS = [
   { value: 'warranty', label: 'Bảo hành', icon: Shield, color: 'text-blue-600' },
   { value: 'return', label: 'Đổi trả', icon: FileText, color: 'text-green-600' },
+  { value: 'refund', label: 'Hoàn tiền', icon: Banknote, color: 'text-emerald-600' },
   { value: 'shipping', label: 'Vận chuyển', icon: Truck, color: 'text-purple-600' },
   { value: 'purchase', label: 'Mua hàng', icon: ShoppingCart, color: 'text-amber-600' },
   { value: 'privacy', label: 'Bảo mật', icon: Lock, color: 'text-red-600' },
