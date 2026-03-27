@@ -9,6 +9,7 @@ import { SearchBar } from '@/components/molecules/SearchBar';
 import { Header } from '@/components/organisms/Header';
 import { RecentOrdersTable } from '@/components/organisms/RecentOrdersTable';
 import { Button } from '@/components/ui/button';
+import { buildDetailPath } from '@/hooks/useDetailRoute';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +22,7 @@ import {
 
 const Orders = () => {
   const t = useTranslations('manager.orders');
+  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<

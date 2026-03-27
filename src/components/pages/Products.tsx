@@ -62,6 +62,7 @@ const PAGE_SIZE_OPTIONS = [20, 50, 100] as const;
 
 const Products = () => {
   const t = useTranslations('manager.products');
+  const { detailId, openDetail, closeDetail } = useDetailRoute();
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);

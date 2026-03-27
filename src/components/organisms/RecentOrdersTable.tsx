@@ -51,8 +51,10 @@ export const RecentOrdersTable = ({
   statusFilter = 'all',
   filter,
   emptyMessage,
+  detailHref,
 }: RecentOrdersTableProps) => {
   const t = useTranslations('manager.orders');
+  const router = useRouter();
 
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);

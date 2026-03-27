@@ -158,6 +158,7 @@ function getApprovalBreakdown(refund: RefundRequest): Partial<RefundBreakdown> {
 
 const Refunds = ({ scope = 'sale' }: RefundsProps) => {
   const t = useTranslations('manager.refunds');
+  const { detailId, openDetail, closeDetail } = useDetailRoute();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [methodFilter, setMethodFilter] = useState<string>('all');

@@ -77,6 +77,7 @@ export default function OrdersPending() {
   const scope: 'sale' | 'manager' = pathname?.includes('/manager/')
     ? 'manager'
     : 'sale';
+  const { detailId, openDetail, closeDetail } = useDetailRoute();
 
   const [orders, setOrders] = useState<PendingOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);

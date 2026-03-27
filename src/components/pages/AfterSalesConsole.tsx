@@ -416,6 +416,7 @@ function TicketDetailDialog({
 export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope }) {
   const t = useTranslations('manager.afterSales');
   const tStatus = useTranslations('manager.afterSales.status');
+  const { detailId, openDetail, closeDetail } = useDetailRoute();
   const tabs = TAB_CONFIG[scope];
   const scopeKeys = SCOPE_KEYS[scope];
   const [activeTab, setActiveTab] = useState<ConsoleTab>(tabs[0].value);
@@ -713,7 +714,7 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
                               {formatDateTime(ticket.lastMessageAt || ticket.updatedAt)}
                             </td>
                             <td className="px-4 py-3 text-right">
-                              <Button variant="outline" size="sm" onClick={() => void openTicketDetail(ticket)}>
+                              <Button variant="outline" size="sm" onClick={() => void openDetail(ticket.id)}>
                                 {t('table.open')}
                               </Button>
                             </td>

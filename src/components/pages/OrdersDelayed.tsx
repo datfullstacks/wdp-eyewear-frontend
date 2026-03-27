@@ -35,6 +35,7 @@ const ITEMS_PER_PAGE = 10;
 
 export default function OrdersDelayed() {
   const t = useTranslations('manager.delayed');
+  const { detailId, openDetail, closeDetail } = useDetailRoute();
   const [orders, setOrders] = useState<DelayedOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
