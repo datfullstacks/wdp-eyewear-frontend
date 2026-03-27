@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Filter } from 'lucide-react';
 
 import { SearchBar } from '@/components/molecules/SearchBar';
@@ -16,6 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { buildDetailPath } from '@/hooks/useDetailRoute';
 
 const statusFilters = [
   { key: 'all', label: 'Tất cả' },
@@ -26,6 +28,7 @@ const statusFilters = [
 ];
 
 const Orders = () => {
+  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<
@@ -95,7 +98,11 @@ const Orders = () => {
           </div>
         </div>
 
-        <RecentOrdersTable searchTerm={searchTerm} statusFilter={statusFilter} />
+        <RecentOrdersTable
+          searchTerm={searchTerm}
+          statusFilter={statusFilter}
+          detailHref={(order) => buildDetailPath(pathname, order.id)}
+        />
       </div>
     </>
   );

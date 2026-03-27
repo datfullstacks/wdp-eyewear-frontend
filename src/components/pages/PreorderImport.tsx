@@ -41,6 +41,7 @@ import type {
   ImportProductOption,
 } from '@/components/organisms/preorder-import';
 import type { PreorderBatch } from '@/types/preorderImport';
+import { useDetailRoute } from '@/hooks/useDetailRoute';
 
 const PAGE_SIZE_OPTIONS = [20, 50, 100] as const;
 
@@ -116,6 +117,7 @@ function buildInitialReceiveQuantities(batch: PreorderBatch | null) {
 }
 
 const PreorderImport = () => {
+  const { detailId, openDetail, closeDetail } = useDetailRoute();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [supplierFilter, setSupplierFilter] = useState<string>('all');
@@ -312,9 +314,38 @@ const PreorderImport = () => {
     loadPageData(currentPage);
   }, [currentPage, searchTerm, statusFilter, supplierFilter, pageSize]);
 
+  useEffect(() => {
+    if (!detailId) {
+      setIsDetailOpen(false);
+      return;
+    }
+
+    const matchedBatch = batches.find((batch) => batch.id === detailId);
+    if (matchedBatch) {
+      setSelectedBatch(matchedBatch);
+      setIsDetailOpen(true);
+    }
+
+    let cancelled = false;
+
+    void loadBatchDetail(detailId).then((batch) => {
+      if (cancelled) return;
+      if (batch) {
+        setSelectedBatch(batch);
+        setIsDetailOpen(true);
+        return;
+      }
+      setSelectedBatch(null);
+      setIsDetailOpen(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [detailId]);
+
   const handleOpenDetail = async (batch: PreorderBatch) => {
-    setSelectedBatch(batch);
-    setIsDetailOpen(true);
+    openDetail(batch.id);
     await loadBatchDetail(batch.id);
   };
 
@@ -717,7 +748,15 @@ const PreorderImport = () => {
       <ImportDetailModal
         batch={selectedBatch}
         open={isDetailOpen}
-        onOpenChange={setIsDetailOpen}
+        onOpenChange={(open) => {
+          setIsDetailOpen(open);
+          if (open) return;
+          if (detailId) {
+            closeDetail();
+            return;
+          }
+          setSelectedBatch(null);
+        }}
         onReceive={handleOpenReceive}
       />
 

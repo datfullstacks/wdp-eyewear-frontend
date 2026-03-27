@@ -306,8 +306,8 @@ function toPrescriptionData(item: OrderItem): PrescriptionData | undefined {
     pd: item.prescription.pd || '',
     addRight: item.prescription.rightEye.add || '',
     addLeft: item.prescription.leftEye.add || '',
-    lensType: '',
-    coating: '',
+    lensType: item.prescription.lensType || '',
+    coating: item.prescription.coating || '',
     notes: item.prescription.note || '',
   };
 }

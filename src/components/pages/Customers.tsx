@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Clock, Filter, Phone, UserPlus, Users } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useDetailRoute } from '@/hooks/useDetailRoute';
 
 type SegmentFilter = 'all' | 'has_phone' | 'no_phone' | 'google' | 'credentials';
 
@@ -39,6 +40,7 @@ function isWithinDays(value?: string, days = 30) {
 }
 
 const Customers = () => {
+  const { detailId, openDetail, closeDetail } = useDetailRoute();
   const [searchTerm, setSearchTerm] = useState('');
   const [segmentFilter, setSegmentFilter] = useState<SegmentFilter>('all');
   const [customers, setCustomers] = useState<User[]>([]);
@@ -167,10 +169,16 @@ const Customers = () => {
     setCurrentPage(1);
   }, [searchTerm, segmentFilter]);
 
-  const handleViewDetails = (id: string) => {
-    setDetailUserId(id);
+  useEffect(() => {
+    if (!detailId) {
+      setDetailOpen(false);
+      setDetailUserId(null);
+      return;
+    }
+
+    setDetailUserId(detailId);
     setDetailOpen(true);
-  };
+  }, [detailId]);
 
   return (
     <>
@@ -274,7 +282,10 @@ const Customers = () => {
           </div>
         ) : (
           <>
-            <CustomerList customers={paginatedCustomers} onViewDetails={handleViewDetails} />
+            <CustomerList
+              customers={paginatedCustomers}
+              onViewDetails={openDetail}
+            />
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
@@ -291,7 +302,12 @@ const Customers = () => {
         open={detailOpen}
         onOpenChange={(open) => {
           setDetailOpen(open);
-          if (!open) setDetailUserId(null);
+          if (open) return;
+          if (detailId) {
+            closeDetail();
+            return;
+          }
+          setDetailUserId(null);
         }}
         userId={detailUserId}
       />

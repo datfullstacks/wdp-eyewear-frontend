@@ -23,6 +23,7 @@ import {
   RxOrderTable,
   RxStatsGrid,
 } from '@/components/organisms/rx-prescription';
+import { useDetailRoute } from '@/hooks/useDetailRoute';
 import { useStatusRealtimeReload } from '@/hooks/useStatusRealtime';
 import { toPrescriptionOrder } from '@/lib/orderAdapters';
 import { canOperationHandlePrescription } from '@/lib/orderWorkflow';
@@ -49,6 +50,8 @@ function buildPrescriptionPayload(form: PrescriptionData) {
       add: form.addLeft || '',
     },
     pd: form.pd || '',
+    lensType: form.lensType || '',
+    coating: form.coating || '',
     note: form.notes || '',
     attachmentUrls: [],
   };
@@ -88,6 +91,7 @@ function getNextPrescriptionOpsStage(
 }
 
 export default function OrdersPrescription() {
+  const { detailId, openDetail, closeDetail } = useDetailRoute();
   const [orders, setOrders] = useState<PrescriptionOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -133,6 +137,25 @@ export default function OrdersPrescription() {
     reload: loadOrders,
   });
 
+  useEffect(() => {
+    if (!detailId) {
+      setDetailOpen(false);
+      return;
+    }
+
+    const matchedOrder = orders.find((order) => order.id === detailId);
+    if (matchedOrder) {
+      setSelectedOrder(matchedOrder);
+      setDetailOpen(true);
+      return;
+    }
+
+    if (!isLoading) {
+      setSelectedOrder(null);
+      setDetailOpen(false);
+    }
+  }, [detailId, isLoading, orders]);
+
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
       order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -155,8 +178,7 @@ export default function OrdersPrescription() {
   };
 
   const handleOpenDetail = (order: PrescriptionOrder) => {
-    setSelectedOrder(order);
-    setDetailOpen(true);
+    openDetail(order.id);
   };
 
   const handleOpenInputPrescription = (order: PrescriptionOrder) => {
@@ -395,7 +417,15 @@ export default function OrdersPrescription() {
 
         <RxDetailModal
           open={detailOpen}
-          onOpenChange={setDetailOpen}
+          onOpenChange={(open) => {
+            setDetailOpen(open);
+            if (open) return;
+            if (detailId) {
+              closeDetail();
+              return;
+            }
+            setSelectedOrder(null);
+          }}
           order={selectedOrder}
           onInputPrescription={handleOpenInputPrescription}
         />
