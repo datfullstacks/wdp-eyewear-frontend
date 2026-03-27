@@ -5,7 +5,10 @@ import { useRouter, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Header } from '@/components/organisms/Header';
-import { ProductForm, type ProductFormState } from '@/components/organisms/manager';
+import {
+  ProductForm,
+  type ProductFormState,
+} from '@/components/organisms/manager';
 import { Button } from '@/components/atoms';
 import { Card } from '@/components/ui/card';
 import {
@@ -18,12 +21,31 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { productApi, uploadApi, type ProductDetail, type ProductMediaAsset } from '@/api';
-import { buildProductFormState, buildUpsertPayload, EMPTY_PRODUCT_FORM } from '@/lib/productHelpers';
-import { AlertTriangle, ArrowLeft, Edit, Loader2, Package, Trash2, X, Save } from 'lucide-react';
+import {
+  productApi,
+  uploadApi,
+  type ProductDetail,
+  type ProductMediaAsset,
+} from '@/api';
+import {
+  buildProductFormState,
+  buildUpsertPayload,
+  EMPTY_PRODUCT_FORM,
+} from '@/lib/productHelpers';
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Edit,
+  Loader2,
+  Package,
+  Trash2,
+  X,
+  Save,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400';
+const FALLBACK_IMAGE =
+  'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400';
 
 export default function ProductDetailPage() {
   const router = useRouter();
@@ -40,7 +62,8 @@ export default function ProductDetailPage() {
   const [uploadingKey, setUploadingKey] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const [formData, setFormData] = useState<ProductFormState>(EMPTY_PRODUCT_FORM);
+  const [formData, setFormData] =
+    useState<ProductFormState>(EMPTY_PRODUCT_FORM);
 
   const loadProduct = useCallback(async () => {
     try {
@@ -50,7 +73,9 @@ export default function ProductDetailPage() {
       setProduct(data);
       populateForm(data);
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Failed to load product');
+      setApiError(
+        error instanceof Error ? error.message : 'Failed to load product'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -94,7 +119,9 @@ export default function ProductDetailPage() {
           setFormData((prev) => ({ ...prev, thumbnailUrl: result.url }));
         }
       } catch (error) {
-        setApiError(`Upload ${role} failed: ${error instanceof Error ? error.message : 'Unknown'}`);
+        setApiError(
+          `Upload ${role} failed: ${error instanceof Error ? error.message : 'Unknown'}`
+        );
       } finally {
         setUploadingKey('');
       }
@@ -117,7 +144,9 @@ export default function ProductDetailPage() {
         galleryUrls: [...prev.galleryUrls, ...uploadedUrls],
       }));
     } catch (error) {
-      setApiError(`Upload gallery failed: ${error instanceof Error ? error.message : 'Unknown'}`);
+      setApiError(
+        `Upload gallery failed: ${error instanceof Error ? error.message : 'Unknown'}`
+      );
     } finally {
       setUploadingKey('');
     }
@@ -133,7 +162,7 @@ export default function ProductDetailPage() {
   const handleUploadVariantAsset = useCallback(
     async (
       file: File,
-      variantId: string,
+      variantIndex: number,
       field: 'imageUrl' | 'posterUrl' | 'glbUrl'
     ) => {
       const uploadSuffix =
@@ -142,15 +171,17 @@ export default function ProductDetailPage() {
           : field === 'posterUrl'
             ? 'poster'
             : 'glb';
-      const uploadKey = `variant-${variantId || 'unknown'}-${uploadSuffix}`;
+      const uploadKey = `variant-${variantIndex}-${uploadSuffix}`;
       setUploadingKey(uploadKey);
       setApiError('');
       try {
-        const result = await uploadApi.uploadFile(file, { folder: 'products/variants' });
+        const result = await uploadApi.uploadFile(file, {
+          folder: 'products/variants',
+        });
         setFormData((prev) => ({
           ...prev,
           variants: prev.variants.map((variant, index) =>
-            variant.id === variantId
+            index === variantIndex
               ? { ...variant, [field]: result.url }
               : variant
           ),
@@ -173,7 +204,12 @@ export default function ProductDetailPage() {
     const hasAnyStock = Boolean(
       formData.stock || formData.variants.some((variant) => variant.stock)
     );
-    if (!formData.name.trim() || !formData.category || !hasAnyPrice || !hasAnyStock) {
+    if (
+      !formData.name.trim() ||
+      !formData.category ||
+      !hasAnyPrice ||
+      !hasAnyStock
+    ) {
       setApiError(tDetail('fillRequired'));
       return;
     }
@@ -182,12 +218,16 @@ export default function ProductDetailPage() {
     setApiError('');
 
     try {
-      const payload = buildUpsertPayload(formData, { existingProduct: product });
+      const payload = buildUpsertPayload(formData, {
+        existingProduct: product,
+      });
       await productApi.update(productId, payload);
       await loadProduct();
       setIsEditing(false);
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : tDetail('updateFailed'));
+      setApiError(
+        error instanceof Error ? error.message : tDetail('updateFailed')
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -196,7 +236,8 @@ export default function ProductDetailPage() {
   const handleToggleStatus = async () => {
     if (!product) return;
     try {
-      const newStatus: 'active' | 'inactive' = product.status === 'active' ? 'inactive' : 'active';
+      const newStatus: 'active' | 'inactive' =
+        product.status === 'active' ? 'inactive' : 'active';
       await productApi.updateStatus(productId, newStatus);
       await loadProduct();
     } catch (error) {
@@ -227,7 +268,10 @@ export default function ProductDetailPage() {
         <div className="text-center">
           <AlertTriangle className="mx-auto h-12 w-12 text-red-600" />
           <h2 className="mt-4 text-xl font-semibold">{tDetail('notFound')}</h2>
-          <Button onClick={() => router.push('/manager/products')} className="mt-4">
+          <Button
+            onClick={() => router.push('/manager/products')}
+            className="mt-4"
+          >
             {tDetail('backToList')}
           </Button>
         </div>
@@ -247,7 +291,7 @@ export default function ProductDetailPage() {
         <div className="flex items-center justify-between">
           <Link
             href="/manager/products"
-            className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-amber-600 transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition-colors hover:text-amber-600"
           >
             <ArrowLeft className="h-4 w-4" />
             {tDetail('backToList')}
@@ -262,13 +306,15 @@ export default function ProductDetailPage() {
                   onClick={handleToggleStatus}
                   className="text-sm"
                 >
-                  {product.status === 'active' ? tDetail('deactivate') : tDetail('activate')}
+                  {product.status === 'active'
+                    ? tDetail('deactivate')
+                    : tDetail('activate')}
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setIsDeleteDialogOpen(true)}
-                  className="text-sm text-red-600 border-red-200 hover:bg-red-50"
+                  className="border-red-200 text-sm text-red-600 hover:bg-red-50"
                 >
                   <Trash2 className="mr-1 h-4 w-4" />
                   {tDetail('delete')}
@@ -364,28 +410,46 @@ export default function ProductDetailPage() {
 
             {/* Product Details */}
             <Card className="p-6">
-              <h3 className="mb-4 text-lg font-semibold">{tDetail('detailInfo')}</h3>
+              <h3 className="mb-4 text-lg font-semibold">
+                {tDetail('detailInfo')}
+              </h3>
               <dl className="space-y-3">
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">{tDetail('productName')}</dt>
-                  <dd className="mt-1 text-base text-gray-900">{product.name}</dd>
+                  <dt className="text-sm font-medium text-gray-500">
+                    {tDetail('productName')}
+                  </dt>
+                  <dd className="mt-1 text-base text-gray-900">
+                    {product.name}
+                  </dd>
                 </div>
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">{tDetail('brand')}</dt>
-                  <dd className="mt-1 text-base text-gray-900">{product.brand}</dd>
+                  <dt className="text-sm font-medium text-gray-500">
+                    {tDetail('brand')}
+                  </dt>
+                  <dd className="mt-1 text-base text-gray-900">
+                    {product.brand}
+                  </dd>
                 </div>
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">{tDetail('category')}</dt>
-                  <dd className="mt-1 text-base text-gray-900">{product.category}</dd>
+                  <dt className="text-sm font-medium text-gray-500">
+                    {tDetail('category')}
+                  </dt>
+                  <dd className="mt-1 text-base text-gray-900">
+                    {product.category}
+                  </dd>
                 </div>
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">{tDetail('price')}</dt>
+                  <dt className="text-sm font-medium text-gray-500">
+                    {tDetail('price')}
+                  </dt>
                   <dd className="mt-1 text-lg font-semibold text-gray-900">
                     {product.price.toLocaleString()} VND
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">{tDetail('stock')}</dt>
+                  <dt className="text-sm font-medium text-gray-500">
+                    {tDetail('stock')}
+                  </dt>
                   <dd className="mt-1">
                     <span
                       className={cn(
@@ -400,7 +464,9 @@ export default function ProductDetailPage() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">{tDetail('status')}</dt>
+                  <dt className="text-sm font-medium text-gray-500">
+                    {tDetail('status')}
+                  </dt>
                   <dd className="mt-1">
                     <span
                       className={cn(
@@ -410,14 +476,20 @@ export default function ProductDetailPage() {
                           : 'bg-gray-100 text-gray-700'
                       )}
                     >
-                      {product.status === 'active' ? t('table.active') : t('table.inactive')}
+                      {product.status === 'active'
+                        ? t('table.active')
+                        : t('table.inactive')}
                     </span>
                   </dd>
                 </div>
                 {product.description && (
                   <div>
-                    <dt className="text-sm font-medium text-gray-500">{tDetail('description')}</dt>
-                    <dd className="mt-1 text-base text-gray-900">{product.description}</dd>
+                    <dt className="text-sm font-medium text-gray-500">
+                      {tDetail('description')}
+                    </dt>
+                    <dd className="mt-1 text-base text-gray-900">
+                      {product.description}
+                    </dd>
                   </div>
                 )}
               </dl>
@@ -427,7 +499,10 @@ export default function ProductDetailPage() {
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('deleteConfirm.title')}</AlertDialogTitle>
@@ -437,7 +512,9 @@ export default function ProductDetailPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('deleteConfirm.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>{t('deleteConfirm.confirm')}</AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete}>
+              {t('deleteConfirm.confirm')}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

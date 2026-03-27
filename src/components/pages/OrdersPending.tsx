@@ -308,12 +308,17 @@ export default function OrdersPending() {
     try {
       setIsSubmittingAction(true);
       setErrorMessage(null);
-      await Promise.all(targetIds.map((id) => orderApi.updateStatus(id, 'confirmed')));
+      await Promise.all(
+        targetIds.map((id) => orderApi.updateStatus(id, 'confirmed'))
+      );
       await loadPendingOrders();
       setSelectedOrders([]);
     } catch (error) {
       setErrorMessage(
-        extractApiErrorMessage(error, 'Không thể duyệt một hoặc nhiều đơn hàng.')
+        extractApiErrorMessage(
+          error,
+          'Không thể duyệt một hoặc nhiều đơn hàng.'
+        )
       );
     } finally {
       setIsSubmittingAction(false);
@@ -371,7 +376,9 @@ export default function OrdersPending() {
                     Tất cả
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => setCreatedDateFilter(toLocalIsoDate(new Date()))}
+                    onClick={() =>
+                      setCreatedDateFilter(toLocalIsoDate(new Date()))
+                    }
                   >
                     Hôm nay
                   </DropdownMenuItem>
@@ -383,8 +390,10 @@ export default function OrdersPending() {
                     <input
                       type="date"
                       value={createdDateFilter}
-                      onChange={(event) => setCreatedDateFilter(event.target.value)}
-                      className="border-input bg-background text-foreground h-9 w-full rounded-md border px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:ring-offset-2"
+                      onChange={(event) =>
+                        setCreatedDateFilter(event.target.value)
+                      }
+                      className="border-input bg-background text-foreground h-9 w-full rounded-md border px-2 text-sm focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:ring-offset-2 focus-visible:outline-none"
                     />
                   </div>
                 </DropdownMenuContent>
@@ -429,7 +438,9 @@ export default function OrdersPending() {
         </div>
 
         {isLoading && (
-          <p className="text-foreground/70 text-sm">Đang tải dữ liệu đơn hàng...</p>
+          <p className="text-foreground/70 text-sm">
+            Đang tải dữ liệu đơn hàng...
+          </p>
         )}
         {!isLoading && errorMessage && (
           <p className="text-destructive text-sm">{errorMessage}</p>
