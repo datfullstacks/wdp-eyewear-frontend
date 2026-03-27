@@ -37,6 +37,11 @@ export const RefundContactModal = ({
     }
   }, [open]);
 
+  const helperText =
+    'Ghi rõ thông tin sale đang cần khách hàng bổ sung: lý do, hình ảnh, tài khoản nhận tiền, hoặc xác nhận tình trạng đơn.';
+  const inputPlaceholder =
+    'Nhập nội dung sale cần khách hàng bổ sung...';
+
   const handleSubmit = async () => {
     const trimmed = note.trim();
     if (!trimmed) return;
@@ -62,15 +67,19 @@ export const RefundContactModal = ({
               <p className="text-foreground/70">{refund.customerPhone}</p>
             </div>
 
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-slate-700">
-              Ghi rõ thông tin staff đang cần khách hàng bổ sung: lý do, hình
+            <div
+              className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-slate-700"
+              title={helperText}
+            >
+              Ghi rõ thông tin sale đang cần khách hàng bổ sung: lý do, hình
               ảnh, tài khoản nhận tiền, hoặc xác nhận tình trạng đơn.
             </div>
 
             <div>
               <Label className="text-foreground/80">Nội dung yêu cầu *</Label>
               <Textarea
-                placeholder="Nhập nội dung staff cần khách hàng bổ sung..."
+                aria-label={inputPlaceholder}
+                placeholder="Nhập nội dung sale cần khách hàng bổ sung..."
                 className="mt-1"
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
