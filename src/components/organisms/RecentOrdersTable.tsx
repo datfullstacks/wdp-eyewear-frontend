@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
@@ -41,6 +42,7 @@ type RecentOrdersTableProps = {
   statusFilter?: 'all' | OrderStatus;
   filter?: (order: OrderRecord) => boolean;
   emptyMessage?: string;
+  detailHref?: (order: OrderRecord) => string | null;
 };
 
 export const RecentOrdersTable = ({
@@ -124,6 +126,12 @@ export const RecentOrdersTable = ({
   }, [searchTerm, statusFilter]);
 
   const handleOpenDetail = (order: OrderRecord) => {
+    const href = detailHref?.(order);
+    if (href) {
+      router.push(href);
+      return;
+    }
+
     setDetailOrder(order);
     setDetailOpen(true);
   };

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Filter } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -97,7 +98,11 @@ const Orders = () => {
           </div>
         </div>
 
-        <RecentOrdersTable searchTerm={searchTerm} statusFilter={statusFilter} />
+        <RecentOrdersTable
+          searchTerm={searchTerm}
+          statusFilter={statusFilter}
+          detailHref={(order) => buildDetailPath(pathname, order.id)}
+        />
       </div>
     </>
   );

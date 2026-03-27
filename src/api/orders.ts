@@ -157,6 +157,8 @@ interface BackendItemCustomization {
       add?: string;
     };
     pd?: string;
+    lensType?: string;
+    coating?: string;
     note?: string;
     attachmentUrls?: string[];
   };
@@ -324,6 +326,8 @@ export interface OrderItem {
       add: string;
     };
     pd: string;
+    lensType: string;
+    coating: string;
     note: string;
     attachmentUrls: string[];
   } | null;
@@ -945,6 +949,8 @@ function mapOrderItem(raw: BackendOrderItem): OrderItem {
             add: String(leftEye?.add || '').trim(),
           },
           pd: String(prescriptionPayload?.pd || '').trim(),
+          lensType: String(prescriptionPayload?.lensType || '').trim(),
+          coating: String(prescriptionPayload?.coating || '').trim(),
           note: String(prescriptionPayload?.note || '').trim(),
           attachmentUrls,
         }
@@ -1374,6 +1380,8 @@ export const orderApi = {
             add?: string;
           };
           pd?: string;
+          lensType?: string;
+          coating?: string;
           note?: string;
           attachmentUrls?: string[];
         };

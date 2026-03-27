@@ -37,10 +37,12 @@ import {
   InventoryItem,
   toInventoryDisplayStatus,
 } from '@/types/inventory';
+import { useDetailRoute } from '@/hooks/useDetailRoute';
 
 const PAGE_SIZE_OPTIONS = [20, 50, 100] as const;
 
 const Inventory = () => {
+  const { detailId, openDetail, closeDetail } = useDetailRoute();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -218,14 +220,33 @@ const Inventory = () => {
     setCurrentPage((page) => Math.min(Math.max(1, page), totalPages));
   }, [totalPages]);
 
+  useEffect(() => {
+    if (!detailId) {
+      setIsDetailOpen(false);
+      setSelectedItem(null);
+      return;
+    }
+
+    const matchedItem = items.find((item) => item.id === detailId);
+    if (matchedItem) {
+      setSelectedItem(matchedItem);
+      setIsDetailOpen(true);
+      return;
+    }
+
+    if (!isLoading) {
+      setSelectedItem(null);
+      setIsDetailOpen(false);
+    }
+  }, [detailId, isLoading, items]);
+
   const paginatedInventory = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return filteredInventory.slice(start, start + pageSize);
   }, [currentPage, filteredInventory, pageSize]);
 
   const handleViewDetail = (item: InventoryItem) => {
-    setSelectedItem(item);
-    setIsDetailOpen(true);
+    openDetail(item.id);
   };
 
   const handleEditStock = (item: InventoryItem) => {
@@ -481,7 +502,15 @@ const Inventory = () => {
         <InventoryDetailModal
           item={selectedItem}
           open={isDetailOpen}
-          onOpenChange={setIsDetailOpen}
+          onOpenChange={(open) => {
+            setIsDetailOpen(open);
+            if (open) return;
+            if (detailId) {
+              closeDetail();
+              return;
+            }
+            setSelectedItem(null);
+          }}
         />
 
         <InventoryEditModal

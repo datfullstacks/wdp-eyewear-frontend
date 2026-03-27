@@ -100,12 +100,29 @@ export const RefundStatsGrid = ({
             isAmount: true,
           },
         ];
+  const visibleItems =
+    scope === 'operation'
+      ? [
+          {
+            label: 'Chờ nhận hàng',
+            value: String(stats.returnPending),
+            icon: PackageCheck,
+            isAmount: false,
+          },
+          {
+            label: 'Tổng cần kiểm tra',
+            value: formatCurrency(stats.totalAmount),
+            icon: TrendingDown,
+            isAmount: true,
+          },
+        ]
+      : items;
 
   return (
     <div
-      className={`grid grid-cols-2 gap-2 md:grid-cols-3 ${scope === 'operation' ? 'xl:grid-cols-5' : 'xl:grid-cols-6'}`}
+      className={`grid grid-cols-2 gap-2 md:grid-cols-3 ${scope === 'operation' ? 'xl:grid-cols-2' : 'xl:grid-cols-6'}`}
     >
-      {items.map((item) => (
+      {visibleItems.map((item) => (
         <StatCard
           key={item.label}
           icon={item.icon}

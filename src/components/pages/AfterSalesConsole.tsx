@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useDetailRoute } from '@/hooks/useDetailRoute';
 import { Textarea } from '@/components/ui/textarea';
 
 type AfterSalesScope = 'sale' | 'operation' | 'manager';
@@ -317,11 +318,10 @@ function TicketDetailDialog({
                 ticket.messages.map((message: SupportMessageRecord) => (
                   <div
                     key={message.id}
-                    className={`rounded-lg border p-3 text-sm ${
-                      message.sender === 'staff'
+                    className={`rounded-lg border p-3 text-sm ${message.sender === 'staff'
                         ? 'border-amber-200 bg-amber-50'
                         : 'border-slate-200 bg-slate-50'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-between gap-3">
                       <span className="font-medium text-gray-900">
@@ -486,12 +486,15 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
     setSuccessMessage('');
   }, [activeTab]);
 
-  const openTicketDetail = async (ticket: SupportTicketRecord) => {
+  const openTicketDetail = useCallback(async (ticketId: string) => {
     try {
       setDetailLoading(true);
       setDetailOpen(true);
-      setSelectedTicket(ticket);
-      const detail = await supportApi.getTicket(ticket.id);
+      const detail = await supportApi.getTicket(ticketId);
+      const nextTab = tabs.find((tab) => tab.category === detail.category)?.value;
+      if (nextTab) {
+        setActiveTab(nextTab);
+      }
       setSelectedTicket(detail);
     } catch (error) {
       setErrorMessage(
@@ -500,7 +503,26 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
     } finally {
       setDetailLoading(false);
     }
-  };
+  }, [tabs]);
+
+  useEffect(() => {
+    if (!detailId) {
+      setDetailOpen(false);
+      setSelectedTicket(null);
+      return;
+    }
+
+    const matchedTicket = tickets.find((ticket) => ticket.id === detailId);
+    if (matchedTicket) {
+      setSelectedTicket(matchedTicket);
+      const nextTab = tabs.find((tab) => tab.category === matchedTicket.category)?.value;
+      if (nextTab) {
+        setActiveTab(nextTab);
+      }
+    }
+
+    void openTicketDetail(detailId);
+  }, [detailId, openTicketDetail, tabs, tickets]);
 
   const refreshSelectedTicket = async (ticketId: string) => {
     const detail = await supportApi.getTicket(ticketId);
@@ -616,7 +638,7 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
                     className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
                   >
                     <option value="all">{t('allStatus')}</option>
-                    {(['open','in_progress','resolved','closed','requested','under_review','approved','rejected','in_service','completed'] as const).map((key) => (
+                    {(['open', 'in_progress', 'resolved', 'closed', 'requested', 'under_review', 'approved', 'rejected', 'in_service', 'completed'] as const).map((key) => (
                       <option key={key} value={key}>{tStatus(key)}</option>
                     ))}
                   </select>
@@ -692,15 +714,15 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
                             </td>
                             <td className="px-4 py-3 text-right">
                               <Button variant="outline" size="sm" onClick={() => void openTicketDetail(ticket)}>
-                            {t('table.open')}
-                          </Button>
+                                {t('table.open')}
+                              </Button>
                             </td>
                           </tr>
                         ))}
                         {tickets.length === 0 ? (
                           <tr>
                             <td colSpan={6} className="px-4 py-10 text-center text-sm text-gray-500">
-                            {t('table.noData')}
+                              {t('table.noData')}
                             </td>
                           </tr>
                         ) : null}
@@ -723,7 +745,15 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
       <TicketDetailDialog
         ticket={selectedTicket}
         open={detailOpen}
-        onOpenChange={setDetailOpen}
+        onOpenChange={(open) => {
+          setDetailOpen(open);
+          if (open) return;
+          if (detailId) {
+            closeDetail();
+            return;
+          }
+          setSelectedTicket(null);
+        }}
         scope={scope}
         onReply={handleReply}
         onUpdateStatus={handleStatusUpdate}

@@ -20,6 +20,7 @@ interface RxContactModalProps {
   contactNote: string;
   onContactNoteChange: (note: string) => void;
   onSend: () => void;
+  isSubmitting?: boolean;
 }
 
 export const RxContactModal = ({
@@ -29,6 +30,7 @@ export const RxContactModal = ({
   contactNote,
   onContactNoteChange,
   onSend,
+  isSubmitting = false,
 }: RxContactModalProps) => {
   if (!order) return null;
 
@@ -37,10 +39,10 @@ export const RxContactModal = ({
       <DialogContent className="max-w-md w-[92vw] p-4 sm:p-5">
         <DialogHeader>
           <DialogTitle className="text-foreground text-base font-semibold">
-            Liên hệ khách hàng
+            Lien he khach hang
           </DialogTitle>
           <DialogDescription className="text-foreground/70">
-            Gửi thông báo yêu cầu bổ sung thông số mắt
+            Gui ticket support de xac nhan them toa kinh truoc khi vao gia cong
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -51,28 +53,32 @@ export const RxContactModal = ({
             </p>
           </div>
           <div className="space-y-2">
-            <Label className="text-foreground/80">Nội dung tin nhắn</Label>
+            <Label className="text-foreground/80">Noi dung tin nhan</Label>
             <Textarea
               value={contactNote}
               onChange={(e) => onContactNoteChange(e.target.value)}
-              placeholder="Xin chào, chúng tôi cần thông số mắt của bạn để gia công tròng kính..."
+              placeholder="Operations can xac nhan them toa kinh truoc khi dua don vao gia cong..."
               rows={4}
             />
           </div>
           <div className="flex gap-2">
             <Checkbox id="sms" defaultChecked />
-            <Label htmlFor="sms">Gửi SMS</Label>
+            <Label htmlFor="sms">Gui SMS</Label>
             <Checkbox id="email" defaultChecked />
-            <Label htmlFor="email">Gửi Email</Label>
+            <Label htmlFor="email">Gui Email</Label>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Hủy
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+          >
+            Huy
           </Button>
-          <Button onClick={onSend}>
+          <Button onClick={onSend} disabled={isSubmitting}>
             <Send className="mr-2 h-4 w-4" />
-            Gửi thông báo
+            {isSubmitting ? 'Dang gui...' : 'Gui thong bao'}
           </Button>
         </DialogFooter>
       </DialogContent>

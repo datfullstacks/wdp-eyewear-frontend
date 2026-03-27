@@ -22,6 +22,7 @@ import { orderApi } from '@/api';
 import { PendingOrder } from '@/types/pending';
 import { toPendingOrder } from '@/lib/orderAdapters';
 import { useStatusRealtimeReload } from '@/hooks/useStatusRealtime';
+import { useDetailRoute } from '@/hooks/useDetailRoute';
 import { needsActionOrder } from '@/lib/orderWorkflow';
 import {
   canManagerApprovePendingOrder,
@@ -148,6 +149,23 @@ export default function OrdersPending() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, createdDateFilter]);
+
+  useEffect(() => {
+    if (!detailId) {
+      setDetailModal(null);
+      return;
+    }
+
+    const matchedOrder = orders.find((order) => order.id === detailId);
+    if (matchedOrder) {
+      setDetailModal(matchedOrder);
+      return;
+    }
+
+    if (!isLoading) {
+      setDetailModal(null);
+    }
+  }, [detailId, isLoading, orders]);
 
   const visibleSelectedCount = selectedOrders.filter((id) =>
     paginatedOrders.some((order) => order.id === id)
@@ -355,11 +373,10 @@ export default function OrdersPending() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className={`w-9 px-0 ${
-                      createdDateFilter
+                    className={`w-9 px-0 ${createdDateFilter
                         ? 'border-yellow-400 text-yellow-700 hover:border-yellow-500'
                         : ''
-                    }`}
+                      }`}
                     aria-label={t('filterLabel')}
                   >
                     <Filter className="h-4 w-4" />
@@ -444,7 +461,7 @@ export default function OrdersPending() {
           showEmptyState={!isLoading && !errorMessage}
           onSelectAll={handleSelectAll}
           onSelectOrder={handleSelectOrder}
-          onViewDetail={setDetailModal}
+          onViewDetail={(order) => openDetail(order.id)}
           onProcess={setProcessModal}
           onReject={setRejectModal}
           onEscalate={(order) => {
@@ -469,7 +486,13 @@ export default function OrdersPending() {
       <PendingDetailModal
         scope={scope}
         order={detailModal}
-        onClose={() => setDetailModal(null)}
+        onClose={() => {
+          if (detailId) {
+            closeDetail();
+            return;
+          }
+          setDetailModal(null);
+        }}
         onProcess={setProcessModal}
         onReject={setRejectModal}
         onEscalate={(order) => {

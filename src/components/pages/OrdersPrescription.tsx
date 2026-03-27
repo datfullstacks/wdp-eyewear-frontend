@@ -12,7 +12,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Filter, RefreshCw } from 'lucide-react';
-import { orderApi } from '@/api';
+import { orderApi, supportApi } from '@/api';
+import type { SupportTicketRecord } from '@/api';
 import type { OrderOpsStage } from '@/api/orders';
 import { Header } from '@/components/organisms/Header';
 import {
@@ -23,9 +24,10 @@ import {
   RxOrderTable,
   RxStatsGrid,
 } from '@/components/organisms/rx-prescription';
+import { useDetailRoute } from '@/hooks/useDetailRoute';
 import { useStatusRealtimeReload } from '@/hooks/useStatusRealtime';
 import { toPrescriptionOrder } from '@/lib/orderAdapters';
-import { canOperationHandlePrescription } from '@/lib/orderWorkflow';
+import { isOperationsPrescriptionOrder } from '@/lib/orderWorkflow';
 import {
   emptyPrescriptionForm,
   PrescriptionData,
@@ -49,6 +51,8 @@ function buildPrescriptionPayload(form: PrescriptionData) {
       add: form.addLeft || '',
     },
     pd: form.pd || '',
+    lensType: form.lensType || '',
+    coating: form.coating || '',
     note: form.notes || '',
     attachmentUrls: [],
   };
@@ -87,10 +91,35 @@ function getNextPrescriptionOpsStage(
   }
 }
 
+function buildContactMessage(order: PrescriptionOrder, note: string) {
+  const trimmed = note.trim();
+  if (trimmed.length > 0) {
+    return `[OPS] ${trimmed}`;
+  }
+
+  return `[OPS] Don ${order.orderId} can xac nhan them toa kinh truoc khi dua vao gia cong.`;
+}
+
+function pickLatestTicketId(tickets: SupportTicketRecord[]) {
+  return tickets
+    .slice()
+    .sort((left, right) => {
+      const leftTime = new Date(
+        left.lastMessageAt || left.updatedAt || left.createdAt || 0
+      ).getTime();
+      const rightTime = new Date(
+        right.lastMessageAt || right.updatedAt || right.createdAt || 0
+      ).getTime();
+      return rightTime - leftTime;
+    })[0]?.id;
+}
+
 export default function OrdersPrescription() {
+  const { detailId, openDetail, closeDetail } = useDetailRoute();
   const [orders, setOrders] = useState<PrescriptionOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSubmittingAction, setIsSubmittingAction] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -113,12 +142,12 @@ export default function OrdersPrescription() {
     try {
       const result = await orderApi.getAll({ page: 1, limit: 200 });
       const mapped = result.orders
-        .filter(canOperationHandlePrescription)
+        .filter(isOperationsPrescriptionOrder)
         .map(toPrescriptionOrder)
         .filter((value): value is PrescriptionOrder => value !== null);
       setOrders(mapped);
     } catch {
-      setErrorMessage('Không tải được danh sách đơn prescription.');
+      setErrorMessage('Khong tai duoc danh sach don prescription cho operations.');
     } finally {
       setIsLoading(false);
     }
@@ -129,9 +158,28 @@ export default function OrdersPrescription() {
   }, [loadOrders]);
 
   useStatusRealtimeReload({
-    domains: ['order', 'shipping'],
+    domains: ['order', 'shipping', 'support'],
     reload: loadOrders,
   });
+
+  useEffect(() => {
+    if (!detailId) {
+      setDetailOpen(false);
+      return;
+    }
+
+    const matchedOrder = orders.find((order) => order.id === detailId);
+    if (matchedOrder) {
+      setSelectedOrder(matchedOrder);
+      setDetailOpen(true);
+      return;
+    }
+
+    if (!isLoading) {
+      setSelectedOrder(null);
+      setDetailOpen(false);
+    }
+  }, [detailId, isLoading, orders]);
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -145,22 +193,29 @@ export default function OrdersPrescription() {
 
   const stats = {
     total: orders.length,
-    missing: orders.filter((o) => o.prescriptionStatus === 'missing').length,
-    incomplete: orders.filter((o) => o.prescriptionStatus === 'incomplete')
-      .length,
     pendingReview: orders.filter(
-      (o) => o.prescriptionStatus === 'pending_review'
+      (order) => order.prescriptionStatus === 'pending_review'
     ).length,
-    approved: orders.filter((o) => o.prescriptionStatus === 'approved').length,
+    waitingLab: orders.filter((order) => order.workflowStage === 'waiting_lab')
+      .length,
+    labInProgress: orders.filter((order) =>
+      ['lens_processing', 'lens_fitting', 'qc_check'].includes(
+        order.workflowStage
+      )
+    ).length,
+    readyForShipping: orders.filter((order) =>
+      ['ready_to_pack', 'packing', 'ready_to_ship'].includes(order.workflowStage)
+    ).length,
   };
 
   const handleOpenDetail = (order: PrescriptionOrder) => {
-    setSelectedOrder(order);
-    setDetailOpen(true);
+    setSuccessMessage(null);
+    openDetail(order.id);
   };
 
   const handleOpenInputPrescription = (order: PrescriptionOrder) => {
     setSelectedOrder(order);
+    setSuccessMessage(null);
     setPrescriptionForm(
       order.prescription
         ? { ...order.prescription }
@@ -171,12 +226,14 @@ export default function OrdersPrescription() {
 
   const handleOpenContact = (order: PrescriptionOrder) => {
     setSelectedOrder(order);
+    setSuccessMessage(null);
     setContactNote('');
     setContactOpen(true);
   };
 
   const handleOpenApprove = (order: PrescriptionOrder) => {
     setSelectedOrder(order);
+    setSuccessMessage(null);
     setApproveOpen(true);
   };
 
@@ -209,12 +266,10 @@ export default function OrdersPrescription() {
       );
       await loadOrders();
       setInputPrescriptionOpen(false);
+      setSuccessMessage('Da cap nhat thong so prescription cho don hang.');
     } catch (error) {
       setErrorMessage(
-        extractApiErrorMessage(
-          error,
-          'Không thể lưu thông số prescription.'
-        )
+        extractApiErrorMessage(error, 'Khong the luu thong so prescription.')
       );
     } finally {
       setIsSubmittingAction(false);
@@ -227,16 +282,20 @@ export default function OrdersPrescription() {
     try {
       setIsSubmittingAction(true);
       setErrorMessage(null);
-      if (String(selectedOrder.opsStage || '').trim().toLowerCase() !== 'waiting_lab') {
+      if (
+        String(selectedOrder.opsStage || '').trim().toLowerCase() !==
+        'waiting_lab'
+      ) {
         await orderApi.updateOpsStage(selectedOrder.id, 'waiting_lab');
       }
       await loadOrders();
       setApproveOpen(false);
+      setSuccessMessage('Da duyet Rx va chuyen don sang cho vao gia cong.');
     } catch (error) {
       setErrorMessage(
         extractApiErrorMessage(
           error,
-          'Không thể duyệt prescription cho đơn hàng này.'
+          'Khong the duyet prescription cho don hang nay.'
         )
       );
     } finally {
@@ -253,12 +312,13 @@ export default function OrdersPrescription() {
       setErrorMessage(null);
       await orderApi.updateOpsStage(order.id, nextOpsStage);
       await loadOrders();
+      setSuccessMessage(`Da cap nhat tien do don ${order.orderId}.`);
       if (selectedOrder?.id === order.id) {
         setSelectedOrder(null);
       }
     } catch (error) {
       setErrorMessage(
-        extractApiErrorMessage(error, 'Không thể cập nhật tiến độ prescription.')
+        extractApiErrorMessage(error, 'Khong the cap nhat tien do prescription.')
       );
     } finally {
       setIsSubmittingAction(false);
@@ -271,12 +331,13 @@ export default function OrdersPrescription() {
       setErrorMessage(null);
       await orderApi.createShipment(order.id);
       await loadOrders();
+      setSuccessMessage(`Da tao van don GHN cho don ${order.orderId}.`);
       if (selectedOrder?.id === order.id) {
         setSelectedOrder(null);
       }
     } catch (error) {
       setErrorMessage(
-        extractApiErrorMessage(error, 'Không thể tạo vận đơn GHN.')
+        extractApiErrorMessage(error, 'Khong the tao van don GHN.')
       );
     } finally {
       setIsSubmittingAction(false);
@@ -289,35 +350,89 @@ export default function OrdersPrescription() {
       setErrorMessage(null);
       await orderApi.syncShipment(order.id);
       await loadOrders();
+      setSuccessMessage(`Da dong bo GHN cho don ${order.orderId}.`);
       if (selectedOrder?.id === order.id) {
         setSelectedOrder(null);
       }
     } catch (error) {
       setErrorMessage(
-        extractApiErrorMessage(error, 'Không thể đồng bộ trạng thái GHN.')
+        extractApiErrorMessage(error, 'Khong the dong bo trang thai GHN.')
       );
     } finally {
       setIsSubmittingAction(false);
     }
   };
 
-  const handleSendContact = () => {
-    setContactOpen(false);
+  const handleSendContact = async () => {
+    if (!selectedOrder) return;
+
+    try {
+      setIsSubmittingAction(true);
+      setErrorMessage(null);
+
+      const result = await supportApi.getTickets({
+        page: 1,
+        limit: 20,
+        category: 'prescription',
+        orderId: selectedOrder.id,
+      });
+      const ticketId = pickLatestTicketId(result.items);
+      const message = buildContactMessage(selectedOrder, contactNote);
+
+      if (ticketId) {
+        await supportApi.replyTicket(ticketId, { message });
+      } else {
+        await supportApi.createTicket({
+          subject: `Prescription clarification for ${selectedOrder.orderId}`,
+          message,
+          category: 'prescription',
+          priority: selectedOrder.priority === 'normal' ? 'normal' : 'high',
+          orderId: selectedOrder.id,
+        });
+      }
+
+      await loadOrders();
+      setContactOpen(false);
+      setSuccessMessage(
+        `Da gui yeu cau xac nhan toa cho don ${selectedOrder.orderId}.`
+      );
+    } catch (error) {
+      setErrorMessage(
+        extractApiErrorMessage(
+          error,
+          'Khong the gui yeu cau xac nhan prescription.'
+        )
+      );
+    } finally {
+      setIsSubmittingAction(false);
+    }
   };
 
   return (
     <>
       <Header
-        title="Đơn Prescription"
-        subtitle="Review Rx, theo dõi gia công tròng, QC và bàn giao vận chuyển"
+        title="Don Prescription"
+        subtitle="Queue operations cho review Rx, gia cong trong, QC va ban giao giao van"
       />
       <div className="space-y-6 p-6">
         <RxStatsGrid stats={stats} />
 
+        {successMessage ? (
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {successMessage}
+          </div>
+        ) : null}
+
+        {errorMessage ? (
+          <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {errorMessage}
+          </div>
+        ) : null}
+
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
           <div className="w-full sm:max-w-[240px]">
             <SearchBar
-              placeholder="Tìm theo mã đơn, tên khách, SĐT..."
+              placeholder="Tim theo ma don, ten khach, SDT..."
               value={searchTerm}
               onChange={setSearchTerm}
             />
@@ -328,32 +443,24 @@ export default function OrdersPrescription() {
                 <Button
                   variant="outline"
                   size="icon"
-                  aria-label="Bộ lọc"
+                  aria-label="Bo loc"
                   className="text-foreground/80 hover:text-foreground"
                 >
                   <Filter />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuLabel>Trạng thái Rx</DropdownMenuLabel>
+                <DropdownMenuLabel>Trang thai Rx</DropdownMenuLabel>
                 <DropdownMenuRadioGroup
                   value={statusFilter}
                   onValueChange={setStatusFilter}
                 >
-                  <DropdownMenuRadioItem value="all">
-                    Tất cả
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="missing">
-                    Thiếu Rx
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="incomplete">
-                    Chưa đầy đủ
-                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="all">Tat ca</DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="pending_review">
-                    Chờ duyệt
+                    Cho duyet
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="approved">
-                    Đã duyệt
+                    Da duyet
                   </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
@@ -369,18 +476,15 @@ export default function OrdersPrescription() {
             disabled={isLoading || isSubmittingAction}
           >
             <RefreshCw className="h-4 w-4" />
-            Làm mới
+            Lam moi
           </Button>
         </div>
 
-        {isLoading && (
+        {isLoading ? (
           <p className="text-foreground/70 text-sm">
-            Đang tải dữ liệu đơn prescription...
+            Dang tai du lieu don prescription cho operations...
           </p>
-        )}
-        {!isLoading && errorMessage && (
-          <p className="text-destructive text-sm">{errorMessage}</p>
-        )}
+        ) : null}
 
         <RxOrderTable
           orders={filteredOrders}
@@ -395,7 +499,15 @@ export default function OrdersPrescription() {
 
         <RxDetailModal
           open={detailOpen}
-          onOpenChange={setDetailOpen}
+          onOpenChange={(open) => {
+            setDetailOpen(open);
+            if (open) return;
+            if (detailId) {
+              closeDetail();
+              return;
+            }
+            setSelectedOrder(null);
+          }}
           order={selectedOrder}
           onInputPrescription={handleOpenInputPrescription}
         />
@@ -418,7 +530,10 @@ export default function OrdersPrescription() {
           order={selectedOrder}
           contactNote={contactNote}
           onContactNoteChange={setContactNote}
-          onSend={handleSendContact}
+          onSend={() => {
+            void handleSendContact();
+          }}
+          isSubmitting={isSubmittingAction}
         />
 
         <RxApproveModal

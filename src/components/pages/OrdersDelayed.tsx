@@ -27,6 +27,7 @@ import { DelayedOrder, ContactMethod, ResolveAction } from '@/types/delayed';
 import { Filter } from 'lucide-react';
 import { Header } from '@/components/organisms/Header';
 import { orderApi } from '@/api';
+import { useDetailRoute } from '@/hooks/useDetailRoute';
 import { useStatusRealtimeReload } from '@/hooks/useStatusRealtime';
 import { toDelayedOrdersFromApi } from '@/lib/orderWorkflow';
 
@@ -101,6 +102,23 @@ export default function OrdersDelayed() {
       prev.filter((id) => filteredOrders.some((order) => order.id === id))
     );
   }, [filteredOrders]);
+
+  useEffect(() => {
+    if (!detailId) {
+      setDetailOrder(null);
+      return;
+    }
+
+    const matchedOrder = orders.find((order) => order.id === detailId);
+    if (matchedOrder) {
+      setDetailOrder(matchedOrder);
+      return;
+    }
+
+    if (!isLoading) {
+      setDetailOrder(null);
+    }
+  }, [detailId, isLoading, orders]);
 
   const stats = useMemo(
     () => ({
@@ -247,7 +265,7 @@ export default function OrdersDelayed() {
               selectedOrders={selectedOrders}
               onSelectOrder={toggleSelectOrder}
               onSelectAll={toggleSelectAll}
-              onViewDetail={setDetailOrder}
+              onViewDetail={(order) => openDetail(order.id)}
               onContact={setContactOrder}
               onEscalate={setEscalateOrder}
               onResolve={setResolveOrder}
@@ -269,7 +287,13 @@ export default function OrdersDelayed() {
 
         <DelayedDetailModal
           order={detailOrder}
-          onClose={() => setDetailOrder(null)}
+          onClose={() => {
+            if (detailId) {
+              closeDetail();
+              return;
+            }
+            setDetailOrder(null);
+          }}
           onResolve={setResolveOrder}
         />
 
