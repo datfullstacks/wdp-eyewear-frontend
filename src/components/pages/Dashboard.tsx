@@ -1,7 +1,11 @@
+'use client';
+
+import { usePathname } from 'next/navigation';
 import { Header } from '@/components/organisms/Header';
 import { StatCard } from '@/components/molecules/StatCard';
 import { RecentOrdersTable } from '@/components/organisms/RecentOrdersTable';
 import { ProductGrid } from '@/components/organisms/ProductGrid';
+import { buildDetailPath } from '@/hooks/useDetailRoute';
 import {
   DollarSign,
   ShoppingCart,
@@ -37,7 +41,32 @@ const stats = [
   },
 ];
 
+function resolveDashboardSectionPath(
+  pathname: string,
+  section: 'orders' | 'products'
+): string {
+  const normalizedPath = String(pathname || '').replace(/\/+$/, '');
+
+  if (!normalizedPath) {
+    return `/${section}`;
+  }
+
+  if (normalizedPath.startsWith('/sale/dashboard')) {
+    return `/sale/${section}`;
+  }
+
+  if (normalizedPath.startsWith('/dashboard')) {
+    return `/dashboard/${section}`;
+  }
+
+  return `${normalizedPath}/${section}`.replace(/\/{2,}/g, '/');
+}
+
 const Dashboard = () => {
+  const pathname = usePathname();
+  const ordersPath = resolveDashboardSectionPath(pathname, 'orders');
+  const productsPath = resolveDashboardSectionPath(pathname, 'products');
+
   return (
     <>
       <Header title="Dashboard" subtitle="Tổng quan hoạt động kinh doanh" />
@@ -68,11 +97,13 @@ const Dashboard = () => {
               <TrendingUp className="text-accent h-5 w-5" />
               Đơn hàng gần đây
             </h2>
-            <a href="/orders" className="text-accent text-sm hover:underline">
+            <a href={ordersPath} className="text-accent text-sm hover:underline">
               Xem tất cả
             </a>
           </div>
-          <RecentOrdersTable />
+          <RecentOrdersTable
+            detailHref={(order) => buildDetailPath(ordersPath, order.id)}
+          />
         </section>
 
         {/* Featured Products */}
@@ -82,7 +113,7 @@ const Dashboard = () => {
               <Package className="text-accent h-5 w-5" />
               Sản phẩm nổi bật
             </h2>
-            <a href="/products" className="text-accent text-sm hover:underline">
+            <a href={productsPath} className="text-accent text-sm hover:underline">
               Xem tất cả
             </a>
           </div>

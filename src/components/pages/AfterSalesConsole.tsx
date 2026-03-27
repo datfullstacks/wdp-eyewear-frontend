@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useDetailRoute } from '@/hooks/useDetailRoute';
 import { Textarea } from '@/components/ui/textarea';
 
 type AfterSalesScope = 'sale' | 'operation' | 'manager';
@@ -422,6 +423,7 @@ function TicketDetailDialog({
 }
 
 export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope }) {
+  const { detailId, openDetail, closeDetail } = useDetailRoute();
   const tabs = TAB_CONFIG[scope];
   const [activeTab, setActiveTab] = useState<ConsoleTab>(tabs[0].value);
   const [searchQuery, setSearchQuery] = useState('');
@@ -491,12 +493,15 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
     setSuccessMessage('');
   }, [activeTab]);
 
-  const openTicketDetail = async (ticket: SupportTicketRecord) => {
+  const openTicketDetail = useCallback(async (ticketId: string) => {
     try {
       setDetailLoading(true);
       setDetailOpen(true);
-      setSelectedTicket(ticket);
-      const detail = await supportApi.getTicket(ticket.id);
+      const detail = await supportApi.getTicket(ticketId);
+      const nextTab = tabs.find((tab) => tab.category === detail.category)?.value;
+      if (nextTab) {
+        setActiveTab(nextTab);
+      }
       setSelectedTicket(detail);
     } catch (error) {
       setErrorMessage(
@@ -505,7 +510,26 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
     } finally {
       setDetailLoading(false);
     }
-  };
+  }, [tabs]);
+
+  useEffect(() => {
+    if (!detailId) {
+      setDetailOpen(false);
+      setSelectedTicket(null);
+      return;
+    }
+
+    const matchedTicket = tickets.find((ticket) => ticket.id === detailId);
+    if (matchedTicket) {
+      setSelectedTicket(matchedTicket);
+      const nextTab = tabs.find((tab) => tab.category === matchedTicket.category)?.value;
+      if (nextTab) {
+        setActiveTab(nextTab);
+      }
+    }
+
+    void openTicketDetail(detailId);
+  }, [detailId, openTicketDetail, tabs, tickets]);
 
   const refreshSelectedTicket = async (ticketId: string) => {
     const detail = await supportApi.getTicket(ticketId);
@@ -698,7 +722,11 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
                               {formatDateTime(ticket.lastMessageAt || ticket.updatedAt)}
                             </td>
                             <td className="px-4 py-3 text-right">
-                              <Button variant="outline" size="sm" onClick={() => void openTicketDetail(ticket)}>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openDetail(ticket.id)}
+                              >
                                 Mở
                               </Button>
                             </td>
@@ -730,7 +758,15 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
       <TicketDetailDialog
         ticket={selectedTicket}
         open={detailOpen}
-        onOpenChange={setDetailOpen}
+        onOpenChange={(open) => {
+          setDetailOpen(open);
+          if (open) return;
+          if (detailId) {
+            closeDetail();
+            return;
+          }
+          setSelectedTicket(null);
+        }}
         scope={scope}
         onReply={handleReply}
         onUpdateStatus={handleStatusUpdate}
