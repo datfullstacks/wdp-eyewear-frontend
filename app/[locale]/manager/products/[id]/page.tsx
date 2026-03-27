@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Header } from '@/components/organisms/Header';
@@ -20,22 +20,25 @@ import {
 } from '@/components/ui/alert-dialog';
 import { productApi, uploadApi, type ProductDetail, type ProductMediaAsset } from '@/api';
 import { buildProductFormState, buildUpsertPayload, EMPTY_PRODUCT_FORM } from '@/lib/productHelpers';
-import { AlertTriangle, ArrowLeft, Edit, Loader2, Package, Trash2, X, Save } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Edit, Loader2, Package, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400';
 
-export default function ProductDetailPage() {
+function ProductDetailPageInner() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const productId = params.id as string;
   const t = useTranslations('manager.products');
   const tDetail = useTranslations('manager.products.detail');
 
+  // Persist edit mode in URL so locale switch (router.refresh) doesn't reset it
+  const isEditing = searchParams.get('edit') === 'true';
+
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingKey, setUploadingKey] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -70,16 +73,20 @@ export default function ProductDetailPage() {
     if (product) {
       populateForm(product);
     }
-    setIsEditing(true);
     setApiError('');
+    const url = new URL(window.location.href);
+    url.searchParams.set('edit', 'true');
+    router.push(url.pathname + '?' + url.searchParams.toString());
   };
 
   const handleCancelEdit = () => {
     if (product) {
       populateForm(product);
     }
-    setIsEditing(false);
     setApiError('');
+    const url = new URL(window.location.href);
+    url.searchParams.delete('edit');
+    router.push(url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : ''));
   };
 
   const handleUploadSingle = useCallback(
@@ -185,7 +192,10 @@ export default function ProductDetailPage() {
       const payload = buildUpsertPayload(formData, { existingProduct: product });
       await productApi.update(productId, payload);
       await loadProduct();
-      setIsEditing(false);
+      // Exit edit mode by removing ?edit param from URL
+      const url = new URL(window.location.href);
+      url.searchParams.delete('edit');
+      router.push(url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : ''));
     } catch (error) {
       setApiError(error instanceof Error ? error.message : tDetail('updateFailed'));
     } finally {
@@ -283,26 +293,10 @@ export default function ProductDetailPage() {
                 </Button>
               </>
             ) : (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCancelEdit}
-                  disabled={isSubmitting}
-                >
-                  <X className="mr-1 h-4 w-4" />
-                  {tDetail('cancel')}
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleSave}
-                  disabled={isSubmitting}
-                  className="bg-amber-400 text-slate-900 hover:bg-amber-500"
-                >
-                  <Save className="mr-1 h-4 w-4" />
-                  {isSubmitting ? tDetail('saving') : tDetail('save')}
-                </Button>
-              </>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">
+                <Edit className="h-3 w-3" />
+                {tDetail('edit')}
+              </span>
             )}
           </div>
         </div>
@@ -328,6 +322,9 @@ export default function ProductDetailPage() {
               onUploadGallery={handleUploadGallery}
               onUploadVariantAsset={handleUploadVariantAsset}
               onRemoveGallery={handleRemoveGallery}
+              onCancel={handleCancelEdit}
+              onSubmit={handleSave}
+              submitLabel={tDetail('save')}
             />
           </Card>
         ) : (
@@ -442,5 +439,13 @@ export default function ProductDetailPage() {
         </AlertDialogContent>
       </AlertDialog>
     </>
+  );
+}
+
+export default function ProductDetailPage() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-400 border-t-transparent" /></div>}>
+      <ProductDetailPageInner />
+    </Suspense>
   );
 }
