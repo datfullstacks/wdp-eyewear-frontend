@@ -38,6 +38,12 @@ export type SupportTicketStatus =
 export type SupportPriority = 'low' | 'normal' | 'high';
 export type SupportMessageSender = 'user' | 'staff';
 export type WarrantyEligibility = 'eligible' | 'expired' | 'not_covered';
+export type SupportTicketOwnerRole =
+  | 'none'
+  | 'customer'
+  | 'sales'
+  | 'operations'
+  | 'manager';
 
 interface RawSupportMessage {
   _id?: string;
@@ -95,6 +101,9 @@ interface RawSupportTicket {
   orderId?: RawSupportRef | string | null;
   storeId?: RawSupportRef | string | null;
   warranty?: RawWarrantyMetadata | null;
+  currentOwnerRole?: SupportTicketOwnerRole;
+  currentOwnerUserId?: RawSupportRef | string | null;
+  nextActionCode?: string;
   messages?: RawSupportMessage[];
   lastMessageAt?: string | null;
   createdAt?: string | null;
@@ -204,6 +213,9 @@ export interface SupportTicketRecord {
   storeId: string | null;
   store: SupportStoreSummary | null;
   warranty: SupportWarrantyMetadata | null;
+  currentOwnerRole: SupportTicketOwnerRole;
+  currentOwnerUserId: string | null;
+  nextActionCode: string;
   messages: SupportMessageRecord[];
   lastMessageAt?: string;
   createdAt?: string;
@@ -234,6 +246,7 @@ export interface ListSupportTicketsParams {
   page?: number;
   limit?: number;
   status?: string;
+  ownerRole?: SupportTicketOwnerRole;
   userId?: string;
   category?: SupportTicketCategory;
   eligibility?: WarrantyEligibility;
@@ -353,6 +366,9 @@ function mapSupportTicket(raw: RawSupportTicket): SupportTicketRecord {
     storeId: storeId || null,
     store: toSupportStore(raw.storeId),
     warranty: toWarrantyMetadata(raw.warranty),
+    currentOwnerRole: (raw.currentOwnerRole || 'none') as SupportTicketOwnerRole,
+    currentOwnerUserId: toId(raw.currentOwnerUserId) || null,
+    nextActionCode: String(raw.nextActionCode || ''),
     messages: Array.isArray(raw.messages) ? raw.messages.map(toSupportMessage) : [],
     lastMessageAt: raw.lastMessageAt || undefined,
     createdAt: raw.createdAt || undefined,

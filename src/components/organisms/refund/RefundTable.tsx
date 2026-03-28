@@ -31,6 +31,7 @@ import {
 import {
   RefundRequest,
   formatCurrency,
+  hasRefundBankInfo,
   methodConfig,
   statusConfig,
 } from '@/types/refund';
@@ -100,6 +101,7 @@ export const RefundTable = ({
             const isOwnedBySales = refund.currentOwnerRole === 'sales';
             const isOwnedByManager = refund.currentOwnerRole === 'manager';
             const isOwnedByOperations = refund.currentOwnerRole === 'operations';
+            const hasBankInfo = hasRefundBankInfo(refund.bankInfo);
             const canSaleApprove =
               scope === 'sale' &&
               isOwnedBySales &&
@@ -116,7 +118,12 @@ export const RefundTable = ({
             const canSaleRequestInfo =
               scope === 'sale' &&
               isOwnedBySales &&
-              (refund.status === 'requested' || refund.status === 'reviewing');
+              (refund.status === 'requested' ||
+                refund.status === 'reviewing' ||
+                (!hasBankInfo &&
+                  ['approved', 'return_received', 'processing'].includes(
+                    refund.status
+                  )));
             const canResumeReview =
               scope === 'sale' && refund.status === 'waiting_customer_info';
             const canManagerDecide =
@@ -134,12 +141,21 @@ export const RefundTable = ({
             const canSaleStartProcessing =
               scope === 'sale' &&
               isOwnedBySales &&
+              hasBankInfo &&
               (refund.status === 'return_received' ||
                 (refund.status === 'approved' && !refund.requiresReturn));
             const canSaleComplete =
               scope === 'sale' &&
               isOwnedBySales &&
+              hasBankInfo &&
               refund.status === 'processing';
+            const shouldWarnMissingBankInfo =
+              scope === 'sale' &&
+              isOwnedBySales &&
+              !hasBankInfo &&
+              ['approved', 'return_received', 'processing'].includes(
+                refund.status
+              );
 
             return (
               <TableRow key={refund.id} className="hover:bg-muted/30">
@@ -253,6 +269,16 @@ export const RefundTable = ({
                           >
                             <MessageSquareWarning className="mr-2 h-4 w-4" />
                             Yêu cầu bổ sung
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      {shouldWarnMissingBankInfo && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem disabled>
+                            <Banknote className="mr-2 h-4 w-4 text-amber-600" />
+                            Thiếu TK hoàn tiền
                           </DropdownMenuItem>
                         </>
                       )}

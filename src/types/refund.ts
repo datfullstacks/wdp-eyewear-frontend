@@ -159,7 +159,7 @@ function resolveRefundMethod(
   }
 }
 
-function hasBankInfo(bankInfo?: RefundBankAccount) {
+export function hasRefundBankInfo(bankInfo?: RefundBankAccount) {
   return Boolean(
     bankInfo?.bankName ||
     bankInfo?.accountNumber ||
@@ -200,7 +200,7 @@ export function toRefundRequest(order: OrderRecord): RefundRequest | null {
     return null;
   }
 
-  const bankInfo = hasBankInfo(refund.bankAccount)
+  const bankInfo = hasRefundBankInfo(refund.bankAccount)
     ? refund.bankAccount
     : undefined;
   const requestedBreakdown = refund.requestedBreakdown;

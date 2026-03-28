@@ -16,6 +16,7 @@ import {
   methodConfig,
   statusConfig,
 } from '@/types/refund';
+import { RefundPayoutQrCard } from './RefundPayoutQrCard';
 
 interface RefundDetailModalProps {
   refund: RefundRequest | null;
@@ -135,7 +136,14 @@ export const RefundDetailModal = ({
         ? 'Chờ sale xác nhận đã chuyển tiền'
         : refund?.nextActionCode === 'start_review'
           ? 'Chờ sale review'
-          : nextActionLabel;
+        : nextActionLabel;
+  const payoutAmount = breakdown?.total || refund?.amount || 0;
+  const canShowPayoutQr =
+    Boolean(refund?.bankInfo) &&
+    refund?.method === 'bank_transfer' &&
+    ['approved', 'return_received', 'processing', 'completed'].includes(
+      refund?.status || ''
+    );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -179,7 +187,7 @@ export const RefundDetailModal = ({
 
             <div className={sectionCardClass}>
               <Label className={labelClass}>Lý do hoàn tiền</Label>
-              <p className="mt-3 max-w-3xl text-[15px] leading-8 whitespace-pre-wrap text-slate-900">
+              <p className="mt-3 max-w-3xl whitespace-pre-wrap text-[15px] leading-8 text-slate-900">
                 {refund.reason}
               </p>
             </div>
@@ -187,9 +195,7 @@ export const RefundDetailModal = ({
             <div className="grid gap-4 sm:grid-cols-2">
               <div className={fieldCardClass}>
                 <Label className={labelClass}>Phương thức hoàn tiền</Label>
-                <p className={valueClass}>
-                  {methodConfig[refund.method].label}
-                </p>
+                <p className={valueClass}>{methodConfig[refund.method].label}</p>
               </div>
               <div className={fieldCardClass}>
                 <Label className={labelClass}>Ngày tạo yêu cầu</Label>
@@ -237,9 +243,9 @@ export const RefundDetailModal = ({
               </div>
             )}
 
-            {refund.bankInfo && (
-              <div className={sectionCardClass}>
-                <Label className={labelClass}>Tài khoản nhận tiền</Label>
+            <div className={sectionCardClass}>
+              <Label className={labelClass}>Tài khoản nhận tiền</Label>
+              {refund.bankInfo ? (
                 <div className="mt-3 grid gap-3 rounded-xl border border-slate-300 bg-slate-50 p-4 text-[15px] sm:grid-cols-2">
                   <div>
                     <span className="block text-xs font-bold text-slate-700">
@@ -276,8 +282,20 @@ export const RefundDetailModal = ({
                     </div>
                   )}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+                  Khách chưa cung cấp tài khoản nhận tiền. Sale cần gửi yêu cầu bổ sung trước khi xử lý payout.
+                </div>
+              )}
+            </div>
+
+            {canShowPayoutQr ? (
+              <RefundPayoutQrCard
+                refund={refund}
+                amount={payoutAmount}
+                title="QR chuyển khoản để hoàn tiền"
+              />
+            ) : null}
 
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <div className={fieldCardClass}>
@@ -286,21 +304,15 @@ export const RefundDetailModal = ({
               </div>
               <div className={fieldCardClass}>
                 <Label className={labelClass}>Cần trả hàng</Label>
-                <p className={valueClass}>
-                  {refund.requiresReturn ? 'Có' : 'Không'}
-                </p>
+                <p className={valueClass}>{refund.requiresReturn ? 'Có' : 'Không'}</p>
               </div>
               <div className={fieldCardClass}>
                 <Label className={labelClass}>Người xử lý hiện tại</Label>
-                <p className={valueClass}>
-                  {displayOwnerLabel}
-                </p>
+                <p className={valueClass}>{displayOwnerLabel}</p>
               </div>
               <div className={fieldCardClass}>
                 <Label className={labelClass}>Bước tiếp theo</Label>
-                <p className={valueClass}>
-                  {displayNextActionLabel}
-                </p>
+                <p className={valueClass}>{displayNextActionLabel}</p>
               </div>
             </div>
 
