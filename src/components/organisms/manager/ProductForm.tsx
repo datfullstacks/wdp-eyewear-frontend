@@ -12,6 +12,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Upload, XCircle } from 'lucide-react';
+
+// ── XYZ helpers ────────────────────────────────────────────────────────────────
+// Values in state are stored as space-separated strings (e.g. "85 181 90")
+// to keep the API contract unchanged.
+function parseXYZ(value: string): [string, string, string] {
+  const parts = String(value || '').trim().split(/\s+/);
+  return [parts[0] ?? '', parts[1] ?? '', parts[2] ?? ''];
+}
+function formatXYZ(x: string, y: string, z: string): string {
+  return `${x} ${y} ${z}`;
+}
 import type {
   PreOrderShippingCollectionTiming,
   ProductMediaAsset,
@@ -261,10 +272,10 @@ export function ProductForm({
   };
 
   return (
-    <div className="space-y-4">
-      <Input
-        label="Product Name"
-        value={formData.name}
+    <div className="space-y-3">
+        <Input
+          label="Product Name"
+          value={formData.name}
         onChange={(event) =>
           onChange((prev) => ({ ...prev, name: event.target.value }))
         }
@@ -281,7 +292,7 @@ export function ProductForm({
         placeholder="Enter brand"
       />
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3">
         <Input
           label="Price (VND)"
           type="number"
@@ -341,21 +352,21 @@ export function ProductForm({
           onChange={(event) =>
             onChange((prev) => ({ ...prev, description: event.target.value }))
           }
-          rows={3}
+          rows={2}
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none"
           placeholder="Optional product description"
         />
       </div>
 
-      <div className="rounded-md border border-gray-200 p-4">
-        <div className="mb-4">
-          <p className="text-sm font-medium text-gray-700">Store network</p>
-          <p className="mt-1 text-xs text-gray-500">
+      <div className="rounded-md border border-gray-200 p-3">
+        <div className="mb-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Store network</p>
+          <p className="mt-0.5 text-xs text-gray-400">
             Gan san pham vao cua hang de van hanh theo mo hinh chuoi. Mobile se co the loc san pham theo cua hang nay.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="mb-2 block text-sm font-medium text-gray-700">
               Pham vi cua hang
@@ -494,10 +505,10 @@ export function ProductForm({
         )}
       </div>
 
-      <div className="rounded-md border border-gray-200 p-4">
-        <div className="mb-4 flex items-start justify-between gap-3">
+      <div className="rounded-md border border-gray-200 p-3">
+        <div className="mb-3 flex items-start justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-gray-700">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
               Variants and asset mapping
             </p>
             <p className="mt-1 text-xs text-gray-500">
@@ -720,12 +731,12 @@ export function ProductForm({
       </div>
 
       {supportsTryOn ? (
-        <div className="rounded-md border border-gray-200 p-4">
-          <div className="mb-4">
-            <p className="text-sm font-medium text-gray-700">
+        <div className="rounded-md border border-gray-200 p-3">
+          <div className="mb-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
               Frame and mobile fit specs (optional)
             </p>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-0.5 text-xs text-gray-400">
               Chi nhap khi da co thong so that. Co the de trong va bo sung sau, manager khong can doan de luu san pham.
             </p>
           </div>
@@ -735,7 +746,7 @@ export function ProductForm({
               {hasFrameSpecs ? 'Dang co thong so da nhap' : 'Them thong so khi da xac nhan duoc'}
             </summary>
 
-            <div className="mt-4 grid grid-cols-2 gap-4">
+            <div className="mt-3 grid grid-cols-2 gap-3">
               <Input
                 label="Shape"
                 value={formData.frameShape}
@@ -834,7 +845,7 @@ export function ProductForm({
               />
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-4">
+            <div className="mt-3 grid grid-cols-2 gap-3">
               <Input
                 label="Bridge (mm)"
                 type="number"
@@ -899,7 +910,7 @@ export function ProductForm({
               ) : null}
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-4">
+            <div className="mt-3 grid grid-cols-2 gap-3">
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                 <input
                   type="checkbox"
@@ -932,11 +943,11 @@ export function ProductForm({
         </div>
       ) : null}
 
-      <div className="rounded-md border border-gray-200 p-4">
+      <div className="rounded-md border border-gray-200 p-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-gray-700">Pre-order config</p>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Pre-order config</p>
+            <p className="mt-0.5 text-xs text-gray-400">
               Manager-owned business config for deposit, split payment, and shipping collection timing. Cac moc thoi gian co the de trong neu chua chot.
             </p>
           </div>
@@ -957,7 +968,7 @@ export function ProductForm({
 
         {formData.preOrderEnabled ? (
           <div className="mt-4 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <Input
                 label="Deposit percent"
                 type="number"
@@ -987,7 +998,7 @@ export function ProductForm({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <Input
                 label="Start at"
                 type="datetime-local"
@@ -1012,7 +1023,7 @@ export function ProductForm({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <Input
                 label="Ship from"
                 type="datetime-local"
@@ -1041,7 +1052,7 @@ export function ProductForm({
               Neu chua biet lich giao du kien, co the de trong Ship from va Ship to roi cap nhat sau.
             </p>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-700">
                   Shipping collection timing
@@ -1127,93 +1138,72 @@ export function ProductForm({
         ) : null}
       </div>
 
+      {/* ── Media uploads ── */}
       <div className="rounded-md border border-gray-200 p-3">
-        <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-          <Upload className="h-4 w-4" />
-          Hero image (role: hero)
-        </div>
-        {formData.heroImageUrl && (
-          <img
-            src={formData.heroImageUrl}
-            alt="Hero preview"
-            className="mb-2 h-20 w-20 rounded-md object-cover"
-          />
-        )}
-        <input
-          type="file"
-          accept="image/*"
-          disabled={isSubmitting || uploadingKey === 'hero'}
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) void onUploadSingle(file, 'hero');
-          }}
-          className="block w-full text-sm text-gray-600"
-        />
-      </div>
-
-      <div className="rounded-md border border-gray-200 p-3">
-        <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-          <Upload className="h-4 w-4" />
-          Thumbnail image (role: thumbnail)
-        </div>
-        {formData.thumbnailUrl && (
-          <img
-            src={formData.thumbnailUrl}
-            alt="Thumbnail preview"
-            className="mb-2 h-20 w-20 rounded-md object-cover"
-          />
-        )}
-        <input
-          type="file"
-          accept="image/*"
-          disabled={isSubmitting || uploadingKey === 'thumbnail'}
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) void onUploadSingle(file, 'thumbnail');
-          }}
-          className="block w-full text-sm text-gray-600"
-        />
-      </div>
-
-      <div className="rounded-md border border-gray-200 p-3">
-        <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-          <Upload className="h-4 w-4" />
-          Gallery images (role: gallery)
-        </div>
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          disabled={isSubmitting || uploadingKey === 'gallery'}
-          onChange={(event) => void onUploadGallery(event.target.files)}
-          className="mb-3 block w-full text-sm text-gray-600"
-        />
-        {formData.galleryUrls.length > 0 && (
-          <div className="grid grid-cols-4 gap-2">
-            {formData.galleryUrls.map((url, index) => (
-              <div key={`${url}-${index}`} className="relative">
-                <img
-                  src={url}
-                  alt={`Gallery ${index + 1}`}
-                  className="h-16 w-16 rounded-md object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => onRemoveGallery(index)}
-                  className="absolute -top-2 -right-2 rounded-full bg-white text-red-600 shadow"
-                >
-                  <XCircle className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Media</p>
+        <div className="grid grid-cols-2 gap-3">
+          {/* Hero */}
+          <div className="rounded border border-gray-100 p-2">
+            <div className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-gray-600">
+              <Upload className="h-3.5 w-3.5" /> Hero image
+            </div>
+            {formData.heroImageUrl && (
+              <img src={formData.heroImageUrl} alt="Hero preview" className="mb-1.5 h-16 w-16 rounded object-cover" />
+            )}
+            <input
+              type="file" accept="image/*"
+              disabled={isSubmitting || uploadingKey === 'hero'}
+              onChange={(event) => { const file = event.target.files?.[0]; if (file) void onUploadSingle(file, 'hero'); }}
+              className="block w-full text-xs text-gray-500"
+            />
           </div>
-        )}
+          {/* Thumbnail */}
+          <div className="rounded border border-gray-100 p-2">
+            <div className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-gray-600">
+              <Upload className="h-3.5 w-3.5" /> Thumbnail image
+            </div>
+            {formData.thumbnailUrl && (
+              <img src={formData.thumbnailUrl} alt="Thumbnail preview" className="mb-1.5 h-16 w-16 rounded object-cover" />
+            )}
+            <input
+              type="file" accept="image/*"
+              disabled={isSubmitting || uploadingKey === 'thumbnail'}
+              onChange={(event) => { const file = event.target.files?.[0]; if (file) void onUploadSingle(file, 'thumbnail'); }}
+              className="block w-full text-xs text-gray-500"
+            />
+          </div>
+        </div>
+        {/* Gallery */}
+        <div className="mt-3">
+          <div className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-gray-600">
+            <Upload className="h-3.5 w-3.5" /> Gallery images
+          </div>
+          <input
+            type="file" accept="image/*" multiple
+            disabled={isSubmitting || uploadingKey === 'gallery'}
+            onChange={(event) => void onUploadGallery(event.target.files)}
+            className="mb-2 block w-full text-xs text-gray-500"
+          />
+          {formData.galleryUrls.length > 0 && (
+            <div className="grid grid-cols-5 gap-2">
+              {formData.galleryUrls.map((url, index) => (
+                <div key={`${url}-${index}`} className="relative">
+                  <img src={url} alt={`Gallery ${index + 1}`} className="h-14 w-14 rounded object-cover" />
+                  <button type="button" onClick={() => onRemoveGallery(index)}
+                    className="absolute -top-2 -right-2 rounded-full bg-white text-red-500 shadow">
+                    <XCircle className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="rounded-md border border-gray-200 p-4">
+      <div className="rounded-md border border-gray-200 p-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-gray-700">Mobile try-on config</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Mobile try-on config</p>
             <p className="mt-1 text-xs text-gray-500">
               Phan nay chi cau hinh workflow va runtime cho try-on tren mobile. File poster va GLB
               duoc upload theo tung bien the o phia tren.
@@ -1405,51 +1395,129 @@ export function ProductForm({
                 />
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-4">
-                <Input
-                  label="Prefab rotation (tuy chon)"
-                  value={formData.tryOnRotation}
-                  onChange={(event) =>
-                    onChange((prev) => ({
-                      ...prev,
-                      tryOnRotation: event.target.value,
-                    }))
-                  }
-                  placeholder="-90 0 0"
-                />
-                <Input
-                  label="Prefab scale (tuy chon)"
-                  value={formData.tryOnScale}
-                  onChange={(event) =>
-                    onChange((prev) => ({
-                      ...prev,
-                      tryOnScale: event.target.value,
-                    }))
-                  }
-                  placeholder="1 1 1"
-                />
-                <Input
-                  label="Prefab translation (tuy chon)"
-                  value={formData.tryOnTranslation}
-                  onChange={(event) =>
-                    onChange((prev) => ({
-                      ...prev,
-                      tryOnTranslation: event.target.value,
-                    }))
-                  }
-                  placeholder="0 0 0"
-                />
-                <Input
-                  label="Prefab gravity (tuy chon)"
-                  value={formData.tryOnGravity}
-                  onChange={(event) =>
-                    onChange((prev) => ({
-                      ...prev,
-                      tryOnGravity: event.target.value,
-                    }))
-                  }
-                  placeholder="0 0 0"
-                />
+              {/* ── Prefab XYZ table ── */}
+              <div className="mt-4">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Prefab transform (tuy chon)
+                </p>
+                <div className="overflow-hidden rounded-md border border-gray-200">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                        <th className="px-3 py-2 text-left w-1/4">Thuộc tính</th>
+                        <th className="px-3 py-2 text-center">X</th>
+                        <th className="px-3 py-2 text-center">Y</th>
+                        <th className="px-3 py-2 text-center">Z</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {/* Rotation */}
+                      {(() => {
+                        const [rx, ry, rz] = parseXYZ(formData.tryOnRotation);
+                        const mkChange = (axis: 0 | 1 | 2, val: string) => {
+                          const parts: [string, string, string] = [rx, ry, rz];
+                          parts[axis] = val;
+                          onChange((prev) => ({ ...prev, tryOnRotation: formatXYZ(...parts) }));
+                        };
+                        return (
+                          <tr>
+                            <td className="px-3 py-2 text-xs font-medium text-gray-600">Rotation</td>
+                            {([rx, ry, rz] as string[]).map((v, i) => (
+                              <td key={i} className="px-2 py-1.5">
+                                <input
+                                  type="number"
+                                  value={v}
+                                  onChange={(e) => mkChange(i as 0 | 1 | 2, e.target.value)}
+                                  placeholder="0"
+                                  className="w-full rounded border border-gray-200 px-2 py-1 text-center text-sm focus:border-amber-400 focus:outline-none"
+                                />
+                              </td>
+                            ))}
+                          </tr>
+                        );
+                      })()}
+                      {/* Scale */}
+                      {(() => {
+                        const [sx, sy, sz] = parseXYZ(formData.tryOnScale);
+                        const mkChange = (axis: 0 | 1 | 2, val: string) => {
+                          const parts: [string, string, string] = [sx, sy, sz];
+                          parts[axis] = val;
+                          onChange((prev) => ({ ...prev, tryOnScale: formatXYZ(...parts) }));
+                        };
+                        return (
+                          <tr className="bg-gray-50/40">
+                            <td className="px-3 py-2 text-xs font-medium text-gray-600">Scale</td>
+                            {([sx, sy, sz] as string[]).map((v, i) => (
+                              <td key={i} className="px-2 py-1.5">
+                                <input
+                                  type="number"
+                                  value={v}
+                                  onChange={(e) => mkChange(i as 0 | 1 | 2, e.target.value)}
+                                  placeholder="1"
+                                  className="w-full rounded border border-gray-200 px-2 py-1 text-center text-sm focus:border-amber-400 focus:outline-none"
+                                />
+                              </td>
+                            ))}
+                          </tr>
+                        );
+                      })()}
+                      {/* Translation */}
+                      {(() => {
+                        const [tx, ty, tz] = parseXYZ(formData.tryOnTranslation);
+                        const mkChange = (axis: 0 | 1 | 2, val: string) => {
+                          const parts: [string, string, string] = [tx, ty, tz];
+                          parts[axis] = val;
+                          onChange((prev) => ({ ...prev, tryOnTranslation: formatXYZ(...parts) }));
+                        };
+                        return (
+                          <tr>
+                            <td className="px-3 py-2 text-xs font-medium text-gray-600">Translation</td>
+                            {([tx, ty, tz] as string[]).map((v, i) => (
+                              <td key={i} className="px-2 py-1.5">
+                                <input
+                                  type="number"
+                                  value={v}
+                                  onChange={(e) => mkChange(i as 0 | 1 | 2, e.target.value)}
+                                  placeholder="0"
+                                  className="w-full rounded border border-gray-200 px-2 py-1 text-center text-sm focus:border-amber-400 focus:outline-none"
+                                />
+                              </td>
+                            ))}
+                          </tr>
+                        );
+                      })()}
+                      {/* Gravity */}
+                      {(() => {
+                        const [gx, gy, gz] = parseXYZ(formData.tryOnGravity);
+                        const mkChange = (axis: 0 | 1 | 2, val: string) => {
+                          const parts: [string, string, string] = [gx, gy, gz];
+                          parts[axis] = val;
+                          onChange((prev) => ({ ...prev, tryOnGravity: formatXYZ(...parts) }));
+                        };
+                        return (
+                          <tr className="bg-gray-50/40">
+                            <td className="px-3 py-2 text-xs font-medium text-gray-600">Gravity</td>
+                            {([gx, gy, gz] as string[]).map((v, i) => (
+                              <td key={i} className="px-2 py-1.5">
+                                <input
+                                  type="number"
+                                  value={v}
+                                  onChange={(e) => mkChange(i as 0 | 1 | 2, e.target.value)}
+                                  placeholder="0"
+                                  className="w-full rounded border border-gray-200 px-2 py-1 text-center text-sm focus:border-amber-400 focus:outline-none"
+                                />
+                              </td>
+                            ))}
+                          </tr>
+                        );
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Prefab cut — single value, keep as plain input */}
+              <div className="mt-3">
                 <Input
                   label="Prefab cut (tuy chon)"
                   value={formData.tryOnCut}
@@ -1481,8 +1549,9 @@ export function ProductForm({
         ) : null}
       </div>
 
+      {/* ── Action buttons — bottom of form ── */}
       {(onCancel || onSubmit) && (
-        <div className="flex justify-end gap-3 pt-4">
+        <div className="flex items-center justify-end gap-3 border-t border-gray-200 pt-4">
           {onCancel && (
             <Button
               type="button"
@@ -1490,12 +1559,12 @@ export function ProductForm({
               onClick={onCancel}
               disabled={isSubmitting}
             >
-              Cancel
+              Hủy
             </Button>
           )}
           {onSubmit && (
             <Button type="button" onClick={onSubmit} disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : submitLabel}
+              {isSubmitting ? 'Đang lưu...' : submitLabel}
             </Button>
           )}
         </div>
