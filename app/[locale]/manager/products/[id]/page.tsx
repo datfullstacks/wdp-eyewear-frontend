@@ -262,7 +262,7 @@ export default function ProductDetailPage() {
 
         {/* ── EDIT mode ── */}
         {isEditing ? (
-          <Card className="p-6">
+          <Card className="p-4">
             <ProductForm
               formData={formData}
               isSubmitting={isSubmitting}

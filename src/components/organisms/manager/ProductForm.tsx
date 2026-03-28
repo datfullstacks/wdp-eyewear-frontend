@@ -273,88 +273,75 @@ export function ProductForm({
 
   return (
     <div className="space-y-3">
-        <Input
-          label="Product Name"
-          value={formData.name}
-        onChange={(event) =>
-          onChange((prev) => ({ ...prev, name: event.target.value }))
-        }
-        placeholder="Enter product name"
-        required
-      />
-
-      <Input
-        label="Brand"
-        value={formData.brand}
-        onChange={(event) =>
-          onChange((prev) => ({ ...prev, brand: event.target.value }))
-        }
-        placeholder="Enter brand"
-      />
-
+      {/* Row 1: Name + Brand */}
       <div className="grid grid-cols-2 gap-3">
         <Input
-          label="Price (VND)"
+          label="Tên sản phẩm"
+          value={formData.name}
+          onChange={(e) => onChange((prev) => ({ ...prev, name: e.target.value }))}
+          placeholder="Nhập tên sản phẩm"
+          required
+        />
+        <Input
+          label="Thương hiệu"
+          value={formData.brand}
+          onChange={(e) => onChange((prev) => ({ ...prev, brand: e.target.value }))}
+          placeholder="Nhập thương hiệu"
+        />
+      </div>
+
+      {/* Row 2: Price + Stock + Category */}
+      <div className="grid grid-cols-3 gap-3">
+        <Input
+          label="Giá (VND)"
           type="number"
           value={formData.price}
-          onChange={(event) =>
-            onChange((prev) => ({ ...prev, price: event.target.value }))
-          }
+          onChange={(e) => onChange((prev) => ({ ...prev, price: e.target.value }))}
           placeholder="0"
         />
         <Input
-          label="Stock"
+          label="Tồn kho"
           type="number"
           value={formData.stock}
-          onChange={(event) =>
-            onChange((prev) => ({ ...prev, stock: event.target.value }))
-          }
+          onChange={(e) => onChange((prev) => ({ ...prev, stock: e.target.value }))}
           placeholder="0"
         />
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700">Danh mục</label>
+          <Select
+            value={formData.category}
+            onValueChange={(value) =>
+              onChange((prev) => ({
+                ...prev,
+                category: value,
+                tryOnEnabled:
+                  value === 'frame' || value === 'sunglasses' ? prev.tryOnEnabled : false,
+              }))
+            }
+          >
+            <SelectTrigger className="h-10">
+              <SelectValue placeholder="Chọn danh mục" />
+            </SelectTrigger>
+            <SelectContent>
+              {CATEGORY_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
+      {/* Description */}
       <div>
-        <label className="mb-2 block text-sm font-medium text-gray-700">
-          Category
-        </label>
-        <Select
-          value={formData.category}
-          onValueChange={(value) =>
-            onChange((prev) => ({
-              ...prev,
-              category: value,
-              tryOnEnabled:
-                value === 'frame' || value === 'sunglasses'
-                  ? prev.tryOnEnabled
-                  : false,
-            }))
-          }
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select category" />
-          </SelectTrigger>
-          <SelectContent>
-            {CATEGORY_OPTIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <label className="mb-2 block text-sm font-medium text-gray-700">
-          Description
-        </label>
+        <label className="mb-1.5 block text-sm font-medium text-gray-700">Mô tả</label>
         <textarea
           value={formData.description}
-          onChange={(event) =>
-            onChange((prev) => ({ ...prev, description: event.target.value }))
-          }
+          onChange={(e) => onChange((prev) => ({ ...prev, description: e.target.value }))}
           rows={2}
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none"
-          placeholder="Optional product description"
+          placeholder="Mô tả sản phẩm (tùy chọn)"
         />
       </div>
 
@@ -527,9 +514,9 @@ export function ProductForm({
           {variantRows.map((variant, index) => (
             <div
               key={variant.id || `${variant.sku}-${index}`}
-              className="rounded-md border border-gray-200 p-4"
+              className="rounded-md border border-gray-200 p-3"
             >
-              <div className="mb-4 flex items-center justify-between">
+              <div className="mb-3 flex items-center justify-between">
                 <p className="text-sm font-semibold text-gray-800">
                   Variant {index + 1}
                 </p>
@@ -544,185 +531,136 @@ export function ProductForm({
                 ) : null}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              {/* Row 1: identity — 4 cols */}
+              <div className="grid grid-cols-4 gap-3">
                 <Input
                   label="SKU"
                   value={variant.sku}
-                  onChange={(event) =>
-                    updateVariant(index, (current) => ({
-                      ...current,
-                      sku: event.target.value,
-                    }))
-                  }
-                  placeholder="SKU-FRAME-BLK-M"
+                  onChange={(e) => updateVariant(index, (c) => ({ ...c, sku: e.target.value }))}
+                  placeholder="SKU-BLK-M"
                 />
                 <Input
-                  label="Warehouse location"
+                  label="Kho"
                   value={variant.warehouseLocation}
-                  onChange={(event) =>
-                    updateVariant(index, (current) => ({
-                      ...current,
-                      warehouseLocation: event.target.value,
-                    }))
-                  }
-                  placeholder="HCM-FRAME-01"
+                  onChange={(e) => updateVariant(index, (c) => ({ ...c, warehouseLocation: e.target.value }))}
+                  placeholder="HCM-01"
                 />
                 <Input
-                  label="Color"
+                  label="Màu"
                   value={variant.color}
-                  onChange={(event) =>
-                    updateVariant(index, (current) => ({
-                      ...current,
-                      color: event.target.value,
-                    }))
-                  }
+                  onChange={(e) => updateVariant(index, (c) => ({ ...c, color: e.target.value }))}
                   placeholder="Black"
                 />
                 <Input
                   label="Size"
                   value={variant.size}
-                  onChange={(event) =>
-                    updateVariant(index, (current) => ({
-                      ...current,
-                      size: event.target.value,
-                    }))
-                  }
+                  onChange={(e) => updateVariant(index, (c) => ({ ...c, size: e.target.value }))}
                   placeholder="M"
                 />
+              </div>
+              {/* Row 2: price + stock */}
+              <div className="grid grid-cols-2 gap-3">
                 <Input
-                  label="Variant price (VND)"
+                  label="Giá biến thể (VND)"
                   type="number"
                   value={variant.price}
-                  onChange={(event) =>
-                    updateVariant(index, (current) => ({
-                      ...current,
-                      price: event.target.value,
-                    }))
-                  }
+                  onChange={(e) => updateVariant(index, (c) => ({ ...c, price: e.target.value }))}
                   placeholder={formData.price || '0'}
                 />
                 <Input
-                  label="Variant stock"
+                  label="Tồn kho biến thể"
                   type="number"
                   value={variant.stock}
-                  onChange={(event) =>
-                    updateVariant(index, (current) => ({
-                      ...current,
-                      stock: event.target.value,
-                    }))
-                  }
+                  onChange={(e) => updateVariant(index, (c) => ({ ...c, stock: e.target.value }))}
                   placeholder="0"
                 />
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-4">
-                <div className="rounded-md border border-gray-100 p-3">
-                  <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <Upload className="h-4 w-4" />
-                    Variant image
-                  </div>
-                  {variant.imageUrl ? (
-                    <img
-                      src={variant.imageUrl}
-                      alt={`Variant ${index + 1}`}
-                      className="mb-2 h-20 w-20 rounded-md object-cover"
+              {/* Asset uploads: Image | Poster | GLB in 3 cols */}
+              <div className="mt-3 grid grid-cols-3 gap-3">
+                {/* Variant image */}
+                <div className="rounded-md border border-gray-100 bg-gray-50">
+                  <label className="flex cursor-pointer flex-col items-center gap-1.5 p-2 text-xs font-medium text-gray-500 hover:text-amber-600">
+                    {variant.imageUrl ? (
+                      <img src={variant.imageUrl} alt={`Variant ${index + 1}`} className="h-20 w-full rounded object-cover" />
+                    ) : (
+                      <div className="flex h-20 w-full flex-col items-center justify-center rounded border-2 border-dashed border-gray-200 text-gray-400">
+                        <Upload className="h-5 w-5" />
+                        <span className="mt-1 text-xs">Ảnh biến thể</span>
+                      </div>
+                    )}
+                    <span className="text-xs">{variant.imageUrl ? '↺ Đổi ảnh' : '+ Tải lên'}</span>
+                    <input
+                      type="file" accept="image/*"
+                      disabled={isSubmitting || uploadingKey === getVariantUploadKey(variant.id, 'image')}
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) void onUploadVariantAsset(f, variant.id, 'imageUrl'); }}
+                      className="hidden"
                     />
-                  ) : null}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    disabled={
-                      isSubmitting ||
-                      uploadingKey === getVariantUploadKey(variant.id, 'image')
-                    }
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (file) void onUploadVariantAsset(file, variant.id, 'imageUrl');
-                    }}
-                    className="block w-full text-sm text-gray-600"
-                  />
-                  <Input
-                    label="Image URL"
-                    value={variant.imageUrl}
-                    onChange={(event) =>
-                      updateVariant(index, (current) => ({
-                        ...current,
-                        imageUrl: event.target.value,
-                      }))
-                    }
-                    placeholder="https://..."
-                  />
+                  </label>
+                  {variant.imageUrl && (
+                    <input
+                      type="text" value={variant.imageUrl}
+                      onChange={(e) => updateVariant(index, (c) => ({ ...c, imageUrl: e.target.value }))}
+                      className="w-full rounded-b-md border-t border-gray-200 px-2 py-1 text-xs text-gray-500 focus:border-amber-400 focus:outline-none"
+                      placeholder="URL..."
+                    />
+                  )}
                 </div>
 
-                <div className="rounded-md border border-gray-100 p-3">
-                  <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <Upload className="h-4 w-4" />
-                    Poster image
-                  </div>
-                  {variant.posterUrl ? (
-                    <img
-                      src={variant.posterUrl}
-                      alt={`Variant poster ${index + 1}`}
-                      className="mb-2 h-20 w-20 rounded-md object-cover"
+                {/* Poster image */}
+                <div className="rounded-md border border-gray-100 bg-gray-50">
+                  <label className="flex cursor-pointer flex-col items-center gap-1.5 p-2 text-xs font-medium text-gray-500 hover:text-amber-600">
+                    {variant.posterUrl ? (
+                      <img src={variant.posterUrl} alt={`Poster ${index + 1}`} className="h-20 w-full rounded object-cover" />
+                    ) : (
+                      <div className="flex h-20 w-full flex-col items-center justify-center rounded border-2 border-dashed border-gray-200 text-gray-400">
+                        <Upload className="h-5 w-5" />
+                        <span className="mt-1 text-xs">Ảnh poster</span>
+                      </div>
+                    )}
+                    <span className="text-xs">{variant.posterUrl ? '↺ Đổi ảnh' : '+ Tải lên'}</span>
+                    <input
+                      type="file" accept="image/*"
+                      disabled={isSubmitting || uploadingKey === getVariantUploadKey(variant.id, 'poster')}
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) void onUploadVariantAsset(f, variant.id, 'posterUrl'); }}
+                      className="hidden"
                     />
-                  ) : null}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    disabled={
-                      isSubmitting ||
-                      uploadingKey === getVariantUploadKey(variant.id, 'poster')
-                    }
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (file) void onUploadVariantAsset(file, variant.id, 'posterUrl');
-                    }}
-                    className="block w-full text-sm text-gray-600"
-                  />
-                  <Input
-                    label="Poster URL"
-                    value={variant.posterUrl}
-                    onChange={(event) =>
-                      updateVariant(index, (current) => ({
-                        ...current,
-                        posterUrl: event.target.value,
-                      }))
-                    }
-                    placeholder="https://..."
-                  />
+                  </label>
+                  {variant.posterUrl && (
+                    <input
+                      type="text" value={variant.posterUrl}
+                      onChange={(e) => updateVariant(index, (c) => ({ ...c, posterUrl: e.target.value }))}
+                      className="w-full rounded-b-md border-t border-gray-200 px-2 py-1 text-xs text-gray-500 focus:border-amber-400 focus:outline-none"
+                      placeholder="URL..."
+                    />
+                  )}
                 </div>
-              </div>
 
-              <div className="mt-4">
-                <div className="rounded-md border border-gray-100 p-3">
-                  <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <Upload className="h-4 w-4" />
-                    GLB asset
-                  </div>
-                  <input
-                    type="file"
-                    accept=".glb,.gltf,model/gltf-binary,model/gltf+json"
-                    disabled={
-                      isSubmitting ||
-                      uploadingKey === getVariantUploadKey(variant.id, 'glb')
-                    }
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (file) void onUploadVariantAsset(file, variant.id, 'glbUrl');
-                    }}
-                    className="block w-full text-sm text-gray-600"
-                  />
-                  <Input
-                    label="GLB URL"
-                    value={variant.glbUrl}
-                    onChange={(event) =>
-                      updateVariant(index, (current) => ({
-                        ...current,
-                        glbUrl: event.target.value,
-                      }))
-                    }
-                    placeholder="https://...glb"
-                  />
+                {/* GLB asset */}
+                <div className="rounded-md border border-gray-100 bg-gray-50">
+                  <label className="flex cursor-pointer flex-col items-center gap-1.5 p-2 text-xs font-medium text-gray-500 hover:text-amber-600">
+                    <div className={`flex h-20 w-full flex-col items-center justify-center rounded border-2 text-center ${
+                      variant.glbUrl ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-dashed border-gray-200 text-gray-400'
+                    }`}>
+                      <Upload className="h-5 w-5" />
+                      <span className="mt-1 text-xs">{variant.glbUrl ? 'GLB ✓' : 'GLB file'}</span>
+                    </div>
+                    <span className="text-xs">{variant.glbUrl ? '↺ Đổi GLB' : '+ Tải lên'}</span>
+                    <input
+                      type="file" accept=".glb,.gltf"
+                      disabled={isSubmitting || uploadingKey === getVariantUploadKey(variant.id, 'glb')}
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) void onUploadVariantAsset(f, variant.id, 'glbUrl'); }}
+                      className="hidden"
+                    />
+                  </label>
+                  {variant.glbUrl && (
+                    <input
+                      type="text" value={variant.glbUrl}
+                      onChange={(e) => updateVariant(index, (c) => ({ ...c, glbUrl: e.target.value }))}
+                      className="w-full rounded-b-md border-t border-gray-200 px-2 py-1 text-xs text-gray-500 focus:border-amber-400 focus:outline-none"
+                      placeholder="https://...glb"
+                    />
+                  )}
                 </div>
               </div>
             </div>
@@ -967,7 +905,7 @@ export function ProductForm({
         </div>
 
         {formData.preOrderEnabled ? (
-          <div className="mt-4 space-y-4">
+          <div className="mt-3 space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <Input
                 label="Deposit percent"
@@ -1141,61 +1079,83 @@ export function ProductForm({
       {/* ── Media uploads ── */}
       <div className="rounded-md border border-gray-200 p-3">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Media</p>
+
+        {/* Hero + Thumbnail side by side */}
         <div className="grid grid-cols-2 gap-3">
           {/* Hero */}
-          <div className="rounded border border-gray-100 p-2">
-            <div className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-gray-600">
-              <Upload className="h-3.5 w-3.5" /> Hero image
-            </div>
-            {formData.heroImageUrl && (
-              <img src={formData.heroImageUrl} alt="Hero preview" className="mb-1.5 h-16 w-16 rounded object-cover" />
-            )}
-            <input
-              type="file" accept="image/*"
-              disabled={isSubmitting || uploadingKey === 'hero'}
-              onChange={(event) => { const file = event.target.files?.[0]; if (file) void onUploadSingle(file, 'hero'); }}
-              className="block w-full text-xs text-gray-500"
-            />
+          <div className="rounded-md border border-gray-100 bg-gray-50">
+            <label className="flex cursor-pointer flex-col items-center gap-1.5 p-2 text-xs font-medium text-gray-500 hover:text-amber-600">
+              {formData.heroImageUrl ? (
+                <img src={formData.heroImageUrl} alt="Hero" className="h-28 w-full rounded object-cover" />
+              ) : (
+                <div className="flex h-28 w-full flex-col items-center justify-center rounded border-2 border-dashed border-gray-200 text-gray-400">
+                  <Upload className="h-6 w-6" />
+                  <span className="mt-1 text-xs">Ảnh chính (Hero)</span>
+                </div>
+              )}
+              <span>{formData.heroImageUrl ? '↺ Đổi ảnh hero' : '+ Tải lên hero'}</span>
+              <input
+                type="file" accept="image/*"
+                disabled={isSubmitting || uploadingKey === 'hero'}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) void onUploadSingle(f, 'hero'); }}
+                className="hidden"
+              />
+            </label>
           </div>
+
           {/* Thumbnail */}
-          <div className="rounded border border-gray-100 p-2">
-            <div className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-gray-600">
-              <Upload className="h-3.5 w-3.5" /> Thumbnail image
-            </div>
-            {formData.thumbnailUrl && (
-              <img src={formData.thumbnailUrl} alt="Thumbnail preview" className="mb-1.5 h-16 w-16 rounded object-cover" />
-            )}
-            <input
-              type="file" accept="image/*"
-              disabled={isSubmitting || uploadingKey === 'thumbnail'}
-              onChange={(event) => { const file = event.target.files?.[0]; if (file) void onUploadSingle(file, 'thumbnail'); }}
-              className="block w-full text-xs text-gray-500"
-            />
+          <div className="rounded-md border border-gray-100 bg-gray-50">
+            <label className="flex cursor-pointer flex-col items-center gap-1.5 p-2 text-xs font-medium text-gray-500 hover:text-amber-600">
+              {formData.thumbnailUrl ? (
+                <img src={formData.thumbnailUrl} alt="Thumbnail" className="h-28 w-full rounded object-cover" />
+              ) : (
+                <div className="flex h-28 w-full flex-col items-center justify-center rounded border-2 border-dashed border-gray-200 text-gray-400">
+                  <Upload className="h-6 w-6" />
+                  <span className="mt-1 text-xs">Ảnh thu nhỏ</span>
+                </div>
+              )}
+              <span>{formData.thumbnailUrl ? '↺ Đổi thumbnail' : '+ Tải lên thumbnail'}</span>
+              <input
+                type="file" accept="image/*"
+                disabled={isSubmitting || uploadingKey === 'thumbnail'}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) void onUploadSingle(f, 'thumbnail'); }}
+                className="hidden"
+              />
+            </label>
           </div>
         </div>
+
         {/* Gallery */}
         <div className="mt-3">
-          <div className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-gray-600">
-            <Upload className="h-3.5 w-3.5" /> Gallery images
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-xs font-medium text-gray-600">Ảnh bộ sưu tập</span>
+            <label className="flex cursor-pointer items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 hover:border-amber-400 hover:text-amber-600">
+              <Upload className="h-3 w-3" /> Thêm ảnh
+              <input
+                type="file" accept="image/*" multiple
+                disabled={isSubmitting || uploadingKey === 'gallery'}
+                onChange={(e) => void onUploadGallery(e.target.files)}
+                className="hidden"
+              />
+            </label>
           </div>
-          <input
-            type="file" accept="image/*" multiple
-            disabled={isSubmitting || uploadingKey === 'gallery'}
-            onChange={(event) => void onUploadGallery(event.target.files)}
-            className="mb-2 block w-full text-xs text-gray-500"
-          />
-          {formData.galleryUrls.length > 0 && (
-            <div className="grid grid-cols-5 gap-2">
+          {formData.galleryUrls.length > 0 ? (
+            <div className="grid grid-cols-6 gap-2">
               {formData.galleryUrls.map((url, index) => (
-                <div key={`${url}-${index}`} className="relative">
-                  <img src={url} alt={`Gallery ${index + 1}`} className="h-14 w-14 rounded object-cover" />
-                  <button type="button" onClick={() => onRemoveGallery(index)}
-                    className="absolute -top-2 -right-2 rounded-full bg-white text-red-500 shadow">
+                <div key={`${url}-${index}`} className="group relative">
+                  <img src={url} alt={`Gallery ${index + 1}`} className="h-14 w-full rounded-md object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => onRemoveGallery(index)}
+                    className="absolute -right-1 -top-1 rounded-full bg-white text-red-500 shadow opacity-0 transition-opacity group-hover:opacity-100"
+                  >
                     <XCircle className="h-4 w-4" />
                   </button>
                 </div>
               ))}
             </div>
+          ) : (
+            <p className="text-center text-xs text-gray-400 py-3">Chưa có ảnh gallery</p>
           )}
         </div>
       </div>
@@ -1232,7 +1192,7 @@ export function ProductForm({
         ) : null}
 
         {formData.tryOnEnabled ? (
-          <div className="mt-4 space-y-4">
+          <div className="mt-3 space-y-3">
             <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900">
               <p className="font-semibold">Manager can nho:</p>
               <p className="mt-1">Moi bien the muon thu kinh nen co image, poster va GLB rieng.</p>
@@ -1563,9 +1523,14 @@ export function ProductForm({
             </Button>
           )}
           {onSubmit && (
-            <Button type="button" onClick={onSubmit} disabled={isSubmitting}>
-              {isSubmitting ? 'Đang lưu...' : submitLabel}
-            </Button>
+            <Button
+            type="button"
+            onClick={onSubmit}
+            disabled={isSubmitting}
+            className="bg-amber-400 text-slate-900 hover:bg-amber-500"
+          >
+            {isSubmitting ? 'Đang lưu...' : submitLabel}
+          </Button>
           )}
         </div>
       )}
