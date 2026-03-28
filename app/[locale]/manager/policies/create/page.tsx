@@ -105,7 +105,7 @@ export default function CreatePolicyPage() {
     <>
       <Header
         title="Create Policy"
-        subtitle="Publish business rules for warranty, return, shipping, and platform terms"
+        subtitle="Publish business rules for refund, return, warranty, shipping, and platform terms"
       />
 
       <div className="space-y-6 p-6">
@@ -131,6 +131,7 @@ export default function CreatePolicyPage() {
           </h4>
           <ul className="space-y-1 text-sm text-blue-800">
             <li>Write short summaries so staff can identify the right policy quickly.</li>
+            <li>Use the refund category for manager-approved refund scope, shipping fee rules, and exception criteria.</li>
             <li>Keep version numbers explicit when policy changes affect operations.</li>
             <li>Use draft first for review, then publish active when approved.</li>
           </ul>

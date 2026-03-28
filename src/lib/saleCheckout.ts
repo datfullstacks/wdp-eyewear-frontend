@@ -17,6 +17,17 @@ function sanitizeNumber(value: number): number {
   return Math.max(1, Math.floor(value));
 }
 
+function capCartQuantity(quantity: number, stock?: number): number {
+  const normalizedQuantity = sanitizeNumber(quantity);
+  const normalizedStock = Number(stock);
+
+  if (Number.isFinite(normalizedStock) && normalizedStock > 0) {
+    return Math.min(normalizedQuantity, Math.floor(normalizedStock));
+  }
+
+  return normalizedQuantity;
+}
+
 function getPrimaryImage(product: SaleProduct): string {
   if (product.imageUrl) return product.imageUrl;
 
@@ -74,6 +85,51 @@ export function mapProductToCartItem(
     stock: Number(variant.stock || 0),
     quantity: normalizedQuantity,
   };
+}
+
+export function reconcileCartItems(
+  cartItems: SaleCartItem[],
+  products: SaleProduct[]
+): {
+  items: SaleCartItem[];
+  removedItems: SaleCartItem[];
+} {
+  const productMap = new Map(
+    products
+      .filter((product) => Boolean(product?._id))
+      .map((product) => [String(product._id), product] as const)
+  );
+
+  return cartItems.reduce<{
+    items: SaleCartItem[];
+    removedItems: SaleCartItem[];
+  }>(
+    (result, cartItem) => {
+      const product = productMap.get(String(cartItem.productId));
+      if (!product) {
+        result.removedItems.push(cartItem);
+        return result;
+      }
+
+      const variant = product.variants.find(
+        (item) => String(item?._id || '') === String(cartItem.variantId)
+      );
+      if (!variant) {
+        result.removedItems.push(cartItem);
+        return result;
+      }
+
+      result.items.push(
+        mapProductToCartItem(
+          product,
+          variant,
+          capCartQuantity(cartItem.quantity, variant.stock)
+        )
+      );
+      return result;
+    },
+    { items: [], removedItems: [] }
+  );
 }
 
 export function buildCheckoutPayload(input: {

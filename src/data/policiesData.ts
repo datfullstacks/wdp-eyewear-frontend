@@ -3,7 +3,14 @@
 export interface Policy {
   id: string;
   title: string;
-  category: 'warranty' | 'return' | 'shipping' | 'purchase' | 'privacy' | 'terms';
+  category:
+    | 'warranty'
+    | 'return'
+    | 'refund'
+    | 'shipping'
+    | 'purchase'
+    | 'privacy'
+    | 'terms';
   content: string;
   summary: string;
   effectiveDate: string;

@@ -17,6 +17,7 @@ type CategoryFilter =
   | 'all'
   | 'warranty'
   | 'return'
+  | 'refund'
   | 'shipping'
   | 'purchase'
   | 'privacy'
@@ -178,7 +179,7 @@ export default function PoliciesPage() {
     <>
       <Header
         title="Policy Management"
-        subtitle="Control business rules for purchase, return, warranty, shipping, and privacy"
+        subtitle="Control business rules for refund, return, warranty, shipping, purchase, and privacy"
         showAddButton
         addButtonLabel="Create policy"
         onAdd={() => router.push('/manager/policies/create')}
@@ -221,6 +222,7 @@ export default function PoliciesPage() {
                   <option value="all">All categories</option>
                   <option value="warranty">Warranty</option>
                   <option value="return">Return</option>
+                  <option value="refund">Refund</option>
                   <option value="shipping">Shipping</option>
                   <option value="purchase">Purchase</option>
                   <option value="privacy">Privacy</option>
@@ -259,6 +261,7 @@ export default function PoliciesPage() {
                   noData: 'No policies found',
                   warranty: 'Warranty',
                   return: 'Return',
+                  refund: 'Refund',
                   shipping: 'Shipping',
                   purchase: 'Purchase',
                   privacy: 'Privacy',

@@ -18,6 +18,10 @@ const formatCurrency = (value: number) =>
     maximumFractionDigits: 0,
   }).format(value || 0);
 
+function getActiveUsageCount(discount: PromotionRecord) {
+  return Number(discount.activeCount ?? discount.usageCount ?? 0);
+}
+
 function toFormData(discount: PromotionRecord): DiscountFormData {
   return {
     code: discount.code,
@@ -125,6 +129,8 @@ export default function DiscountDetailPage() {
     );
   }
 
+  const activeUsageCount = getActiveUsageCount(discount);
+
   return (
     <>
       <Header
@@ -226,7 +232,11 @@ export default function DiscountDetailPage() {
                 <div>
                   <div className="text-gray-500">Usage</div>
                   <div>
-                    {discount.usageCount} / {discount.usageLimit === 0 ? 'Unlimited' : discount.usageLimit}
+                    {activeUsageCount} /{' '}
+                    {discount.usageLimit === 0 ? 'Unlimited' : discount.usageLimit}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    Used {discount.usedCount ?? activeUsageCount} • Reserved {discount.reservedCount ?? 0}
                   </div>
                 </div>
                 <div>

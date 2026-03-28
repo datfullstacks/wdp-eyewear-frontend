@@ -6,6 +6,10 @@ type PromotionStatus = "active" | "inactive" | "expired" | "scheduled";
 export interface PromotionRecord extends Discount {
   cartType?: "all" | "ready_stock" | "pre_order";
   active?: boolean;
+  usedCount?: number;
+  reservedCount?: number;
+  activeCount?: number;
+  remainingCount?: number | null;
 }
 
 interface BackendEnvelope<T> {
@@ -32,6 +36,10 @@ interface BackendPromotion {
   endDate?: string;
   usageLimit?: number;
   usageCount?: number;
+  usedCount?: number;
+  reservedCount?: number;
+  activeCount?: number;
+  remainingCount?: number | null;
   applicableCategories?: string[];
   cartType?: "all" | "ready_stock" | "pre_order";
   status?: PromotionStatus;
@@ -45,6 +53,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function mapPromotion(raw: BackendPromotion): PromotionRecord {
+  const usedCount = Number(raw.usedCount ?? raw.usageCount ?? 0);
+  const reservedCount = Number(raw.reservedCount ?? 0);
+  const activeCount = Number(
+    raw.activeCount ?? raw.usageCount ?? usedCount + reservedCount
+  );
+
   return {
     id: raw.id || raw._id || "",
     code: raw.code || "",
@@ -57,7 +71,14 @@ function mapPromotion(raw: BackendPromotion): PromotionRecord {
     startDate: raw.startDate || "",
     endDate: raw.endDate || "",
     usageLimit: Number(raw.usageLimit || 0),
-    usageCount: Number(raw.usageCount || 0),
+    usageCount: activeCount,
+    usedCount,
+    reservedCount,
+    activeCount,
+    remainingCount:
+      raw.remainingCount === null || raw.remainingCount === undefined
+        ? null
+        : Number(raw.remainingCount),
     applicableCategories: Array.isArray(raw.applicableCategories)
       ? raw.applicableCategories
       : ["all"],

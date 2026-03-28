@@ -373,6 +373,7 @@ export interface ProductUpsertInput {
     };
   };
   variant?: {
+    _id?: string;
     sku?: string;
     barcode?: string;
     color?: string;
@@ -383,6 +384,7 @@ export interface ProductUpsertInput {
     stock?: number;
   };
   variants?: Array<{
+    _id?: string;
     sku?: string;
     barcode?: string;
     color?: string;
@@ -468,6 +470,10 @@ function getProductStock(raw?: BackendProduct): number {
   const variants = raw?.variants || [];
   if (variants.length === 0) return 0;
   return variants.reduce((sum, variant) => sum + Number(variant.stock || 0), 0);
+}
+
+function isMongoId(value: unknown): boolean {
+  return /^[a-f0-9]{24}$/i.test(String(value ?? '').trim());
 }
 
 function normalizeStoreRef(raw: any): ProductStoreRef {
@@ -755,6 +761,7 @@ function toBackendUpsertPayload(
       ? input.variants
       : [
           {
+            _id: input.variant?._id,
             sku: input.variant?.sku,
             barcode: input.variant?.barcode,
             color: input.variant?.color,
@@ -766,6 +773,7 @@ function toBackendUpsertPayload(
           },
         ];
   const normalizedVariants = variantInputs.map((variant, index) => ({
+    ...(isMongoId(variant._id) ? { _id: String(variant._id) } : {}),
     sku: variant.sku || `SKU-${Date.now()}-${index + 1}`,
     barcode: variant.barcode,
     options: {

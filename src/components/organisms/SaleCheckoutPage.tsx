@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   AlertCircle,
@@ -16,12 +16,12 @@ import {
   Trash2,
 } from 'lucide-react';
 
-import { createCheckout, createQuote } from '@/api/saleCheckout';
+import { createCheckout, createQuote, getProducts } from '@/api/saleCheckout';
 import { RuntimeFeatureBlockedPage } from '@/components/pages/RuntimeFeatureBlockedPage';
 import { Header } from '@/components/organisms/Header';
 import { useOrderPolling } from '@/hooks/useOrderPolling';
 import { useRuntimeSystemConfig } from '@/hooks/useRuntimeSystemConfig';
-import { buildCheckoutPayload } from '@/lib/saleCheckout';
+import { buildCheckoutPayload, reconcileCartItems } from '@/lib/saleCheckout';
 import { cn } from '@/lib/utils';
 import { useSaleCartStore } from '@/stores/saleCartStore';
 import type {
@@ -949,6 +949,8 @@ export const SaleCheckoutPage: React.FC = () => {
 
   const cartItems = useSaleCartStore((state) => state.items);
   const clearCart = useSaleCartStore((state) => state.clearCart);
+  const replaceItems = useSaleCartStore((state) => state.replaceItems);
+  const cartItemsRef = useRef(cartItems);
 
   const [shippingForm, setShippingForm] =
     useState<ShippingAddressForm>(defaultShippingForm);
@@ -989,11 +991,22 @@ export const SaleCheckoutPage: React.FC = () => {
     () => cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
     [cartItems]
   );
+  const cartVariantSignature = useMemo(
+    () =>
+      cartItems
+        .map((item) => `${item.productId}::${item.variantId}`)
+        .join('|'),
+    [cartItems]
+  );
 
   const summary = useMemo(
     () => resolveSummary(subtotal, quoteResult, checkoutResult),
     [checkoutResult, quoteResult, subtotal]
   );
+
+  useEffect(() => {
+    cartItemsRef.current = cartItems;
+  }, [cartItems]);
 
   useEffect(() => {
     if (
@@ -1019,12 +1032,84 @@ export const SaleCheckoutPage: React.FC = () => {
     stopOrderPolling();
   };
 
+  useEffect(() => {
+    if (!cartVariantSignature) return;
+
+    let active = true;
+
+    const syncCartWithLatestVariants = async () => {
+      try {
+        const products = await getProducts();
+        if (!active) return;
+
+        const currentItems = cartItemsRef.current;
+        const { items, removedItems } = reconcileCartItems(currentItems, products);
+        const hasChanges = JSON.stringify(items) !== JSON.stringify(currentItems);
+
+        if (!hasChanges && removedItems.length === 0) return;
+
+        replaceItems(items);
+        setQuoteResult(null);
+        setCheckoutResult(null);
+        setQuoteError('');
+        setOrderDetail(null);
+        stopOrderPolling();
+
+        if (removedItems.length > 0) {
+          const removedNames = Array.from(
+            new Set(removedItems.map((item) => item.productName).filter(Boolean))
+          );
+          setCheckoutError(
+            `Da xoa ${removedNames.join(', ')} khoi gio hang vi bien the da bi xoa hoac thay doi. Vui long chon lai bien the moi nhat.`
+          );
+          return;
+        }
+
+        if (hasChanges) {
+          setCheckoutError(
+            'Gio hang da duoc dong bo lai theo du lieu ton kho va bien the moi nhat.'
+          );
+        }
+      } catch {
+        // Keep the current cart state if the sync request fails.
+      }
+    };
+
+    void syncCartWithLatestVariants();
+
+    return () => {
+      active = false;
+    };
+  }, [cartVariantSignature, replaceItems, setOrderDetail, stopOrderPolling]);
+
   const validateCheckoutInput = (): string => {
     if (cartItems.length === 0) return 'Gi\u1ecf h\u00e0ng \u0111ang tr\u1ed1ng.';
+
+    const missingVariantItem = cartItems.find(
+      (item) => !String(item.variantId || '').trim()
+    );
+    if (missingVariantItem) {
+      return `Bien the khong hop le o san pham: ${missingVariantItem.productName}`;
+    }
 
     const invalidQtyItem = cartItems.find((item) => item.quantity < 1);
     if (invalidQtyItem) {
       return `S\u1ed1 l\u01b0\u1ee3ng kh\u00f4ng h\u1ee3p l\u1ec7 \u1edf s\u1ea3n ph\u1ea9m: ${invalidQtyItem.productName}`;
+    }
+
+    const outOfStockItem = cartItems.find(
+      (item) => Number.isFinite(Number(item.stock)) && Number(item.stock) <= 0
+    );
+    if (outOfStockItem) {
+      return `Bien the da het hang: ${outOfStockItem.productName}`;
+    }
+
+    const exceededStockItem = cartItems.find((item) => {
+      const stock = Number(item.stock);
+      return Number.isFinite(stock) && stock > 0 && item.quantity > stock;
+    });
+    if (exceededStockItem) {
+      return `So luong vuot ton kho cua san pham: ${exceededStockItem.productName}`;
     }
 
     const missingField = REQUIRED_SHIPPING_FIELDS.find(
