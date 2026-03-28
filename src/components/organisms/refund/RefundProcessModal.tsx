@@ -14,7 +14,13 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { RefundRequest, formatCurrency, methodConfig } from '@/types/refund';
+import { RefundPayoutQrCard } from './RefundPayoutQrCard';
+import {
+  RefundRequest,
+  formatCurrency,
+  hasRefundBankInfo,
+  methodConfig,
+} from '@/types/refund';
 
 interface RefundProcessModalProps {
   refund: RefundRequest | null;
@@ -60,6 +66,10 @@ export const RefundProcessModal = ({
       refund.amount
     );
   }, [refund]);
+  const hasBankInfo = useMemo(
+    () => hasRefundBankInfo(refund?.bankInfo),
+    [refund]
+  );
 
   const handleSubmit = async () => {
     await onSubmit({
@@ -108,17 +118,28 @@ export const RefundProcessModal = ({
                   Số tiền: <span className="font-bold">{formatCurrency(amount)}</span>
                 </p>
                 <p>Phương thức: {methodConfig[refund.method].label}</p>
-                {refund.bankInfo ? (
+                {hasBankInfo && refund.bankInfo ? (
                   <>
                     <p>Ngân hàng: {refund.bankInfo.bankName || '--'}</p>
-                    <p>So TK: {refund.bankInfo.accountNumber || '--'}</p>
+                    <p>Số TK: {refund.bankInfo.accountNumber || '--'}</p>
                     <p>Chủ TK: {refund.bankInfo.accountHolder || '--'}</p>
                   </>
                 ) : (
-                  <p>Khách chưa cung cấp thông tin tài khoản.</p>
+                  <p>
+                    Khách chưa cung cấp tài khoản hoàn tiền. Hãy yêu cầu bổ
+                    sung trước khi xác nhận chuyển tiền.
+                  </p>
                 )}
               </div>
             </div>
+
+            {hasBankInfo && refund.method === 'bank_transfer' ? (
+              <RefundPayoutQrCard
+                refund={refund}
+                amount={amount}
+                title="QR chuyển khoản hoàn tiền"
+              />
+            ) : null}
 
             <div>
               <Label className="text-foreground/80">Mã giao dịch</Label>
@@ -174,7 +195,7 @@ export const RefundProcessModal = ({
           </Button>
           <Button
             onClick={() => void handleSubmit()}
-            disabled={isSubmitting || !transactionRef.trim()}
+            disabled={isSubmitting || !transactionRef.trim() || !hasBankInfo}
           >
             <CreditCard className="mr-2 h-4 w-4" />
             {isSubmitting ? 'Đang xử lý...' : 'Xác nhận đã chuyển tiền'}

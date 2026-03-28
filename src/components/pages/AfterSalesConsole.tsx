@@ -7,6 +7,7 @@ import { AlertTriangle, ExternalLink, Loader2, MessageSquare, RefreshCw } from '
 import supportApi, {
   type SupportMessageRecord,
   type SupportTicketCategory,
+  type SupportTicketOwnerRole,
   type SupportTicketRecord,
   type SupportTicketStatus,
   type WarrantyEligibility,
@@ -116,6 +117,23 @@ const ROLE_LABELS: Record<string, string> = {
   manager: 'Quản lý',
   admin: 'Quản trị viên',
 };
+const TICKET_OWNER_LABELS: Record<SupportTicketOwnerRole, string> = {
+  none: 'Đã đóng',
+  customer: 'Khách hàng',
+  sales: 'Sale',
+  operations: 'Operations',
+  manager: 'Manager',
+};
+const NEXT_ACTION_LABELS: Record<string, string> = {
+  review_ticket: 'Sale xem xét yêu cầu',
+  follow_up_customer: 'Sale theo dõi và phản hồi khách',
+  close_ticket: 'Sale đóng case',
+  review_warranty: 'Sale kiểm tra điều kiện bảo hành',
+  decide_warranty: 'Sale duyệt hoặc từ chối bảo hành',
+  start_service: 'Operations tiếp nhận bảo hành',
+  complete_service: 'Operations hoàn tất bảo hành',
+  reply_customer: 'Phản hồi khách hàng',
+};
 
 const ORDER_TYPE_LABELS: Record<string, string> = {
   ready_stock: 'Có sẵn',
@@ -161,6 +179,20 @@ function getStatusOptions(scope: AfterSalesScope, category: SupportTicketCategor
     return ['in_service', 'completed'] as SupportTicketStatus[];
   }
   return [] as SupportTicketStatus[];
+}
+
+function getOwnerRoleFilter(
+  scope: AfterSalesScope,
+  category: SupportTicketCategory
+): SupportTicketOwnerRole | undefined {
+  if (scope === 'manager') return undefined;
+  if (scope === 'sale' && ['return', 'warranty'].includes(category)) {
+    return 'sales';
+  }
+  if (scope === 'operation' && category === 'warranty') {
+    return 'operations';
+  }
+  return undefined;
 }
 
 function TicketDetailDialog({
@@ -235,6 +267,18 @@ function TicketDetailDialog({
                   <dt>Khách hàng</dt>
                   <dd className="text-right font-medium text-gray-900">
                     {ticket.user?.name || ticket.email || '-'}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt>Đang xử lý</dt>
+                  <dd className="text-right font-medium text-gray-900">
+                    {TICKET_OWNER_LABELS[ticket.currentOwnerRole] || ticket.currentOwnerRole}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt>Bước tiếp theo</dt>
+                  <dd className="text-right font-medium text-gray-900">
+                    {NEXT_ACTION_LABELS[ticket.nextActionCode] || ticket.nextActionCode || '-'}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-3">
@@ -447,11 +491,13 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
     try {
       setLoading(true);
       setErrorMessage('');
+      const ownerRole = getOwnerRoleFilter(scope, activeConfig.category);
 
       if (activeConfig.category === 'warranty') {
         const result = await supportApi.getWarrantyCases({
           page: 1,
           limit: 100,
+          ownerRole,
           status: statusFilter !== 'all' ? statusFilter : undefined,
           eligibility:
             eligibilityFilter !== 'all'
@@ -465,6 +511,7 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
           page: 1,
           limit: 100,
           category: activeConfig.category,
+          ownerRole,
           status: statusFilter !== 'all' ? statusFilter : undefined,
           q: searchQuery || undefined,
         });
@@ -477,7 +524,7 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
     } finally {
       setLoading(false);
     }
-  }, [activeConfig.category, eligibilityFilter, searchQuery, statusFilter]);
+  }, [activeConfig.category, eligibilityFilter, scope, searchQuery, statusFilter]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -712,6 +759,10 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
                               >
                                 {STATUS_LABELS[ticket.status] || ticket.status}
                               </span>
+                              <div className="mt-1 text-xs text-gray-500">
+                                {TICKET_OWNER_LABELS[ticket.currentOwnerRole] ||
+                                  ticket.currentOwnerRole}
+                              </div>
                               {ticket.warranty ? (
                                 <div className="mt-1 text-xs text-gray-500">
                                   {ELIGIBILITY_LABELS[ticket.warranty.eligibility]}
@@ -719,7 +770,12 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
                               ) : null}
                             </td>
                             <td className="px-4 py-3">
-                              {formatDateTime(ticket.lastMessageAt || ticket.updatedAt)}
+                              <div>{formatDateTime(ticket.lastMessageAt || ticket.updatedAt)}</div>
+                              <div className="mt-1 text-xs text-gray-500">
+                                {NEXT_ACTION_LABELS[ticket.nextActionCode] ||
+                                  ticket.nextActionCode ||
+                                  '-'}
+                              </div>
                             </td>
                             <td className="px-4 py-3 text-right">
                               <Button
