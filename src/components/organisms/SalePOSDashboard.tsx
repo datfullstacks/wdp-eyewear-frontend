@@ -9,7 +9,11 @@ import { SearchBar } from '@/components/molecules/SearchBar';
 import { CartDrawer } from './CartDrawer';
 import { SaleHeader } from './SaleHeader';
 import { getProducts } from '@/api/saleCheckout';
-import { mapProductToCartItem, mapProductToOption } from '@/lib/saleCheckout';
+import {
+  mapProductToCartItem,
+  mapProductToOption,
+  reconcileCartItems,
+} from '@/lib/saleCheckout';
 import { useSaleCartStore } from '@/stores/saleCartStore';
 import type { SaleProduct } from '@/types/saleCheckout';
 
@@ -47,6 +51,7 @@ export const SalePOSDashboard: React.FC = () => {
 
   const cartItems = useSaleCartStore((state) => state.items);
   const addToCart = useSaleCartStore((state) => state.addToCart);
+  const replaceItems = useSaleCartStore((state) => state.replaceItems);
   const removeFromCart = useSaleCartStore((state) => state.removeFromCart);
   const updateQuantity = useSaleCartStore((state) => state.updateQuantity);
   const clearCart = useSaleCartStore((state) => state.clearCart);
@@ -103,6 +108,26 @@ export const SalePOSDashboard: React.FC = () => {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (products.length === 0 || cartItems.length === 0) return;
+
+    const { items, removedItems } = reconcileCartItems(cartItems, products);
+    const hasChanges = JSON.stringify(items) !== JSON.stringify(cartItems);
+
+    if (!hasChanges && removedItems.length === 0) return;
+
+    replaceItems(items);
+
+    if (removedItems.length > 0) {
+      const removedNames = Array.from(
+        new Set(removedItems.map((item) => item.productName).filter(Boolean))
+      );
+      setActionError(
+        `Da xoa ${removedNames.join(', ')} khoi gio hang vi bien the da bi xoa hoac thay doi. Vui long chon lai bien the moi nhat.`
+      );
+    }
+  }, [cartItems, products, replaceItems]);
 
   const filteredProducts = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();

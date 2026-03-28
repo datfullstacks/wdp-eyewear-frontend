@@ -5,6 +5,7 @@ import type { SaleCartItem } from '@/types/saleCheckout';
 interface SaleCartState {
   items: SaleCartItem[];
   addToCart: (item: SaleCartItem) => void;
+  replaceItems: (items: SaleCartItem[]) => void;
   removeFromCart: (productId: string, variantId: string) => void;
   updateQuantity: (productId: string, variantId: string, quantity: number) => void;
   clearCart: () => void;
@@ -16,6 +17,17 @@ function itemKey(productId: string, variantId: string): string {
   return `${productId}::${variantId}`;
 }
 
+function capQuantity(quantity: number, stock?: number): number {
+  const normalizedQty = Math.max(1, Math.floor(quantity || 1));
+  const normalizedStock = Number(stock);
+
+  if (Number.isFinite(normalizedStock) && normalizedStock > 0) {
+    return Math.min(normalizedQty, Math.floor(normalizedStock));
+  }
+
+  return normalizedQty;
+}
+
 export const useSaleCartStore = create<SaleCartState>()(
   persist(
     (set, get) => ({
@@ -23,7 +35,7 @@ export const useSaleCartStore = create<SaleCartState>()(
 
       addToCart: (item) =>
         set((state) => {
-          const normalizedQty = Math.max(1, Math.floor(item.quantity || 1));
+          const normalizedQty = capQuantity(item.quantity, item.stock);
           const nextItem = { ...item, quantity: normalizedQty };
           const targetKey = itemKey(nextItem.productId, nextItem.variantId);
 
@@ -41,15 +53,21 @@ export const useSaleCartStore = create<SaleCartState>()(
               const currentKey = itemKey(current.productId, current.variantId);
               if (currentKey !== targetKey) return current;
 
-              const mergedQty = current.quantity + normalizedQty;
-              const cappedQty = Math.max(1, Math.min(current.stock || mergedQty, mergedQty));
-
               return {
                 ...current,
-                quantity: cappedQty,
+                ...nextItem,
+                quantity: capQuantity(current.quantity + normalizedQty, nextItem.stock),
               };
             }),
           };
+        }),
+
+      replaceItems: (items) =>
+        set({
+          items: items.map((item) => ({
+            ...item,
+            quantity: capQuantity(item.quantity, item.stock),
+          })),
         }),
 
       removeFromCart: (productId, variantId) =>
@@ -66,11 +84,9 @@ export const useSaleCartStore = create<SaleCartState>()(
               return item;
             }
 
-            const normalizedQty = Math.max(1, Math.floor(quantity));
-            const cappedQty = Math.max(1, Math.min(item.stock || normalizedQty, normalizedQty));
             return {
               ...item,
-              quantity: cappedQty,
+              quantity: capQuantity(quantity, item.stock),
             };
           }),
         })),

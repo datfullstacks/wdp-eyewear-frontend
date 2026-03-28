@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Filter } from 'lucide-react';
 
 import { orderApi, type OrderRecord, type RefundBreakdown } from '@/api';
+import policyApi, { type PolicyRecord } from '@/api/policies';
 import { SearchBar } from '@/components/molecules/SearchBar';
 import { Pagination } from '@/components/molecules/Pagination';
 import { Header } from '@/components/organisms/Header';
@@ -164,13 +165,20 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
     useState<SaleQueueView>('needs_action');
   const [currentPage, setCurrentPage] = useState(1);
   const [refunds, setRefunds] = useState<RefundRequest[]>([]);
+  const [activeRefundPolicy, setActiveRefundPolicy] = useState<PolicyRecord | null>(
+    null
+  );
   const [selectedRefund, setSelectedRefund] = useState<RefundRequest | null>(
     null
   );
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isRefundPolicyLoading, setIsRefundPolicyLoading] = useState(
+    scope === 'manager'
+  );
   const [isSubmittingAction, setIsSubmittingAction] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [refundPolicyError, setRefundPolicyError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isApproveOpen, setIsApproveOpen] = useState(false);
@@ -205,6 +213,48 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
     };
 
     void load();
+
+    return () => {
+      mounted = false;
+    };
+  }, [scope]);
+
+  useEffect(() => {
+    if (scope !== 'manager') {
+      setActiveRefundPolicy(null);
+      setIsRefundPolicyLoading(false);
+      setRefundPolicyError('');
+      return;
+    }
+
+    let mounted = true;
+
+    const loadRefundPolicy = async () => {
+      try {
+        setIsRefundPolicyLoading(true);
+        setRefundPolicyError('');
+        const result = await policyApi.getAll({
+          page: 1,
+          limit: 5,
+          category: 'refund',
+          status: 'active',
+        });
+        if (!mounted) return;
+        setActiveRefundPolicy(result.policies[0] || null);
+      } catch (error) {
+        if (!mounted) return;
+        setActiveRefundPolicy(null);
+        setRefundPolicyError(
+          toErrorMessage(error, 'Không thể tải chính sách hoàn tiền.')
+        );
+      } finally {
+        if (mounted) {
+          setIsRefundPolicyLoading(false);
+        }
+      }
+    };
+
+    void loadRefundPolicy();
 
     return () => {
       mounted = false;
@@ -425,6 +475,54 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
       <Header title={pageTitle} subtitle={pageSubtitle} />
 
       <div className="space-y-6 p-6">
+        {scope === 'manager' && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+              <div className="space-y-1">
+                <div className="text-sm font-semibold text-amber-900">
+                  Chính sách hoàn tiền cho manager
+                </div>
+                {isRefundPolicyLoading ? (
+                  <p className="text-sm text-amber-800">
+                    Đang tải chính sách hoàn tiền đang áp dụng...
+                  </p>
+                ) : activeRefundPolicy ? (
+                  <>
+                    <p className="text-sm font-medium text-amber-900">
+                      {activeRefundPolicy.title} • Version{' '}
+                      {activeRefundPolicy.version}
+                    </p>
+                    <p className="text-sm text-amber-800">
+                      {activeRefundPolicy.summary}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-sm text-amber-800">
+                    Chưa có policy hoàn tiền active. Manager nên ban hành policy
+                    để làm chuẩn cho các case refund bị đẩy lên phê duyệt.
+                  </p>
+                )}
+                {refundPolicyError && (
+                  <p className="text-sm text-red-700">{refundPolicyError}</p>
+                )}
+              </div>
+
+              <Link
+                href={
+                  activeRefundPolicy
+                    ? `/manager/policies/${activeRefundPolicy.id}`
+                    : '/manager/policies/create'
+                }
+                className="inline-flex items-center justify-center rounded-lg border border-amber-300 bg-white px-4 py-2 text-sm font-medium text-amber-900 transition-colors hover:border-amber-400 hover:bg-amber-100"
+              >
+                {activeRefundPolicy
+                  ? 'Mở policy hoàn tiền'
+                  : 'Tạo policy hoàn tiền'}
+              </Link>
+            </div>
+          </div>
+        )}
+
         <RefundStatsGrid stats={stats} scope={scope} />
 
         {successMessage && (

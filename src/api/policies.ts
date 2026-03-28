@@ -99,8 +99,30 @@ export const policyApi = {
     };
   },
 
+  async getPublic(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    category?: string;
+  }) {
+    const response = await apiClient.get("/api/policies/public", { params });
+    const { rows, pagination } = extractRows(response.data);
+
+    return {
+      policies: rows.map(mapPolicy),
+      total: pagination?.total ?? rows.length,
+      page: pagination?.page ?? params?.page ?? 1,
+      pageSize: pagination?.limit ?? params?.limit ?? rows.length,
+    };
+  },
+
   async getById(id: string) {
     const response = await apiClient.get(`/api/policies/${id}`);
+    return mapPolicy(extractOne(response.data));
+  },
+
+  async getPublicById(id: string) {
+    const response = await apiClient.get(`/api/policies/public/${id}`);
     return mapPolicy(extractOne(response.data));
   },
 
