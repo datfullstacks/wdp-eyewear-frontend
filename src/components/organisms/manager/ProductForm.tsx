@@ -1114,21 +1114,21 @@ export function ProductForm({
         {formData.tryOnEnabled ? (
           <div className="mt-3 space-y-3">
             <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900">
-              <p className="font-semibold">Manager can nho:</p>
-              <p className="mt-1">Moi bien the muon thu kinh nen co image, poster va GLB rieng.</p>
-              <p className="mt-1">Toi da {MAX_TRY_ON_MODELS} bien the duoc map try-on trong 1 san pham.</p>
-              <p className="mt-1">Effect path la tuy chon nang cao. Da so truong hop co the de trong.</p>
+              <p className="font-semibold">{tF('tryOnNoteTitle')}</p>
+              <p className="mt-1">{tF('tryOnNote1')}</p>
+              <p className="mt-1">{tF('tryOnNote2', { max: MAX_TRY_ON_MODELS })}</p>
+              <p className="mt-1">{tF('tryOnNote3')}</p>
             </div>
 
             {mappedTryOnModelCount > MAX_TRY_ON_MODELS ? (
               <p className="rounded-md border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700">
-                Giam so bien the da map try-on xuong {MAX_TRY_ON_MODELS} hoac it hon truoc khi luu san pham try-on.
+                {tF('tryOnLimitError', { max: MAX_TRY_ON_MODELS })}
               </p>
             ) : null}
 
             <div>
               <label className="mb-2 block text-sm font-medium text-gray-700">
-                Trang thai try-on
+                {tF('tryOnStatusLabel')}
               </label>
               <Select
                 value={formData.tryOnStatus}
@@ -1140,12 +1140,12 @@ export function ProductForm({
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Chon trang thai" />
+                  <SelectValue placeholder={tF('tryOnStatusPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {tryOnStatusOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                      {tF(`tryOnStatus.${option.value}` as any)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1199,20 +1199,19 @@ export function ProductForm({
               className="rounded-md border border-dashed border-gray-300 bg-white px-4 py-3"
             >
               <summary className="cursor-pointer text-sm font-medium text-gray-700">
-                Cai dat try-on nang cao (tuy chon)
+                {tF('tryOnAdvancedSettings')}
               </summary>
 
               <p className="mt-3 rounded-md border border-gray-200 bg-white p-3 text-xs text-gray-600">
-                Neu chi dung GLB theo tung bien the, ban co the de trong toan bo nhom field ben duoi.
+                {tF('tryOnAdvancedHint1')}
               </p>
               <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
-                Moi gia tri nhap o day se ghi de runtime mac dinh. Neu model dang hien thi binh thuong, hay de trong.
-                Khong nen bat physics neu chua cau hinh collider.
+                {tF('tryOnAdvancedHint2')}
               </p>
 
               <div className="mt-4 grid grid-cols-2 gap-4">
                 <Input
-                  label="Scene / effect code (tuy chon)"
+                  label={tF('sceneOrEffectCode')}
                   value={formData.tryOnScene}
                   onChange={(event) =>
                     onChange((prev) => ({
@@ -1223,7 +1222,7 @@ export function ProductForm({
                   placeholder="Vi du: effect kx..."
                 />
                 <Input
-                  label="Web AR URL (tuy chon)"
+                  label={tF('webArUrl')}
                   value={formData.tryOnArUrl}
                   onChange={(event) =>
                     onChange((prev) => ({
@@ -1234,7 +1233,7 @@ export function ProductForm({
                   placeholder="https://..."
                 />
                 <Input
-                  label="Launch URL fallback (tuy chon)"
+                  label={tF('launchUrlFallback')}
                   value={formData.tryOnLaunchUrl}
                   onChange={(event) =>
                     onChange((prev) => ({
@@ -1245,7 +1244,7 @@ export function ProductForm({
                   placeholder="https://..."
                 />
                 <Input
-                  label="Effect path (nang cao, thuong de trong)"
+                  label={tF('effectPath')}
                   value={formData.tryOnEffectPath}
                   onChange={(event) =>
                     onChange((prev) => ({
@@ -1259,7 +1258,7 @@ export function ProductForm({
 
               <div className="mt-4">
                 <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Resource paths bo sung (tuy chon)
+                  {tF('resourcePaths')}
                 </label>
                 <textarea
                   value={formData.tryOnResourcePaths}
@@ -1271,20 +1270,20 @@ export function ProductForm({
                   }
                   rows={3}
                   className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none"
-                  placeholder="Moi dong 1 resource path"
+                  placeholder={tF('resourcePathsPlaceholder')}
                 />
               </div>
 
               {/* ── Prefab XYZ table ── */}
               <div className="mt-4">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Prefab transform (tuy chon)
+                  {tF('prefabTransform')}
                 </p>
                 <div className="overflow-hidden rounded-md border border-gray-200">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-400">
-                        <th className="px-3 py-2 text-left w-1/4">Thuộc tính</th>
+                        <th className="px-3 py-2 text-left w-1/4">{tF('prefabProperty')}</th>
                         <th className="px-3 py-2 text-center">X</th>
                         <th className="px-3 py-2 text-center">Y</th>
                         <th className="px-3 py-2 text-center">Z</th>
@@ -1301,7 +1300,7 @@ export function ProductForm({
                         };
                         return (
                           <tr>
-                            <td className="px-3 py-2 text-xs font-medium text-gray-600">Rotation</td>
+                            <td className="px-3 py-2 text-xs font-medium text-gray-600">{tF('prefabRotation')}</td>
                             {([rx, ry, rz] as string[]).map((v, i) => (
                               <td key={i} className="px-2 py-1.5">
                                 <input
@@ -1326,7 +1325,7 @@ export function ProductForm({
                         };
                         return (
                           <tr className="bg-gray-50/40">
-                            <td className="px-3 py-2 text-xs font-medium text-gray-600">Scale</td>
+                            <td className="px-3 py-2 text-xs font-medium text-gray-600">{tF('prefabScale')}</td>
                             {([sx, sy, sz] as string[]).map((v, i) => (
                               <td key={i} className="px-2 py-1.5">
                                 <input
@@ -1351,7 +1350,7 @@ export function ProductForm({
                         };
                         return (
                           <tr>
-                            <td className="px-3 py-2 text-xs font-medium text-gray-600">Translation</td>
+                            <td className="px-3 py-2 text-xs font-medium text-gray-600">{tF('prefabTranslation')}</td>
                             {([tx, ty, tz] as string[]).map((v, i) => (
                               <td key={i} className="px-2 py-1.5">
                                 <input
@@ -1376,7 +1375,7 @@ export function ProductForm({
                         };
                         return (
                           <tr className="bg-gray-50/40">
-                            <td className="px-3 py-2 text-xs font-medium text-gray-600">Gravity</td>
+                            <td className="px-3 py-2 text-xs font-medium text-gray-600">{tF('prefabGravity')}</td>
                             {([gx, gy, gz] as string[]).map((v, i) => (
                               <td key={i} className="px-2 py-1.5">
                                 <input
@@ -1399,7 +1398,7 @@ export function ProductForm({
               {/* Prefab cut — single value, keep as plain input */}
               <div className="mt-3">
                 <Input
-                  label="Prefab cut (tuy chon)"
+                  label={tF('prefabCut')}
                   value={formData.tryOnCut}
                   onChange={(event) =>
                     onChange((prev) => ({
@@ -1422,7 +1421,7 @@ export function ProductForm({
                     }))
                   }
                 />
-                Bat physics cho prefab (nang cao)
+                {tF('prefabUsePhysics')}
               </label>
             </details>
           </div>

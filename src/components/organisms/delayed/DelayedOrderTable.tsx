@@ -1,4 +1,4 @@
-﻿import {
+import {
   Table,
   TableBody,
   TableCell,
@@ -7,8 +7,10 @@
   TableRow,
 } from '@/components/ui/table';
 import { DelayedOrderRow } from '@/components/molecules/DelayedOrderRow';
+import { DelayTypeBadge } from '@/components/atoms/DelayTypeBadge';
 import { DelayedOrder } from '@/types/delayed';
 import { ShieldAlert } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface DelayedOrderTableProps {
   orders: DelayedOrder[];
@@ -31,19 +33,21 @@ export const DelayedOrderTable = ({
   onEscalate,
   onResolve,
 }: DelayedOrderTableProps) => {
+  const t = useTranslations('manager.orders.table');
+
   return (
     <div className="glass-card overflow-hidden rounded-xl">
       <Table className="text-sm font-normal">
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead className="w-[140px]">Mã đơn</TableHead>
-            <TableHead>Khách hàng</TableHead>
-            <TableHead>Loại cảnh báo</TableHead>
-            <TableHead>Mức độ</TableHead>
-            <TableHead>Thời gian trễ</TableHead>
-            <TableHead>Trạng thái</TableHead>
-            <TableHead>Người xử lý</TableHead>
-            <TableHead className="w-[120px] text-right">Thao tác</TableHead>
+            <TableHead className="w-[140px]">{t('orderId')}</TableHead>
+            <TableHead>{t('customer')}</TableHead>
+            <TableHead>{t('alertType')}</TableHead>
+            <TableHead>{t('severity')}</TableHead>
+            <TableHead>{t('delayDuration')}</TableHead>
+            <TableHead>{t('status')}</TableHead>
+            <TableHead>{t('assignee')}</TableHead>
+            <TableHead className="w-[120px] text-right">{t('actions')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -52,7 +56,7 @@ export const DelayedOrderTable = ({
               <TableCell colSpan={8} className="py-12">
                 <div className="text-muted-foreground text-center">
                   <ShieldAlert className="mx-auto mb-4 h-12 w-12 opacity-50" />
-                  <p>Không có đơn hàng cảnh báo nào</p>
+                  <p>{t('noAlertOrders')}</p>
                 </div>
               </TableCell>
             </TableRow>

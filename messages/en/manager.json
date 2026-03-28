@@ -203,7 +203,33 @@
       "prefabRotation": "Rotation",
       "prefabScale": "Scale",
       "prefabTranslation": "Translation",
+      "tryOnNoteTitle": "Manager notes:",
+      "tryOnNote1": "Each try-on variant should have its own image, poster, and GLB.",
+      "tryOnNote2": "At most {max} variants can be configured for try-on per product.",
+      "tryOnNote3": "Effect path is an advanced option. It usually can be left empty.",
+      "tryOnLimitError": "Please reduce the number of try-on variants to {max} or less before saving.",
+      "tryOnStatusLabel": "Try-on Status",
+      "tryOnStatusPlaceholder": "Select status",
+      "tryOnStatus": {
+        "draft": "Draft",
+        "pending_review": "Pending review",
+        "approved": "Approved",
+        "published": "Published",
+        "rejected": "Rejected",
+        "archived": "Archived"
+      },
+      "tryOnAdvancedSettings": "Advanced try-on settings (optional)",
+      "tryOnAdvancedHint1": "If you only use GLB by variant, you can leave all fields below empty.",
+      "tryOnAdvancedHint2": "Any value entered here will override runtime default. If model displays normally, leave empty. Do not enable physics without proper colliders.",
+      "sceneOrEffectCode": "Scene / effect code (optional)",
+      "webArUrl": "Web AR URL (optional)",
+      "launchUrlFallback": "Launch URL fallback (optional)",
+      "effectPath": "Effect path (advanced, usually empty)",
+      "resourcePaths": "Additional resource paths (optional)",
+      "resourcePathsPlaceholder": "1 resource path per line",
       "prefabGravity": "Gravity",
+      "prefabCut": "Prefab cut (optional)",
+      "prefabUsePhysics": "Enable physics for prefab (advanced)",
       "cancelButton": "Cancel",
       "saveButton": "Save",
       "savingButton": "Saving..."
@@ -425,7 +451,54 @@
     "trendUp": "+{value}% compared to last month",
     "trendDown": "-{value}% compared to last month",
     "loading": "Loading...",
-    "error": "Error"
+    "error": "Error",
+    "viewDetail": "View detail",
+    "loadingOrders": "Loading orders...",
+    "noOrders": "No orders yet.",
+    "products": "{count} products",
+    "orderType": {
+      "ready_stock": "Ready stock",
+      "pre_order": "Pre-order",
+      "preorder": "Pre-order",
+      "prescription": "Prescription"
+    },
+    "orderStatus": {
+      "cancelled": "Cancelled",
+      "returned": "Returned",
+      "delivered": "Delivered",
+      "return_in_transit": "Return in transit",
+      "return_pending": "Awaiting return",
+      "waiting_redelivery": "Awaiting re-delivery / return",
+      "delivery_failed": "Delivery failed",
+      "picking": "Ops picking",
+      "waiting_lab": "Awaiting lens processing",
+      "lens_processing": "Lens cutting in progress",
+      "lens_fitting": "Lens fitting in progress",
+      "qc_check": "QC in progress",
+      "ready_to_pack": "Processing done, awaiting packing",
+      "packing": "Ops packing",
+      "ready_to_ship": "Ready to create shipment",
+      "in_transit": "In transit",
+      "handover_to_carrier": "Carrier picking up",
+      "shipment_created": "Shipment created",
+      "processing": "Processing order",
+      "confirmed": "Order confirmed",
+      "exception": "Order needs additional action",
+      "pending": "Awaiting confirmation"
+    },
+    "shippingStatus": {
+      "delivered": "Delivered",
+      "returned": "Returned",
+      "returning": "Returning",
+      "waiting_redelivery": "Awaiting re-delivery / return",
+      "delivery_fail": "Delivery failed",
+      "in_transit": "In transit",
+      "picking": "Carrier picking up",
+      "ready_to_pick": "Shipment created",
+      "ready_to_ship": "Ready to create shipment",
+      "exception": "Shipment needs manual handling",
+      "default": "Processing shipping"
+    }
   },
   "orders": {
     "title": "Orders",
@@ -451,7 +524,39 @@
       "date": "Date",
       "type": "Order type",
       "status": "Status",
-      "actions": "Actions"
+      "actions": "Actions",
+      "payment": "Payment",
+      "time": "Time",
+      "alertType": "Alert type",
+      "severity": "Severity",
+      "delayDuration": "Delay duration",
+      "assignee": "Assignee",
+      "noOrders": "No orders needing action",
+      "noAlertOrders": "No alert orders"
+    },
+    "actions": {
+      "viewDetail": "View detail",
+      "approve": "Confirm order",
+      "reject": "Reject",
+      "escalate": "Escalate to manager",
+      "sendBack": "Send back to sale",
+      "managerApprove": "Manager approve",
+      "saleConfirm": "Confirm process",
+      "viewPrescription": "View prescription",
+      "printOrder": "Print order",
+      "sendNotification": "Send notification",
+      "contactCustomer": "Contact customer",
+      "resolve": "Resolve"
+    },
+    "stats": {
+      "totalCount": "Total orders",
+      "selectedCount": "Selected"
+    },
+    "alerts_stats": {
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "slaBreached": "SLA breached"
     },
     "pending_page": {
       "title_manager": "Orders needing manager approval",
@@ -520,7 +625,34 @@
       "amount": "Amount",
       "method": "Method",
       "status": "Status",
-      "createdAt": "Created at"
+      "createdAt": "Created at",
+      "noRefunds": "No refund requests found."
+    },
+    "stats": {
+      "payoutReady": "Ready to payout",
+      "returnPending": "Awaiting return",
+      "payoutProcessing": "Processing payout",
+      "completed": "Completed",
+      "totalExpense": "Total payout",
+      "processing": "Processing",
+      "waitingCustomer": "Awaiting customer",
+      "managerReview": "Manager review",
+      "approved": "Approved",
+      "totalRefund": "Total refund",
+      "toBeChecked": "Total to check"
+    },
+    "actions": {
+      "viewDetail": "View detail",
+      "approve": "Approve",
+      "reject": "Reject",
+      "escalate": "Escalate to manager",
+      "requestInfo": "Request info",
+      "resumeReview": "Resume review",
+      "sendBack": "Send back to sale",
+      "confirmReturnReceived": "Confirm return received",
+      "inspectionFailed": "QC fail / send back",
+      "startProcessing": "Start payout",
+      "complete": "Confirm payout"
     }
   },
   "afterSales": {

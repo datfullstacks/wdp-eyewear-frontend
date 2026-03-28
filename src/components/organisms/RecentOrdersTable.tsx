@@ -20,6 +20,7 @@ import {
 import { MoreHorizontal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { orderApi } from '@/api';
 import type { OrderRecord } from '@/api/orders';
@@ -35,14 +36,6 @@ type OrderStatus = 'pending' | 'processing' | 'completed' | 'cancelled';
 
 const ITEMS_PER_PAGE = 10;
 
-function orderTypeLabel(orderType: string): string {
-  const normalized = String(orderType || '').trim().toLowerCase();
-  if (normalized === 'ready_stock') return 'Hàng có sẵn';
-  if (normalized === 'pre_order' || normalized === 'preorder')
-    return 'Đặt trước';
-  return orderType || '-';
-}
-
 type RecentOrdersTableProps = {
   limit?: number;
   searchTerm?: string;
@@ -57,10 +50,13 @@ export const RecentOrdersTable = ({
   searchTerm = '',
   statusFilter = 'all',
   filter,
-  emptyMessage = 'Chua co don hang nao.',
+  emptyMessage,
   detailHref,
-}: RecentOrdersTableProps) => {
+  }: RecentOrdersTableProps) => {
   const router = useRouter();
+  const tc = useTranslations('manager.common');
+  const tt = useTranslations('manager.orders.table');
+  const ta = useTranslations('manager.orders.actions');
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -81,7 +77,7 @@ export const RecentOrdersTable = ({
         const result = await orderApi.getAll({ page: 1, limit });
         if (isMounted) setOrders(result.orders);
       } catch {
-        if (isMounted) setErrorMessage('Khong tai duoc don hang gan day.');
+        if (isMounted) setErrorMessage(tc('loadingOrders'));
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -148,13 +144,13 @@ export const RecentOrdersTable = ({
       <Table className="text-sm font-normal">
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead className="w-[140px] whitespace-nowrap">Mã đơn</TableHead>
-            <TableHead>Khách hàng</TableHead>
-            <TableHead>Sản phẩm</TableHead>
-            <TableHead className="text-right">Tổng tiền</TableHead>
-            <TableHead className="text-center">Ngày</TableHead>
-            <TableHead className="whitespace-nowrap">Loại đơn</TableHead>
-            <TableHead>Trạng thái</TableHead>
+            <TableHead className="w-[140px] whitespace-nowrap">{tt('orderId')}</TableHead>
+            <TableHead>{tt('customer')}</TableHead>
+            <TableHead>{tt('products')}</TableHead>
+            <TableHead className="text-right">{tt('total')}</TableHead>
+            <TableHead className="text-center">{tt('date')}</TableHead>
+            <TableHead className="whitespace-nowrap">{tt('type')}</TableHead>
+            <TableHead>{tt('status')}</TableHead>
             <TableHead className="w-[60px]" />
           </TableRow>
         </TableHeader>
@@ -162,7 +158,7 @@ export const RecentOrdersTable = ({
           {isLoading && (
             <TableRow>
               <TableCell colSpan={8} className="text-foreground/70 py-10 text-center">
-                Dang tai don hang...
+                {tc('loadingOrders')}
               </TableCell>
             </TableRow>
           )}
@@ -178,7 +174,7 @@ export const RecentOrdersTable = ({
           {!isLoading && !errorMessage && visibleOrders.length === 0 && (
             <TableRow>
               <TableCell colSpan={8} className="text-foreground/70 py-10 text-center">
-                {emptyMessage}
+                {emptyMessage ?? tc('noOrders')}
               </TableCell>
             </TableRow>
           )}
@@ -209,7 +205,7 @@ export const RecentOrdersTable = ({
                           {dashboard.customerName}
                         </p>
                         <p className="text-foreground/80 text-xs">
-                          {dashboard.products.length} san pham
+                          {tc('products', { count: dashboard.products.length })}
                         </p>
                       </div>
                     </div>
@@ -229,16 +225,25 @@ export const RecentOrdersTable = ({
                     {dashboard.date}
                   </TableCell>
                   <TableCell className="text-foreground/80 text-sm whitespace-nowrap">
-                    {orderTypeLabel(order.orderType)}
+                    {(() => {
+                      const key = String(order.orderType || '').trim().toLowerCase();
+                      const typeMap: Record<string, string> = {
+                        ready_stock: tc('orderType.ready_stock'),
+                        pre_order: tc('orderType.pre_order'),
+                        preorder: tc('orderType.preorder'),
+                        prescription: tc('orderType.prescription'),
+                      };
+                      return typeMap[key] || order.orderType || '-';
+                    })()}
                   </TableCell>
                   <TableCell>
                     <div className="space-y-1">
                       <StatusBadge status={statusInfo.type}>
-                        {statusInfo.label}
+                        {statusInfo.labelKey ? tc(`orderStatus.${statusInfo.labelKey}` as any) : statusInfo.label}
                       </StatusBadge>
                       {shippingInfo && (
                         <p className="text-foreground/70 text-xs">
-                          VC: {shippingInfo.label}
+                          VC: {shippingInfo.labelKey ? tc(`shippingStatus.${shippingInfo.labelKey}` as any) : shippingInfo.label}
                         </p>
                       )}
                     </div>
@@ -257,7 +262,7 @@ export const RecentOrdersTable = ({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleOpenDetail(order)}>
-                            Xem chi tiet
+                            {ta('viewDetail')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

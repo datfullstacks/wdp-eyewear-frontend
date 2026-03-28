@@ -9,6 +9,7 @@ import {
 
 import { StatCard } from '@/components/molecules/StatCard';
 import { formatCurrency } from '@/types/refund';
+import { useTranslations } from 'next-intl';
 
 interface RefundStatsGridProps {
   stats: {
@@ -28,35 +29,37 @@ export const RefundStatsGrid = ({
   stats,
   scope = 'sale',
 }: RefundStatsGridProps) => {
+  const t = useTranslations('manager.refunds.stats');
+
   const items =
     scope === 'operation'
       ? [
           {
-            label: 'Sẵn sàng payout',
+            label: t('payoutReady'),
             value: String(stats.approved),
             icon: CreditCard,
             isAmount: false,
           },
           {
-            label: 'Chờ nhận hàng',
+            label: t('returnPending'),
             value: String(stats.returnPending),
             icon: PackageCheck,
             isAmount: false,
           },
           {
-            label: 'Đang payout',
+            label: t('payoutProcessing'),
             value: String(stats.processing),
             icon: Clock,
             isAmount: false,
           },
           {
-            label: 'Hoàn thành',
+            label: t('completed'),
             value: String(stats.completed),
             icon: CheckCircle,
             isAmount: false,
           },
           {
-            label: 'Tổng cần chi',
+            label: t('totalExpense'),
             value: formatCurrency(stats.totalAmount),
             icon: TrendingDown,
             isAmount: true,
@@ -64,37 +67,37 @@ export const RefundStatsGrid = ({
         ]
       : [
           {
-            label: 'Đang xử lý',
+            label: t('processing'),
             value: String(stats.open),
             icon: Clock,
             isAmount: false,
           },
           {
-            label: 'Chờ KH bổ sung',
+            label: t('waitingCustomer'),
             value: String(stats.waitingCustomer),
             icon: Eye,
             isAmount: false,
           },
           {
-            label: 'Cần quản lý',
+            label: t('managerReview'),
             value: String(stats.escalated),
             icon: CreditCard,
             isAmount: false,
           },
           {
-            label: 'Đã duyệt',
+            label: t('approved'),
             value: String(stats.approved),
             icon: CreditCard,
             isAmount: false,
           },
           {
-            label: 'Hoàn thành',
+            label: t('completed'),
             value: String(stats.completed),
             icon: CheckCircle,
             isAmount: false,
           },
           {
-            label: 'Tổng cần hoàn',
+            label: t('totalRefund'),
             value: formatCurrency(stats.totalAmount),
             icon: TrendingDown,
             isAmount: true,
@@ -104,13 +107,13 @@ export const RefundStatsGrid = ({
     scope === 'operation'
       ? [
           {
-            label: 'Chờ nhận hàng',
+            label: t('returnPending'),
             value: String(stats.returnPending),
             icon: PackageCheck,
             isAmount: false,
           },
           {
-            label: 'Tổng cần kiểm tra',
+            label: t('toBeChecked'),
             value: formatCurrency(stats.totalAmount),
             icon: TrendingDown,
             isAmount: true,

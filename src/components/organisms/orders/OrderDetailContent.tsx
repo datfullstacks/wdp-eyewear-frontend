@@ -17,6 +17,7 @@ import {
   getCustomerShippingStatusMeta,
 } from '@/lib/customerOrderStatus';
 import { toPrescriptionOrder, toSupplementOrder } from '@/lib/orderAdapters';
+import { useTranslations } from 'next-intl';
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('vi-VN', {
@@ -210,6 +211,8 @@ function PrescriptionSummary({
 }
 
 export function OrderDetailContent({ order }: { order: OrderRecord }) {
+  const tc = useTranslations('manager.common');
+  
   const createdAtLabel = order.createdAt
     ? new Date(order.createdAt).toLocaleString('vi-VN')
     : '-';
@@ -253,7 +256,7 @@ export function OrderDetailContent({ order }: { order: OrderRecord }) {
 
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge status={orderStatusMeta.type}>
-              {orderStatusMeta.label}
+              {orderStatusMeta.labelKey ? tc(`orderStatus.${orderStatusMeta.labelKey}` as any) : orderStatusMeta.label}
             </StatusBadge>
             <StatusBadge status={paymentBadgeType(order.paymentStatus)}>
               {PAYMENT_STATUS_TEXT[order.paymentStatus]}
@@ -303,7 +306,7 @@ export function OrderDetailContent({ order }: { order: OrderRecord }) {
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <InfoTile label="Trạng thái đơn">
             <StatusBadge status={orderStatusMeta.type}>
-              {orderStatusMeta.label}
+              {orderStatusMeta.labelKey ? tc(`orderStatus.${orderStatusMeta.labelKey}` as any) : orderStatusMeta.label}
             </StatusBadge>
           </InfoTile>
 
@@ -327,7 +330,7 @@ export function OrderDetailContent({ order }: { order: OrderRecord }) {
             {shippingStatusMeta ? (
               <div className="space-y-1.5">
                 <StatusBadge status={shippingStatusMeta.type}>
-                  {shippingStatusMeta.label}
+                  {shippingStatusMeta.labelKey ? tc(`shippingStatus.${shippingStatusMeta.labelKey}` as any) : shippingStatusMeta.label}
                 </StatusBadge>
                 <p className="text-muted-foreground text-xs">{serviceLabel}</p>
               </div>

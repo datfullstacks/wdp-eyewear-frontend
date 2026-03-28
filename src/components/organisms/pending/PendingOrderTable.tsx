@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useTranslations } from 'next-intl';
 
 interface PendingOrderTableProps {
   orders: PendingOrder[];
@@ -36,19 +37,21 @@ export const PendingOrderTable = ({
   onEscalate,
   onSendBack,
 }: PendingOrderTableProps) => {
+  const t = useTranslations('manager.orders.table');
+
   return (
     <div className="glass-card overflow-hidden rounded-xl">
       <Table className="text-sm font-normal">
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead>Mã đơn</TableHead>
-            <TableHead>Khách hàng</TableHead>
-            <TableHead>Sản phẩm</TableHead>
-            <TableHead>Tổng tiền</TableHead>
-            <TableHead>Thanh toán</TableHead>
-            <TableHead>Loại đơn</TableHead>
-            <TableHead>Thời gian</TableHead>
-            <TableHead className="text-right">Thao tác</TableHead>
+            <TableHead>{t('orderId')}</TableHead>
+            <TableHead>{t('customer')}</TableHead>
+            <TableHead>{t('products')}</TableHead>
+            <TableHead>{t('total')}</TableHead>
+            <TableHead>{t('payment')}</TableHead>
+            <TableHead>{t('type')}</TableHead>
+            <TableHead>{t('time')}</TableHead>
+            <TableHead className="text-right">{t('actions')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -73,7 +76,7 @@ export const PendingOrderTable = ({
         <div className="p-12 text-center">
           <Package className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
           <p className="text-muted-foreground">
-            Không có đơn hàng nào cần xử lý
+            {t('noOrders')}
           </p>
         </div>
       )}
