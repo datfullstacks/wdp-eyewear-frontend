@@ -9,12 +9,20 @@ import {
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Filter, RefreshCw } from 'lucide-react';
-import { orderApi, supportApi } from '@/api';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Filter } from 'lucide-react';
+import {
+  orderApi,
+  productApi,
+  supportApi,
+  type ProductDetail,
+} from '@/api';
 import type { SupportTicketRecord } from '@/api';
-import type { OrderOpsStage } from '@/api/orders';
+import type { OrderItem, OrderOpsStage, OrderRecord } from '@/api/orders';
 import { Header } from '@/components/organisms/Header';
 import {
   RxApproveModal,
@@ -33,6 +41,87 @@ import {
   PrescriptionData,
   PrescriptionOrder,
 } from '@/types/rxPrescription';
+
+type ProductVariant = NonNullable<ProductDetail['variants']>[number];
+
+function normalizeVariantKey(value: string): string {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function toProductVariantLabel(variant?: ProductVariant): string {
+  const color = String(
+    variant?.options?.color ||
+      variant?.options?.Colour ||
+      variant?.options?.colour ||
+      ''
+  ).trim();
+  const size = String(variant?.options?.size || variant?.options?.Size || '').trim();
+  if (color && size) return `${color} - ${size}`;
+  return color || size || 'Mac dinh';
+}
+
+function matchProductVariant(
+  item: OrderItem,
+  product?: ProductDetail | null
+): ProductVariant | null {
+  const variants = Array.isArray(product?.variants) ? product.variants : [];
+  if (variants.length === 0) return null;
+
+  const variantId = String(item.variantId || '').trim();
+  if (variantId) {
+    const matchedById =
+      variants.find((variant) => String(variant?._id || '').trim() === variantId) ||
+      null;
+    if (matchedById) return matchedById;
+  }
+
+  const sku = String(item.sku || '').trim().toLowerCase();
+  if (sku) {
+    const matchedBySku =
+      variants.find((variant) => String(variant?.sku || '').trim().toLowerCase() === sku) ||
+      null;
+    if (matchedBySku) return matchedBySku;
+  }
+
+  const normalizedVariant = normalizeVariantKey(item.variant);
+  if (!normalizedVariant) return null;
+
+  return (
+    variants.find(
+      (variant) =>
+        normalizeVariantKey(toProductVariantLabel(variant)) === normalizedVariant
+    ) || null
+  );
+}
+
+function hydrateOrderItemsWithProductData(
+  orders: OrderRecord[],
+  productDetailsById: Record<string, ProductDetail>
+): OrderRecord[] {
+  return orders.map((order) => ({
+    ...order,
+    items: order.items.map((item) => {
+      const productId = String(item.productId || '').trim();
+      const product = productDetailsById[productId];
+      const matchedVariant = matchProductVariant(item, product);
+
+      if (!matchedVariant) return item;
+
+      return {
+        ...item,
+        sku: String(matchedVariant.sku || '').trim() || item.sku,
+        warehouseLocation: String(matchedVariant.warehouseLocation || '').trim(),
+      };
+    }),
+  }));
+}
 
 function buildPrescriptionPayload(form: PrescriptionData) {
   return {
@@ -91,6 +180,19 @@ function getNextPrescriptionOpsStage(
   }
 }
 
+function isWithinDateRange(
+  dateValue: string,
+  fromDate: string,
+  toDate: string
+) {
+  if (!fromDate && !toDate) return true;
+  const normalized = String(dateValue || '').slice(0, 10);
+  if (!normalized) return false;
+  if (fromDate && normalized < fromDate) return false;
+  if (toDate && normalized > toDate) return false;
+  return true;
+}
+
 function buildContactMessage(order: PrescriptionOrder, note: string) {
   const trimmed = note.trim();
   if (trimmed.length > 0) {
@@ -123,6 +225,8 @@ export default function OrdersPrescription() {
   const [isSubmittingAction, setIsSubmittingAction] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [orderDateFrom, setOrderDateFrom] = useState('');
+  const [orderDateTo, setOrderDateTo] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<PrescriptionOrder | null>(
     null
   );
@@ -135,14 +239,42 @@ export default function OrdersPrescription() {
   );
   const [contactNote, setContactNote] = useState('');
 
+  const hydratePrescriptionOrders = useCallback(async (input: OrderRecord[]) => {
+    const productIds = Array.from(
+      new Set(
+        input
+          .flatMap((order) =>
+            order.items.map((item) => String(item.productId || '').trim())
+          )
+          .filter(Boolean)
+      )
+    );
+
+    if (productIds.length === 0) return input;
+
+    const results = await Promise.allSettled(
+      productIds.map((productId) => productApi.getById(productId))
+    );
+    const productDetailsById: Record<string, ProductDetail> = {};
+
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        productDetailsById[productIds[index]] = result.value;
+      }
+    });
+
+    return hydrateOrderItemsWithProductData(input, productDetailsById);
+  }, []);
+
   const loadOrders = useCallback(async () => {
     setIsLoading(true);
     setErrorMessage(null);
 
     try {
       const result = await orderApi.getAll({ page: 1, limit: 200 });
-      const mapped = result.orders
-        .filter(isOperationsPrescriptionOrder)
+      const relevantOrders = result.orders.filter(isOperationsPrescriptionOrder);
+      const hydratedOrders = await hydratePrescriptionOrders(relevantOrders);
+      const mapped = hydratedOrders
         .map(toPrescriptionOrder)
         .filter((value): value is PrescriptionOrder => value !== null);
       setOrders(mapped);
@@ -151,11 +283,17 @@ export default function OrdersPrescription() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [hydratePrescriptionOrders]);
 
   useEffect(() => {
     void loadOrders();
   }, [loadOrders]);
+
+  useEffect(() => {
+    setSelectedOrder((current) =>
+      current ? orders.find((order) => order.id === current.id) || current : null
+    );
+  }, [orders]);
 
   useStatusRealtimeReload({
     domains: ['order', 'shipping', 'support'],
@@ -188,7 +326,12 @@ export default function OrdersPrescription() {
       order.phone.includes(searchTerm);
     const matchesStatus =
       statusFilter === 'all' || order.prescriptionStatus === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesOrderDate = isWithinDateRange(
+      order.orderDate,
+      orderDateFrom,
+      orderDateTo
+    );
+    return matchesSearch && matchesStatus && matchesOrderDate;
   });
 
   const stats = {
@@ -449,8 +592,14 @@ export default function OrdersPrescription() {
                   <Filter />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuLabel>Trang thai Rx</DropdownMenuLabel>
+              <DropdownMenuContent
+                align="start"
+                alignOffset={12}
+                sideOffset={8}
+                collisionPadding={24}
+                className="w-80"
+              >
+                <DropdownMenuLabel>Trạng thái Rx</DropdownMenuLabel>
                 <DropdownMenuRadioGroup
                   value={statusFilter}
                   onValueChange={setStatusFilter}
@@ -463,21 +612,61 @@ export default function OrdersPrescription() {
                     Da duyet
                   </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                <div className="space-y-2 px-2 py-1.5">
+                  <div className="text-sm font-semibold text-slate-900">
+                    Ngày tạo đơn
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label
+                        htmlFor="prescription-order-date-from"
+                        className="font-semibold text-slate-900"
+                      >
+                        Từ ngày
+                      </Label>
+                      <Input
+                        id="prescription-order-date-from"
+                        type="date"
+                        className="border-slate-300 bg-white text-slate-900 [color-scheme:light] focus-visible:ring-slate-400"
+                        value={orderDateFrom}
+                        onChange={(event) => setOrderDateFrom(event.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label
+                        htmlFor="prescription-order-date-to"
+                        className="font-semibold text-slate-900"
+                      >
+                        Đến ngày
+                      </Label>
+                      <Input
+                        id="prescription-order-date-to"
+                        type="date"
+                        className="border-slate-300 bg-white text-slate-900 [color-scheme:light] focus-visible:ring-slate-400"
+                        value={orderDateTo}
+                        onChange={(event) => setOrderDateTo(event.target.value)}
+                      />
+                    </div>
+                  </div>
+                  {(orderDateFrom || orderDateTo) && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-full justify-center text-sm"
+                      onClick={() => {
+                        setOrderDateFrom('');
+                        setOrderDateTo('');
+                      }}
+                    >
+                      Đặt lại ngày
+                    </Button>
+                  )}
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2"
-            onClick={() => {
-              void loadOrders();
-            }}
-            disabled={isLoading || isSubmittingAction}
-          >
-            <RefreshCw className="h-4 w-4" />
-            Lam moi
-          </Button>
         </div>
 
         {isLoading ? (

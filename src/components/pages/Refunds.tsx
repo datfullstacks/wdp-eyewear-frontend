@@ -187,9 +187,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
   const [isSendBackOpen, setIsSendBackOpen] = useState(false);
   const [isRequestInfoOpen, setIsRequestInfoOpen] = useState(false);
   const [isInspectionOpen, setIsInspectionOpen] = useState(false);
-  const [inspectionMode, setInspectionMode] = useState<'pass' | 'fail'>(
-    'pass'
-  );
+  const [inspectionMode, setInspectionMode] = useState<'pass' | 'fail'>('pass');
   const [isProcessOpen, setIsProcessOpen] = useState(false);
 
   useEffect(() => {
@@ -604,7 +602,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {scope !== 'sale' && (
+            {scope === 'manager' && (
               <Button
                 variant="outline"
                 onClick={() => void refreshRefunds()}
@@ -628,7 +626,9 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => setSaleQueueView(option.value as SaleQueueView)}
+                  onClick={() =>
+                    setSaleQueueView(option.value as SaleQueueView)
+                  }
                   className={
                     active
                       ? 'rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white'

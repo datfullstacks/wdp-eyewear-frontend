@@ -71,16 +71,23 @@ const Inventory = () => {
       try {
         setIsLoading(true);
         setError(null);
-        const result = await inventoryApi.getStockItems({ page: 1, limit: 100 });
+        const result = await inventoryApi.getStockItems({
+          page: 1,
+          limit: 100,
+        });
         if (!isMounted) return;
         setItems(result);
       } catch (err) {
         if (!isMounted) return;
         const message =
-          (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data
-            ?.message ||
+          (
+            err as {
+              response?: { data?: { message?: string } };
+              message?: string;
+            }
+          )?.response?.data?.message ||
           (err as { message?: string })?.message ||
-          'Khong the tai ton kho. Vui long thu lai.';
+          'Không thể tải tồn kho. Vui lòng thử lại.';
         setError(message);
       } finally {
         if (isMounted) setIsLoading(false);
@@ -105,7 +112,7 @@ const Inventory = () => {
         const session = await getSession();
         const currentUserId = String(session?.user?.id || '').trim();
         if (!currentUserId) {
-          throw new Error('Khong xac dinh duoc tai khoan dang nhap.');
+          throw new Error('Không xác định dược tài khỏan đang nhập.');
         }
 
         const currentUser = await userApi.getById(currentUserId);
@@ -114,12 +121,16 @@ const Inventory = () => {
           ? scope.stores
               .map((store) => ({
                 id: String(store?.id || '').trim(),
-                name: String(store?.name || '').trim() || String(store?.id || '').trim(),
+                name:
+                  String(store?.name || '').trim() ||
+                  String(store?.id || '').trim(),
               }))
               .filter((store) => store.id)
           : [];
 
-        const storesById = new Map(scopeStores.map((store) => [store.id, store]));
+        const storesById = new Map(
+          scopeStores.map((store) => [store.id, store])
+        );
         const primaryStoreId = String(scope?.primaryStoreId || '').trim();
         const primaryStoreName = String(scope?.primaryStore?.name || '').trim();
         if (primaryStoreId && !storesById.has(primaryStoreId)) {
@@ -138,7 +149,7 @@ const Inventory = () => {
 
         if (!nextStoreId) {
           throw new Error(
-            'Tai khoan operation chua duoc gan cua hang de nhap kho.'
+            'Tài khoản operation chưa được gán cửa hàng để nhập kho.'
           );
         }
 
@@ -154,10 +165,14 @@ const Inventory = () => {
         setResolvedStoreId('');
         setResolvedStoreLabel('');
         const message =
-          (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data
-            ?.message ||
+          (
+            err as {
+              response?: { data?: { message?: string } };
+              message?: string;
+            }
+          )?.response?.data?.message ||
           (err as { message?: string })?.message ||
-          'Khong tai duoc pham vi cua hang cua tai khoan operation.';
+          'Không tải đuọc phạm vi cửa hàng của tài khoản operation.';
         setStoreScopeError(message);
       } finally {
         if (mounted) setIsResolvingStoreScope(false);
@@ -172,7 +187,9 @@ const Inventory = () => {
   }, []);
 
   const inventoryCategories = useMemo(() => {
-    const categories = new Set(items.map((item) => item.category).filter(Boolean));
+    const categories = new Set(
+      items.map((item) => item.category).filter(Boolean)
+    );
     return Array.from(categories).sort((a, b) => a.localeCompare(b));
   }, [items]);
 
@@ -201,8 +218,7 @@ const Inventory = () => {
       ).length,
       outOfStock: items.filter(
         (item) => toInventoryDisplayStatus(item.status) === 'out_of_stock'
-      )
-        .length,
+      ).length,
     }),
     [items]
   );
@@ -275,17 +291,18 @@ const Inventory = () => {
     }
   ) => {
     if (item.trackInventory === false) {
-      throw new Error('San pham nay khong theo doi ton kho.');
+      throw new Error('Sản phẩm này không theo dõi tồn kho.');
     }
 
     if (!resolvedStoreId) {
       throw new Error(
-        storeScopeError || 'Tai khoan operation chua duoc gan cua hang de nhap kho.'
+        storeScopeError ||
+          'Tài khoản operation chưa được gán cửa hàng để nhập kho.'
       );
     }
 
     if (!item.productId || !item.variantId) {
-      throw new Error('Khong tim thay bien the hop le de tao phieu nhap kho.');
+      throw new Error('Không tìm thấy biến thể hợp lệ để tạo phiếu nhập kho.');
     }
 
     await inventoryApi.createReceipt({
@@ -310,8 +327,8 @@ const Inventory = () => {
   return (
     <>
       <Header
-        title="Ton kho va tinh trang hang"
-        subtitle="Operation theo doi ton kho va tao phieu nhap kho cho tung bien the."
+        title="Tồn kho và tình trạng hàng"
+        subtitle="Operation theo dõi tồn kho và tạo phiếu nhập kho cho từng biến thể."
       />
 
       <div className="space-y-6 p-6">
@@ -325,16 +342,16 @@ const Inventory = () => {
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
             <p className="font-medium">
               {resolvedStoreLabel
-                ? `Phieu nhap kho se duoc tao cho ${resolvedStoreLabel}.`
-                : 'Operation co the nhap kho truc tiep tu man nay.'}
+                ? `Phiếu nhập kho sẽ được tạo cho ${resolvedStoreLabel}.`
+                : 'Operation có thể nhập kho trực tiếp từ màn này.'}
             </p>
             <p className="mt-1">
-              Hang nhap theo batch pre-order van co the xu ly tai{' '}
+              Hàng nhập theo batch pre-order vẫn có thể xử lý tại{' '}
               <Link
                 href="/operation/inventory/import"
                 className="font-semibold underline underline-offset-4"
               >
-                Nhap hang pre-order
+                Nhập hàng pre-order
               </Link>
               .
             </p>
@@ -343,7 +360,7 @@ const Inventory = () => {
 
         {isLoading ? (
           <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-6 text-sm text-slate-600">
-            Dang tai ton kho...
+            Đang tải tồn kho...
           </div>
         ) : null}
 
@@ -356,7 +373,7 @@ const Inventory = () => {
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-start">
           <div className="w-full sm:max-w-[240px]">
             <SearchBar
-              placeholder="Tim theo ten, SKU, thuong hieu..."
+              placeholder="Tìm theo tên, SKU, thương hiệu..."
               value={searchTerm}
               onChange={setSearchTerm}
             />
@@ -368,13 +385,14 @@ const Inventory = () => {
               onValueChange={(value) => {
                 setResolvedStoreId(value);
                 setResolvedStoreLabel(
-                  availableStores.find((store) => store.id === value)?.name || ''
+                  availableStores.find((store) => store.id === value)?.name ||
+                    ''
                 );
               }}
               disabled={isResolvingStoreScope}
             >
               <SelectTrigger className="w-full sm:w-[260px]">
-                <SelectValue placeholder="Chon cua hang" />
+                <SelectValue placeholder="Chọn cửa hàng" />
               </SelectTrigger>
               <SelectContent>
                 {availableStores.map((store) => (
@@ -392,7 +410,7 @@ const Inventory = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  aria-label="Bo loc"
+                  aria-label="Bộ lọc"
                   className="text-foreground/80 hover:text-foreground"
                 >
                   <Filter />
@@ -418,13 +436,13 @@ const Inventory = () => {
 
                 <DropdownMenuSeparator />
 
-                <DropdownMenuLabel>Danh muc</DropdownMenuLabel>
+                <DropdownMenuLabel>Danh mục</DropdownMenuLabel>
                 <DropdownMenuRadioGroup
                   value={categoryFilter}
                   onValueChange={setCategoryFilter}
                 >
                   <DropdownMenuRadioItem value="all">
-                    Tat ca danh muc
+                    Tất cả danh mục
                   </DropdownMenuRadioItem>
                   {inventoryCategories.map((category) => (
                     <DropdownMenuRadioItem key={category} value={category}>
@@ -445,14 +463,17 @@ const Inventory = () => {
               onEditStock={handleEditStock}
               onViewHistory={handleViewHistory}
               historyEnabled={false}
-              stockEditEnabled={Boolean(resolvedStoreId) && !isResolvingStoreScope}
-              stockEditLabel="Nhap kho"
+              stockEditEnabled={
+                Boolean(resolvedStoreId) && !isResolvingStoreScope
+              }
+              stockEditLabel="Nhập kho"
             />
 
             {filteredInventory.length > 0 && totalPages > 1 ? (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/70 bg-white/90 p-4 text-sm text-slate-700">
                 <p>
-                  Trang <span className="font-semibold">{currentPage}</span>/{totalPages}{' '}
+                  Trang <span className="font-semibold">{currentPage}</span>/
+                  {totalPages}{' '}
                   <span className="text-slate-500">
                     ({filteredInventory.length} dòng tồn kho)
                   </span>
@@ -462,7 +483,9 @@ const Inventory = () => {
                   <Select
                     value={String(pageSize)}
                     onValueChange={(value) =>
-                      setPageSize(Number(value) as (typeof PAGE_SIZE_OPTIONS)[number])
+                      setPageSize(
+                        Number(value) as (typeof PAGE_SIZE_OPTIONS)[number]
+                      )
                     }
                   >
                     <SelectTrigger className="w-[140px]">
@@ -480,7 +503,9 @@ const Inventory = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                    onClick={() =>
+                      setCurrentPage((page) => Math.max(1, page - 1))
+                    }
                     disabled={currentPage <= 1}
                   >
                     Trang trước
@@ -488,7 +513,9 @@ const Inventory = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                    onClick={() =>
+                      setCurrentPage((page) => Math.min(totalPages, page + 1))
+                    }
                     disabled={currentPage >= totalPages}
                   >
                     Trang sau
