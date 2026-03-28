@@ -13,6 +13,13 @@ import { Eye, Trash2, Percent, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Discount } from '@/data/discountsData';
 
+type DiscountWithUsage = Discount & {
+  usedCount?: number;
+  reservedCount?: number;
+  activeCount?: number;
+  remainingCount?: number | null;
+};
+
 interface DiscountTableTranslations {
   code: string;
   name: string;
@@ -35,9 +42,9 @@ interface DiscountTableTranslations {
 }
 
 interface DiscountTableProps {
-  discounts: Discount[];
-  onView?: (discount: Discount) => void;
-  onDelete?: (discount: Discount) => void;
+  discounts: DiscountWithUsage[];
+  onView?: (discount: DiscountWithUsage) => void;
+  onDelete?: (discount: DiscountWithUsage) => void;
   translations?: DiscountTableTranslations;
 }
 
@@ -90,6 +97,18 @@ function getStatusLabel(status: string, t: DiscountTableTranslations) {
   return labels[status as keyof typeof labels] || status;
 }
 
+function getActiveUsageCount(discount: DiscountWithUsage) {
+  return Number(discount.activeCount ?? discount.usageCount ?? 0);
+}
+
+function getUsedCount(discount: DiscountWithUsage) {
+  return Number(discount.usedCount ?? discount.usageCount ?? 0);
+}
+
+function getReservedCount(discount: DiscountWithUsage) {
+  return Number(discount.reservedCount ?? 0);
+}
+
 export function DiscountTable({
   discounts,
   onView,
@@ -118,106 +137,115 @@ export function DiscountTable({
             </TableCell>
           </TableRow>
         ) : (
-          discounts.map((discount) => (
-            <TableRow key={discount.id} className="hover:bg-gray-50">
-              <TableCell>
-                <div className="font-mono font-semibold text-amber-600">
-                  {discount.code}
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="font-medium text-gray-900">{discount.name}</div>
-                <div className="text-xs text-gray-500 line-clamp-1">
-                  {discount.description}
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-1">
-                  {discount.type === 'percentage' ? (
-                    <Percent className="h-3 w-3 text-blue-600" />
-                  ) : (
-                    <DollarSign className="h-3 w-3 text-green-600" />
-                  )}
-                  <span className="text-sm text-gray-600">
-                    {discount.type === 'percentage' ? t.percentage : t.fixed}
-                  </span>
-                </div>
-              </TableCell>
-              <TableCell className="font-medium text-gray-900">
-                {discount.type === 'percentage'
-                  ? `${discount.value}%`
-                  : `${discount.value.toLocaleString()}đ`}
-              </TableCell>
-              <TableCell>
-                <div className="text-sm text-gray-600">
-                  <div>{formatDate(discount.startDate)}</div>
+          discounts.map((discount) => {
+            const activeUsageCount = getActiveUsageCount(discount);
+            const usedCount = getUsedCount(discount);
+            const reservedCount = getReservedCount(discount);
+
+            return (
+              <TableRow key={discount.id} className="hover:bg-gray-50">
+                <TableCell>
+                  <div className="font-mono font-semibold text-amber-600">
+                    {discount.code}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="font-medium text-gray-900">{discount.name}</div>
+                  <div className="text-xs text-gray-500 line-clamp-1">
+                    {discount.description}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1">
+                    {discount.type === 'percentage' ? (
+                      <Percent className="h-3 w-3 text-blue-600" />
+                    ) : (
+                      <DollarSign className="h-3 w-3 text-green-600" />
+                    )}
+                    <span className="text-sm text-gray-600">
+                      {discount.type === 'percentage' ? t.percentage : t.fixed}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell className="font-medium text-gray-900">
+                  {discount.type === 'percentage'
+                    ? `${discount.value}%`
+                    : `${discount.value.toLocaleString()}đ`}
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm text-gray-600">
+                    <div>{formatDate(discount.startDate)}</div>
+                    <div className="text-xs text-gray-400">
+                      đến {formatDate(discount.endDate)}
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm text-gray-600">
+                    {activeUsageCount} /{' '}
+                    {discount.usageLimit === 0
+                      ? t.unlimited
+                      : discount.usageLimit.toLocaleString()}
+                  </div>
                   <div className="text-xs text-gray-400">
-                    đến {formatDate(discount.endDate)}
+                    Used {usedCount} • Reserved {reservedCount}
                   </div>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="text-sm text-gray-600">
-                  {discount.usageCount} /{' '}
-                  {discount.usageLimit === 0
-                    ? t.unlimited
-                    : discount.usageLimit.toLocaleString()}
-                </div>
-                {discount.usageLimit > 0 && (
-                  <div className="mt-1 h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className={cn(
-                        'h-full rounded-full',
-                        discount.usageCount >= discount.usageLimit
-                          ? 'bg-red-500'
-                          : 'bg-amber-500'
-                      )}
-                      style={{
-                        width: `${Math.min(
-                          (discount.usageCount / discount.usageLimit) * 100,
-                          100
-                        )}%`,
-                      }}
-                    />
+                  {discount.usageLimit > 0 && (
+                    <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                      <div
+                        className={cn(
+                          'h-full rounded-full',
+                          activeUsageCount >= discount.usageLimit
+                            ? 'bg-red-500'
+                            : 'bg-amber-500'
+                        )}
+                        style={{
+                          width: `${Math.min(
+                            (activeUsageCount / discount.usageLimit) * 100,
+                            100
+                          )}%`,
+                        }}
+                      />
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <span
+                    className={cn(
+                      'rounded-full px-2 py-1 text-xs font-medium',
+                      getStatusColor(discount.status)
+                    )}
+                  >
+                    {getStatusLabel(discount.status, t)}
+                  </span>
+                </TableCell>
+                <TableCell className="text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    {onView && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => onView(discount)}
+                        title={t.viewDetails}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {onDelete && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => onDelete(discount)}
+                        title={t.deleteDiscount}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-600" />
+                      </Button>
+                    )}
                   </div>
-                )}
-              </TableCell>
-              <TableCell>
-                <span
-                  className={cn(
-                    'rounded-full px-2 py-1 text-xs font-medium',
-                    getStatusColor(discount.status)
-                  )}
-                >
-                  {getStatusLabel(discount.status, t)}
-                </span>
-              </TableCell>
-              <TableCell className="text-center">
-                <div className="flex items-center justify-center gap-1">
-                  {onView && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => onView(discount)}
-                      title={t.viewDetails}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {onDelete && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => onDelete(discount)}
-                      title={t.deleteDiscount}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-600" />
-                    </Button>
-                  )}
-                </div>
-              </TableCell>
-            </TableRow>
-          ))
+                </TableCell>
+              </TableRow>
+            );
+          })
         )}
       </TableBody>
     </Table>

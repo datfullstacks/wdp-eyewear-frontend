@@ -9,7 +9,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Eye, Trash2, FileText, Shield, Truck, ShoppingCart, Lock, ScrollText } from 'lucide-react';
+import {
+  Banknote,
+  Eye,
+  Trash2,
+  FileText,
+  Shield,
+  Truck,
+  ShoppingCart,
+  Lock,
+  ScrollText,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Policy } from '@/data/policiesData';
 
@@ -22,6 +32,7 @@ interface PolicyTableTranslations {
   noData: string;
   warranty: string;
   return: string;
+  refund: string;
   shipping: string;
   purchase: string;
   privacy: string;
@@ -49,6 +60,7 @@ const defaultTranslations: PolicyTableTranslations = {
   noData: 'Không có dữ liệu',
   warranty: 'Bảo hành',
   return: 'Đổi trả',
+  refund: 'Hoàn tiền',
   shipping: 'Vận chuyển',
   purchase: 'Mua hàng',
   privacy: 'Bảo mật',
@@ -72,6 +84,7 @@ function getCategoryIcon(category: string) {
   const icons = {
     warranty: Shield,
     return: FileText,
+    refund: Banknote,
     shipping: Truck,
     purchase: ShoppingCart,
     privacy: Lock,
@@ -84,6 +97,7 @@ function getCategoryColor(category: string) {
   const colors = {
     warranty: 'text-blue-600 bg-blue-50',
     return: 'text-green-600 bg-green-50',
+    refund: 'text-emerald-600 bg-emerald-50',
     shipping: 'text-purple-600 bg-purple-50',
     purchase: 'text-amber-600 bg-amber-50',
     privacy: 'text-red-600 bg-red-50',
@@ -96,6 +110,7 @@ function getCategoryLabel(category: string, t: PolicyTableTranslations) {
   const labels = {
     warranty: t.warranty,
     return: t.return,
+    refund: t.refund,
     shipping: t.shipping,
     purchase: t.purchase,
     privacy: t.privacy,

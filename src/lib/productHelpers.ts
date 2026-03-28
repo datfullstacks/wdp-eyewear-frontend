@@ -149,6 +149,10 @@ function createObjectId(seed: string, index = 0) {
   return `${timePart}${cleanedSeed}${randomPart}${indexPart}`.slice(0, 24).padEnd(24, '0');
 }
 
+function isPersistedMongoId(value: unknown) {
+  return /^[a-f0-9]{24}$/i.test(toText(value));
+}
+
 function resolveTryOnCategory(category: string) {
   const normalized = normalizeCategoryValue(category);
   return TRY_ON_CAPABLE_CATEGORIES.has(normalized) ? normalized : 'other';
@@ -592,6 +596,7 @@ export function buildUpsertPayload(
       note: toOptionalText(form.storeScopeNote),
     },
     variants: variants.map((variant, index) => ({
+      ...(isPersistedMongoId(variant.id) ? { _id: variant.id } : {}),
       sku: toOptionalText(variant.sku) || `SKU-${Date.now()}-${index + 1}`,
       color: toOptionalText(variant.color),
       size: toOptionalText(variant.size),
