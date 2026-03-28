@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Input } from '@/components/atoms/Input';
 import { Button } from '@/components/atoms';
 import { MAX_TRY_ON_MODELS } from '@/lib/productHelpers';
@@ -179,6 +180,7 @@ export function ProductForm({
     variantId: string,
     suffix: 'image' | 'poster' | 'glb'
   ) => `variant-${variantId || 'unknown'}-${suffix}`;
+  const tF = useTranslations('manager.products.form');
   const priceValue = Number(formData.price || 0);
   const previewBasePrice = Number.isFinite(priceValue) ? Math.max(0, priceValue) : 0;
   const previewDepositPercent = formData.preOrderEnabled
@@ -276,38 +278,38 @@ export function ProductForm({
       {/* Row 1: Name + Brand */}
       <div className="grid grid-cols-2 gap-3">
         <Input
-          label="Tên sản phẩm"
+          label={tF('productName')}
           value={formData.name}
           onChange={(e) => onChange((prev) => ({ ...prev, name: e.target.value }))}
-          placeholder="Nhập tên sản phẩm"
+          placeholder={tF('productNamePlaceholder')}
           required
         />
         <Input
-          label="Thương hiệu"
+          label={tF('brand')}
           value={formData.brand}
           onChange={(e) => onChange((prev) => ({ ...prev, brand: e.target.value }))}
-          placeholder="Nhập thương hiệu"
+          placeholder={tF('brandPlaceholder')}
         />
       </div>
 
       {/* Row 2: Price + Stock + Category */}
       <div className="grid grid-cols-3 gap-3">
         <Input
-          label="Giá (VND)"
+          label={tF('price')}
           type="number"
           value={formData.price}
           onChange={(e) => onChange((prev) => ({ ...prev, price: e.target.value }))}
           placeholder="0"
         />
         <Input
-          label="Tồn kho"
+          label={tF('stock')}
           type="number"
           value={formData.stock}
           onChange={(e) => onChange((prev) => ({ ...prev, stock: e.target.value }))}
           placeholder="0"
         />
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700">Danh mục</label>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700">{tF('category')}</label>
           <Select
             value={formData.category}
             onValueChange={(value) =>
@@ -320,7 +322,7 @@ export function ProductForm({
             }
           >
             <SelectTrigger className="h-10">
-              <SelectValue placeholder="Chọn danh mục" />
+              <SelectValue placeholder={tF('categoryPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
               {CATEGORY_OPTIONS.map((o) => (
@@ -335,29 +337,25 @@ export function ProductForm({
 
       {/* Description */}
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-gray-700">Mô tả</label>
+        <label className="mb-1.5 block text-sm font-medium text-gray-700">{tF('description')}</label>
         <textarea
           value={formData.description}
           onChange={(e) => onChange((prev) => ({ ...prev, description: e.target.value }))}
           rows={2}
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none"
-          placeholder="Mô tả sản phẩm (tùy chọn)"
+          placeholder={tF('descriptionPlaceholder')}
         />
       </div>
 
       <div className="rounded-md border border-gray-200 p-3">
         <div className="mb-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Store network</p>
-          <p className="mt-0.5 text-xs text-gray-400">
-            Gan san pham vao cua hang de van hanh theo mo hinh chuoi. Mobile se co the loc san pham theo cua hang nay.
-          </p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{tF('storeNetwork')}</p>
+          <p className="mt-0.5 text-xs text-gray-400">{tF('storeNetworkDesc')}</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Pham vi cua hang
-            </label>
+            <label className="mb-2 block text-sm font-medium text-gray-700">{tF('storeScope')}</label>
             <Select
               value={formData.storeScopeMode}
               onValueChange={(value) =>
@@ -376,39 +374,29 @@ export function ProductForm({
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Chon pham vi" />
+                <SelectValue placeholder={tF('storeScope')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Ban o tat ca cua hang</SelectItem>
-                <SelectItem value="selected">Chi ban o cua hang duoc chon</SelectItem>
+                <SelectItem value="all">{tF('storeAll')}</SelectItem>
+                <SelectItem value="selected">{tF('storeSelected')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <Input
-            label="Ghi chu phan bo cua hang (tuy chon)"
+            label={tF('storeScopeNote')}
             value={formData.storeScopeNote}
-            onChange={(event) =>
-              onChange((prev) => ({
-                ...prev,
-                storeScopeNote: event.target.value,
-              }))
-            }
-            placeholder="Vi du: chi mo ban tai HCM trong thang dau"
+            onChange={(event) => onChange((prev) => ({ ...prev, storeScopeNote: event.target.value }))}
+            placeholder={tF('storeScopeNotePlaceholder')}
           />
         </div>
 
         {formData.storeScopeMode === 'all' ? (
-          <p className="mt-3 rounded-md border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900">
-            San pham nay se duoc coi la ban o tat ca cua hang. Neu ban muon gioi han theo chi nhanh, hay chuyen sang
-            "Chi ban o cua hang duoc chon".
-          </p>
+          <p className="mt-3 rounded-md border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900">{tF('storeAllNote')}</p>
         ) : (
           <div className="mt-4 space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Cua hang mac dinh
-              </label>
+              <label className="mb-2 block text-sm font-medium text-gray-700">{tF('primaryStore')}</label>
               <Select
                 value={formData.primaryStoreId || '__none'}
                 onValueChange={(value) =>
@@ -426,10 +414,10 @@ export function ProductForm({
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Chon cua hang mac dinh" />
+                  <SelectValue placeholder={tF('primaryStorePlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none">Chua chon</SelectItem>
+                  <SelectItem value="__none">{tF('storeNone')}</SelectItem>
                   {storeOptions.map((store) => (
                     <SelectItem key={store.id} value={store.id}>
                       {store.name} ({store.code})
@@ -440,11 +428,9 @@ export function ProductForm({
             </div>
 
             <div>
-              <p className="mb-2 text-sm font-medium text-gray-700">Danh sach cua hang ap dung</p>
+              <p className="mb-2 text-sm font-medium text-gray-700">{tF('storeList')}</p>
               {storeOptions.length === 0 ? (
-                <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-                  Chua co cua hang nao trong he thong. Hay tao cua hang truoc roi quay lai gan vao san pham.
-                </p>
+                <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">{tF('noStore')}</p>
               ) : (
                 <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                   {storeOptions.map((store) => {
@@ -479,7 +465,7 @@ export function ProductForm({
                             {store.name} ({store.code})
                           </div>
                           <div className="mt-1 text-xs text-gray-500">
-                            {[store.addressLine1, store.district, store.city].filter(Boolean).join(', ') || 'Chua co dia chi'}
+                            {[store.addressLine1, store.district, store.city].filter(Boolean).join(', ') || tF('noAddress')}
                           </div>
                         </div>
                       </label>
@@ -495,19 +481,13 @@ export function ProductForm({
       <div className="rounded-md border border-gray-200 p-3">
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Variants and asset mapping
-            </p>
-            <p className="mt-1 text-xs text-gray-500">
-              Map image and GLB per color or size so mobile can switch assets correctly when the customer changes variant.
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{tF('variantsTitle')}</p>
+            <p className="mt-1 text-xs text-gray-500">{tF('variantsDesc')}</p>
             <p className="mt-2 text-xs font-medium text-amber-800">
-              Try-on supports up to {MAX_TRY_ON_MODELS} mapped models per product. Current mapped models: {mappedTryOnModelCount}/{MAX_TRY_ON_MODELS}
+              {tF('tryOnLimit', { max: MAX_TRY_ON_MODELS, current: mappedTryOnModelCount })}
             </p>
           </div>
-          <Button type="button" variant="outline" onClick={addVariant}>
-            Add variant
-          </Button>
+          <Button type="button" variant="outline" onClick={addVariant}>{tF('addVariant')}</Button>
         </div>
 
         <div className="space-y-4">
@@ -517,63 +497,23 @@ export function ProductForm({
               className="rounded-md border border-gray-200 p-3"
             >
               <div className="mb-3 flex items-center justify-between">
-                <p className="text-sm font-semibold text-gray-800">
-                  Variant {index + 1}
-                </p>
+              <p className="text-sm font-semibold text-gray-800">{tF('variant')} {index + 1}</p>
                 {variantRows.length > 1 ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => removeVariant(index)}
-                  >
-                    Remove
-                  </Button>
+                  <Button type="button" variant="outline" onClick={() => removeVariant(index)}>{tF('removeVariant')}</Button>
                 ) : null}
               </div>
 
               {/* Row 1: identity — 4 cols */}
               <div className="grid grid-cols-4 gap-3">
-                <Input
-                  label="SKU"
-                  value={variant.sku}
-                  onChange={(e) => updateVariant(index, (c) => ({ ...c, sku: e.target.value }))}
-                  placeholder="SKU-BLK-M"
-                />
-                <Input
-                  label="Kho"
-                  value={variant.warehouseLocation}
-                  onChange={(e) => updateVariant(index, (c) => ({ ...c, warehouseLocation: e.target.value }))}
-                  placeholder="HCM-01"
-                />
-                <Input
-                  label="Màu"
-                  value={variant.color}
-                  onChange={(e) => updateVariant(index, (c) => ({ ...c, color: e.target.value }))}
-                  placeholder="Black"
-                />
-                <Input
-                  label="Size"
-                  value={variant.size}
-                  onChange={(e) => updateVariant(index, (c) => ({ ...c, size: e.target.value }))}
-                  placeholder="M"
-                />
+                <Input label={tF('sku')} value={variant.sku} onChange={(e) => updateVariant(index, (c) => ({ ...c, sku: e.target.value }))} placeholder="SKU-BLK-M" />
+                <Input label={tF('warehouse')} value={variant.warehouseLocation} onChange={(e) => updateVariant(index, (c) => ({ ...c, warehouseLocation: e.target.value }))} placeholder="HCM-01" />
+                <Input label={tF('color')} value={variant.color} onChange={(e) => updateVariant(index, (c) => ({ ...c, color: e.target.value }))} placeholder="Black" />
+                <Input label={tF('size')} value={variant.size} onChange={(e) => updateVariant(index, (c) => ({ ...c, size: e.target.value }))} placeholder="M" />
               </div>
               {/* Row 2: price + stock */}
               <div className="grid grid-cols-2 gap-3">
-                <Input
-                  label="Giá biến thể (VND)"
-                  type="number"
-                  value={variant.price}
-                  onChange={(e) => updateVariant(index, (c) => ({ ...c, price: e.target.value }))}
-                  placeholder={formData.price || '0'}
-                />
-                <Input
-                  label="Tồn kho biến thể"
-                  type="number"
-                  value={variant.stock}
-                  onChange={(e) => updateVariant(index, (c) => ({ ...c, stock: e.target.value }))}
-                  placeholder="0"
-                />
+                <Input label={tF('variantPrice')} type="number" value={variant.price} onChange={(e) => updateVariant(index, (c) => ({ ...c, price: e.target.value }))} placeholder={formData.price || '0'} />
+                <Input label={tF('variantStock')} type="number" value={variant.stock} onChange={(e) => updateVariant(index, (c) => ({ ...c, stock: e.target.value }))} placeholder="0" />
               </div>
 
               {/* Asset uploads: Image | Poster | GLB in 3 cols */}
@@ -586,10 +526,10 @@ export function ProductForm({
                     ) : (
                       <div className="flex h-20 w-full flex-col items-center justify-center rounded border-2 border-dashed border-gray-200 text-gray-400">
                         <Upload className="h-5 w-5" />
-                        <span className="mt-1 text-xs">Ảnh biến thể</span>
+                      <span className="mt-1 text-xs">{tF('variantImage')}</span>
                       </div>
                     )}
-                    <span className="text-xs">{variant.imageUrl ? '↺ Đổi ảnh' : '+ Tải lên'}</span>
+                    <span className="text-xs">{variant.imageUrl ? tF('changeImage') : tF('upload')}</span>
                     <input
                       type="file" accept="image/*"
                       disabled={isSubmitting || uploadingKey === getVariantUploadKey(variant.id, 'image')}
@@ -615,10 +555,10 @@ export function ProductForm({
                     ) : (
                       <div className="flex h-20 w-full flex-col items-center justify-center rounded border-2 border-dashed border-gray-200 text-gray-400">
                         <Upload className="h-5 w-5" />
-                        <span className="mt-1 text-xs">Ảnh poster</span>
+                      <span className="mt-1 text-xs">{tF('posterImage')}</span>
                       </div>
                     )}
-                    <span className="text-xs">{variant.posterUrl ? '↺ Đổi ảnh' : '+ Tải lên'}</span>
+                    <span className="text-xs">{variant.posterUrl ? tF('changeImage') : tF('upload')}</span>
                     <input
                       type="file" accept="image/*"
                       disabled={isSubmitting || uploadingKey === getVariantUploadKey(variant.id, 'poster')}
@@ -643,9 +583,9 @@ export function ProductForm({
                       variant.glbUrl ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-dashed border-gray-200 text-gray-400'
                     }`}>
                       <Upload className="h-5 w-5" />
-                      <span className="mt-1 text-xs">{variant.glbUrl ? 'GLB ✓' : 'GLB file'}</span>
+                      <span className="mt-1 text-xs">{variant.glbUrl ? tF('glbDone') : tF('glbAsset')}</span>
                     </div>
-                    <span className="text-xs">{variant.glbUrl ? '↺ Đổi GLB' : '+ Tải lên'}</span>
+                    <span className="text-xs">{variant.glbUrl ? tF('changeGlb') : tF('upload')}</span>
                     <input
                       type="file" accept=".glb,.gltf"
                       disabled={isSubmitting || uploadingKey === getVariantUploadKey(variant.id, 'glb')}
@@ -671,17 +611,13 @@ export function ProductForm({
       {supportsTryOn ? (
         <div className="rounded-md border border-gray-200 p-3">
           <div className="mb-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Frame and mobile fit specs (optional)
-            </p>
-            <p className="mt-0.5 text-xs text-gray-400">
-              Chi nhap khi da co thong so that. Co the de trong va bo sung sau, manager khong can doan de luu san pham.
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{tF('frameSpecsTitle')}</p>
+            <p className="mt-0.5 text-xs text-gray-400">{tF('frameSpecsDesc')}</p>
           </div>
 
           <details open={hasFrameSpecs} className="rounded-md border border-dashed border-gray-300 bg-gray-50 px-4 py-3">
             <summary className="cursor-pointer text-sm font-medium text-gray-700">
-              {hasFrameSpecs ? 'Dang co thong so da nhap' : 'Them thong so khi da xac nhan duoc'}
+              {hasFrameSpecs ? tF('frameSpecsHasData') : tF('frameSpecsEmpty')}
             </summary>
 
             <div className="mt-3 grid grid-cols-2 gap-3">
@@ -884,23 +820,12 @@ export function ProductForm({
       <div className="rounded-md border border-gray-200 p-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Pre-order config</p>
-            <p className="mt-0.5 text-xs text-gray-400">
-              Manager-owned business config for deposit, split payment, and shipping collection timing. Cac moc thoi gian co the de trong neu chua chot.
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{tF('preOrderTitle')}</p>
+            <p className="mt-0.5 text-xs text-gray-400">{tF('preOrderDesc')}</p>
           </div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-            <input
-              type="checkbox"
-              checked={formData.preOrderEnabled}
-              onChange={(event) =>
-                onChange((prev) => ({
-                  ...prev,
-                  preOrderEnabled: event.target.checked,
-                }))
-              }
-            />
-            Enable pre-order
+            <input type="checkbox" checked={formData.preOrderEnabled} onChange={(e) => onChange((prev) => ({ ...prev, preOrderEnabled: e.target.checked }))} />
+            {tF('enablePreOrder')}
           </label>
         </div>
 
@@ -1078,7 +1003,7 @@ export function ProductForm({
 
       {/* ── Media uploads ── */}
       <div className="rounded-md border border-gray-200 p-3">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Media</p>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">{tF('mediaTitle')}</p>
 
         {/* Hero + Thumbnail side by side */}
         <div className="grid grid-cols-2 gap-3">
@@ -1090,10 +1015,10 @@ export function ProductForm({
               ) : (
                 <div className="flex h-28 w-full flex-col items-center justify-center rounded border-2 border-dashed border-gray-200 text-gray-400">
                   <Upload className="h-6 w-6" />
-                  <span className="mt-1 text-xs">Ảnh chính (Hero)</span>
+              <span className="mt-1 text-xs">{tF('heroImage')}</span>
                 </div>
               )}
-              <span>{formData.heroImageUrl ? '↺ Đổi ảnh hero' : '+ Tải lên hero'}</span>
+              <span>{formData.heroImageUrl ? tF('changeHero') : tF('uploadHero')}</span>
               <input
                 type="file" accept="image/*"
                 disabled={isSubmitting || uploadingKey === 'hero'}
@@ -1111,10 +1036,10 @@ export function ProductForm({
               ) : (
                 <div className="flex h-28 w-full flex-col items-center justify-center rounded border-2 border-dashed border-gray-200 text-gray-400">
                   <Upload className="h-6 w-6" />
-                  <span className="mt-1 text-xs">Ảnh thu nhỏ</span>
+              <span className="mt-1 text-xs">{tF('thumbnailImage')}</span>
                 </div>
               )}
-              <span>{formData.thumbnailUrl ? '↺ Đổi thumbnail' : '+ Tải lên thumbnail'}</span>
+              <span>{formData.thumbnailUrl ? tF('changeThumbnail') : tF('uploadThumbnail')}</span>
               <input
                 type="file" accept="image/*"
                 disabled={isSubmitting || uploadingKey === 'thumbnail'}
@@ -1128,9 +1053,9 @@ export function ProductForm({
         {/* Gallery */}
         <div className="mt-3">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-600">Ảnh bộ sưu tập</span>
+            <span className="text-xs font-medium text-gray-600">{tF('gallery')}</span>
             <label className="flex cursor-pointer items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 hover:border-amber-400 hover:text-amber-600">
-              <Upload className="h-3 w-3" /> Thêm ảnh
+              <Upload className="h-3 w-3" /> {tF('addGallery')}
               <input
                 type="file" accept="image/*" multiple
                 disabled={isSubmitting || uploadingKey === 'gallery'}
@@ -1155,7 +1080,7 @@ export function ProductForm({
               ))}
             </div>
           ) : (
-            <p className="text-center text-xs text-gray-400 py-3">Chưa có ảnh gallery</p>
+            <p className="text-center text-xs text-gray-400 py-3">{tF('noGallery')}</p>
           )}
         </div>
       </div>
@@ -1163,11 +1088,8 @@ export function ProductForm({
       <div className="rounded-md border border-gray-200 p-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Mobile try-on config</p>
-            <p className="mt-1 text-xs text-gray-500">
-              Phan nay chi cau hinh workflow va runtime cho try-on tren mobile. File poster va GLB
-              duoc upload theo tung bien the o phia tren.
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{tF('tryOnTitle')}</p>
+            <p className="mt-1 text-xs text-gray-500">{tF('tryOnDesc')}</p>
           </div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
             <input
@@ -1181,14 +1103,12 @@ export function ProductForm({
                 }))
               }
             />
-            Bat try-on cho mobile
+            {tF('enableTryOn')}
           </label>
         </div>
 
         {!supportsTryOn ? (
-          <p className="mt-3 text-xs font-medium text-amber-700">
-            Try-on chi ap dung cho san pham thuoc category frame hoac sunglasses trong mobile app hien tai.
-          </p>
+          <p className="mt-3 text-xs font-medium text-amber-700">{tF('tryOnNotSupported')}</p>
         ) : null}
 
         {formData.tryOnEnabled ? (
@@ -1513,13 +1433,8 @@ export function ProductForm({
       {(onCancel || onSubmit) && (
         <div className="flex items-center justify-end gap-3 border-t border-gray-200 pt-4">
           {onCancel && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              disabled={isSubmitting}
-            >
-              Hủy
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+              {tF('cancelButton')}
             </Button>
           )}
           {onSubmit && (
@@ -1529,7 +1444,7 @@ export function ProductForm({
             disabled={isSubmitting}
             className="bg-amber-400 text-slate-900 hover:bg-amber-500"
           >
-            {isSubmitting ? 'Đang lưu...' : submitLabel}
+            {isSubmitting ? tF('savingButton') : submitLabel}
           </Button>
           )}
         </div>
