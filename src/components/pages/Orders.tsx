@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Filter } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { SearchBar } from '@/components/molecules/SearchBar';
 import { Header } from '@/components/organisms/Header';
@@ -19,16 +20,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { buildDetailPath } from '@/hooks/useDetailRoute';
 
-const statusFilters = [
-  { key: 'all', label: 'Tất cả' },
-  { key: 'pending', label: 'Cần xử lý' },
-  { key: 'processing', label: 'Đã xử lý' },
-  { key: 'completed', label: 'Hoàn thành' },
-  { key: 'cancelled', label: 'Đã hủy' },
-];
-
 const Orders = () => {
   const pathname = usePathname();
+  const t = useTranslations('manager.orders');
   const [mounted, setMounted] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<
@@ -41,20 +35,28 @@ const Orders = () => {
 
   if (!mounted) return null;
 
+  const statusFilters = [
+    { key: 'all', label: t('all') },
+    { key: 'pending', label: t('pending') },
+    { key: 'processing', label: t('processing') },
+    { key: 'completed', label: t('completed') },
+    { key: 'cancelled', label: t('cancelled') },
+  ];
+
   return (
     <>
       <Header
-        title="Đơn hàng"
-        subtitle="Quản lý đơn hàng khách mua"
+        title={t('title')}
+        subtitle={t('subtitle')}
         showAddButton
-        addButtonLabel="Tạo đơn mới"
+        addButtonLabel={t('createNew')}
       />
 
       <div className="space-y-6 p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
           <div className="w-full sm:max-w-[240px]">
             <SearchBar
-              placeholder="Tìm theo mã đơn, khách hàng..."
+              placeholder={t('searchPlaceholder')}
               value={searchTerm}
               accent="yellow"
               onChange={setSearchTerm}
@@ -66,14 +68,14 @@ const Orders = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  aria-label="Bộ lọc"
+                  aria-label={t('filterLabel')}
                   className="text-foreground/80 hover:text-foreground"
                 >
                   <Filter />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Trạng thái</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('statusLabel')}</DropdownMenuLabel>
                 <DropdownMenuRadioGroup
                   value={statusFilter}
                   onValueChange={(value) =>
@@ -87,10 +89,10 @@ const Orders = () => {
                   ))}
                 </DropdownMenuRadioGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel>Thời gian</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('timeLabel')}</DropdownMenuLabel>
                 <DropdownMenuRadioGroup value="today">
                   <DropdownMenuRadioItem value="today">
-                    Hôm nay
+                    {t('today')}
                   </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>

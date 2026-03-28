@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { SearchBar } from '@/components/molecules/SearchBar';
 import { Pagination } from '@/components/molecules/Pagination';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ import { toDelayedOrdersFromApi } from '@/lib/orderWorkflow';
 const ITEMS_PER_PAGE = 10;
 
 export default function OrdersDelayed() {
+  const t = useTranslations('manager.orders.alerts');
   const { detailId, openDetail, closeDetail } = useDetailRoute();
   const [orders, setOrders] = useState<DelayedOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,7 +58,7 @@ export default function OrdersDelayed() {
       const result = await orderApi.getAll({ page: 1, limit: 200 });
       setOrders(toDelayedOrdersFromApi(result.orders));
     } catch {
-      setErrorMessage('Khong tai duoc danh sach canh bao.');
+      setErrorMessage(t('loading'));
     } finally {
       setIsLoading(false);
     }
@@ -189,8 +191,8 @@ export default function OrdersDelayed() {
   return (
     <>
       <Header
-        title="Don tre & Canh bao"
-        subtitle="Quan ly va xu ly cac don vi pham SLA hoac can can thiệp"
+        title={t('title')}
+        subtitle={t('subtitle')}
       />
       <div className="space-y-6 p-6">
         <DelayedStatsGrid stats={stats} />
@@ -198,7 +200,7 @@ export default function OrdersDelayed() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
           <div className="w-full sm:max-w-[240px]">
             <SearchBar
-              placeholder="Tim theo ma don, ten KH, SDT..."
+              placeholder={t('searchPlaceholder')}
               value={searchTerm}
               onChange={setSearchTerm}
             />
@@ -209,31 +211,31 @@ export default function OrdersDelayed() {
                 <Button
                   variant="outline"
                   size="icon"
-                  aria-label="Bo loc"
+                  aria-label={t('filterLabel')}
                   className="text-foreground/80 hover:text-foreground"
                 >
                   <Filter />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuLabel>Muc do</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('severityLabel')}</DropdownMenuLabel>
                 <DropdownMenuRadioGroup
                   value={severityFilter}
                   onValueChange={setSeverityFilter}
                 >
-                  <DropdownMenuRadioItem value="all">Tat ca muc do</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="critical">Nghiem trong</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="high">Cao</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="medium">Trung binh</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="low">Thap</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="all">{t('allSeverities')}</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="critical">{t('critical')}</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="high">{t('high')}</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="medium">{t('medium')}</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="low">{t('low')}</DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel>Loai canh bao</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('typeLabel')}</DropdownMenuLabel>
                 <DropdownMenuRadioGroup
                   value={typeFilter}
                   onValueChange={setTypeFilter}
                 >
-                  <DropdownMenuRadioItem value="all">Tat ca loai</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="all">{t('allTypes')}</DropdownMenuRadioItem>
                   {Object.entries(delayTypeLabels).map(([value, label]) => (
                     <DropdownMenuRadioItem key={value} value={value}>
                       {label}
@@ -246,7 +248,7 @@ export default function OrdersDelayed() {
         </div>
 
         {isLoading && (
-          <p className="text-foreground/70 text-sm">Dang tai du lieu canh bao...</p>
+          <p className="text-foreground/70 text-sm">{t('loading')}</p>
         )}
         {!isLoading && errorMessage && (
           <p className="text-destructive text-sm">{errorMessage}</p>
