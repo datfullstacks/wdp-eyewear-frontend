@@ -208,6 +208,7 @@ interface BackendRefundBreakdown {
 }
 
 interface BackendRefundBankAccount {
+  bankCode?: string;
   bankName?: string;
   accountNumber?: string;
   accountHolder?: string;
@@ -416,6 +417,7 @@ export interface RefundBreakdown {
 }
 
 export interface RefundBankAccount {
+  bankCode: string;
   bankName: string;
   accountNumber: string;
   accountHolder: string;
@@ -682,16 +684,18 @@ function mapRefundBankAccount(
 ): RefundBankAccount | undefined {
   if (!raw || !isRecord(raw)) return undefined;
 
+  const bankCode = String(raw.bankCode || '').trim().toUpperCase();
   const bankName = String(raw.bankName || '').trim();
   const accountNumber = String(raw.accountNumber || '').trim();
   const accountHolder = String(raw.accountHolder || '').trim();
   const note = String(raw.note || '').trim();
 
-  if (!bankName && !accountNumber && !accountHolder && !note) {
+  if (!bankCode && !bankName && !accountNumber && !accountHolder && !note) {
     return undefined;
   }
 
   return {
+    bankCode,
     bankName,
     accountNumber,
     accountHolder,
