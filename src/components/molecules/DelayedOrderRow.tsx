@@ -1,4 +1,4 @@
-﻿import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
 import {
   DropdownMenu,
@@ -11,6 +11,7 @@ import { StatusBadge } from '@/components/atoms/StatusBadge';
 import { SeverityBadge } from '@/components/atoms/SeverityBadge';
 import { DelayTypeBadge } from '@/components/atoms/DelayTypeBadge';
 import { DelayedOrder } from '@/types/delayed';
+import { useTranslations } from 'next-intl';
 import {
   Phone,
   ArrowUpRight,
@@ -36,6 +37,8 @@ export const DelayedOrderRow = ({
   onEscalate,
   onResolve,
 }: DelayedOrderRowProps) => {
+  const t = useTranslations('manager.orders.actions');
+
   return (
     <TableRow className="hover:bg-muted/30">
       <TableCell className="text-foreground font-mono text-sm font-normal">
@@ -70,10 +73,10 @@ export const DelayedOrderRow = ({
       <TableCell className="text-foreground/90 text-sm">
         <span
           className={
-            order.assignedTo === 'Chưa gán' ? 'text-muted-foreground italic' : ''
+            order.assignedTo === 'Chưa gán' || order.assignedTo === 'Unassigned' ? 'text-muted-foreground italic' : ''
           }
         >
-          {order.assignedTo}
+          {order.assignedTo === 'Chưa gán' ? 'Unassigned' : order.assignedTo}
         </span>
       </TableCell>
       <TableCell className="text-right">
@@ -91,16 +94,16 @@ export const DelayedOrderRow = ({
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => onContact(order)}>
               <Phone className="mr-2 h-4 w-4" />
-              Liên hệ khách
+              {t('contactCustomer')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onEscalate(order)}>
               <ArrowUpRight className="mr-2 h-4 w-4" />
-              Leo thang
+              {t('escalate')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onResolve(order)}>
               <CheckCircle className="mr-2 h-4 w-4" />
-              Xử lý
+              {t('resolve')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

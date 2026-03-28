@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useTranslations } from 'next-intl';
 import { Label } from '@/components/ui/label';
 
 function formatDateTime(value?: string) {
@@ -54,6 +55,7 @@ export function ReadyStockShipmentModal({
   onSubmit: () => void;
   onAdvanceStatus: (status: OrderShippingTestStatus) => void;
 }) {
+  const tc = useTranslations('manager.common');
   if (!order) return null;
 
   const isCreate = mode === 'create';
@@ -116,7 +118,7 @@ export function ReadyStockShipmentModal({
                 <div className="space-y-1">
                   <Label>Trạng thái GHN</Label>
                   <div className="text-sm font-semibold">
-                    {shippingStatusMeta?.label || '-'}
+                    {shippingStatusMeta?.labelKey ? tc(`shippingStatus.${shippingStatusMeta.labelKey}` as any) : (shippingStatusMeta?.label || '-')}
                   </div>
                 </div>
                 <div className="space-y-1">

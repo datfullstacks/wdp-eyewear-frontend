@@ -1,4 +1,7 @@
+'use client';
+
 import { CheckCircle, Package } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface PendingStatsGridProps {
   totalCount: number;
@@ -9,16 +12,18 @@ export const PendingStatsGrid = ({
   totalCount,
   selectedCount,
 }: PendingStatsGridProps) => {
+  const t = useTranslations('manager.orders.stats');
+
   const stats = [
     {
-      label: 'Tổng đơn',
+      label: t('totalCount'),
       value: totalCount,
       icon: Package,
       iconBg: 'bg-primary/10',
       iconColor: 'text-primary',
     },
     {
-      label: 'Đã chọn',
+      label: t('selectedCount'),
       value: selectedCount,
       icon: CheckCircle,
       iconBg: 'bg-success/10',

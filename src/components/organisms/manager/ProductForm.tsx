@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Input } from '@/components/atoms/Input';
 import { Button } from '@/components/atoms';
 import { MAX_TRY_ON_MODELS } from '@/lib/productHelpers';
@@ -12,6 +13,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Upload, XCircle } from 'lucide-react';
+
+// ── XYZ helpers ────────────────────────────────────────────────────────────────
+// Values in state are stored as space-separated strings (e.g. "85 181 90")
+// to keep the API contract unchanged.
+function parseXYZ(value: string): [string, string, string] {
+  const parts = String(value || '').trim().split(/\s+/);
+  return [parts[0] ?? '', parts[1] ?? '', parts[2] ?? ''];
+}
+function formatXYZ(x: string, y: string, z: string): string {
+  return `${x} ${y} ${z}`;
+}
 import type {
   PreOrderShippingCollectionTiming,
   ProductMediaAsset,
@@ -168,6 +180,7 @@ export function ProductForm({
     variantId: string,
     suffix: 'image' | 'poster' | 'glb'
   ) => `variant-${variantId || 'unknown'}-${suffix}`;
+  const tF = useTranslations('manager.products.form');
   const priceValue = Number(formData.price || 0);
   const previewBasePrice = Number.isFinite(priceValue) ? Math.max(0, priceValue) : 0;
   const previewDepositPercent = formData.preOrderEnabled
@@ -261,105 +274,88 @@ export function ProductForm({
   };
 
   return (
-    <div className="space-y-4">
-      <Input
-        label="Product Name"
-        value={formData.name}
-        onChange={(event) =>
-          onChange((prev) => ({ ...prev, name: event.target.value }))
-        }
-        placeholder="Enter product name"
-        required
-      />
-
-      <Input
-        label="Brand"
-        value={formData.brand}
-        onChange={(event) =>
-          onChange((prev) => ({ ...prev, brand: event.target.value }))
-        }
-        placeholder="Enter brand"
-      />
-
-      <div className="grid grid-cols-2 gap-4">
+    <div className="space-y-3">
+      {/* Row 1: Name + Brand */}
+      <div className="grid grid-cols-2 gap-3">
         <Input
-          label="Price (VND)"
+          label={tF('productName')}
+          value={formData.name}
+          onChange={(e) => onChange((prev) => ({ ...prev, name: e.target.value }))}
+          placeholder={tF('productNamePlaceholder')}
+          required
+        />
+        <Input
+          label={tF('brand')}
+          value={formData.brand}
+          onChange={(e) => onChange((prev) => ({ ...prev, brand: e.target.value }))}
+          placeholder={tF('brandPlaceholder')}
+        />
+      </div>
+
+      {/* Row 2: Price + Stock + Category */}
+      <div className="grid grid-cols-3 gap-3">
+        <Input
+          label={tF('price')}
           type="number"
           value={formData.price}
-          onChange={(event) =>
-            onChange((prev) => ({ ...prev, price: event.target.value }))
-          }
+          onChange={(e) => onChange((prev) => ({ ...prev, price: e.target.value }))}
           placeholder="0"
         />
         <Input
-          label="Stock"
+          label={tF('stock')}
           type="number"
           value={formData.stock}
-          onChange={(event) =>
-            onChange((prev) => ({ ...prev, stock: event.target.value }))
-          }
+          onChange={(e) => onChange((prev) => ({ ...prev, stock: e.target.value }))}
           placeholder="0"
         />
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700">{tF('category')}</label>
+          <Select
+            value={formData.category}
+            onValueChange={(value) =>
+              onChange((prev) => ({
+                ...prev,
+                category: value,
+                tryOnEnabled:
+                  value === 'frame' || value === 'sunglasses' ? prev.tryOnEnabled : false,
+              }))
+            }
+          >
+            <SelectTrigger className="h-10">
+              <SelectValue placeholder={tF('categoryPlaceholder')} />
+            </SelectTrigger>
+            <SelectContent>
+              {CATEGORY_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
+      {/* Description */}
       <div>
-        <label className="mb-2 block text-sm font-medium text-gray-700">
-          Category
-        </label>
-        <Select
-          value={formData.category}
-          onValueChange={(value) =>
-            onChange((prev) => ({
-              ...prev,
-              category: value,
-              tryOnEnabled:
-                value === 'frame' || value === 'sunglasses'
-                  ? prev.tryOnEnabled
-                  : false,
-            }))
-          }
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select category" />
-          </SelectTrigger>
-          <SelectContent>
-            {CATEGORY_OPTIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <label className="mb-2 block text-sm font-medium text-gray-700">
-          Description
-        </label>
+        <label className="mb-1.5 block text-sm font-medium text-gray-700">{tF('description')}</label>
         <textarea
           value={formData.description}
-          onChange={(event) =>
-            onChange((prev) => ({ ...prev, description: event.target.value }))
-          }
-          rows={3}
+          onChange={(e) => onChange((prev) => ({ ...prev, description: e.target.value }))}
+          rows={2}
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none"
-          placeholder="Optional product description"
+          placeholder={tF('descriptionPlaceholder')}
         />
       </div>
 
-      <div className="rounded-md border border-gray-200 p-4">
-        <div className="mb-4">
-          <p className="text-sm font-medium text-gray-700">Store network</p>
-          <p className="mt-1 text-xs text-gray-500">
-            Gan san pham vao cua hang de van hanh theo mo hinh chuoi. Mobile se co the loc san pham theo cua hang nay.
-          </p>
+      <div className="rounded-md border border-gray-200 p-3">
+        <div className="mb-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{tF('storeNetwork')}</p>
+          <p className="mt-0.5 text-xs text-gray-400">{tF('storeNetworkDesc')}</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Pham vi cua hang
-            </label>
+            <label className="mb-2 block text-sm font-medium text-gray-700">{tF('storeScope')}</label>
             <Select
               value={formData.storeScopeMode}
               onValueChange={(value) =>
@@ -378,39 +374,29 @@ export function ProductForm({
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Chon pham vi" />
+                <SelectValue placeholder={tF('storeScope')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Ban o tat ca cua hang</SelectItem>
-                <SelectItem value="selected">Chi ban o cua hang duoc chon</SelectItem>
+                <SelectItem value="all">{tF('storeAll')}</SelectItem>
+                <SelectItem value="selected">{tF('storeSelected')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <Input
-            label="Ghi chu phan bo cua hang (tuy chon)"
+            label={tF('storeScopeNote')}
             value={formData.storeScopeNote}
-            onChange={(event) =>
-              onChange((prev) => ({
-                ...prev,
-                storeScopeNote: event.target.value,
-              }))
-            }
-            placeholder="Vi du: chi mo ban tai HCM trong thang dau"
+            onChange={(event) => onChange((prev) => ({ ...prev, storeScopeNote: event.target.value }))}
+            placeholder={tF('storeScopeNotePlaceholder')}
           />
         </div>
 
         {formData.storeScopeMode === 'all' ? (
-          <p className="mt-3 rounded-md border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900">
-            San pham nay se duoc coi la ban o tat ca cua hang. Neu ban muon gioi han theo chi nhanh, hay chuyen sang
-            "Chi ban o cua hang duoc chon".
-          </p>
+          <p className="mt-3 rounded-md border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900">{tF('storeAllNote')}</p>
         ) : (
           <div className="mt-4 space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Cua hang mac dinh
-              </label>
+              <label className="mb-2 block text-sm font-medium text-gray-700">{tF('primaryStore')}</label>
               <Select
                 value={formData.primaryStoreId || '__none'}
                 onValueChange={(value) =>
@@ -428,10 +414,10 @@ export function ProductForm({
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Chon cua hang mac dinh" />
+                  <SelectValue placeholder={tF('primaryStorePlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none">Chua chon</SelectItem>
+                  <SelectItem value="__none">{tF('storeNone')}</SelectItem>
                   {storeOptions.map((store) => (
                     <SelectItem key={store.id} value={store.id}>
                       {store.name} ({store.code})
@@ -442,11 +428,9 @@ export function ProductForm({
             </div>
 
             <div>
-              <p className="mb-2 text-sm font-medium text-gray-700">Danh sach cua hang ap dung</p>
+              <p className="mb-2 text-sm font-medium text-gray-700">{tF('storeList')}</p>
               {storeOptions.length === 0 ? (
-                <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-                  Chua co cua hang nao trong he thong. Hay tao cua hang truoc roi quay lai gan vao san pham.
-                </p>
+                <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">{tF('noStore')}</p>
               ) : (
                 <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                   {storeOptions.map((store) => {
@@ -481,7 +465,7 @@ export function ProductForm({
                             {store.name} ({store.code})
                           </div>
                           <div className="mt-1 text-xs text-gray-500">
-                            {[store.addressLine1, store.district, store.city].filter(Boolean).join(', ') || 'Chua co dia chi'}
+                            {[store.addressLine1, store.district, store.city].filter(Boolean).join(', ') || tF('noAddress')}
                           </div>
                         </div>
                       </label>
@@ -494,224 +478,129 @@ export function ProductForm({
         )}
       </div>
 
-      <div className="rounded-md border border-gray-200 p-4">
-        <div className="mb-4 flex items-start justify-between gap-3">
+      <div className="rounded-md border border-gray-200 p-3">
+        <div className="mb-3 flex items-start justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-gray-700">
-              Variants and asset mapping
-            </p>
-            <p className="mt-1 text-xs text-gray-500">
-              Map image and GLB per color or size so mobile can switch assets correctly when the customer changes variant.
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{tF('variantsTitle')}</p>
+            <p className="mt-1 text-xs text-gray-500">{tF('variantsDesc')}</p>
             <p className="mt-2 text-xs font-medium text-amber-800">
-              Try-on supports up to {MAX_TRY_ON_MODELS} mapped models per product. Current mapped models: {mappedTryOnModelCount}/{MAX_TRY_ON_MODELS}
+              {tF('tryOnLimit', { max: MAX_TRY_ON_MODELS, current: mappedTryOnModelCount })}
             </p>
           </div>
-          <Button type="button" variant="outline" onClick={addVariant}>
-            Add variant
-          </Button>
+          <Button type="button" variant="outline" onClick={addVariant}>{tF('addVariant')}</Button>
         </div>
 
         <div className="space-y-4">
           {variantRows.map((variant, index) => (
             <div
               key={variant.id || `${variant.sku}-${index}`}
-              className="rounded-md border border-gray-200 p-4"
+              className="rounded-md border border-gray-200 p-3"
             >
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm font-semibold text-gray-800">
-                  Variant {index + 1}
-                </p>
+              <div className="mb-3 flex items-center justify-between">
+              <p className="text-sm font-semibold text-gray-800">{tF('variant')} {index + 1}</p>
                 {variantRows.length > 1 ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => removeVariant(index)}
-                  >
-                    Remove
-                  </Button>
+                  <Button type="button" variant="outline" onClick={() => removeVariant(index)}>{tF('removeVariant')}</Button>
                 ) : null}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <Input
-                  label="SKU"
-                  value={variant.sku}
-                  onChange={(event) =>
-                    updateVariant(index, (current) => ({
-                      ...current,
-                      sku: event.target.value,
-                    }))
-                  }
-                  placeholder="SKU-FRAME-BLK-M"
-                />
-                <Input
-                  label="Warehouse location"
-                  value={variant.warehouseLocation}
-                  onChange={(event) =>
-                    updateVariant(index, (current) => ({
-                      ...current,
-                      warehouseLocation: event.target.value,
-                    }))
-                  }
-                  placeholder="HCM-FRAME-01"
-                />
-                <Input
-                  label="Color"
-                  value={variant.color}
-                  onChange={(event) =>
-                    updateVariant(index, (current) => ({
-                      ...current,
-                      color: event.target.value,
-                    }))
-                  }
-                  placeholder="Black"
-                />
-                <Input
-                  label="Size"
-                  value={variant.size}
-                  onChange={(event) =>
-                    updateVariant(index, (current) => ({
-                      ...current,
-                      size: event.target.value,
-                    }))
-                  }
-                  placeholder="M"
-                />
-                <Input
-                  label="Variant price (VND)"
-                  type="number"
-                  value={variant.price}
-                  onChange={(event) =>
-                    updateVariant(index, (current) => ({
-                      ...current,
-                      price: event.target.value,
-                    }))
-                  }
-                  placeholder={formData.price || '0'}
-                />
-                <Input
-                  label="Variant stock"
-                  type="number"
-                  value={variant.stock}
-                  onChange={(event) =>
-                    updateVariant(index, (current) => ({
-                      ...current,
-                      stock: event.target.value,
-                    }))
-                  }
-                  placeholder="0"
-                />
+              {/* Row 1: identity — 4 cols */}
+              <div className="grid grid-cols-4 gap-3">
+                <Input label={tF('sku')} value={variant.sku} onChange={(e) => updateVariant(index, (c) => ({ ...c, sku: e.target.value }))} placeholder="SKU-BLK-M" />
+                <Input label={tF('warehouse')} value={variant.warehouseLocation} onChange={(e) => updateVariant(index, (c) => ({ ...c, warehouseLocation: e.target.value }))} placeholder="HCM-01" />
+                <Input label={tF('color')} value={variant.color} onChange={(e) => updateVariant(index, (c) => ({ ...c, color: e.target.value }))} placeholder="Black" />
+                <Input label={tF('size')} value={variant.size} onChange={(e) => updateVariant(index, (c) => ({ ...c, size: e.target.value }))} placeholder="M" />
+              </div>
+              {/* Row 2: price + stock */}
+              <div className="grid grid-cols-2 gap-3">
+                <Input label={tF('variantPrice')} type="number" value={variant.price} onChange={(e) => updateVariant(index, (c) => ({ ...c, price: e.target.value }))} placeholder={formData.price || '0'} />
+                <Input label={tF('variantStock')} type="number" value={variant.stock} onChange={(e) => updateVariant(index, (c) => ({ ...c, stock: e.target.value }))} placeholder="0" />
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-4">
-                <div className="rounded-md border border-gray-100 p-3">
-                  <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <Upload className="h-4 w-4" />
-                    Variant image
-                  </div>
-                  {variant.imageUrl ? (
-                    <img
-                      src={variant.imageUrl}
-                      alt={`Variant ${index + 1}`}
-                      className="mb-2 h-20 w-20 rounded-md object-cover"
+              {/* Asset uploads: Image | Poster | GLB in 3 cols */}
+              <div className="mt-3 grid grid-cols-3 gap-3">
+                {/* Variant image */}
+                <div className="rounded-md border border-gray-100 bg-gray-50">
+                  <label className="flex cursor-pointer flex-col items-center gap-1.5 p-2 text-xs font-medium text-gray-500 hover:text-amber-600">
+                    {variant.imageUrl ? (
+                      <img src={variant.imageUrl} alt={`Variant ${index + 1}`} className="h-20 w-full rounded object-cover" />
+                    ) : (
+                      <div className="flex h-20 w-full flex-col items-center justify-center rounded border-2 border-dashed border-gray-200 text-gray-400">
+                        <Upload className="h-5 w-5" />
+                      <span className="mt-1 text-xs">{tF('variantImage')}</span>
+                      </div>
+                    )}
+                    <span className="text-xs">{variant.imageUrl ? tF('changeImage') : tF('upload')}</span>
+                    <input
+                      type="file" accept="image/*"
+                      disabled={isSubmitting || uploadingKey === getVariantUploadKey(variant.id, 'image')}
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) void onUploadVariantAsset(f, variant.id, 'imageUrl'); }}
+                      className="hidden"
                     />
-                  ) : null}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    disabled={
-                      isSubmitting ||
-                      uploadingKey === getVariantUploadKey(variant.id, 'image')
-                    }
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (file) void onUploadVariantAsset(file, variant.id, 'imageUrl');
-                    }}
-                    className="block w-full text-sm text-gray-600"
-                  />
-                  <Input
-                    label="Image URL"
-                    value={variant.imageUrl}
-                    onChange={(event) =>
-                      updateVariant(index, (current) => ({
-                        ...current,
-                        imageUrl: event.target.value,
-                      }))
-                    }
-                    placeholder="https://..."
-                  />
+                  </label>
+                  {variant.imageUrl && (
+                    <input
+                      type="text" value={variant.imageUrl}
+                      onChange={(e) => updateVariant(index, (c) => ({ ...c, imageUrl: e.target.value }))}
+                      className="w-full rounded-b-md border-t border-gray-200 px-2 py-1 text-xs text-gray-500 focus:border-amber-400 focus:outline-none"
+                      placeholder="URL..."
+                    />
+                  )}
                 </div>
 
-                <div className="rounded-md border border-gray-100 p-3">
-                  <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <Upload className="h-4 w-4" />
-                    Poster image
-                  </div>
-                  {variant.posterUrl ? (
-                    <img
-                      src={variant.posterUrl}
-                      alt={`Variant poster ${index + 1}`}
-                      className="mb-2 h-20 w-20 rounded-md object-cover"
+                {/* Poster image */}
+                <div className="rounded-md border border-gray-100 bg-gray-50">
+                  <label className="flex cursor-pointer flex-col items-center gap-1.5 p-2 text-xs font-medium text-gray-500 hover:text-amber-600">
+                    {variant.posterUrl ? (
+                      <img src={variant.posterUrl} alt={`Poster ${index + 1}`} className="h-20 w-full rounded object-cover" />
+                    ) : (
+                      <div className="flex h-20 w-full flex-col items-center justify-center rounded border-2 border-dashed border-gray-200 text-gray-400">
+                        <Upload className="h-5 w-5" />
+                      <span className="mt-1 text-xs">{tF('posterImage')}</span>
+                      </div>
+                    )}
+                    <span className="text-xs">{variant.posterUrl ? tF('changeImage') : tF('upload')}</span>
+                    <input
+                      type="file" accept="image/*"
+                      disabled={isSubmitting || uploadingKey === getVariantUploadKey(variant.id, 'poster')}
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) void onUploadVariantAsset(f, variant.id, 'posterUrl'); }}
+                      className="hidden"
                     />
-                  ) : null}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    disabled={
-                      isSubmitting ||
-                      uploadingKey === getVariantUploadKey(variant.id, 'poster')
-                    }
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (file) void onUploadVariantAsset(file, variant.id, 'posterUrl');
-                    }}
-                    className="block w-full text-sm text-gray-600"
-                  />
-                  <Input
-                    label="Poster URL"
-                    value={variant.posterUrl}
-                    onChange={(event) =>
-                      updateVariant(index, (current) => ({
-                        ...current,
-                        posterUrl: event.target.value,
-                      }))
-                    }
-                    placeholder="https://..."
-                  />
+                  </label>
+                  {variant.posterUrl && (
+                    <input
+                      type="text" value={variant.posterUrl}
+                      onChange={(e) => updateVariant(index, (c) => ({ ...c, posterUrl: e.target.value }))}
+                      className="w-full rounded-b-md border-t border-gray-200 px-2 py-1 text-xs text-gray-500 focus:border-amber-400 focus:outline-none"
+                      placeholder="URL..."
+                    />
+                  )}
                 </div>
-              </div>
 
-              <div className="mt-4">
-                <div className="rounded-md border border-gray-100 p-3">
-                  <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <Upload className="h-4 w-4" />
-                    GLB asset
-                  </div>
-                  <input
-                    type="file"
-                    accept=".glb,.gltf,model/gltf-binary,model/gltf+json"
-                    disabled={
-                      isSubmitting ||
-                      uploadingKey === getVariantUploadKey(variant.id, 'glb')
-                    }
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (file) void onUploadVariantAsset(file, variant.id, 'glbUrl');
-                    }}
-                    className="block w-full text-sm text-gray-600"
-                  />
-                  <Input
-                    label="GLB URL"
-                    value={variant.glbUrl}
-                    onChange={(event) =>
-                      updateVariant(index, (current) => ({
-                        ...current,
-                        glbUrl: event.target.value,
-                      }))
-                    }
-                    placeholder="https://...glb"
-                  />
+                {/* GLB asset */}
+                <div className="rounded-md border border-gray-100 bg-gray-50">
+                  <label className="flex cursor-pointer flex-col items-center gap-1.5 p-2 text-xs font-medium text-gray-500 hover:text-amber-600">
+                    <div className={`flex h-20 w-full flex-col items-center justify-center rounded border-2 text-center ${
+                      variant.glbUrl ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-dashed border-gray-200 text-gray-400'
+                    }`}>
+                      <Upload className="h-5 w-5" />
+                      <span className="mt-1 text-xs">{variant.glbUrl ? tF('glbDone') : tF('glbAsset')}</span>
+                    </div>
+                    <span className="text-xs">{variant.glbUrl ? tF('changeGlb') : tF('upload')}</span>
+                    <input
+                      type="file" accept=".glb,.gltf"
+                      disabled={isSubmitting || uploadingKey === getVariantUploadKey(variant.id, 'glb')}
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) void onUploadVariantAsset(f, variant.id, 'glbUrl'); }}
+                      className="hidden"
+                    />
+                  </label>
+                  {variant.glbUrl && (
+                    <input
+                      type="text" value={variant.glbUrl}
+                      onChange={(e) => updateVariant(index, (c) => ({ ...c, glbUrl: e.target.value }))}
+                      className="w-full rounded-b-md border-t border-gray-200 px-2 py-1 text-xs text-gray-500 focus:border-amber-400 focus:outline-none"
+                      placeholder="https://...glb"
+                    />
+                  )}
                 </div>
               </div>
             </div>
@@ -720,22 +609,18 @@ export function ProductForm({
       </div>
 
       {supportsTryOn ? (
-        <div className="rounded-md border border-gray-200 p-4">
-          <div className="mb-4">
-            <p className="text-sm font-medium text-gray-700">
-              Frame and mobile fit specs (optional)
-            </p>
-            <p className="mt-1 text-xs text-gray-500">
-              Chi nhap khi da co thong so that. Co the de trong va bo sung sau, manager khong can doan de luu san pham.
-            </p>
+        <div className="rounded-md border border-gray-200 p-3">
+          <div className="mb-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{tF('frameSpecsTitle')}</p>
+            <p className="mt-0.5 text-xs text-gray-400">{tF('frameSpecsDesc')}</p>
           </div>
 
           <details open={hasFrameSpecs} className="rounded-md border border-dashed border-gray-300 bg-gray-50 px-4 py-3">
             <summary className="cursor-pointer text-sm font-medium text-gray-700">
-              {hasFrameSpecs ? 'Dang co thong so da nhap' : 'Them thong so khi da xac nhan duoc'}
+              {hasFrameSpecs ? tF('frameSpecsHasData') : tF('frameSpecsEmpty')}
             </summary>
 
-            <div className="mt-4 grid grid-cols-2 gap-4">
+            <div className="mt-3 grid grid-cols-2 gap-3">
               <Input
                 label="Shape"
                 value={formData.frameShape}
@@ -834,7 +719,7 @@ export function ProductForm({
               />
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-4">
+            <div className="mt-3 grid grid-cols-2 gap-3">
               <Input
                 label="Bridge (mm)"
                 type="number"
@@ -899,7 +784,7 @@ export function ProductForm({
               ) : null}
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-4">
+            <div className="mt-3 grid grid-cols-2 gap-3">
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                 <input
                   type="checkbox"
@@ -932,32 +817,21 @@ export function ProductForm({
         </div>
       ) : null}
 
-      <div className="rounded-md border border-gray-200 p-4">
+      <div className="rounded-md border border-gray-200 p-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-gray-700">Pre-order config</p>
-            <p className="mt-1 text-xs text-gray-500">
-              Manager-owned business config for deposit, split payment, and shipping collection timing. Cac moc thoi gian co the de trong neu chua chot.
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{tF('preOrderTitle')}</p>
+            <p className="mt-0.5 text-xs text-gray-400">{tF('preOrderDesc')}</p>
           </div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-            <input
-              type="checkbox"
-              checked={formData.preOrderEnabled}
-              onChange={(event) =>
-                onChange((prev) => ({
-                  ...prev,
-                  preOrderEnabled: event.target.checked,
-                }))
-              }
-            />
-            Enable pre-order
+            <input type="checkbox" checked={formData.preOrderEnabled} onChange={(e) => onChange((prev) => ({ ...prev, preOrderEnabled: e.target.checked }))} />
+            {tF('enablePreOrder')}
           </label>
         </div>
 
         {formData.preOrderEnabled ? (
-          <div className="mt-4 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <div className="mt-3 space-y-3">
+            <div className="grid grid-cols-2 gap-3">
               <Input
                 label="Deposit percent"
                 type="number"
@@ -987,7 +861,7 @@ export function ProductForm({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <Input
                 label="Start at"
                 type="datetime-local"
@@ -1012,7 +886,7 @@ export function ProductForm({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <Input
                 label="Ship from"
                 type="datetime-local"
@@ -1041,7 +915,7 @@ export function ProductForm({
               Neu chua biet lich giao du kien, co the de trong Ship from va Ship to roi cap nhat sau.
             </p>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-700">
                   Shipping collection timing
@@ -1127,97 +1001,95 @@ export function ProductForm({
         ) : null}
       </div>
 
+      {/* ── Media uploads ── */}
       <div className="rounded-md border border-gray-200 p-3">
-        <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-          <Upload className="h-4 w-4" />
-          Hero image (role: hero)
-        </div>
-        {formData.heroImageUrl && (
-          <img
-            src={formData.heroImageUrl}
-            alt="Hero preview"
-            className="mb-2 h-20 w-20 rounded-md object-cover"
-          />
-        )}
-        <input
-          type="file"
-          accept="image/*"
-          disabled={isSubmitting || uploadingKey === 'hero'}
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) void onUploadSingle(file, 'hero');
-          }}
-          className="block w-full text-sm text-gray-600"
-        />
-      </div>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">{tF('mediaTitle')}</p>
 
-      <div className="rounded-md border border-gray-200 p-3">
-        <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-          <Upload className="h-4 w-4" />
-          Thumbnail image (role: thumbnail)
-        </div>
-        {formData.thumbnailUrl && (
-          <img
-            src={formData.thumbnailUrl}
-            alt="Thumbnail preview"
-            className="mb-2 h-20 w-20 rounded-md object-cover"
-          />
-        )}
-        <input
-          type="file"
-          accept="image/*"
-          disabled={isSubmitting || uploadingKey === 'thumbnail'}
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) void onUploadSingle(file, 'thumbnail');
-          }}
-          className="block w-full text-sm text-gray-600"
-        />
-      </div>
-
-      <div className="rounded-md border border-gray-200 p-3">
-        <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-          <Upload className="h-4 w-4" />
-          Gallery images (role: gallery)
-        </div>
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          disabled={isSubmitting || uploadingKey === 'gallery'}
-          onChange={(event) => void onUploadGallery(event.target.files)}
-          className="mb-3 block w-full text-sm text-gray-600"
-        />
-        {formData.galleryUrls.length > 0 && (
-          <div className="grid grid-cols-4 gap-2">
-            {formData.galleryUrls.map((url, index) => (
-              <div key={`${url}-${index}`} className="relative">
-                <img
-                  src={url}
-                  alt={`Gallery ${index + 1}`}
-                  className="h-16 w-16 rounded-md object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => onRemoveGallery(index)}
-                  className="absolute -top-2 -right-2 rounded-full bg-white text-red-600 shadow"
-                >
-                  <XCircle className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
+        {/* Hero + Thumbnail side by side */}
+        <div className="grid grid-cols-2 gap-3">
+          {/* Hero */}
+          <div className="rounded-md border border-gray-100 bg-gray-50">
+            <label className="flex cursor-pointer flex-col items-center gap-1.5 p-2 text-xs font-medium text-gray-500 hover:text-amber-600">
+              {formData.heroImageUrl ? (
+                <img src={formData.heroImageUrl} alt="Hero" className="h-28 w-full rounded object-cover" />
+              ) : (
+                <div className="flex h-28 w-full flex-col items-center justify-center rounded border-2 border-dashed border-gray-200 text-gray-400">
+                  <Upload className="h-6 w-6" />
+              <span className="mt-1 text-xs">{tF('heroImage')}</span>
+                </div>
+              )}
+              <span>{formData.heroImageUrl ? tF('changeHero') : tF('uploadHero')}</span>
+              <input
+                type="file" accept="image/*"
+                disabled={isSubmitting || uploadingKey === 'hero'}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) void onUploadSingle(f, 'hero'); }}
+                className="hidden"
+              />
+            </label>
           </div>
-        )}
+
+          {/* Thumbnail */}
+          <div className="rounded-md border border-gray-100 bg-gray-50">
+            <label className="flex cursor-pointer flex-col items-center gap-1.5 p-2 text-xs font-medium text-gray-500 hover:text-amber-600">
+              {formData.thumbnailUrl ? (
+                <img src={formData.thumbnailUrl} alt="Thumbnail" className="h-28 w-full rounded object-cover" />
+              ) : (
+                <div className="flex h-28 w-full flex-col items-center justify-center rounded border-2 border-dashed border-gray-200 text-gray-400">
+                  <Upload className="h-6 w-6" />
+              <span className="mt-1 text-xs">{tF('thumbnailImage')}</span>
+                </div>
+              )}
+              <span>{formData.thumbnailUrl ? tF('changeThumbnail') : tF('uploadThumbnail')}</span>
+              <input
+                type="file" accept="image/*"
+                disabled={isSubmitting || uploadingKey === 'thumbnail'}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) void onUploadSingle(f, 'thumbnail'); }}
+                className="hidden"
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* Gallery */}
+        <div className="mt-3">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-xs font-medium text-gray-600">{tF('gallery')}</span>
+            <label className="flex cursor-pointer items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 hover:border-amber-400 hover:text-amber-600">
+              <Upload className="h-3 w-3" /> {tF('addGallery')}
+              <input
+                type="file" accept="image/*" multiple
+                disabled={isSubmitting || uploadingKey === 'gallery'}
+                onChange={(e) => void onUploadGallery(e.target.files)}
+                className="hidden"
+              />
+            </label>
+          </div>
+          {formData.galleryUrls.length > 0 ? (
+            <div className="grid grid-cols-6 gap-2">
+              {formData.galleryUrls.map((url, index) => (
+                <div key={`${url}-${index}`} className="group relative">
+                  <img src={url} alt={`Gallery ${index + 1}`} className="h-14 w-full rounded-md object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => onRemoveGallery(index)}
+                    className="absolute -right-1 -top-1 rounded-full bg-white text-red-500 shadow opacity-0 transition-opacity group-hover:opacity-100"
+                  >
+                    <XCircle className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-xs text-gray-400 py-3">{tF('noGallery')}</p>
+          )}
+        </div>
       </div>
 
-      <div className="rounded-md border border-gray-200 p-4">
+      <div className="rounded-md border border-gray-200 p-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-gray-700">Mobile try-on config</p>
-            <p className="mt-1 text-xs text-gray-500">
-              Phan nay chi cau hinh workflow va runtime cho try-on tren mobile. File poster va GLB
-              duoc upload theo tung bien the o phia tren.
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{tF('tryOnTitle')}</p>
+            <p className="mt-1 text-xs text-gray-500">{tF('tryOnDesc')}</p>
           </div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
             <input
@@ -1231,34 +1103,32 @@ export function ProductForm({
                 }))
               }
             />
-            Bat try-on cho mobile
+            {tF('enableTryOn')}
           </label>
         </div>
 
         {!supportsTryOn ? (
-          <p className="mt-3 text-xs font-medium text-amber-700">
-            Try-on chi ap dung cho san pham thuoc category frame hoac sunglasses trong mobile app hien tai.
-          </p>
+          <p className="mt-3 text-xs font-medium text-amber-700">{tF('tryOnNotSupported')}</p>
         ) : null}
 
         {formData.tryOnEnabled ? (
-          <div className="mt-4 space-y-4">
+          <div className="mt-3 space-y-3">
             <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900">
-              <p className="font-semibold">Manager can nho:</p>
-              <p className="mt-1">Moi bien the muon thu kinh nen co image, poster va GLB rieng.</p>
-              <p className="mt-1">Toi da {MAX_TRY_ON_MODELS} bien the duoc map try-on trong 1 san pham.</p>
-              <p className="mt-1">Effect path la tuy chon nang cao. Da so truong hop co the de trong.</p>
+              <p className="font-semibold">{tF('tryOnNoteTitle')}</p>
+              <p className="mt-1">{tF('tryOnNote1')}</p>
+              <p className="mt-1">{tF('tryOnNote2', { max: MAX_TRY_ON_MODELS })}</p>
+              <p className="mt-1">{tF('tryOnNote3')}</p>
             </div>
 
             {mappedTryOnModelCount > MAX_TRY_ON_MODELS ? (
               <p className="rounded-md border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700">
-                Giam so bien the da map try-on xuong {MAX_TRY_ON_MODELS} hoac it hon truoc khi luu san pham try-on.
+                {tF('tryOnLimitError', { max: MAX_TRY_ON_MODELS })}
               </p>
             ) : null}
 
             <div>
               <label className="mb-2 block text-sm font-medium text-gray-700">
-                Trang thai try-on
+                {tF('tryOnStatusLabel')}
               </label>
               <Select
                 value={formData.tryOnStatus}
@@ -1270,12 +1140,12 @@ export function ProductForm({
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Chon trang thai" />
+                  <SelectValue placeholder={tF('tryOnStatusPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {tryOnStatusOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                      {tF(`tryOnStatus.${option.value}` as any)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1329,20 +1199,19 @@ export function ProductForm({
               className="rounded-md border border-dashed border-gray-300 bg-white px-4 py-3"
             >
               <summary className="cursor-pointer text-sm font-medium text-gray-700">
-                Cai dat try-on nang cao (tuy chon)
+                {tF('tryOnAdvancedSettings')}
               </summary>
 
               <p className="mt-3 rounded-md border border-gray-200 bg-white p-3 text-xs text-gray-600">
-                Neu chi dung GLB theo tung bien the, ban co the de trong toan bo nhom field ben duoi.
+                {tF('tryOnAdvancedHint1')}
               </p>
               <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
-                Moi gia tri nhap o day se ghi de runtime mac dinh. Neu model dang hien thi binh thuong, hay de trong.
-                Khong nen bat physics neu chua cau hinh collider.
+                {tF('tryOnAdvancedHint2')}
               </p>
 
               <div className="mt-4 grid grid-cols-2 gap-4">
                 <Input
-                  label="Scene / effect code (tuy chon)"
+                  label={tF('sceneOrEffectCode')}
                   value={formData.tryOnScene}
                   onChange={(event) =>
                     onChange((prev) => ({
@@ -1353,7 +1222,7 @@ export function ProductForm({
                   placeholder="Vi du: effect kx..."
                 />
                 <Input
-                  label="Web AR URL (tuy chon)"
+                  label={tF('webArUrl')}
                   value={formData.tryOnArUrl}
                   onChange={(event) =>
                     onChange((prev) => ({
@@ -1364,7 +1233,7 @@ export function ProductForm({
                   placeholder="https://..."
                 />
                 <Input
-                  label="Launch URL fallback (tuy chon)"
+                  label={tF('launchUrlFallback')}
                   value={formData.tryOnLaunchUrl}
                   onChange={(event) =>
                     onChange((prev) => ({
@@ -1375,7 +1244,7 @@ export function ProductForm({
                   placeholder="https://..."
                 />
                 <Input
-                  label="Effect path (nang cao, thuong de trong)"
+                  label={tF('effectPath')}
                   value={formData.tryOnEffectPath}
                   onChange={(event) =>
                     onChange((prev) => ({
@@ -1389,7 +1258,7 @@ export function ProductForm({
 
               <div className="mt-4">
                 <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Resource paths bo sung (tuy chon)
+                  {tF('resourcePaths')}
                 </label>
                 <textarea
                   value={formData.tryOnResourcePaths}
@@ -1401,57 +1270,135 @@ export function ProductForm({
                   }
                   rows={3}
                   className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none"
-                  placeholder="Moi dong 1 resource path"
+                  placeholder={tF('resourcePathsPlaceholder')}
                 />
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-4">
+              {/* ── Prefab XYZ table ── */}
+              <div className="mt-4">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  {tF('prefabTransform')}
+                </p>
+                <div className="overflow-hidden rounded-md border border-gray-200">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                        <th className="px-3 py-2 text-left w-1/4">{tF('prefabProperty')}</th>
+                        <th className="px-3 py-2 text-center">X</th>
+                        <th className="px-3 py-2 text-center">Y</th>
+                        <th className="px-3 py-2 text-center">Z</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {/* Rotation */}
+                      {(() => {
+                        const [rx, ry, rz] = parseXYZ(formData.tryOnRotation);
+                        const mkChange = (axis: 0 | 1 | 2, val: string) => {
+                          const parts: [string, string, string] = [rx, ry, rz];
+                          parts[axis] = val;
+                          onChange((prev) => ({ ...prev, tryOnRotation: formatXYZ(...parts) }));
+                        };
+                        return (
+                          <tr>
+                            <td className="px-3 py-2 text-xs font-medium text-gray-600">{tF('prefabRotation')}</td>
+                            {([rx, ry, rz] as string[]).map((v, i) => (
+                              <td key={i} className="px-2 py-1.5">
+                                <input
+                                  type="number"
+                                  value={v}
+                                  onChange={(e) => mkChange(i as 0 | 1 | 2, e.target.value)}
+                                  placeholder="0"
+                                  className="w-full rounded border border-gray-200 px-2 py-1 text-center text-sm focus:border-amber-400 focus:outline-none"
+                                />
+                              </td>
+                            ))}
+                          </tr>
+                        );
+                      })()}
+                      {/* Scale */}
+                      {(() => {
+                        const [sx, sy, sz] = parseXYZ(formData.tryOnScale);
+                        const mkChange = (axis: 0 | 1 | 2, val: string) => {
+                          const parts: [string, string, string] = [sx, sy, sz];
+                          parts[axis] = val;
+                          onChange((prev) => ({ ...prev, tryOnScale: formatXYZ(...parts) }));
+                        };
+                        return (
+                          <tr className="bg-gray-50/40">
+                            <td className="px-3 py-2 text-xs font-medium text-gray-600">{tF('prefabScale')}</td>
+                            {([sx, sy, sz] as string[]).map((v, i) => (
+                              <td key={i} className="px-2 py-1.5">
+                                <input
+                                  type="number"
+                                  value={v}
+                                  onChange={(e) => mkChange(i as 0 | 1 | 2, e.target.value)}
+                                  placeholder="1"
+                                  className="w-full rounded border border-gray-200 px-2 py-1 text-center text-sm focus:border-amber-400 focus:outline-none"
+                                />
+                              </td>
+                            ))}
+                          </tr>
+                        );
+                      })()}
+                      {/* Translation */}
+                      {(() => {
+                        const [tx, ty, tz] = parseXYZ(formData.tryOnTranslation);
+                        const mkChange = (axis: 0 | 1 | 2, val: string) => {
+                          const parts: [string, string, string] = [tx, ty, tz];
+                          parts[axis] = val;
+                          onChange((prev) => ({ ...prev, tryOnTranslation: formatXYZ(...parts) }));
+                        };
+                        return (
+                          <tr>
+                            <td className="px-3 py-2 text-xs font-medium text-gray-600">{tF('prefabTranslation')}</td>
+                            {([tx, ty, tz] as string[]).map((v, i) => (
+                              <td key={i} className="px-2 py-1.5">
+                                <input
+                                  type="number"
+                                  value={v}
+                                  onChange={(e) => mkChange(i as 0 | 1 | 2, e.target.value)}
+                                  placeholder="0"
+                                  className="w-full rounded border border-gray-200 px-2 py-1 text-center text-sm focus:border-amber-400 focus:outline-none"
+                                />
+                              </td>
+                            ))}
+                          </tr>
+                        );
+                      })()}
+                      {/* Gravity */}
+                      {(() => {
+                        const [gx, gy, gz] = parseXYZ(formData.tryOnGravity);
+                        const mkChange = (axis: 0 | 1 | 2, val: string) => {
+                          const parts: [string, string, string] = [gx, gy, gz];
+                          parts[axis] = val;
+                          onChange((prev) => ({ ...prev, tryOnGravity: formatXYZ(...parts) }));
+                        };
+                        return (
+                          <tr className="bg-gray-50/40">
+                            <td className="px-3 py-2 text-xs font-medium text-gray-600">{tF('prefabGravity')}</td>
+                            {([gx, gy, gz] as string[]).map((v, i) => (
+                              <td key={i} className="px-2 py-1.5">
+                                <input
+                                  type="number"
+                                  value={v}
+                                  onChange={(e) => mkChange(i as 0 | 1 | 2, e.target.value)}
+                                  placeholder="0"
+                                  className="w-full rounded border border-gray-200 px-2 py-1 text-center text-sm focus:border-amber-400 focus:outline-none"
+                                />
+                              </td>
+                            ))}
+                          </tr>
+                        );
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Prefab cut — single value, keep as plain input */}
+              <div className="mt-3">
                 <Input
-                  label="Prefab rotation (tuy chon)"
-                  value={formData.tryOnRotation}
-                  onChange={(event) =>
-                    onChange((prev) => ({
-                      ...prev,
-                      tryOnRotation: event.target.value,
-                    }))
-                  }
-                  placeholder="-90 0 0"
-                />
-                <Input
-                  label="Prefab scale (tuy chon)"
-                  value={formData.tryOnScale}
-                  onChange={(event) =>
-                    onChange((prev) => ({
-                      ...prev,
-                      tryOnScale: event.target.value,
-                    }))
-                  }
-                  placeholder="1 1 1"
-                />
-                <Input
-                  label="Prefab translation (tuy chon)"
-                  value={formData.tryOnTranslation}
-                  onChange={(event) =>
-                    onChange((prev) => ({
-                      ...prev,
-                      tryOnTranslation: event.target.value,
-                    }))
-                  }
-                  placeholder="0 0 0"
-                />
-                <Input
-                  label="Prefab gravity (tuy chon)"
-                  value={formData.tryOnGravity}
-                  onChange={(event) =>
-                    onChange((prev) => ({
-                      ...prev,
-                      tryOnGravity: event.target.value,
-                    }))
-                  }
-                  placeholder="0 0 0"
-                />
-                <Input
-                  label="Prefab cut (tuy chon)"
+                  label={tF('prefabCut')}
                   value={formData.tryOnCut}
                   onChange={(event) =>
                     onChange((prev) => ({
@@ -1474,29 +1421,30 @@ export function ProductForm({
                     }))
                   }
                 />
-                Bat physics cho prefab (nang cao)
+                {tF('prefabUsePhysics')}
               </label>
             </details>
           </div>
         ) : null}
       </div>
 
+      {/* ── Action buttons — bottom of form ── */}
       {(onCancel || onSubmit) && (
-        <div className="flex justify-end gap-3 pt-4">
+        <div className="flex items-center justify-end gap-3 border-t border-gray-200 pt-4">
           {onCancel && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              disabled={isSubmitting}
-            >
-              Cancel
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+              {tF('cancelButton')}
             </Button>
           )}
           {onSubmit && (
-            <Button type="button" onClick={onSubmit} disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : submitLabel}
-            </Button>
+            <Button
+            type="button"
+            onClick={onSubmit}
+            disabled={isSubmitting}
+            className="bg-amber-400 text-slate-900 hover:bg-amber-500"
+          >
+            {isSubmitting ? tF('savingButton') : submitLabel}
+          </Button>
           )}
         </div>
       )}
