@@ -112,10 +112,7 @@ export default function CreateProductPage() {
     const hasAnyPrice = Boolean(
       formData.price || formData.variants.some((variant) => variant.price)
     );
-    const hasAnyStock = Boolean(
-      formData.stock || formData.variants.some((variant) => variant.stock)
-    );
-    if (!formData.name.trim() || !formData.category || !hasAnyPrice || !hasAnyStock) {
+    if (!formData.name.trim() || !formData.category || !hasAnyPrice) {
       setApiError('Please fill all required fields');
       return;
     }

@@ -192,7 +192,7 @@ function getEffectiveVariants(form: ProductFormState): ProductVariantFormState[]
       color: form.variantColor,
       size: form.variantSize,
       price: form.price,
-      stock: form.stock,
+      stock: '',
       warehouseLocation: form.variantWarehouseLocation,
       imageUrl: '',
       posterUrl: form.tryOnPosterUrl,
@@ -544,17 +544,6 @@ export function buildUpsertPayload(
       : firstVariantWithPrice != null
         ? Number(firstVariantWithPrice.price)
         : 0;
-  const hasVariantStock = variants.some(
-    (variant) => toText(variant.stock) && Number.isFinite(Number(variant.stock))
-  );
-  const topLevelStock = hasVariantStock
-    ? variants.reduce((sum, variant) => {
-        const value = Number(variant.stock);
-        return sum + (toText(variant.stock) && Number.isFinite(value) && value >= 0 ? value : 0);
-      }, 0)
-    : Number.isFinite(Number(form.stock))
-      ? Number(form.stock)
-      : 0;
 
   return {
     name: form.name.trim(),
@@ -562,7 +551,7 @@ export function buildUpsertPayload(
     category: form.category,
     type: resolvedType,
     price: topLevelPrice,
-    stock: topLevelStock,
+    stock: 0,
     description: form.description.trim() || undefined,
     imageUrl: form.heroImageUrl || undefined,
     mediaAssets: assets,
@@ -611,16 +600,6 @@ export function buildUpsertPayload(
         Number(variant.price) >= 0
           ? Number(variant.price)
           : topLevelPrice,
-      stock:
-        toText(variant.stock) &&
-        Number.isFinite(Number(variant.stock)) &&
-        Number(variant.stock) >= 0
-          ? Number(variant.stock)
-          : variants.length === 1 &&
-              Number.isFinite(Number(form.stock)) &&
-              Number(form.stock) >= 0
-            ? Number(form.stock)
-            : 0,
     })),
     specs: buildFrameSpecsPayload(form, resolvedType),
     tryOn: buildTryOnInput(form, resolvedType, variants, ids.tryOnAssetIds),

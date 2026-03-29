@@ -292,20 +292,13 @@ export function ProductForm({
         />
       </div>
 
-      {/* Row 2: Price + Stock + Category */}
-      <div className="grid grid-cols-3 gap-3">
+      {/* Row 2: Price + Category */}
+      <div className="grid grid-cols-2 gap-3">
         <Input
           label={tF('price')}
           type="number"
           value={formData.price}
           onChange={(e) => onChange((prev) => ({ ...prev, price: e.target.value }))}
-          placeholder="0"
-        />
-        <Input
-          label={tF('stock')}
-          type="number"
-          value={formData.stock}
-          onChange={(e) => onChange((prev) => ({ ...prev, stock: e.target.value }))}
           placeholder="0"
         />
         <div>
@@ -483,6 +476,9 @@ export function ProductForm({
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{tF('variantsTitle')}</p>
             <p className="mt-1 text-xs text-gray-500">{tF('variantsDesc')}</p>
+            <p className="mt-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-900">
+              {tF('inventoryManagedNote')}
+            </p>
             <p className="mt-2 text-xs font-medium text-amber-800">
               {tF('tryOnLimit', { max: MAX_TRY_ON_MODELS, current: mappedTryOnModelCount })}
             </p>
@@ -510,10 +506,9 @@ export function ProductForm({
                 <Input label={tF('color')} value={variant.color} onChange={(e) => updateVariant(index, (c) => ({ ...c, color: e.target.value }))} placeholder="Black" />
                 <Input label={tF('size')} value={variant.size} onChange={(e) => updateVariant(index, (c) => ({ ...c, size: e.target.value }))} placeholder="M" />
               </div>
-              {/* Row 2: price + stock */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Row 2: price */}
+              <div className="grid grid-cols-1 gap-3">
                 <Input label={tF('variantPrice')} type="number" value={variant.price} onChange={(e) => updateVariant(index, (c) => ({ ...c, price: e.target.value }))} placeholder={formData.price || '0'} />
-                <Input label={tF('variantStock')} type="number" value={variant.stock} onChange={(e) => updateVariant(index, (c) => ({ ...c, stock: e.target.value }))} placeholder="0" />
               </div>
 
               {/* Asset uploads: Image | Poster | GLB in 3 cols */}
