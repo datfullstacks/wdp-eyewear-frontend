@@ -60,10 +60,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white lg:grid lg:grid-cols-2">
-      <aside className="relative hidden overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 lg:flex">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(245,158,11,0.18),transparent_45%),radial-gradient(circle_at_70%_30%,rgba(59,130,246,0.14),transparent_48%),radial-gradient(circle_at_40%_80%,rgba(99,102,241,0.12),transparent_50%)]" />
-        <div className="relative flex w-full flex-col p-12 text-slate-100">
+    <div className="min-h-screen bg-white lg:grid lg:grid-cols-[1.08fr_0.92fr]">
+      <aside className="relative hidden overflow-hidden border-r border-white/10 bg-[#0b1329] lg:flex">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_10%,rgba(245,158,11,0.18),transparent_28%),radial-gradient(circle_at_88%_82%,rgba(37,99,235,0.16),transparent_30%),linear-gradient(180deg,#111827_0%,#0b1329_55%,#0a1735_100%)]" />
+        <div
+          className="absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)]"
+          style={{ backgroundSize: '40px 40px' }}
+        />
+        <div className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-transparent via-amber-400/40 to-transparent" />
+        <div className="relative flex w-full flex-col justify-between p-12 text-slate-100">
           <div className="flex items-start gap-4">
             <div className="grid h-12 w-12 place-content-center rounded-2xl bg-amber-400 text-slate-950 shadow-sm">
               <Glasses className="h-6 w-6" aria-hidden="true" />
@@ -78,45 +83,48 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="mt-24 max-w-xl">
-            <h2 className="text-5xl leading-[1.08] font-semibold tracking-tight text-white">
+          <div className="mt-16 max-w-[760px]">
+            <h2 className="text-[clamp(2.9rem,4.8vw,4.3rem)] leading-[0.98] font-extrabold tracking-[-0.055em] text-white">
               Quản lý cửa hàng{' '}
-              <span className="text-amber-400">thông minh & hiệu quả</span>
+              <span className="block text-amber-400">thông minh & hiệu quả</span>
             </h2>
-            <p className="mt-6 text-base leading-relaxed text-slate-300">
+            <p className="mt-8 max-w-[650px] text-[15px] leading-8 text-slate-200/90">
               Chào mừng trở lại. Trải nghiệm giải pháp quản lý toàn diện — nơi
               mọi đơn hàng và khách hàng được vận hành trong một nền tảng duy
               nhất.
             </p>
           </div>
 
-          <div className="mt-16 grid max-w-xl grid-cols-3 gap-10">
-            <div>
-              <div className="text-3xl font-semibold text-amber-400">24/7</div>
-              <div className="mt-1 text-sm text-slate-300">Hỗ trợ liên tục</div>
-            </div>
-            <div>
-              <div className="text-3xl font-semibold text-amber-400">
-                Bảo mật
+          <div className="mt-16 max-w-[760px]">
+            <div className="grid grid-cols-3 gap-12">
+              <div>
+                <div className="text-[2.1rem] font-semibold text-amber-400">24/7</div>
+                <div className="mt-1 text-sm text-slate-200/90">Hỗ trợ liên tục</div>
               </div>
-              <div className="mt-1 text-sm text-slate-300">
-                Dữ liệu được mã hóa
+              <div>
+                <div className="text-[2.1rem] font-semibold text-amber-400">
+                  Bảo mật
+                </div>
+                <div className="mt-1 text-sm text-slate-200/90">
+                  Dữ liệu được mã hóa
+                </div>
               </div>
-            </div>
-            <div>
-              <div className="text-3xl font-semibold text-amber-400">
-                All-in-One
-              </div>
-              <div className="mt-1 text-sm text-slate-300">
-                Quản lý trên một nền tảng
+              <div>
+                <div className="text-[2.1rem] font-semibold text-amber-400">
+                  All-in-One
+                </div>
+                <div className="mt-1 text-sm text-slate-200/90">
+                  Quản lý trên một nền tảng
+                </div>
               </div>
             </div>
           </div>
         </div>
       </aside>
 
-      <main className="flex items-center justify-center bg-slate-50 px-6 py-12">
-        <div className="w-full max-w-md">
+      <main className="relative flex items-center justify-center overflow-hidden bg-slate-50 px-6 py-12">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(245,158,11,0.08),transparent_34%)]" />
+        <div className="relative w-full max-w-md">
           <div className="mb-8">
             <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
               {t('login')}
@@ -126,7 +134,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-slate-100 bg-white p-8 shadow-sm">
+          <div className="rounded-[28px] border border-white/80 bg-white/90 p-8 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-sm">
             {error && (
               <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {error}

@@ -27,7 +27,6 @@ import {
   TrendingUp,
   User,
   Users,
-  Warehouse,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -52,7 +51,6 @@ type MenuItem = {
 
 const menuItems: MenuItem[] = [
   { icon: LayoutDashboard, label: 'Tổng quan', path: '/sale/dashboard' },
-  { icon: Warehouse, label: 'Sản phẩm', path: '/sale/products' },
   {
     icon: ShoppingCart,
     label: 'Đơn hàng',

@@ -33,15 +33,15 @@ function formatOwner(owner: string) {
 function formatNextAction(code: string) {
   switch (code) {
     case 'customer_submit_info':
-      return 'Cho khach bo sung';
+      return 'Chờ khách bổ sung';
     case 'manager_approve':
-      return 'Cho manager';
+      return 'Chờ manager';
     case 'confirm_return_received':
-      return 'Cho nhan/QC hang';
+      return 'Chờ nhận/QC hàng';
     case 'start_processing':
-      return 'Cho bat dau payout';
+      return 'Chờ bắt đầu payout';
     case 'complete':
-      return 'Cho xac nhan payout';
+      return 'Chờ xác nhận payout';
     case 'start_review':
       return 'Cho staff review';
     default:
@@ -169,7 +169,7 @@ export default function CustomerHistoryPage() {
                       setSearch(event.target.value);
                       setPage(1);
                     }}
-                    placeholder="Tim theo order, khach hang, phone, status"
+                    placeholder="Tìm theo order, khách hàng, số điện thoại, trạng thái"
                     className="w-full bg-transparent text-sm outline-none"
                   />
                 </label>

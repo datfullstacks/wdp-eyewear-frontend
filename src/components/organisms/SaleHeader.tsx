@@ -15,19 +15,19 @@ export const SaleHeader: React.FC<SaleHeaderProps> = ({
   className,
 }) => {
   return (
-    <div className={cn('border-b border-gray-200 bg-white px-6 py-4 shadow-sm', className)}>
+    <div
+      className={cn(
+        'border-b border-gray-200 bg-white px-6 py-4 shadow-sm',
+        className
+      )}
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-500">
             <Glasses className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              POS - Bán hàng
-            </h1>
-            <p className="text-sm text-gray-600">
-              Eyes Dream Sale Dashboard
-            </p>
+            <h1 className="text-2xl font-bold text-gray-900">POS - Bán hàng</h1>
           </div>
         </div>
 
@@ -55,7 +55,7 @@ export const SaleHeader: React.FC<SaleHeaderProps> = ({
             aria-label="Thông báo"
           >
             <Bell className="h-6 w-6" />
-            <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+            <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
               2
             </span>
           </button>
@@ -74,7 +74,7 @@ export const SaleHeader: React.FC<SaleHeaderProps> = ({
           >
             <ShoppingCart className="h-6 w-6" />
             {cartItemCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-yellow-500 text-xs font-bold text-white shadow-md">
+              <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-yellow-500 text-xs font-bold text-white shadow-md">
                 {cartItemCount > 99 ? '99+' : cartItemCount}
               </span>
             )}

@@ -30,11 +30,11 @@ export function getCustomerOrderStatusMeta(
   const shipmentStatus = normalize(order.shipment?.latestStatus);
 
   if (rawStatus === 'cancelled') {
-    return { category: 'cancelled', label: 'Da huy don', labelKey: 'cancelled', type: 'error' };
+    return { category: 'cancelled', label: 'Đã hủy đơn', labelKey: 'cancelled', type: 'error' };
   }
 
   if (rawStatus === 'returned') {
-    return { category: 'cancelled', label: 'Da hoan hang', labelKey: 'returned', type: 'error' };
+    return { category: 'cancelled', label: 'Đã hoàn hàng', labelKey: 'returned', type: 'error' };
   }
 
   if (
