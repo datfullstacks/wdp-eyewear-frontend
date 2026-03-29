@@ -63,6 +63,36 @@ function formatCurrency(value?: number, currency = 'VND') {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency }).format(value);
 }
 
+function getProviderLabel(provider?: unknown) {
+  const normalized = typeof provider === 'string' ? provider.trim().toLowerCase() : '';
+  if (!normalized) return '-';
+  if (normalized === 'google') return 'Google';
+  if (normalized === 'credentials' || normalized === 'local') return 'Email / mật khẩu';
+  return provider as string;
+}
+
+function getRoleLabel(role?: unknown) {
+  const normalized = typeof role === 'string' ? role.trim().toLowerCase() : '';
+  if (!normalized) return '-';
+
+  switch (normalized) {
+    case 'customer':
+      return 'Khách hàng';
+    case 'sales':
+    case 'staff':
+      return 'Nhân viên sale';
+    case 'operations':
+    case 'operation':
+      return 'Nhân viên vận hành';
+    case 'manager':
+      return 'Quản lý';
+    case 'admin':
+      return 'Quản trị viên';
+    default:
+      return role as string;
+  }
+}
+
 function resolvePhone(user: Record<string, unknown>) {
   const direct = user.phone;
   if (typeof direct === 'string' && direct.trim()) return direct;
@@ -86,6 +116,13 @@ function getDefaultAddresses(user: Record<string, unknown>) {
   const defaults = addresses.filter((address) => address.isDefault === true);
   if (defaults.length > 0) return defaults;
   return addresses.slice(0, 1);
+}
+
+function getAddressCount(user: Record<string, unknown>) {
+  const addresses = Array.isArray(user.addresses)
+    ? (user.addresses.filter(isRecord) as Record<string, unknown>[])
+    : [];
+  return addresses.length;
 }
 
 function extractFavouriteIds(user: Record<string, unknown>): string[] {
@@ -249,14 +286,10 @@ export function CustomerDetailPage({
     if (!user) return null;
 
     return {
-      id:
-        (typeof user._id === 'string' && user._id) ||
-        (typeof user.id === 'string' && user.id) ||
-        '',
       name: (typeof user.name === 'string' && user.name) || '(Chưa có tên)',
       email: (typeof user.email === 'string' && user.email) || '-',
-      role: (typeof user.role === 'string' && user.role) || '-',
-      provider: (typeof user.provider === 'string' && user.provider) || '-',
+      role: getRoleLabel(user.role),
+      provider: getProviderLabel(user.provider),
       avatarUrl:
         (typeof user.avatarUrl === 'string' && user.avatarUrl) ||
         (typeof user.avatar === 'string' && user.avatar) ||
@@ -264,6 +297,7 @@ export function CustomerDetailPage({
       phone: resolvePhone(user) || '-',
       createdAt: formatDate(user.createdAt),
       updatedAt: formatDate(user.updatedAt),
+      addressCount: getAddressCount(user),
       addresses: getDefaultAddresses(user),
       favouriteIds: extractFavouriteIds(user),
     };
@@ -389,7 +423,7 @@ export function CustomerDetailPage({
                   </h1>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <span className="inline-flex items-center rounded-full border border-amber-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-900">
-                      Provider: {viewModel.provider}
+                      Phương thức đăng nhập: {viewModel.provider}
                     </span>
                     <span className="inline-flex items-center rounded-full border border-amber-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-900">
                       Vai trò: {viewModel.role}
@@ -431,8 +465,11 @@ export function CustomerDetailPage({
             <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <InfoCard label="Email" value={viewModel.email} />
               <InfoCard label="Số điện thoại" value={viewModel.phone} />
-              <InfoCard label="Mã khách hàng" value={viewModel.id || '-'} mono />
-              <InfoCard label="Provider" value={viewModel.provider} />
+              <InfoCard
+                label="Số địa chỉ đã lưu"
+                value={String(viewModel.addressCount)}
+              />
+              <InfoCard label="Phương thức đăng nhập" value={viewModel.provider} />
               <InfoCard label="Ngày tạo" value={viewModel.createdAt} />
               <InfoCard label="Ngày cập nhật" value={viewModel.updatedAt} />
             </div>

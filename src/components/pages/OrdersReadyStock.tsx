@@ -93,7 +93,9 @@ function toProductVariantLabel(variant?: ProductVariant): string {
       variant?.options?.colour ||
       ''
   ).trim();
-  const size = String(variant?.options?.size || variant?.options?.Size || '').trim();
+  const size = String(
+    variant?.options?.size || variant?.options?.Size || ''
+  ).trim();
   if (color && size) return `${color} - ${size}`;
   return color || size || 'Mac dinh';
 }
@@ -108,16 +110,23 @@ function matchProductVariant(
   const variantId = String(item.variantId || '').trim();
   if (variantId) {
     const matchedById =
-      variants.find((variant) => String(variant?._id || '').trim() === variantId) ||
-      null;
+      variants.find(
+        (variant) => String(variant?._id || '').trim() === variantId
+      ) || null;
     if (matchedById) return matchedById;
   }
 
-  const sku = String(item.sku || '').trim().toLowerCase();
+  const sku = String(item.sku || '')
+    .trim()
+    .toLowerCase();
   if (sku) {
     const matchedBySku =
-      variants.find((variant) => String(variant?.sku || '').trim().toLowerCase() === sku) ||
-      null;
+      variants.find(
+        (variant) =>
+          String(variant?.sku || '')
+            .trim()
+            .toLowerCase() === sku
+      ) || null;
     if (matchedBySku) return matchedBySku;
   }
 
@@ -127,7 +136,8 @@ function matchProductVariant(
   return (
     variants.find(
       (variant) =>
-        normalizeVariantKey(toProductVariantLabel(variant)) === normalizedVariant
+        normalizeVariantKey(toProductVariantLabel(variant)) ===
+        normalizedVariant
     ) || null
   );
 }
@@ -148,7 +158,9 @@ function enrichReadyStockOrders(
       return {
         ...item,
         sku: String(matchedVariant.sku || '').trim() || item.sku,
-        warehouseLocation: String(matchedVariant.warehouseLocation || '').trim(),
+        warehouseLocation: String(
+          matchedVariant.warehouseLocation || ''
+        ).trim(),
       };
     }),
   }));
@@ -283,13 +295,19 @@ export default function OrdersReadyStock() {
 
   useEffect(() => {
     setDetailOrder((current) =>
-      current ? orders.find((order) => order.id === current.id) || current : null
+      current
+        ? orders.find((order) => order.id === current.id) || current
+        : null
     );
     setHoldOrder((current) =>
-      current ? orders.find((order) => order.id === current.id) || current : null
+      current
+        ? orders.find((order) => order.id === current.id) || current
+        : null
     );
     setShipmentOrder((current) =>
-      current ? orders.find((order) => order.id === current.id) || current : null
+      current
+        ? orders.find((order) => order.id === current.id) || current
+        : null
     );
   }, [orders]);
 
@@ -573,7 +591,10 @@ export default function OrdersReadyStock() {
 
   return (
     <>
-      <Header title="Quản lý đơn có sẵn" subtitle="" />
+      <Header
+        title="Quản lý đơn có sẵn"
+        subtitle="Quản lý đơn hàng sẵn kho chờ xử lý"
+      />
 
       <div className="space-y-6 p-6">
         <ReadyStockStatsGrid orders={orders} resolveOps={resolveOps} />

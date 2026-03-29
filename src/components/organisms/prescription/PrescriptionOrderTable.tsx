@@ -48,10 +48,10 @@ const missingTypeTextClass: Record<SupplementOrder['missingType'], string> = {
 };
 
 const missingTypeLabel: Record<SupplementOrder['missingType'], string> = {
-  no_prescription: 'Chua co Rx',
-  incomplete_data: 'Thieu du lieu',
-  unclear_image: 'Anh khong ro',
-  need_verification: 'Can xac nhan',
+  no_prescription: 'Chưa có Rx',
+  incomplete_data: 'Thiếu dữ liệu',
+  unclear_image: 'Ảnh không rõ',
+  need_verification: 'Cần xác nhận',
 };
 
 export const PrescriptionOrderTable = ({
@@ -64,7 +64,8 @@ export const PrescriptionOrderTable = ({
   onViewHistory,
   onUploadImage,
 }: PrescriptionOrderTableProps) => {
-  const allSelected = orders.length > 0 && selectedOrders.length === orders.length;
+  const allSelected =
+    orders.length > 0 && selectedOrders.length === orders.length;
 
   return (
     <div className="glass-card overflow-hidden rounded-xl">
@@ -78,11 +79,11 @@ export const PrescriptionOrderTable = ({
                 aria-label="Select all orders"
               />
             </TableHead>
-            <TableHead>Don hang</TableHead>
-            <TableHead>Khach hang</TableHead>
-            <TableHead>Thong tin thieu</TableHead>
-            <TableHead>Lien he</TableHead>
-            <TableHead>Cho</TableHead>
+            <TableHead>Đơn hàng</TableHead>
+            <TableHead>Khách hàng</TableHead>
+            <TableHead>Thông tin thiếu</TableHead>
+            <TableHead>Liên hệ</TableHead>
+            <TableHead>Chờ</TableHead>
             <TableHead className="w-[60px]"></TableHead>
           </TableRow>
         </TableHeader>
@@ -95,13 +96,17 @@ export const PrescriptionOrderTable = ({
                 <TableCell>
                   <Checkbox
                     checked={checked}
-                    onCheckedChange={(value) => onSelectOrder(order.id, Boolean(value))}
+                    onCheckedChange={(value) =>
+                      onSelectOrder(order.id, Boolean(value))
+                    }
                     aria-label={`Select ${order.orderId}`}
                   />
                 </TableCell>
                 <TableCell>
                   <div className="font-medium">{order.orderId}</div>
-                  <p className="text-foreground/85 mt-1 text-xs">Dat: {order.orderDate}</p>
+                  <p className="text-foreground/85 mt-1 text-xs">
+                    Dat: {order.orderDate}
+                  </p>
                   {order.supportStatus ? (
                     <p className="text-foreground/70 mt-1 text-xs">
                       Support status: {order.supportStatus}
@@ -112,8 +117,12 @@ export const PrescriptionOrderTable = ({
                   <div className="flex items-center gap-2">
                     <User className="text-foreground/80 h-4 w-4" />
                     <div>
-                      <p className="text-foreground font-normal">{order.customer}</p>
-                      <p className="text-foreground/85 text-sm">{order.phone}</p>
+                      <p className="text-foreground font-normal">
+                        {order.customer}
+                      </p>
+                      <p className="text-foreground/85 text-sm">
+                        {order.phone}
+                      </p>
                     </div>
                   </div>
                 </TableCell>
@@ -122,7 +131,7 @@ export const PrescriptionOrderTable = ({
                     <span
                       className={cn(
                         'text-sm font-medium',
-                        missingTypeTextClass[order.missingType],
+                        missingTypeTextClass[order.missingType]
                       )}
                     >
                       {missingTypeLabel[order.missingType]}
@@ -130,21 +139,25 @@ export const PrescriptionOrderTable = ({
                     <p className="text-foreground/85 mt-1 text-xs">
                       {order.missingFields.length > 2
                         ? `${order.missingFields.length} thong so thieu`
-                        : order.missingFields.map((field) => field.label).join(', ')}
+                        : order.missingFields
+                            .map((field) => field.label)
+                            .join(', ')}
                     </p>
                   </div>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     {order.contactAttempts === 0 ? (
-                      <span className="text-foreground/80 text-sm">Chua lien he</span>
+                      <span className="text-foreground/80 text-sm">
+                        Chua lien he
+                      </span>
                     ) : (
                       <span
                         className={cn(
                           'text-sm font-medium',
                           order.contactAttempts >= 3
                             ? 'text-amber-600'
-                            : 'text-foreground/80',
+                            : 'text-foreground/80'
                         )}
                       >
                         {order.contactAttempts} lan
@@ -161,7 +174,9 @@ export const PrescriptionOrderTable = ({
                   <div className="flex items-center gap-1">
                     <Clock
                       className={`h-4 w-4 ${
-                        order.daysPending >= 3 ? 'text-destructive' : 'text-foreground/80'
+                        order.daysPending >= 3
+                          ? 'text-destructive'
+                          : 'text-foreground/80'
                       }`}
                     />
                     <span
@@ -219,8 +234,11 @@ export const PrescriptionOrderTable = ({
 
           {orders.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-foreground/80 py-8 text-center">
-                Khong co don hang nao can xu ly
+              <TableCell
+                colSpan={7}
+                className="text-foreground/80 py-8 text-center"
+              >
+                Không có đơn hàng nào cần xử lý
               </TableCell>
             </TableRow>
           ) : null}

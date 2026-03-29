@@ -66,6 +66,7 @@ export const RefundProcessModal = ({
       refund.amount
     );
   }, [refund]);
+
   const hasBankInfo = useMemo(
     () => hasRefundBankInfo(refund?.bankInfo),
     [refund]
@@ -97,7 +98,7 @@ export const RefundProcessModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[92vw] max-w-md p-4 sm:p-5">
+      <DialogContent className="max-h-[90vh] w-[95vw] max-w-xl overflow-y-auto p-4 sm:p-5">
         <DialogHeader>
           <DialogTitle className="text-foreground text-base font-semibold">
             Hoàn tất payout
@@ -110,9 +111,7 @@ export const RefundProcessModal = ({
         {refund && (
           <div className="space-y-4">
             <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
-              <p className="mb-2 font-medium text-slate-900">
-                Thông tin payout
-              </p>
+              <p className="mb-2 font-medium text-slate-900">Thông tin payout</p>
               <div className="space-y-1 text-sm text-slate-700">
                 <p>
                   Số tiền: <span className="font-bold">{formatCurrency(amount)}</span>
@@ -126,8 +125,8 @@ export const RefundProcessModal = ({
                   </>
                 ) : (
                   <p>
-                    Khách chưa cung cấp tài khoản hoàn tiền. Hãy yêu cầu bổ
-                    sung trước khi xác nhận chuyển tiền.
+                    Khách chưa cung cấp tài khoản hoàn tiền. Hãy yêu cầu bổ sung
+                    trước khi xác nhận chuyển tiền.
                   </p>
                 )}
               </div>
@@ -138,6 +137,7 @@ export const RefundProcessModal = ({
                 refund={refund}
                 amount={amount}
                 title="QR chuyển khoản hoàn tiền"
+                layout="compact"
               />
             ) : null}
 
@@ -152,7 +152,9 @@ export const RefundProcessModal = ({
             </div>
 
             <div>
-              <Label className="text-foreground/80">Link chứng từ payout (nếu có)</Label>
+              <Label className="text-foreground/80">
+                Link chứng từ payout (nếu có)
+              </Label>
               <Input
                 value={payoutProofUrl}
                 onChange={(event) => setPayoutProofUrl(event.target.value)}
@@ -165,10 +167,12 @@ export const RefundProcessModal = ({
                   accept="image/*"
                   onChange={(event) => void handleProofUpload(event)}
                   disabled={uploadingProof}
-                  className="text-sm"
+                  className="text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium"
                 />
                 {uploadingProof ? (
-                  <p className="mt-1 text-xs text-slate-500">Đang upload chứng từ...</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Đang upload chứng từ...
+                  </p>
                 ) : null}
               </div>
             </div>
@@ -185,7 +189,7 @@ export const RefundProcessModal = ({
           </div>
         )}
 
-        <DialogFooter>
+        <DialogFooter className="gap-2 pt-2">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}

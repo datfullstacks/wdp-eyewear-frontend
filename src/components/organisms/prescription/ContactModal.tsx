@@ -93,7 +93,7 @@ export const ContactModal = ({
       <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle className="text-foreground text-base font-semibold">
-            Lien he khach hang
+            Liên hệ khách hàng
           </DialogTitle>
           <DialogDescription className="text-foreground/70">
             {order?.customer} - {order?.orderId}
@@ -102,7 +102,7 @@ export const ContactModal = ({
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label className="text-foreground/80">Hinh thuc lien he</Label>
+            <Label className="text-foreground/80">Hình thức liên hệ</Label>
             <div className="flex flex-wrap gap-2">
               {contactTypes.map((type) => (
                 <Button
@@ -128,14 +128,14 @@ export const ContactModal = ({
             Array.isArray(contactTemplates[contactType]) &&
             contactTemplates[contactType].length > 0 && (
               <div className="space-y-2">
-                <Label className="text-foreground/80">Mau tin nhan</Label>
+                <Label className="text-foreground/80">Mẫu tin nhắn</Label>
                 <Select
                   value={selectedTemplate}
                   onValueChange={handleTemplateSelect}
                   disabled={isSubmitting}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Chon mau co san..." />
+                    <SelectValue placeholder="Chọn mẫu có sẵn..." />
                   </SelectTrigger>
                   <SelectContent>
                     {contactTemplates[contactType].map((template) => (
@@ -150,15 +150,15 @@ export const ContactModal = ({
 
           <div className="space-y-2">
             <Label className="text-foreground/80">
-              {contactType === 'phone' ? 'Ghi chu cuoc goi' : 'Noi dung'}
+              {contactType === 'phone' ? 'Ghi chú cuộc gọi' : 'Nội dung'}
             </Label>
             <Textarea
               value={contactContent}
               onChange={(event) => setContactContent(event.target.value)}
               placeholder={
                 contactType === 'phone'
-                  ? 'Nhap ghi chu cuoc goi...'
-                  : 'Nhap noi dung tin nhan...'
+                  ? 'Nhập ghi chú cuộc gọi...'
+                  : 'Nhập nội dung tin nhắn...'
               }
               rows={5}
               disabled={isSubmitting}
@@ -186,14 +186,18 @@ export const ContactModal = ({
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
           >
-            Huy
+            Hủy
           </Button>
           <Button
             onClick={handleSend}
             disabled={isSubmitting || !contactContent.trim()}
           >
             <Send className="mr-2 h-4 w-4" />
-            {isSubmitting ? 'Dang gui...' : contactType === 'phone' ? 'Luu ghi chu' : 'Gui'}
+            {isSubmitting
+              ? 'Đang gửi...'
+              : contactType === 'phone'
+                ? 'Lưu ghi chú'
+                : 'Gửi'}
           </Button>
         </DialogFooter>
       </DialogContent>
