@@ -82,6 +82,37 @@ export default function PoliciesPage() {
     runtimeConfigError,
   ]);
 
+  const filteredPolicies = useMemo(() => {
+    return policies.filter((policy) => {
+      const matchesSearch =
+        policy.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        policy.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        policy.content.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesStatus = statusFilter === 'all' || policy.status === statusFilter;
+      const matchesCategory = categoryFilter === 'all' || policy.category === categoryFilter;
+
+      return matchesSearch && matchesStatus && matchesCategory;
+    });
+  }, [policies, searchQuery, statusFilter, categoryFilter]);
+
+  const stats = useMemo(() => {
+    const activePolicies = policies.filter((policy) => policy.status === 'active').length;
+    const needsReview = policies.filter((policy) => {
+      if (policy.status !== 'active') return false;
+      const monthsOld =
+        (Date.now() - new Date(policy.updatedAt || Date.now()).getTime()) /
+        (1000 * 60 * 60 * 24 * 30);
+      return monthsOld >= 6;
+    }).length;
+
+    return [
+      { title: 'Total policies', value: policies.length, icon: FileText },
+      { title: 'Active policies', value: activePolicies, icon: Shield },
+      { title: 'Needs review', value: needsReview, icon: AlertCircle },
+    ];
+  }, [policies]);
+
   if (loadingRuntimeConfig) {
     return (
       <>
@@ -131,37 +162,6 @@ export default function PoliciesPage() {
       />
     );
   }
-
-  const filteredPolicies = useMemo(() => {
-    return policies.filter((policy) => {
-      const matchesSearch =
-        policy.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        policy.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        policy.content.toLowerCase().includes(searchQuery.toLowerCase());
-
-      const matchesStatus = statusFilter === 'all' || policy.status === statusFilter;
-      const matchesCategory = categoryFilter === 'all' || policy.category === categoryFilter;
-
-      return matchesSearch && matchesStatus && matchesCategory;
-    });
-  }, [policies, searchQuery, statusFilter, categoryFilter]);
-
-  const stats = useMemo(() => {
-    const activePolicies = policies.filter((policy) => policy.status === 'active').length;
-    const needsReview = policies.filter((policy) => {
-      if (policy.status !== 'active') return false;
-      const monthsOld =
-        (Date.now() - new Date(policy.updatedAt || Date.now()).getTime()) /
-        (1000 * 60 * 60 * 24 * 30);
-      return monthsOld >= 6;
-    }).length;
-
-    return [
-      { title: 'Total policies', value: policies.length, icon: FileText },
-      { title: 'Active policies', value: activePolicies, icon: Shield },
-      { title: 'Needs review', value: needsReview, icon: AlertCircle },
-    ];
-  }, [policies]);
 
   const handleDelete = async (policy: PolicyRecord) => {
     if (!window.confirm(`Delete policy "${policy.title}"?`)) return;
