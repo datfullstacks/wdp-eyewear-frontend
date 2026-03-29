@@ -15,12 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Filter } from 'lucide-react';
-import {
-  orderApi,
-  productApi,
-  supportApi,
-  type ProductDetail,
-} from '@/api';
+import { orderApi, productApi, supportApi, type ProductDetail } from '@/api';
 import type { SupportTicketRecord } from '@/api';
 import type { OrderItem, OrderOpsStage, OrderRecord } from '@/api/orders';
 import { Header } from '@/components/organisms/Header';
@@ -62,7 +57,9 @@ function toProductVariantLabel(variant?: ProductVariant): string {
       variant?.options?.colour ||
       ''
   ).trim();
-  const size = String(variant?.options?.size || variant?.options?.Size || '').trim();
+  const size = String(
+    variant?.options?.size || variant?.options?.Size || ''
+  ).trim();
   if (color && size) return `${color} - ${size}`;
   return color || size || 'Mac dinh';
 }
@@ -77,16 +74,23 @@ function matchProductVariant(
   const variantId = String(item.variantId || '').trim();
   if (variantId) {
     const matchedById =
-      variants.find((variant) => String(variant?._id || '').trim() === variantId) ||
-      null;
+      variants.find(
+        (variant) => String(variant?._id || '').trim() === variantId
+      ) || null;
     if (matchedById) return matchedById;
   }
 
-  const sku = String(item.sku || '').trim().toLowerCase();
+  const sku = String(item.sku || '')
+    .trim()
+    .toLowerCase();
   if (sku) {
     const matchedBySku =
-      variants.find((variant) => String(variant?.sku || '').trim().toLowerCase() === sku) ||
-      null;
+      variants.find(
+        (variant) =>
+          String(variant?.sku || '')
+            .trim()
+            .toLowerCase() === sku
+      ) || null;
     if (matchedBySku) return matchedBySku;
   }
 
@@ -96,7 +100,8 @@ function matchProductVariant(
   return (
     variants.find(
       (variant) =>
-        normalizeVariantKey(toProductVariantLabel(variant)) === normalizedVariant
+        normalizeVariantKey(toProductVariantLabel(variant)) ===
+        normalizedVariant
     ) || null
   );
 }
@@ -117,7 +122,9 @@ function hydrateOrderItemsWithProductData(
       return {
         ...item,
         sku: String(matchedVariant.sku || '').trim() || item.sku,
-        warehouseLocation: String(matchedVariant.warehouseLocation || '').trim(),
+        warehouseLocation: String(
+          matchedVariant.warehouseLocation || ''
+        ).trim(),
       };
     }),
   }));
@@ -149,7 +156,8 @@ function buildPrescriptionPayload(form: PrescriptionData) {
 
 function extractApiErrorMessage(error: unknown, fallback: string) {
   if (typeof error === 'object' && error !== null) {
-    const response = (error as { response?: { data?: { message?: string } } }).response;
+    const response = (error as { response?: { data?: { message?: string } } })
+      .response;
     const message = response?.data?.message;
     if (typeof message === 'string' && message.trim().length > 0) {
       return message;
@@ -199,21 +207,19 @@ function buildContactMessage(order: PrescriptionOrder, note: string) {
     return `[OPS] ${trimmed}`;
   }
 
-  return `[OPS] Don ${order.orderId} can xac nhan them toa kinh truoc khi dua vao gia cong.`;
+  return `[OPS] Đơn ${order.orderId} cần xác nhận thêm toa kinh trước khi đưa vào gia công.`;
 }
 
 function pickLatestTicketId(tickets: SupportTicketRecord[]) {
-  return tickets
-    .slice()
-    .sort((left, right) => {
-      const leftTime = new Date(
-        left.lastMessageAt || left.updatedAt || left.createdAt || 0
-      ).getTime();
-      const rightTime = new Date(
-        right.lastMessageAt || right.updatedAt || right.createdAt || 0
-      ).getTime();
-      return rightTime - leftTime;
-    })[0]?.id;
+  return tickets.slice().sort((left, right) => {
+    const leftTime = new Date(
+      left.lastMessageAt || left.updatedAt || left.createdAt || 0
+    ).getTime();
+    const rightTime = new Date(
+      right.lastMessageAt || right.updatedAt || right.createdAt || 0
+    ).getTime();
+    return rightTime - leftTime;
+  })[0]?.id;
 }
 
 export default function OrdersPrescription() {
@@ -239,32 +245,35 @@ export default function OrdersPrescription() {
   );
   const [contactNote, setContactNote] = useState('');
 
-  const hydratePrescriptionOrders = useCallback(async (input: OrderRecord[]) => {
-    const productIds = Array.from(
-      new Set(
-        input
-          .flatMap((order) =>
-            order.items.map((item) => String(item.productId || '').trim())
-          )
-          .filter(Boolean)
-      )
-    );
+  const hydratePrescriptionOrders = useCallback(
+    async (input: OrderRecord[]) => {
+      const productIds = Array.from(
+        new Set(
+          input
+            .flatMap((order) =>
+              order.items.map((item) => String(item.productId || '').trim())
+            )
+            .filter(Boolean)
+        )
+      );
 
-    if (productIds.length === 0) return input;
+      if (productIds.length === 0) return input;
 
-    const results = await Promise.allSettled(
-      productIds.map((productId) => productApi.getById(productId))
-    );
-    const productDetailsById: Record<string, ProductDetail> = {};
+      const results = await Promise.allSettled(
+        productIds.map((productId) => productApi.getById(productId))
+      );
+      const productDetailsById: Record<string, ProductDetail> = {};
 
-    results.forEach((result, index) => {
-      if (result.status === 'fulfilled') {
-        productDetailsById[productIds[index]] = result.value;
-      }
-    });
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled') {
+          productDetailsById[productIds[index]] = result.value;
+        }
+      });
 
-    return hydrateOrderItemsWithProductData(input, productDetailsById);
-  }, []);
+      return hydrateOrderItemsWithProductData(input, productDetailsById);
+    },
+    []
+  );
 
   const loadOrders = useCallback(async () => {
     setIsLoading(true);
@@ -272,14 +281,18 @@ export default function OrdersPrescription() {
 
     try {
       const result = await orderApi.getAll({ page: 1, limit: 200 });
-      const relevantOrders = result.orders.filter(isOperationsPrescriptionOrder);
+      const relevantOrders = result.orders.filter(
+        isOperationsPrescriptionOrder
+      );
       const hydratedOrders = await hydratePrescriptionOrders(relevantOrders);
       const mapped = hydratedOrders
         .map(toPrescriptionOrder)
         .filter((value): value is PrescriptionOrder => value !== null);
       setOrders(mapped);
     } catch {
-      setErrorMessage('Khong tai duoc danh sach don prescription cho operations.');
+      setErrorMessage(
+        'Không tải được danh sách đơn prescription cho operations.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -291,7 +304,9 @@ export default function OrdersPrescription() {
 
   useEffect(() => {
     setSelectedOrder((current) =>
-      current ? orders.find((order) => order.id === current.id) || current : null
+      current
+        ? orders.find((order) => order.id === current.id) || current
+        : null
     );
   }, [orders]);
 
@@ -347,7 +362,9 @@ export default function OrdersPrescription() {
       )
     ).length,
     readyForShipping: orders.filter((order) =>
-      ['ready_to_pack', 'packing', 'ready_to_ship'].includes(order.workflowStage)
+      ['ready_to_pack', 'packing', 'ready_to_ship'].includes(
+        order.workflowStage
+      )
     ).length,
   };
 
@@ -409,10 +426,10 @@ export default function OrdersPrescription() {
       );
       await loadOrders();
       setInputPrescriptionOpen(false);
-      setSuccessMessage('Da cap nhat thong so prescription cho don hang.');
+      setSuccessMessage('Đã cập nhật thông số prescription cho đơn hàng.');
     } catch (error) {
       setErrorMessage(
-        extractApiErrorMessage(error, 'Khong the luu thong so prescription.')
+        extractApiErrorMessage(error, 'Không thể lưu thông số prescription.')
       );
     } finally {
       setIsSubmittingAction(false);
@@ -426,19 +443,20 @@ export default function OrdersPrescription() {
       setIsSubmittingAction(true);
       setErrorMessage(null);
       if (
-        String(selectedOrder.opsStage || '').trim().toLowerCase() !==
-        'waiting_lab'
+        String(selectedOrder.opsStage || '')
+          .trim()
+          .toLowerCase() !== 'waiting_lab'
       ) {
         await orderApi.updateOpsStage(selectedOrder.id, 'waiting_lab');
       }
       await loadOrders();
       setApproveOpen(false);
-      setSuccessMessage('Da duyet Rx va chuyen don sang cho vao gia cong.');
+      setSuccessMessage('Đã duyệt Rx và chuyển đơn sang cho vào gia công.');
     } catch (error) {
       setErrorMessage(
         extractApiErrorMessage(
           error,
-          'Khong the duyet prescription cho don hang nay.'
+          'Không thể duyệt prescription cho đơn hàng này.'
         )
       );
     } finally {
@@ -455,13 +473,16 @@ export default function OrdersPrescription() {
       setErrorMessage(null);
       await orderApi.updateOpsStage(order.id, nextOpsStage);
       await loadOrders();
-      setSuccessMessage(`Da cap nhat tien do don ${order.orderId}.`);
+      setSuccessMessage(`Đã cập nhật tiến độ đơn ${order.orderId}.`);
       if (selectedOrder?.id === order.id) {
         setSelectedOrder(null);
       }
     } catch (error) {
       setErrorMessage(
-        extractApiErrorMessage(error, 'Khong the cap nhat tien do prescription.')
+        extractApiErrorMessage(
+          error,
+          'Không thể cập nhật tiến độ prescription.'
+        )
       );
     } finally {
       setIsSubmittingAction(false);
@@ -474,13 +495,13 @@ export default function OrdersPrescription() {
       setErrorMessage(null);
       await orderApi.createShipment(order.id);
       await loadOrders();
-      setSuccessMessage(`Da tao van don GHN cho don ${order.orderId}.`);
+      setSuccessMessage(`Đã tạo vận đơn GHN cho đơn ${order.orderId}.`);
       if (selectedOrder?.id === order.id) {
         setSelectedOrder(null);
       }
     } catch (error) {
       setErrorMessage(
-        extractApiErrorMessage(error, 'Khong the tao van don GHN.')
+        extractApiErrorMessage(error, 'Không thể tạo vận đơn GHN.')
       );
     } finally {
       setIsSubmittingAction(false);
@@ -493,13 +514,13 @@ export default function OrdersPrescription() {
       setErrorMessage(null);
       await orderApi.syncShipment(order.id);
       await loadOrders();
-      setSuccessMessage(`Da dong bo GHN cho don ${order.orderId}.`);
+      setSuccessMessage(`Đã đồng bộ GHN cho đơn ${order.orderId}.`);
       if (selectedOrder?.id === order.id) {
         setSelectedOrder(null);
       }
     } catch (error) {
       setErrorMessage(
-        extractApiErrorMessage(error, 'Khong the dong bo trang thai GHN.')
+        extractApiErrorMessage(error, 'Không thể đồng bộ trạng thái GHN.')
       );
     } finally {
       setIsSubmittingAction(false);
@@ -537,13 +558,13 @@ export default function OrdersPrescription() {
       await loadOrders();
       setContactOpen(false);
       setSuccessMessage(
-        `Da gui yeu cau xac nhan toa cho don ${selectedOrder.orderId}.`
+        `Đã gửi yêu cầu xác nhận toa cho đơn ${selectedOrder.orderId}.`
       );
     } catch (error) {
       setErrorMessage(
         extractApiErrorMessage(
           error,
-          'Khong the gui yeu cau xac nhan prescription.'
+          'Không thể gửi yêu cầu xác nhận prescription.'
         )
       );
     } finally {
@@ -554,8 +575,8 @@ export default function OrdersPrescription() {
   return (
     <>
       <Header
-        title="Don Prescription"
-        subtitle="Queue operations cho review Rx, gia cong trong, QC va ban giao giao van"
+        title="Đơn làm theo thông số"
+        subtitle="Các công đoạn trong hàng đợi để review đơn kính (Rx), gia công tròng, kiểm tra chất lượng (QC), và bàn giao cho bộ phận giao vận."
       />
       <div className="space-y-6 p-6">
         <RxStatsGrid stats={stats} />
@@ -575,7 +596,7 @@ export default function OrdersPrescription() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
           <div className="w-full sm:max-w-[240px]">
             <SearchBar
-              placeholder="Tim theo ma don, ten khach, SDT..."
+              placeholder="Tìm theo mã đơn, tên khách, SDT..."
               value={searchTerm}
               onChange={setSearchTerm}
             />
@@ -586,7 +607,7 @@ export default function OrdersPrescription() {
                 <Button
                   variant="outline"
                   size="icon"
-                  aria-label="Bo loc"
+                  aria-label="Bộ lọc"
                   className="text-foreground/80 hover:text-foreground"
                 >
                   <Filter />
@@ -604,12 +625,14 @@ export default function OrdersPrescription() {
                   value={statusFilter}
                   onValueChange={setStatusFilter}
                 >
-                  <DropdownMenuRadioItem value="all">Tat ca</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="all">
+                    Tất cả
+                  </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="pending_review">
-                    Cho duyet
+                    Chờ duyệt
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="approved">
-                    Da duyet
+                    Đã duyệt
                   </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
                 <DropdownMenuSeparator />
@@ -630,7 +653,9 @@ export default function OrdersPrescription() {
                         type="date"
                         className="border-slate-300 bg-white text-slate-900 [color-scheme:light] focus-visible:ring-slate-400"
                         value={orderDateFrom}
-                        onChange={(event) => setOrderDateFrom(event.target.value)}
+                        onChange={(event) =>
+                          setOrderDateFrom(event.target.value)
+                        }
                       />
                     </div>
                     <div className="space-y-1">
@@ -671,7 +696,7 @@ export default function OrdersPrescription() {
 
         {isLoading ? (
           <p className="text-foreground/70 text-sm">
-            Dang tai du lieu don prescription cho operations...
+            Đang tải dữ liệu đơn làm theo thông số cho operations...
           </p>
         ) : null}
 

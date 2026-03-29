@@ -38,16 +38,16 @@ import type {
 } from '@/types/prescription';
 
 const typeOptions = [
-  { value: 'no_prescription', label: 'Chua co Rx' },
-  { value: 'incomplete_data', label: 'Thieu du lieu' },
-  { value: 'unclear_image', label: 'Anh khong ro' },
-  { value: 'need_verification', label: 'Can xac nhan' },
+  { value: 'no_prescription', label: 'Chưa có Rx' },
+  { value: 'incomplete_data', label: 'Thiếu dữ liệu' },
+  { value: 'unclear_image', label: 'Ảnh không rõ' },
+  { value: 'need_verification', label: 'Cần xác nhận' },
 ];
 
 const priorityOptions = [
-  { value: 'urgent', label: 'Gap' },
+  { value: 'urgent', label: 'Gấp' },
   { value: 'high', label: 'Cao' },
-  { value: 'normal', label: 'Binh thuong' },
+  { value: 'normal', label: 'Bình thường' },
 ];
 
 const CONTACT_PREFIX: Record<ContactType, string> = {
@@ -72,7 +72,10 @@ function decorateContactMessage(type: ContactType, content: string) {
   return `${CONTACT_PREFIX[type]} ${content.trim()}`;
 }
 
-function parseContactMessage(message: string): { type: ContactType; content: string } {
+function parseContactMessage(message: string): {
+  type: ContactType;
+  content: string;
+} {
   const trimmed = String(message || '').trim();
 
   for (const [type, prefix] of Object.entries(CONTACT_PREFIX) as Array<
@@ -95,10 +98,10 @@ function parseContactMessage(message: string): { type: ContactType; content: str
 function buildTemplateMessage(
   order: SupplementOrder,
   contactType: ContactType,
-  templateId: string,
+  templateId: string
 ) {
   const template = (contactTemplates[contactType] || []).find(
-    (entry) => entry.id === templateId,
+    (entry) => entry.id === templateId
   );
   if (!template) return '';
 
@@ -107,14 +110,18 @@ function buildTemplateMessage(
     .replace('{orderId}', order.orderId);
 
   if (content.includes('{missingFields}')) {
-    const fields = order.missingFields.map((field) => `- ${field.label}`).join('\n');
+    const fields = order.missingFields
+      .map((field) => `- ${field.label}`)
+      .join('\n');
     content = content.replace('{missingFields}', fields);
   }
 
   return content.trim();
 }
 
-function mapTicketToContactHistory(ticket?: SupportTicketRecord | null): ContactHistory[] {
+function mapTicketToContactHistory(
+  ticket?: SupportTicketRecord | null
+): ContactHistory[] {
   if (!ticket) return [];
 
   return ticket.messages
@@ -145,10 +152,10 @@ function pickLatestTicketByOrder(tickets: SupportTicketRecord[]) {
     if (!ticket.orderId) continue;
     const existing = map.get(ticket.orderId);
     const existingTime = new Date(
-      existing?.lastMessageAt || existing?.updatedAt || existing?.createdAt || 0,
+      existing?.lastMessageAt || existing?.updatedAt || existing?.createdAt || 0
     ).getTime();
     const nextTime = new Date(
-      ticket.lastMessageAt || ticket.updatedAt || ticket.createdAt || 0,
+      ticket.lastMessageAt || ticket.updatedAt || ticket.createdAt || 0
     ).getTime();
 
     if (!existing || nextTime >= existingTime) {
@@ -171,7 +178,9 @@ export default function OrdersPrescriptionSupplement() {
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState('pending');
-  const [selectedOrder, setSelectedOrder] = useState<SupplementOrder | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<SupplementOrder | null>(
+    null
+  );
   const [detailOpen, setDetailOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -221,13 +230,13 @@ export default function OrdersPrescriptionSupplement() {
 
       setOrders(mapped);
       setSelectedOrders((previous) =>
-        previous.filter((id) => mapped.some((order) => order.id === id)),
+        previous.filter((id) => mapped.some((order) => order.id === id))
       );
     } catch (error) {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : 'Khong tai duoc danh sach don can bo sung prescription.',
+          : 'Không tải đươc danh sách đơn cần bổ sung prescription.'
       );
     } finally {
       setIsLoading(false);
@@ -271,29 +280,42 @@ export default function OrdersPrescriptionSupplement() {
           order.orderId.toLowerCase().includes(searchValue) ||
           order.customer.toLowerCase().includes(searchValue) ||
           order.phone.includes(searchValue);
-        const matchesType = typeFilter === 'all' || order.missingType === typeFilter;
+        const matchesType =
+          typeFilter === 'all' || order.missingType === typeFilter;
         const matchesPriority =
           priorityFilter === 'all' || order.priority === priorityFilter;
 
         return matchesSearch && matchesType && matchesPriority;
       }),
-    [orders, priorityFilter, searchTerm, typeFilter],
+    [orders, priorityFilter, searchTerm, typeFilter]
   );
 
-  const pendingOrders = filteredOrders.filter((order) => order.contactAttempts < 3);
-  const escalatedOrders = filteredOrders.filter((order) => order.contactAttempts >= 3);
+  const pendingOrders = filteredOrders.filter(
+    (order) => order.contactAttempts < 3
+  );
+  const escalatedOrders = filteredOrders.filter(
+    (order) => order.contactAttempts >= 3
+  );
 
   const stats = {
     total: orders.length,
-    noPrescription: orders.filter((order) => order.missingType === 'no_prescription').length,
-    incomplete: orders.filter((order) => order.missingType === 'incomplete_data').length,
-    unclear: orders.filter((order) => order.missingType === 'unclear_image').length,
-    needVerify: orders.filter((order) => order.missingType === 'need_verification').length,
+    noPrescription: orders.filter(
+      (order) => order.missingType === 'no_prescription'
+    ).length,
+    incomplete: orders.filter(
+      (order) => order.missingType === 'incomplete_data'
+    ).length,
+    unclear: orders.filter((order) => order.missingType === 'unclear_image')
+      .length,
+    needVerify: orders.filter(
+      (order) => order.missingType === 'need_verification'
+    ).length,
     urgent: orders.filter((order) => order.priority === 'urgent').length,
     escalated: orders.filter((order) => order.contactAttempts >= 3).length,
   };
 
-  const currentTabOrders = activeTab === 'pending' ? pendingOrders : escalatedOrders;
+  const currentTabOrders =
+    activeTab === 'pending' ? pendingOrders : escalatedOrders;
 
   const handleSelectAll = (checked: boolean) => {
     if (!checked) {
@@ -306,13 +328,15 @@ export default function OrdersPrescriptionSupplement() {
 
   const handleSelectOrder = (orderId: string, checked: boolean) => {
     setSelectedOrders((previous) =>
-      checked ? Array.from(new Set([...previous, orderId])) : previous.filter((id) => id !== orderId),
+      checked
+        ? Array.from(new Set([...previous, orderId]))
+        : previous.filter((id) => id !== orderId)
     );
   };
 
   const handleOpenModal = (
     order: SupplementOrder,
-    setter: (open: boolean) => void,
+    setter: (open: boolean) => void
   ) => {
     setSelectedOrder(order);
     setSuccessMessage(null);
@@ -322,7 +346,7 @@ export default function OrdersPrescriptionSupplement() {
   const createOrReplyPrescriptionTicket = async (
     order: SupplementOrder,
     contactType: ContactType,
-    content: string,
+    content: string
   ) => {
     const message = decorateContactMessage(contactType, content);
 
@@ -346,21 +370,32 @@ export default function OrdersPrescriptionSupplement() {
     try {
       setIsSubmitting(true);
       setErrorMessage(null);
-      await createOrReplyPrescriptionTicket(selectedOrder, contact.type, contact.content);
+      await createOrReplyPrescriptionTicket(
+        selectedOrder,
+        contact.type,
+        contact.content
+      );
       setContactOpen(false);
       setSelectedOrders([]);
-      setSuccessMessage('Prescription clarification message sent through live support ticket.');
+      setSuccessMessage(
+        'Prescription clarification message sent through live support ticket.'
+      );
       await loadOrders();
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : 'Khong gui duoc yeu cau clarification.',
+        error instanceof Error
+          ? error.message
+          : 'Không gửi được yêu cầu clarification.'
       );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleBulkContact = async (contactType: ContactType, templateId: string) => {
+  const handleBulkContact = async (
+    contactType: ContactType,
+    templateId: string
+  ) => {
     const batch = orders.filter((order) => selectedOrders.includes(order.id));
     if (batch.length === 0) return;
 
@@ -372,16 +407,20 @@ export default function OrdersPrescriptionSupplement() {
         batch.map((order) => {
           const content = buildTemplateMessage(order, contactType, templateId);
           return createOrReplyPrescriptionTicket(order, contactType, content);
-        }),
+        })
       );
 
       setBulkContactOpen(false);
       setSelectedOrders([]);
-      setSuccessMessage('Bulk prescription clarification was sent through live support tickets.');
+      setSuccessMessage(
+        'Bulk prescription clarification was sent through live support tickets.'
+      );
       await loadOrders();
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : 'Khong gui duoc bulk clarification.',
+        error instanceof Error
+          ? error.message
+          : 'Không gửi được bulk clarification.'
       );
     } finally {
       setIsSubmitting(false);
@@ -391,8 +430,8 @@ export default function OrdersPrescriptionSupplement() {
   return (
     <>
       <Header
-        title="Don can bo sung prescription"
-        subtitle="Sales/support queue for missing, incomplete, or unclear prescription data"
+        title="Đơn cần bổ sung thông số"
+        subtitle="Hàng đợi bán hàng/hỗ trợ dành cho các trường hợp thiếu, chưa đầy đủ hoặc không rõ ràng về dữ liệu đơn kính"
       />
 
       <div className="space-y-6 p-6">
@@ -432,24 +471,37 @@ export default function OrdersPrescriptionSupplement() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64">
-                  <DropdownMenuLabel>Loai thieu</DropdownMenuLabel>
-                  <DropdownMenuRadioGroup value={typeFilter} onValueChange={setTypeFilter}>
-                    <DropdownMenuRadioItem value="all">Tat ca loai</DropdownMenuRadioItem>
+                  <DropdownMenuLabel>Loại thiếu</DropdownMenuLabel>
+                  <DropdownMenuRadioGroup
+                    value={typeFilter}
+                    onValueChange={setTypeFilter}
+                  >
+                    <DropdownMenuRadioItem value="all">
+                      Tất cả loại
+                    </DropdownMenuRadioItem>
                     {typeOptions.map((option) => (
-                      <DropdownMenuRadioItem key={option.value} value={option.value}>
+                      <DropdownMenuRadioItem
+                        key={option.value}
+                        value={option.value}
+                      >
                         {option.label}
                       </DropdownMenuRadioItem>
                     ))}
                   </DropdownMenuRadioGroup>
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel>Do uu tien</DropdownMenuLabel>
+                  <DropdownMenuLabel>Độ ưu tiên</DropdownMenuLabel>
                   <DropdownMenuRadioGroup
                     value={priorityFilter}
                     onValueChange={setPriorityFilter}
                   >
-                    <DropdownMenuRadioItem value="all">Tat ca</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="all">
+                      Tất cả
+                    </DropdownMenuRadioItem>
                     {priorityOptions.map((option) => (
-                      <DropdownMenuRadioItem key={option.value} value={option.value}>
+                      <DropdownMenuRadioItem
+                        key={option.value}
+                        value={option.value}
+                      >
                         {option.label}
                       </DropdownMenuRadioItem>
                     ))}
@@ -476,24 +528,26 @@ export default function OrdersPrescriptionSupplement() {
               disabled={isLoading || isSubmitting}
             >
               <RefreshCw className="h-4 w-4" />
-              Lam moi
+              Làm mới
             </Button>
           </div>
         </div>
 
         {isLoading ? (
-          <p className="text-foreground/70 text-sm">Dang tai du lieu don can bo sung...</p>
+          <p className="text-foreground/70 text-sm">
+            Đang tải dữ liệu đơn cần bổ sung...
+          </p>
         ) : null}
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="pending" className="gap-2">
               <Clock className="h-4 w-4" />
-              Dang cho ({pendingOrders.length})
+              Đang chờ ({pendingOrders.length})
             </TabsTrigger>
             <TabsTrigger value="escalated" className="gap-2">
               <AlertTriangle className="h-4 w-4" />
-              Escalated ({escalatedOrders.length})
+              Leo thang ({escalatedOrders.length})
             </TabsTrigger>
           </TabsList>
 
@@ -501,33 +555,37 @@ export default function OrdersPrescriptionSupplement() {
             <PrescriptionOrderTable
               orders={pendingOrders}
               selectedOrders={selectedOrders.filter((id) =>
-                pendingOrders.some((order) => order.id === id),
+                pendingOrders.some((order) => order.id === id)
               )}
               onSelectOrder={handleSelectOrder}
               onSelectAll={handleSelectAll}
               onViewDetail={(order) => openDetail(order.id)}
               onContact={(order) => handleOpenModal(order, setContactOpen)}
               onViewHistory={(order) => handleOpenModal(order, setHistoryOpen)}
-              onUploadImage={(order) => handleOpenModal(order, setUploadImageOpen)}
+              onUploadImage={(order) =>
+                handleOpenModal(order, setUploadImageOpen)
+              }
             />
           </TabsContent>
 
           <TabsContent value="escalated" className="space-y-3">
             <div className="text-foreground/80 flex items-center gap-2 text-sm">
               <AlertTriangle className="h-4 w-4 text-amber-600" />
-              Don da lien he nhieu lan ({'>=3'}) can xu ly dac biet
+              Đơn đã liên hệ nhiều lần ({'>=3'}) cần xử lý đặc biệt
             </div>
             <PrescriptionOrderTable
               orders={escalatedOrders}
               selectedOrders={selectedOrders.filter((id) =>
-                escalatedOrders.some((order) => order.id === id),
+                escalatedOrders.some((order) => order.id === id)
               )}
               onSelectOrder={handleSelectOrder}
               onSelectAll={handleSelectAll}
               onViewDetail={(order) => openDetail(order.id)}
               onContact={(order) => handleOpenModal(order, setContactOpen)}
               onViewHistory={(order) => handleOpenModal(order, setHistoryOpen)}
-              onUploadImage={(order) => handleOpenModal(order, setUploadImageOpen)}
+              onUploadImage={(order) =>
+                handleOpenModal(order, setUploadImageOpen)
+              }
             />
           </TabsContent>
         </Tabs>

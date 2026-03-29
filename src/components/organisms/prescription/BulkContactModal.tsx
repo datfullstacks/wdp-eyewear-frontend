@@ -55,16 +55,16 @@ export function BulkContactModal({
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="text-foreground text-base font-semibold">
-            Lien he hang loat
+            Liên hệ hàng loạt
           </DialogTitle>
           <DialogDescription className="text-foreground/70">
-            Gui tin nhan den {selectedCount} khach hang da chon
+            Gửi tin nhắn đến {selectedCount} khách hàng đã chọn
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label className="text-foreground/80">Hinh thuc</Label>
+            <Label className="text-foreground/80">Hình thức</Label>
             <Select
               value={contactType}
               onValueChange={(value) => setContactType(value as ContactType)}
@@ -83,10 +83,14 @@ export function BulkContactModal({
           </div>
 
           <div className="space-y-2">
-            <Label className="text-foreground/80">Mau tin nhan</Label>
-            <Select value={template} onValueChange={setTemplate} disabled={isSubmitting}>
+            <Label className="text-foreground/80">Mẫu tin nhắn</Label>
+            <Select
+              value={template}
+              onValueChange={setTemplate}
+              disabled={isSubmitting}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Chon mau..." />
+                <SelectValue placeholder="Chọn mẫu..." />
               </SelectTrigger>
               <SelectContent>
                 {(contactTemplates[contactType] || []).map((entry) => (
@@ -99,8 +103,8 @@ export function BulkContactModal({
           </div>
 
           <div className="bg-muted/30 rounded-lg p-3 text-sm text-gray-600">
-            The selected template will be sent through live support tickets instead of a local-only
-            queue.
+            Mẫu đã chọn sẽ được gửi thông qua các ticket hỗ trợ trực tiếp thay
+            vì hàng đợi nội bộ (chỉ dùng cục bộ).
           </div>
         </div>
 
@@ -110,11 +114,11 @@ export function BulkContactModal({
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
           >
-            Huy
+            Hủy
           </Button>
           <Button onClick={handleSend} disabled={!template || isSubmitting}>
             <Send className="mr-2 h-4 w-4" />
-            {isSubmitting ? 'Dang gui...' : 'Gui tat ca'}
+            {isSubmitting ? 'Đang gửi...' : 'Gửi tất cả'}
           </Button>
         </DialogFooter>
       </DialogContent>

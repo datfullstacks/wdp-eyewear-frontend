@@ -18,7 +18,7 @@ export const RxStatsGrid = ({ stats }: RxStatsGridProps) => {
     <div className="grid grid-cols-5 gap-3">
       <StatCard
         icon={Glasses}
-        title="Tong don ops Rx"
+        title="Tổng đơn Rx"
         value={stats.total.toString()}
         className="p-3"
         titleClassName="text-foreground/90 text-sm"
@@ -29,7 +29,7 @@ export const RxStatsGrid = ({ stats }: RxStatsGridProps) => {
       />
       <StatCard
         icon={Clock}
-        title="Cho duyet Rx"
+        title="Chờ duyệt Rx"
         value={stats.pendingReview.toString()}
         className="p-3"
         titleClassName="text-foreground/90 text-sm"
@@ -39,7 +39,7 @@ export const RxStatsGrid = ({ stats }: RxStatsGridProps) => {
       />
       <StatCard
         icon={Package}
-        title="Cho vao gia cong"
+        title="Chờ vào gia công"
         value={stats.waitingLab.toString()}
         className="p-3"
         titleClassName="text-foreground/90 text-sm"
@@ -49,7 +49,7 @@ export const RxStatsGrid = ({ stats }: RxStatsGridProps) => {
       />
       <StatCard
         icon={Cog}
-        title="Dang gia cong"
+        title="Đang gia công"
         value={stats.labInProgress.toString()}
         className="p-3"
         titleClassName="text-foreground/90 text-sm"
@@ -59,7 +59,7 @@ export const RxStatsGrid = ({ stats }: RxStatsGridProps) => {
       />
       <StatCard
         icon={Truck}
-        title="San sang giao van"
+        title="Sẵn sàng giao vận"
         value={stats.readyForShipping.toString()}
         className="p-3"
         titleClassName="text-foreground/90 text-sm"

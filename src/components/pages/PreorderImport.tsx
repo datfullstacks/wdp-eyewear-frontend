@@ -671,8 +671,8 @@ const PreorderImport = () => {
             >
               <Plus className="h-4 w-4" />
               {isResolvingStoreScope
-                ? 'Dang tai cua hang...'
-                : 'Tao dot hang moi'}
+                ? 'Đang tải cửa hàng...'
+                : 'Tạo đợt hàng mới'}
             </Button>
           </div>
         </div>

@@ -33,12 +33,12 @@ export const ImportBatchTable = ({
     <Table className="text-sm font-normal">
       <TableHeader>
         <TableRow className="bg-muted/50">
-          <TableHead>Ma dot</TableHead>
-          <TableHead>Nha cung cap</TableHead>
-          <TableHead>Ngay dat</TableHead>
-          <TableHead>Ngay du kien</TableHead>
-          <TableHead>Tien do</TableHead>
-          <TableHead>Trang thai</TableHead>
+          <TableHead>Mã đợt</TableHead>
+          <TableHead>Nhà cung cấp</TableHead>
+          <TableHead>Ngày đặt</TableHead>
+          <TableHead>Ngày dự kiến</TableHead>
+          <TableHead>Tiến độ</TableHead>
+          <TableHead>Trạng thái</TableHead>
           <TableHead className="w-[60px]"></TableHead>
         </TableRow>
       </TableHeader>
@@ -49,7 +49,7 @@ export const ImportBatchTable = ({
               colSpan={7}
               className="text-muted-foreground py-10 text-center"
             >
-              Chua co dot hang nao phu hop bo loc hien tai.
+              Chưa có dot hàng nào phù hợp với bộ lọc hiện tại.
             </TableCell>
           </TableRow>
         ) : null}
@@ -113,7 +113,7 @@ export const ImportBatchTable = ({
                     {batch.status !== 'completed' ? (
                       <DropdownMenuItem onClick={() => onReceive(batch)}>
                         <PackageCheck className="mr-2 h-4 w-4" />
-                        Xac nhan nhap kho
+                        Xác nhận nhập kho
                       </DropdownMenuItem>
                     ) : null}
                   </DropdownMenuContent>
