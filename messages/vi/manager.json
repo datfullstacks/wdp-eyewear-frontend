@@ -232,7 +232,8 @@
       "prefabUsePhysics": "Bật physics cho prefab (nâng cao)",
       "cancelButton": "Hủy",
       "saveButton": "Lưu",
-      "savingButton": "Đang lưu..."
+      "savingButton": "Đang lưu...",
+      "inventoryManagedNote": "T?n kho do b? ph?n Operations qu?n l?. T?ng t?n ???c t?nh t? bi?n ??ng t?n kho c?a t?ng bi?n th?, v? bi?n th? m?i s? b?t ??u t? 0 cho ??n khi Operations c?p nh?t."
     }
   },
   "pricing": {

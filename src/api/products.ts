@@ -780,10 +780,9 @@ function toBackendUpsertPayload(
       ...(variant.color ? { color: variant.color } : {}),
       ...(variant.size ? { size: variant.size } : {}),
     },
-    stock:
-      typeof variant.stock === 'number' && Number.isFinite(variant.stock)
-        ? Number(variant.stock)
-        : Number(input.stock),
+    ...(typeof variant.stock === 'number' && Number.isFinite(variant.stock)
+      ? { stock: Number(variant.stock) }
+      : {}),
     price:
       typeof variant.price === 'number' && Number.isFinite(variant.price)
         ? Number(variant.price)
