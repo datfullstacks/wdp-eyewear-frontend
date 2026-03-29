@@ -35,6 +35,7 @@ import {
   methodConfig,
   statusConfig,
 } from '@/types/refund';
+import { useTranslations } from 'next-intl';
 
 interface RefundTableProps {
   refunds: RefundRequest[];
@@ -69,18 +70,21 @@ export const RefundTable = ({
   onComplete,
   actionsDisabled = false,
 }: RefundTableProps) => {
+  const t = useTranslations('manager.refunds.table');
+  const ta = useTranslations('manager.refunds.actions');
+
   return (
     <div className="glass-card overflow-hidden rounded-xl">
       <Table className="text-sm font-normal">
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead>Mã hoàn tiền</TableHead>
-            <TableHead>Mã đơn hàng</TableHead>
-            <TableHead>Khách hàng</TableHead>
-            <TableHead>Số tiền</TableHead>
-            <TableHead>Phương thức</TableHead>
-            <TableHead>Trạng thái</TableHead>
-            <TableHead>Ngày tạo</TableHead>
+            <TableHead>{t('refundId')}</TableHead>
+            <TableHead>{t('orderId')}</TableHead>
+            <TableHead>{t('customer')}</TableHead>
+            <TableHead>{t('amount')}</TableHead>
+            <TableHead>{t('method')}</TableHead>
+            <TableHead>{t('status')}</TableHead>
+            <TableHead>{t('createdAt')}</TableHead>
             <TableHead className="w-[60px]"></TableHead>
           </TableRow>
         </TableHeader>
@@ -91,7 +95,7 @@ export const RefundTable = ({
                 colSpan={8}
                 className="text-muted-foreground py-8 text-center text-sm"
               >
-                Không có yêu cầu hoàn tiền phù hợp.
+                {t('noRefunds')}
               </TableCell>
             </TableRow>
           )}
@@ -219,7 +223,7 @@ export const RefundTable = ({
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => onDetail(refund)}>
                         <Eye className="mr-2 h-4 w-4" />
-                        Xem chi tiết
+                        {ta('viewDetail')}
                       </DropdownMenuItem>
 
                       {(canSaleApprove || canManagerDecide) && (
@@ -230,7 +234,7 @@ export const RefundTable = ({
                             disabled={actionsDisabled}
                           >
                             <CheckCircle className="text-success mr-2 h-4 w-4" />
-                            Duyệt
+                            {ta('approve')}
                           </DropdownMenuItem>
                         </>
                       )}
@@ -242,7 +246,7 @@ export const RefundTable = ({
                             disabled={actionsDisabled}
                           >
                             <XCircle className="text-destructive mr-2 h-4 w-4" />
-                            Từ chối
+                            {ta('reject')}
                           </DropdownMenuItem>
                         </>
                       )}
@@ -255,7 +259,7 @@ export const RefundTable = ({
                             disabled={actionsDisabled}
                           >
                             <AlertTriangle className="mr-2 h-4 w-4 text-amber-600" />
-                            Chuyển manager
+                            {ta('escalate')}
                           </DropdownMenuItem>
                         </>
                       )}
@@ -268,7 +272,7 @@ export const RefundTable = ({
                             disabled={actionsDisabled}
                           >
                             <MessageSquareWarning className="mr-2 h-4 w-4" />
-                            Yêu cầu bổ sung
+                            {ta('requestInfo')}
                           </DropdownMenuItem>
                         </>
                       )}
@@ -291,7 +295,7 @@ export const RefundTable = ({
                             disabled={actionsDisabled}
                           >
                             <RotateCcw className="mr-2 h-4 w-4" />
-                            Tiếp tục review
+                            {ta('resumeReview')}
                           </DropdownMenuItem>
                         </>
                       )}
@@ -304,7 +308,7 @@ export const RefundTable = ({
                             disabled={actionsDisabled}
                           >
                             <CornerUpLeft className="mr-2 h-4 w-4" />
-                            Trả lại sale
+                            {ta('sendBack')}
                           </DropdownMenuItem>
                         </>
                       )}
@@ -317,7 +321,7 @@ export const RefundTable = ({
                             disabled={actionsDisabled}
                           >
                             <PackageCheck className="mr-2 h-4 w-4 text-blue-600" />
-                            Xác nhận đã nhận hàng
+                            {ta('confirmReturnReceived')}
                           </DropdownMenuItem>
                         </>
                       )}
@@ -329,7 +333,7 @@ export const RefundTable = ({
                             disabled={actionsDisabled}
                           >
                             <AlertTriangle className="mr-2 h-4 w-4 text-amber-600" />
-                            QC fail / trả lại review
+                            {ta('inspectionFailed')}
                           </DropdownMenuItem>
                         </>
                       )}
@@ -342,7 +346,7 @@ export const RefundTable = ({
                             disabled={actionsDisabled}
                           >
                             <CreditCard className="mr-2 h-4 w-4 text-amber-600" />
-                            Bắt đầu payout
+                            {ta('startProcessing')}
                           </DropdownMenuItem>
                         </>
                       )}
@@ -355,7 +359,7 @@ export const RefundTable = ({
                             disabled={actionsDisabled}
                           >
                             <Banknote className="mr-2 h-4 w-4 text-emerald-600" />
-                            Xác nhận đã chuyển tiền
+                            {ta('complete')}
                           </DropdownMenuItem>
                         </>
                       )}

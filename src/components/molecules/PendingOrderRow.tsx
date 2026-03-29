@@ -31,6 +31,7 @@ import {
 } from '@/lib/pendingOrders';
 import { cn } from '@/lib/utils';
 import { PendingOrder } from '@/types/pending';
+import { useTranslations } from 'next-intl';
 
 interface PendingOrderRowProps {
   order: PendingOrder;
@@ -54,6 +55,9 @@ export const PendingOrderRow = ({
   onEscalate,
   onSendBack,
 }: PendingOrderRowProps) => {
+  const t = useTranslations('manager.orders.actions');
+  const tc = useTranslations('manager.common');
+  
   const statusTextClass: Record<string, string> = {
     success: 'text-success',
     warning: 'text-warning',
@@ -78,7 +82,7 @@ export const PendingOrderRow = ({
           : order.managerReviewReason || PENDING_ORDER_MANAGER_APPROVAL_MESSAGE
         : ''
       : isEscalated
-        ? 'Đã chuyển manager xử lý.'
+        ? t('escalatedToManager', { fallback: 'Đã chuyển manager xử lý.' })
         : isSentBack
           ? order.managerReviewReason || PENDING_ORDER_SENT_BACK_MESSAGE
           : !canApprove
@@ -112,7 +116,7 @@ export const PendingOrderRow = ({
           </p>
           {order.products.length > 1 && (
             <p className="text-foreground/80 text-sm">
-              +{order.products.length - 1} sản phẩm khác
+              +{tc('products', { count: order.products.length - 1 })}
             </p>
           )}
         </div>
@@ -139,7 +143,16 @@ export const PendingOrderRow = ({
       </TableCell>
 
       <TableCell className="text-foreground/90 whitespace-nowrap text-sm font-medium">
-        {orderTypeLabel}
+        {(() => {
+          const key = String(order.orderType || '').trim().toLowerCase();
+          const typeMap: Record<string, string> = {
+            ready_stock: tc('orderType.ready_stock'),
+            pre_order: tc('orderType.pre_order'),
+            preorder: tc('orderType.preorder'),
+            prescription: tc('orderType.prescription'),
+          };
+          return typeMap[key] || order.orderType || '-';
+        })()}
       </TableCell>
 
       <TableCell className="text-foreground/90 text-sm">
@@ -161,7 +174,7 @@ export const PendingOrderRow = ({
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => onViewDetail(order)}>
               <Eye className="mr-2 h-4 w-4" />
-              Xem chi tiết
+              {t('viewDetail')}
             </DropdownMenuItem>
 
             <DropdownMenuItem
@@ -172,26 +185,26 @@ export const PendingOrderRow = ({
               onClick={() => onProcess(order)}
             >
               <CheckCircle className="text-success mr-2 h-4 w-4" />
-              {scope === 'manager' ? 'Manager xác nhận' : 'Xác nhận xử lý'}
+              {scope === 'manager' ? t('managerApprove') : t('saleConfirm')}
             </DropdownMenuItem>
 
             {scope === 'sale' && !canApprove && !isEscalated && (
               <DropdownMenuItem onClick={() => onEscalate(order)}>
                 <Send className="mr-2 h-4 w-4" />
-                Chuyển manager
+                {t('escalate')}
               </DropdownMenuItem>
             )}
 
             {scope === 'manager' && isEscalated && (
               <DropdownMenuItem onClick={() => onSendBack(order)}>
                 <Send className="mr-2 h-4 w-4" />
-                Trả lại sale
+                {t('sendBack')}
               </DropdownMenuItem>
             )}
 
             <DropdownMenuItem onClick={() => onReject(order)}>
               <XCircle className="text-destructive mr-2 h-4 w-4" />
-              Từ chối
+              {t('reject')}
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
@@ -199,19 +212,19 @@ export const PendingOrderRow = ({
             {scope !== 'sale' && (
               <DropdownMenuItem>
                 <FileText className="mr-2 h-4 w-4" />
-                Xem đơn thuốc
+                {t('viewPrescription')}
               </DropdownMenuItem>
             )}
 
             <DropdownMenuItem>
               <Printer className="mr-2 h-4 w-4" />
-              In đơn hàng
+              {t('printOrder')}
             </DropdownMenuItem>
 
             {scope !== 'sale' && (
               <DropdownMenuItem>
                 <Send className="mr-2 h-4 w-4" />
-                Gửi thông báo
+                {t('sendNotification')}
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>

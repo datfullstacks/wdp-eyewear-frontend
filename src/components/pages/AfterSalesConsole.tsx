@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, ExternalLink, Loader2, MessageSquare, RefreshCw } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import supportApi, {
   type SupportMessageRecord,
@@ -38,41 +39,23 @@ type TabConfig = {
   category: SupportTicketCategory;
 };
 
-const TAB_CONFIG: Record<AfterSalesScope, TabConfig[]> = {
+const TAB_CONFIG_KEYS: Record<AfterSalesScope, { value: ConsoleTab; labelKey: string; category: SupportTicketCategory }[]> = {
   sale: [
-    { value: 'return', label: 'Đổi / trả', category: 'return' },
-    { value: 'warranty', label: 'Bảo hành', category: 'warranty' },
+    { value: 'return', labelKey: 'tabs.return', category: 'return' },
+    { value: 'warranty', labelKey: 'tabs.warranty', category: 'warranty' },
   ],
-  operation: [{ value: 'warranty', label: 'Xử lý bảo hành', category: 'warranty' }],
+  operation: [{ value: 'warranty', labelKey: 'tabs.warrantyOps', category: 'warranty' }],
   manager: [
-    { value: 'return', label: 'Đổi / trả', category: 'return' },
-    { value: 'warranty', label: 'Bảo hành', category: 'warranty' },
-    { value: 'prescription', label: 'Toa kính', category: 'prescription' },
+    { value: 'return', labelKey: 'tabs.return', category: 'return' },
+    { value: 'warranty', labelKey: 'tabs.warranty', category: 'warranty' },
+    { value: 'prescription', labelKey: 'tabs.prescription', category: 'prescription' },
   ],
 };
 
-const SCOPE_COPY: Record<
-  AfterSalesScope,
-  { title: string; subtitle: string; refundHref: string; refundLabel: string }
-> = {
-  sale: {
-    title: 'Hỗ trợ hậu mãi',
-    subtitle: 'Theo dõi và xử lý yêu cầu đổi trả, bảo hành cho nhân viên bán hàng',
-    refundHref: '/sale/cases/refunds',
-    refundLabel: 'Mở khu vực hoàn tiền',
-  },
-  operation: {
-    title: 'Hàng chờ bảo hành',
-    subtitle: 'Theo dõi và xử lý các yêu cầu bảo hành thuộc bộ phận vận hành',
-    refundHref: '/operation/refunds',
-    refundLabel: 'Mở hàng chờ chi tiền',
-  },
-  manager: {
-    title: 'Tổng quan hỗ trợ kinh doanh',
-    subtitle: 'Theo dõi liên cửa hàng cho yêu cầu đổi trả, bảo hành và toa kính',
-    refundHref: '/manager/refunds/monitoring',
-    refundLabel: 'Mở giám sát hoàn tiền',
-  },
+const REFUND_HREF: Record<AfterSalesScope, string> = {
+  sale: '/sale/cases/refunds',
+  operation: '/operation/refunds',
+  manager: '/manager/refunds/monitoring',
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -467,8 +450,9 @@ function TicketDetailDialog({
 }
 
 export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope }) {
+  const t = useTranslations('manager.afterSales');
   const { detailId, openDetail, closeDetail } = useDetailRoute();
-  const tabs = TAB_CONFIG[scope];
+  const tabs = TAB_CONFIG_KEYS[scope].map((cfg) => ({ ...cfg, label: t(cfg.labelKey as Parameters<typeof t>[0]) }));
   const [activeTab, setActiveTab] = useState<ConsoleTab>(tabs[0].value);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -624,16 +608,16 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
 
   return (
     <>
-      <Header title={SCOPE_COPY[scope].title} subtitle={SCOPE_COPY[scope].subtitle} />
+      <Header title={t(`title_${scope}` as Parameters<typeof t>[0])} subtitle={t(`subtitle_${scope}` as Parameters<typeof t>[0])} />
 
       <div className="space-y-6 p-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-center gap-3">
             <Link
-              href={SCOPE_COPY[scope].refundHref}
+              href={REFUND_HREF[scope]}
               className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
             >
-              {SCOPE_COPY[scope].refundLabel}
+              {t(`refundLabel_${scope}` as Parameters<typeof t>[0])}
               <ExternalLink className="h-4 w-4" />
             </Link>
             {scope === 'sale' ? (
@@ -641,7 +625,7 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
                 href="/sale/orders/prescription-needed"
                 className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
               >
-                Bổ sung toa kính
+                {t('prescriptionLink')}
                 <ExternalLink className="h-4 w-4" />
               </Link>
             ) : null}
@@ -649,7 +633,7 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
 
           <Button variant="outline" className="gap-2" onClick={() => void loadTickets()}>
             <RefreshCw className="h-4 w-4" />
-            Tải lại
+            {t('reload')}
           </Button>
         </div>
 
@@ -680,7 +664,7 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
               <div className="flex flex-col gap-3 lg:flex-row">
                 <div className="flex-1">
                   <SearchBar
-                    placeholder="Tìm theo đơn hàng, khách hàng, số điện thoại hoặc tiêu đề phiếu"
+                    placeholder={t('searchPlaceholder')}
                     value={searchQuery}
                     onChange={setSearchQuery}
                   />
@@ -691,7 +675,7 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
                     onChange={(event) => setStatusFilter(event.target.value)}
                     className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
                   >
-                    <option value="all">Tất cả trạng thái</option>
+                    <option value="all">{t('allStatus')}</option>
                     {Object.entries(STATUS_LABELS).map(([value, label]) => (
                       <option key={value} value={value}>
                         {label}
@@ -706,7 +690,7 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
                       onChange={(event) => setEligibilityFilter(event.target.value)}
                       className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
                     >
-                      <option value="all">Tất cả điều kiện</option>
+                      <option value="all">{t('allConditions')}</option>
                       {Object.entries(ELIGIBILITY_LABELS).map(([value, label]) => (
                         <option key={value} value={value}>
                           {label}
@@ -727,12 +711,12 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
                     <table className="min-w-full text-sm">
                       <thead className="bg-slate-50 text-left text-gray-500">
                         <tr>
-                          <th className="px-4 py-3">Phiếu</th>
-                          <th className="px-4 py-3">Khách hàng</th>
-                          <th className="px-4 py-3">Cửa hàng</th>
-                          <th className="px-4 py-3">Trạng thái</th>
-                          <th className="px-4 py-3">Cập nhật gần nhất</th>
-                          <th className="px-4 py-3 text-right">Thao tác</th>
+                          <th className="px-4 py-3">{t('table.ticket')}</th>
+                          <th className="px-4 py-3">{t('table.customer')}</th>
+                          <th className="px-4 py-3">{t('table.store')}</th>
+                          <th className="px-4 py-3">{t('table.status')}</th>
+                          <th className="px-4 py-3">{t('table.lastUpdate')}</th>
+                          <th className="px-4 py-3 text-right">{t('table.actions')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -783,7 +767,7 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
                                 size="sm"
                                 onClick={() => openDetail(ticket.id)}
                               >
-                                Mở
+                                {t('open')}
                               </Button>
                             </td>
                           </tr>
@@ -791,7 +775,7 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
                         {tickets.length === 0 ? (
                           <tr>
                             <td colSpan={6} className="px-4 py-10 text-center text-sm text-gray-500">
-                              Không có phiếu hỗ trợ nào khớp với bộ lọc hiện tại.
+                              {t('noMatch')}
                             </td>
                           </tr>
                         ) : null}
@@ -806,7 +790,7 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
 
         {detailLoading && detailOpen ? (
           <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-            Đang tải chi tiết phiếu...
+            {t('loadingDetail')}
           </div>
         ) : null}
       </div>

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import axios from 'axios';
 import { orderApi } from '@/api';
@@ -56,6 +56,7 @@ import type {
   ReadyStockOrderOpsState,
   ReadyStockOpsStatus,
 } from '@/types/readyStockOps';
+import { useTranslations } from 'next-intl';
 import {
   CheckCircle2,
   ChevronDown,
@@ -182,6 +183,7 @@ export function ReadyStockOrderDetailModal({
   order: OrderRecord | null;
   onReload: () => Promise<void> | void;
 }) {
+  const tc = useTranslations('manager.common');
   const meName = useAuthStore((s) => s.user?.name) || 'Operations';
 
   const ops = useReadyStockOpsStore((s) =>
@@ -1157,7 +1159,7 @@ export function ReadyStockOrderDetailModal({
                 </div>
                 {shippingStatusMeta ? (
                   <StatusBadge status={shippingStatusMeta.type}>
-                    {shippingStatusMeta.label}
+                    {shippingStatusMeta.labelKey ? tc(`shippingStatus.${shippingStatusMeta.labelKey}` as any) : shippingStatusMeta.label}
                   </StatusBadge>
                 ) : (
                   <div className="text-sm font-semibold">-</div>
