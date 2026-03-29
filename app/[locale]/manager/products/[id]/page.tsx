@@ -141,8 +141,7 @@ export default function ProductDetailPage() {
 
   const handleSave = async () => {
     const hasAnyPrice = Boolean(formData.price || formData.variants.some((v) => v.price));
-    const hasAnyStock = Boolean(formData.stock || formData.variants.some((v) => v.stock));
-    if (!formData.name.trim() || !formData.category || !hasAnyPrice || !hasAnyStock) {
+    if (!formData.name.trim() || !formData.category || !hasAnyPrice) {
       setApiError(tDetail('fillRequired'));
       return;
     }
