@@ -1,13 +1,13 @@
+import { ClipboardList, AlertTriangle, Clock, Send } from 'lucide-react';
+
 import { StatCard } from '@/components/molecules/StatCard';
-import { ClipboardList, AlertTriangle, Clock } from 'lucide-react';
 
 interface PrescriptionStats {
   total: number;
-  noPrescription: number;
-  incomplete: number;
-  unclear: number;
-  needVerify: number;
-  urgent: number;
+  needsReview: number;
+  needsCustomerContact: number;
+  waitingCustomerResponse: number;
+  customerResponded: number;
   escalated: number;
 }
 
@@ -19,7 +19,7 @@ export const PrescriptionStatsGrid = ({
   stats,
 }: PrescriptionStatsGridProps) => {
   return (
-    <div className="grid grid-cols-4 gap-3">
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
       <StatCard
         icon={ClipboardList}
         title="Tổng chờ"
@@ -33,8 +33,18 @@ export const PrescriptionStatsGrid = ({
       />
       <StatCard
         icon={AlertTriangle}
-        title="Chưa có Rx"
-        value={stats.noPrescription.toString()}
+        title="Cần kiểm tra"
+        value={stats.needsReview.toString()}
+        className="p-3"
+        titleClassName="text-foreground/90 text-sm"
+        valueClassName="text-2xl"
+        showIcon={false}
+        inline
+      />
+      <StatCard
+        icon={Send}
+        title="Cần liên hệ"
+        value={stats.needsCustomerContact.toString()}
         className="p-3"
         titleClassName="text-foreground/90 text-sm"
         valueClassName="text-2xl"
@@ -43,8 +53,18 @@ export const PrescriptionStatsGrid = ({
       />
       <StatCard
         icon={Clock}
-        title="Gấp"
-        value={stats.urgent.toString()}
+        title="Chờ phản hồi"
+        value={stats.waitingCustomerResponse.toString()}
+        className="p-3"
+        titleClassName="text-foreground/90 text-sm"
+        valueClassName="text-2xl"
+        showIcon={false}
+        inline
+      />
+      <StatCard
+        icon={ClipboardList}
+        title="Đã phản hồi"
+        value={stats.customerResponded.toString()}
         className="p-3"
         titleClassName="text-foreground/90 text-sm"
         valueClassName="text-2xl"

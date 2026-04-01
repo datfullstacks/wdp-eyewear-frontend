@@ -362,6 +362,27 @@ function getFirstPrescriptionAttachmentUrl(
   )?.prescription?.attachmentUrls?.[0];
 }
 
+function normalizePrescriptionFollowUpStatus(
+  order: OrderRecord
+): SupplementOrder['followUpStatus'] {
+  const followUpStatus = String(
+    order.opsExecution?.prescriptionFollowUpStatus || ''
+  )
+    .trim()
+    .toLowerCase();
+
+  if (followUpStatus === 'needs_customer_contact') {
+    return 'needs_customer_contact';
+  }
+  if (followUpStatus === 'waiting_customer_response') {
+    return 'waiting_customer_response';
+  }
+  if (followUpStatus === 'customer_responded') {
+    return 'customer_responded';
+  }
+  return 'needs_review';
+}
+
 function toProductFrame(item: OrderItem): string {
   const value = String(item.variant || '').trim();
   return value || 'Mặc định';
@@ -710,6 +731,18 @@ export function toSupplementOrder(order: OrderRecord): SupplementOrder | null {
     contactHistory: [],
     prescriptionImage: attachmentUrl,
     notes: rxOrder.notes,
+    followUpStatus: normalizePrescriptionFollowUpStatus(order),
+    followUpNote:
+      String(order.opsExecution?.prescriptionFollowUpNote || '').trim() ||
+      undefined,
+    followUpUpdatedAt:
+      typeof order.opsExecution?.prescriptionFollowUpUpdatedAt === 'string' &&
+      order.opsExecution.prescriptionFollowUpUpdatedAt
+        ? order.opsExecution.prescriptionFollowUpUpdatedAt
+        : undefined,
+    followUpUpdatedBy:
+      String(order.opsExecution?.prescriptionFollowUpUpdatedBy || '').trim() ||
+      undefined,
   };
 }
 

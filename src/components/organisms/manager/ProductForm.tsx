@@ -28,7 +28,6 @@ import type {
   PreOrderShippingCollectionTiming,
   ProductMediaAsset,
   ProductTryOnStatus,
-  StoreRecord,
 } from '@/api';
 
 export interface ProductVariantFormState {
@@ -135,7 +134,6 @@ const HINGE_TYPE_OPTIONS = [
 
 interface ProductFormProps {
   formData: ProductFormState;
-  storeOptions?: StoreRecord[];
   availableTryOnStatuses?: ProductTryOnStatus[];
   isSubmitting: boolean;
   uploadingKey: string;
@@ -155,7 +153,6 @@ interface ProductFormProps {
 
 export function ProductForm({
   formData,
-  storeOptions = [],
   availableTryOnStatuses,
   isSubmitting,
   uploadingKey,
@@ -335,132 +332,13 @@ export function ProductForm({
       <div className="rounded-md border border-gray-200 p-3">
         <div className="mb-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{tF('storeNetwork')}</p>
-          <p className="mt-0.5 text-xs text-gray-400">{tF('storeNetworkDesc')}</p>
+          <p className="mt-0.5 text-xs text-gray-400">
+            Single-store mode is active. Product availability is managed automatically through the flagship store.
+          </p>
         </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">{tF('storeScope')}</label>
-            <Select
-              value={formData.storeScopeMode}
-              onValueChange={(value) =>
-                onChange((prev) => ({
-                  ...prev,
-                  storeScopeMode: value === 'selected' ? 'selected' : 'all',
-                  storeIds:
-                    value === 'selected'
-                      ? prev.storeIds
-                      : [],
-                  primaryStoreId:
-                    value === 'selected'
-                      ? prev.primaryStoreId
-                      : '',
-                }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={tF('storeScope')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{tF('storeAll')}</SelectItem>
-                <SelectItem value="selected">{tF('storeSelected')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Input
-            label={tF('storeScopeNote')}
-            value={formData.storeScopeNote}
-            onChange={(event) => onChange((prev) => ({ ...prev, storeScopeNote: event.target.value }))}
-            placeholder={tF('storeScopeNotePlaceholder')}
-          />
-        </div>
-
-        {formData.storeScopeMode === 'all' ? (
-          <p className="mt-3 rounded-md border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900">{tF('storeAllNote')}</p>
-        ) : (
-          <div className="mt-4 space-y-4">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">{tF('primaryStore')}</label>
-              <Select
-                value={formData.primaryStoreId || '__none'}
-                onValueChange={(value) =>
-                  onChange((prev) => {
-                    const nextPrimary = value === '__none' ? '' : value;
-                    const nextStoreIds = nextPrimary
-                      ? Array.from(new Set([...prev.storeIds, nextPrimary]))
-                      : prev.storeIds;
-                    return {
-                      ...prev,
-                      primaryStoreId: nextPrimary,
-                      storeIds: nextStoreIds,
-                    };
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={tF('primaryStorePlaceholder')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none">{tF('storeNone')}</SelectItem>
-                  {storeOptions.map((store) => (
-                    <SelectItem key={store.id} value={store.id}>
-                      {store.name} ({store.code})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <p className="mb-2 text-sm font-medium text-gray-700">{tF('storeList')}</p>
-              {storeOptions.length === 0 ? (
-                <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">{tF('noStore')}</p>
-              ) : (
-                <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                  {storeOptions.map((store) => {
-                    const checked = formData.storeIds.includes(store.id);
-                    return (
-                      <label
-                        key={store.id}
-                        className="flex items-start gap-3 rounded-md border border-gray-200 px-3 py-3 text-sm"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={(event) =>
-                            onChange((prev) => {
-                              const nextStoreIds = event.target.checked
-                                ? Array.from(new Set([...prev.storeIds, store.id]))
-                                : prev.storeIds.filter((id) => id !== store.id);
-                              const nextPrimary =
-                                prev.primaryStoreId === store.id && !event.target.checked
-                                  ? ''
-                                  : prev.primaryStoreId;
-                              return {
-                                ...prev,
-                                storeIds: nextStoreIds,
-                                primaryStoreId: nextPrimary,
-                              };
-                            })
-                          }
-                        />
-                        <div className="min-w-0">
-                          <div className="font-medium text-gray-800">
-                            {store.name} ({store.code})
-                          </div>
-                          <div className="mt-1 text-xs text-gray-500">
-                            {[store.addressLine1, store.district, store.city].filter(Boolean).join(', ') || tF('noAddress')}
-                          </div>
-                        </div>
-                      </label>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        <p className="rounded-md border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900">
+          Store scope is no longer configured per product. New and updated products are attached to the flagship store by default.
+        </p>
       </div>
 
       <div className="rounded-md border border-gray-200 p-3">

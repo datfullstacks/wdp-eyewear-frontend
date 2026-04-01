@@ -323,7 +323,7 @@ export const inventoryApi = {
   },
 
   createReceipt: async (payload: {
-    storeId: string;
+    storeId?: string;
     supplier: string;
     warehouseLocation?: string;
     note?: string;
