@@ -20,7 +20,6 @@ import {
   ShoppingCart,
   Truck,
   Warehouse,
-  Wrench,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -69,13 +68,6 @@ const menuItems: MenuItem[] = [
         label: 'Đơn có toa',
         path: '/operation/orders/prescription',
         badgeKey: 'prescription',
-        badgeType: 'info',
-      },
-      {
-        icon: Wrench,
-        label: 'Đơn đang gia công',
-        path: '/operation/orders/processing',
-        badgeKey: 'processing',
         badgeType: 'info',
       },
     ],
@@ -246,7 +238,8 @@ export const OperationSidebar: React.FC = () => {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const obj: Record<string, boolean> = {};
     for (const item of resolvedMenuItems) {
-      if (item.children) obj[item.label] = defaultOpenMap.get(item.label) ?? false;
+      if (item.children)
+        obj[item.label] = defaultOpenMap.get(item.label) ?? false;
     }
 
     return obj;
@@ -335,7 +328,9 @@ export const OperationSidebar: React.FC = () => {
                 )}
               >
                 <item.icon className="h-5 w-5 flex-shrink-0" />
-                {!collapsed && <span className="font-medium">{item.label}</span>}
+                {!collapsed && (
+                  <span className="font-medium">{item.label}</span>
+                )}
               </Link>
             );
           }
@@ -421,7 +416,12 @@ export const OperationSidebar: React.FC = () => {
       </nav>
 
       <div className="border-t border-gray-200 p-4">
-        <div className={cn('flex items-center gap-3', collapsed && 'justify-center')}>
+        <div
+          className={cn(
+            'flex items-center gap-3',
+            collapsed && 'justify-center'
+          )}
+        >
           <div className="gradient-gold text-primary flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full font-semibold">
             OP
           </div>

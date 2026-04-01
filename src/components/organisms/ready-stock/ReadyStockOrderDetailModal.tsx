@@ -61,7 +61,6 @@ import {
   CheckCircle2,
   ChevronDown,
   ClipboardCopy,
-  PackageX,
   Truck,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -923,18 +922,6 @@ export function ReadyStockOrderDetailModal({
                 </div>
 
                 <div className="space-y-1">
-                  <Label>{'\u0110\u1ecba ch\u1ec9 d\u00f2ng 1'}</Label>
-                  <div className="text-sm font-semibold">
-                    {addr.addressLine1 || '-'}
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <Label>{'\u0110\u1ecba ch\u1ec9 d\u00f2ng 2'}</Label>
-                  <div className="text-sm font-semibold">
-                    {addr.addressLine2 || '-'}
-                  </div>
-                </div>
-                <div className="space-y-1">
                   <Label>{'Ph\u01b0\u1eddng/x\u00e3'}</Label>
                   <div className="text-sm font-semibold">
                     {addr.ward || '-'}
@@ -1057,55 +1044,6 @@ export function ReadyStockOrderDetailModal({
                                 : '\u0110\u00e1nh d\u1ea5u \u0111\u00e3 l\u1ea5y h\u00e0ng'}
                           </Button>
 
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setItemState(order.id, key, {
-                                issueType:
-                                  'out_of_stock' as ReadyStockIssueType,
-                                issueNote: `Thi\u1ebfu h\u00e0ng: ${item.name}`,
-                              });
-                              setHold(
-                                order.id,
-                                'stock',
-                                `Thi\u1ebfu h\u00e0ng: ${item.name}`
-                              );
-                              void handleReportItemIssue(
-                                key,
-                                'out_of_stock',
-                                `Out of stock: ${item.name}`
-                              );
-                            }}
-                            className="gap-1"
-                          >
-                            <PackageX className="h-4 w-4" />
-                            {'B\u00e1o thi\u1ebfu h\u00e0ng'}
-                          </Button>
-
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setItemState(order.id, key, {
-                                issueType:
-                                  'damaged_item' as ReadyStockIssueType,
-                                issueNote: `H\u00e0ng l\u1ed7i: ${item.name}`,
-                              });
-                              setHold(
-                                order.id,
-                                'stock',
-                                `H\u00e0ng l\u1ed7i c\u1ea7n x\u1eed l\u00fd: ${item.name}`
-                              );
-                              void handleReportItemIssue(
-                                key,
-                                'damaged_item',
-                                `Damaged item: ${item.name}`
-                              );
-                            }}
-                          >
-                            {'B\u00e1o h\u00e0ng l\u1ed7i'}
-                          </Button>
                         </div>
                       </div>
 

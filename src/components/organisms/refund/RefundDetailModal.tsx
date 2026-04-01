@@ -121,7 +121,7 @@ export const RefundDetailModal = ({
             : refund?.nextActionCode === 'complete'
               ? 'Chờ sale xác nhận đã chuyển tiền'
               : refund?.nextActionCode === 'start_review'
-                ? 'Chờ sale review'
+                ? 'Chờ sale duyệt'
                 : '-';
 
   const displayOwnerLabel =
@@ -136,7 +136,7 @@ export const RefundDetailModal = ({
       : refund?.nextActionCode === 'complete'
         ? 'Chờ sale xác nhận đã chuyển tiền'
         : refund?.nextActionCode === 'start_review'
-          ? 'Chờ sale review'
+          ? 'Chờ sale duyệt'
           : nextActionLabel;
 
   return (

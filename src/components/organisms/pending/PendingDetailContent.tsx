@@ -1,4 +1,12 @@
-import { CheckCircle, MapPin, Phone, ShoppingBag, User, XCircle } from 'lucide-react';
+import {
+  CheckCircle,
+  FileText,
+  MapPin,
+  Phone,
+  ShoppingBag,
+  User,
+  XCircle,
+} from 'lucide-react';
 
 import { StatusBadge } from '@/components/atoms/StatusBadge';
 import { Button } from '@/components/ui/button';
@@ -41,6 +49,14 @@ export const PendingDetailContent = ({
     scope === 'manager'
       ? canManagerApprovePendingOrder(order)
       : canSaleHandlePendingOrder(order);
+  const prescriptionSummary = order.prescriptionSummary;
+  const prescription = prescriptionSummary?.prescription;
+  const prescriptionSourceLabel =
+    prescriptionSummary?.source === 'customer_upload'
+      ? 'Khách upload ảnh toa'
+      : prescriptionSummary?.source === 'customer_input'
+        ? 'Khách nhập thông số mắt'
+        : 'Đang chờ bổ sung toa';
   const helperText =
     scope === 'manager'
       ? isEscalated
@@ -64,7 +80,7 @@ export const PendingDetailContent = ({
             <span className="text-[11px] font-semibold tracking-[0.22em] text-slate-950/60">
               ĐƠN HÀNG
             </span>
-            <span className="mt-1 block text-base font-extrabold leading-tight tracking-tight sm:text-lg">
+            <span className="mt-1 block text-base leading-tight font-extrabold tracking-tight sm:text-lg">
               {order.id}
             </span>
           </div>
@@ -170,12 +186,172 @@ export const PendingDetailContent = ({
         </div>
       </section>
 
+      {order.hasPrescription && prescriptionSummary && (
+        <section className="bg-muted/20 border-border rounded-xl border p-3.5">
+          <div className="text-muted-foreground flex items-center gap-2 text-[11px] font-semibold tracking-[0.16em]">
+            <FileText className="h-4 w-4 text-yellow-600" />
+            THÔNG TIN TOA KÍNH
+          </div>
+
+          <div className="mt-3 space-y-3">
+            <div className="rounded-lg border border-sky-200 bg-sky-50/80 p-3">
+              <p className="text-[11px] font-semibold tracking-[0.16em] text-sky-700">
+                NGUỒN TOA
+              </p>
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm font-semibold text-slate-950">
+                  {prescriptionSourceLabel}
+                </p>
+                <span className="inline-flex items-center rounded-full border border-sky-200 bg-white px-2.5 py-1 text-xs font-semibold text-sky-700">
+                  {prescriptionSummary.source === 'customer_upload'
+                    ? 'Upload ảnh'
+                    : prescriptionSummary.source === 'customer_input'
+                      ? 'Nhập thông số'
+                      : 'Chờ bổ sung'}
+                </span>
+              </div>
+            </div>
+
+            {prescriptionSummary.source === 'customer_upload' && (
+              <>
+                {prescriptionSummary.attachmentUrl ? (
+                  <div className="rounded-lg border border-slate-200 bg-white p-3">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-muted-foreground text-xs font-medium">
+                          Ảnh toa khách gửi
+                        </p>
+                        <p className="mt-1 text-sm font-semibold text-slate-950">
+                          Sale có thể mở ảnh gốc để kiểm tra trước khi duyệt.
+                        </p>
+                      </div>
+
+                      <a
+                        href={prescriptionSummary.attachmentUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm font-medium text-sky-700 underline"
+                      >
+                        Mở ảnh gốc
+                      </a>
+                    </div>
+
+                    <img
+                      src={prescriptionSummary.attachmentUrl}
+                      alt={`Prescription ${order.id}`}
+                      className="mt-3 max-h-[32rem] w-full rounded-lg border border-slate-200 object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-medium text-amber-700">
+                    Khách đã chọn upload toa nhưng hiện chưa có ảnh đính kèm.
+                  </div>
+                )}
+              </>
+            )}
+
+            {prescriptionSummary.source === 'customer_input' && (
+              <>
+                {prescription ? (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                      <div className="rounded-lg border border-slate-200 bg-white/80 p-3">
+                        <p className="text-muted-foreground text-xs font-medium">
+                          Loại tròng
+                        </p>
+                        <p className="text-foreground mt-1.5 text-sm font-semibold">
+                          {prescription.lensType || '-'}
+                        </p>
+                      </div>
+
+                      <div className="rounded-lg border border-slate-200 bg-white/80 p-3">
+                        <p className="text-muted-foreground text-xs font-medium">
+                          Lớp phủ
+                        </p>
+                        <p className="text-foreground mt-1.5 text-sm font-semibold">
+                          {prescription.coating || '-'}
+                        </p>
+                      </div>
+
+                      <div className="rounded-lg border border-slate-200 bg-white/80 p-3">
+                        <p className="text-muted-foreground text-xs font-medium">
+                          PD
+                        </p>
+                        <p className="text-foreground mt-1.5 text-sm font-semibold">
+                          {prescription.pd ? `${prescription.pd} mm` : '-'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-200 bg-white p-3">
+                      <div className="overflow-x-auto">
+                        <div className="min-w-[420px]">
+                          <div className="grid grid-cols-5 gap-2 text-center text-xs font-semibold text-slate-700">
+                            <div />
+                            <div>SPH</div>
+                            <div>CYL</div>
+                            <div>AXIS</div>
+                            <div>ADD</div>
+                          </div>
+
+                          <div className="mt-2 grid grid-cols-5 gap-2 text-center text-sm font-medium text-slate-900">
+                            <div className="font-semibold text-slate-950">
+                              OD
+                            </div>
+                            <div>{prescription.sphereRight || '-'}</div>
+                            <div>{prescription.cylinderRight || '-'}</div>
+                            <div>{prescription.axisRight || '-'}</div>
+                            <div>{prescription.addRight || '-'}</div>
+                          </div>
+
+                          <div className="mt-2 grid grid-cols-5 gap-2 text-center text-sm font-medium text-slate-900">
+                            <div className="font-semibold text-slate-950">
+                              OS
+                            </div>
+                            <div>{prescription.sphereLeft || '-'}</div>
+                            <div>{prescription.cylinderLeft || '-'}</div>
+                            <div>{prescription.axisLeft || '-'}</div>
+                            <div>{prescription.addLeft || '-'}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {prescription.notes && (
+                        <div className="mt-3 border-t border-slate-200 pt-3">
+                          <p className="text-muted-foreground text-xs font-medium">
+                            Ghi chú toa
+                          </p>
+                          <p className="text-foreground mt-1 text-sm leading-6 whitespace-pre-wrap">
+                            {prescription.notes}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-medium text-amber-700">
+                    Chưa có thông số mắt để hiển thị.
+                  </div>
+                )}
+              </>
+            )}
+
+            {prescriptionSummary.source === 'pending' && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-medium text-amber-700">
+                Đơn làm theo toa nhưng khách chưa cung cấp đủ ảnh hoặc thông số
+                mắt.
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       {order.note && (
         <section className="rounded-xl border border-yellow-400/25 bg-yellow-400/10 p-3.5">
           <p className="text-[11px] font-semibold tracking-[0.16em] text-yellow-700">
             GHI CHÚ
           </p>
-          <p className="text-foreground mt-1.5 text-sm font-medium leading-6">
+          <p className="text-foreground mt-1.5 text-sm leading-6 font-medium">
             {order.note}
           </p>
         </section>

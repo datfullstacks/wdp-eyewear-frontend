@@ -151,10 +151,42 @@ function MenuItemBadge({
   );
 }
 
+function normalizeSidebarPath(path: string) {
+  const normalized = String(path || '').replace(/\/+$/, '') || '/';
+  return normalized.replace(/^\/(vi|en)(?=\/|$)/, '') || '/';
+}
+
 function isActivePath(pathname: string, itemPath?: string, exact?: boolean) {
   if (!itemPath) return false;
-  if (exact) return pathname === itemPath;
-  return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
+  const normalizedPathname = normalizeSidebarPath(pathname);
+  const normalizedItemPath = normalizeSidebarPath(itemPath);
+
+  if (exact) {
+    if (normalizedPathname === normalizedItemPath) return true;
+
+    if (normalizedItemPath === '/sale/orders') {
+      const excludedPrefixes = [
+        '/sale/orders/pending',
+        '/sale/orders/prescription-needed',
+      ];
+
+      return (
+        normalizedPathname.startsWith('/sale/orders/') &&
+        !excludedPrefixes.some(
+          (prefix) =>
+            normalizedPathname === prefix ||
+            normalizedPathname.startsWith(`${prefix}/`)
+        )
+      );
+    }
+
+    return false;
+  }
+
+  return (
+    normalizedPathname === normalizedItemPath ||
+    normalizedPathname.startsWith(`${normalizedItemPath}/`)
+  );
 }
 
 export const Sidebar: React.FC = () => {
