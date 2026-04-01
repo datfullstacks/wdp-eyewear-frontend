@@ -8,21 +8,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { InventoryItem } from '@/types/inventory';
 import { Textarea } from '@/components/ui/textarea';
+import { InventoryItem } from '@/types/inventory';
 
 interface InventoryEditModalProps {
   item: InventoryItem | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  storeLabel?: string;
   onUpdate: (
     item: InventoryItem,
     payload: {
@@ -38,7 +30,6 @@ export const InventoryEditModal = ({
   item,
   open,
   onOpenChange,
-  storeLabel,
   onUpdate,
 }: InventoryEditModalProps) => {
   const [receiveQty, setReceiveQty] = useState('1');
@@ -66,12 +57,12 @@ export const InventoryEditModal = ({
 
     const quantity = Number.parseInt(receiveQty, 10);
     if (!Number.isFinite(quantity) || Number.isNaN(quantity) || quantity < 1) {
-      setError('Sớ lượng nhập kho không hợp lệ.');
+      setError('So luong nhap kho khong hop le.');
       return;
     }
 
     if (!supplier.trim()) {
-      setError('Nhà cung cấp là bắt buộc.');
+      setError('Nha cung cap la bat buoc.');
       return;
     }
 
@@ -94,7 +85,7 @@ export const InventoryEditModal = ({
           }
         )?.response?.data?.message ||
         (err as { message?: string })?.message ||
-        'Không thể nhập kho. Vui lòng thử lại.';
+        'Khong the ghi nhan nhap kho. Vui long thu lai.';
       setError(message);
     } finally {
       setIsSaving(false);
@@ -109,8 +100,8 @@ export const InventoryEditModal = ({
         <DialogHeader>
           <DialogTitle className="text-foreground">
             {item.trackInventory !== false
-              ? 'Nhập kho cho biến thể'
-              : 'Không theo dõi tồn'}
+              ? 'Ghi nhan nhap kho thu cong'
+              : 'Khong theo doi ton'}
           </DialogTitle>
           <DialogDescription className="text-foreground/90">
             {item.name} ({item.sku})
@@ -122,7 +113,7 @@ export const InventoryEditModal = ({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-foreground/70 text-sm font-medium">
-                  Tồn kho hiện tại
+                  Ton kho hien tai
                 </label>
                 <p className="text-foreground text-2xl font-bold">
                   {item.stock}
@@ -130,7 +121,7 @@ export const InventoryEditModal = ({
               </div>
               <div>
                 <label className="text-foreground/70 text-sm font-medium">
-                  Số lượng nhập
+                  So luong nhap
                 </label>
                 <Input
                   type="number"
@@ -143,24 +134,18 @@ export const InventoryEditModal = ({
             </div>
             <div>
               <label className="text-foreground/70 text-sm font-medium">
-                Cửa hàng
-              </label>
-              <Input value={storeLabel || '-'} className="mt-1" disabled />
-            </div>
-            <div>
-              <label className="text-foreground/70 text-sm font-medium">
-                Nhà cung cấp
+                Nha cung cap
               </label>
               <Input
                 value={supplier}
                 onChange={(e) => setSupplier(e.target.value)}
                 className="mt-1"
-                placeholder="Ví dụ: Nhà cung cấp ABC"
+                placeholder="Vi du: Nha cung cap ABC"
               />
             </div>
             <div>
               <label className="text-foreground/70 text-sm font-medium">
-                Vị trí kho
+                Vi tri kho
               </label>
               <Input
                 value={warehouseLocation}
@@ -171,13 +156,13 @@ export const InventoryEditModal = ({
             </div>
             <div>
               <label className="text-foreground/70 text-sm font-medium">
-                Ghi chú
+                Ghi chu
               </label>
               <Textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 className="mt-1"
-                placeholder="Nhập ghi chú cho phiếu nhập kho..."
+                placeholder="Ghi chu cho phieu nhap kho thu cong..."
               />
             </div>
             {error ? <p className="text-sm text-rose-600">{error}</p> : null}
@@ -185,8 +170,8 @@ export const InventoryEditModal = ({
         ) : (
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
             {item.trackInventory === false
-              ? 'Sản phẩm này đang tắt inventory.track, nên hệ thống không nhập kho tại đây.'
-              : 'Biến thể này không có variantId hợp lệ, nên chưa thể tạo phiếu nhập kho.'}
+              ? 'San pham nay dang tat inventory.track, nen he thong khong ghi nhan nhap kho tai day.'
+              : 'Bien the nay khong co variantId hop le, nen chua the tao phieu nhap kho thu cong.'}
           </div>
         )}
 
@@ -196,7 +181,7 @@ export const InventoryEditModal = ({
             onClick={() => onOpenChange(false)}
             disabled={isSaving}
           >
-            Đóng
+            Dong
           </Button>
           {item.trackInventory !== false && item.variantId ? (
             <Button
@@ -204,7 +189,7 @@ export const InventoryEditModal = ({
               disabled={isSaving}
               className="bg-none bg-yellow-400 text-yellow-950 shadow-lg shadow-yellow-400/30 hover:bg-yellow-500 hover:text-yellow-950 hover:shadow-xl hover:shadow-yellow-400/40 focus-visible:ring-yellow-500"
             >
-              {isSaving ? 'Đang nhập kho...' : 'Xác nhận nhập kho'}
+              {isSaving ? 'Dang ghi nhan...' : 'Xac nhan nhap kho thu cong'}
             </Button>
           ) : null}
         </DialogFooter>

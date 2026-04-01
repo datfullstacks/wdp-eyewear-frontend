@@ -15,7 +15,7 @@ import {
 import { Header } from '@/components/organisms/Header';
 import { UserForm, type UserFormData } from '@/components/organisms/manager';
 import { Card } from '@/components/ui/card';
-import { storeApi, userApi, type StoreRecord } from '@/api';
+import { userApi } from '@/api';
 import { normalizeRole } from '@/lib/roles';
 import { getUserManagementBasePath, isAdminAreaPath } from '@/lib/userManagement';
 
@@ -83,7 +83,6 @@ export default function CreateUserPage() {
   const searchParams = useSearchParams();
   const [selectedRole, setSelectedRole] = useState<CreateRole>('staff');
   const [viewerRole, setViewerRole] = useState('');
-  const [storeOptions, setStoreOptions] = useState<StoreRecord[]>([]);
   const [formData, setFormData] = useState<UserFormData>({
     name: '',
     email: '',
@@ -110,41 +109,6 @@ export default function CreateUserPage() {
       if (!mounted) return;
 
       setViewerRole(normalizeRole(session?.user?.role));
-
-      try {
-        const [storesRes, viewerUser] = await Promise.all([
-          storeApi.getAll({ limit: 200, status: 'all' }),
-          session?.user?.id ? userApi.getById(session.user.id) : Promise.resolve(null),
-        ]);
-
-        const actorStoreIds =
-          viewerUser?.storeAccess?.mode === 'selected'
-            ? viewerUser.storeAccess.storeIds
-            : null;
-        const filteredStores = actorStoreIds
-          ? storesRes.stores.filter((store) => actorStoreIds.includes(store.id))
-          : storesRes.stores;
-
-        if (!mounted) return;
-        setStoreOptions(filteredStores);
-        setFormData((currentValue) => ({
-          ...currentValue,
-          storeScopeMode:
-            currentValue.storeScopeMode ||
-            (actorStoreIds ? 'selected' : 'all'),
-          primaryStoreId:
-            currentValue.primaryStoreId ||
-            viewerUser?.storeAccess?.primaryStoreId ||
-            '',
-          storeIds:
-            currentValue.storeIds && currentValue.storeIds.length > 0
-              ? currentValue.storeIds
-              : actorStoreIds || [],
-        }));
-      } catch {
-        if (!mounted) return;
-        setStoreOptions([]);
-      }
     };
 
     void loadContext();
@@ -273,7 +237,6 @@ export default function CreateUserPage() {
             onCancel={() => router.push(userBasePath)}
             isSubmitting={isSubmitting}
             showPassword
-            storeOptions={storeOptions}
           />
         </Card>
       </div>

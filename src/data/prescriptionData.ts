@@ -49,6 +49,7 @@ export const mockSupplementOrders: SupplementOrder[] = [
       },
     ],
     notes: 'Khách đặt online, chưa cung cấp thông số mắt',
+    followUpStatus: 'waiting_customer_response',
   },
   {
     id: 'SUP002',
@@ -88,6 +89,7 @@ export const mockSupplementOrders: SupplementOrder[] = [
     ],
     prescriptionImage: '/placeholder.svg',
     notes: 'Khách gửi ảnh đơn thuốc nhưng thiếu thông số mắt trái',
+    followUpStatus: 'waiting_customer_response',
   },
   {
     id: 'SUP003',
@@ -114,6 +116,7 @@ export const mockSupplementOrders: SupplementOrder[] = [
     contactHistory: [],
     prescriptionImage: '/placeholder.svg',
     notes: 'Ảnh đơn thuốc bị mờ, không đọc được số liệu',
+    followUpStatus: 'needs_review',
   },
   {
     id: 'SUP004',
@@ -171,6 +174,7 @@ export const mockSupplementOrders: SupplementOrder[] = [
     ],
     notes: 'Độ cầu mắt phải cao bất thường (-8.50), cần xác nhận với khách',
     assignedTo: 'Nhân viên C',
+    followUpStatus: 'customer_responded',
   },
   {
     id: 'SUP005',
@@ -229,6 +233,7 @@ export const mockSupplementOrders: SupplementOrder[] = [
       },
     ],
     notes: 'Đơn hàng cho trẻ em, khách hẹn đến cửa hàng đo mắt nhưng chưa đến',
+    followUpStatus: 'waiting_customer_response',
   },
 ];
 
