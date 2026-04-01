@@ -99,9 +99,15 @@ function isPreorderStillActive(order: OrderRecord): boolean {
   );
 }
 
+function isCancelledOrder(order: OrderRecord): boolean {
+  return normalizeRawStatus(order) === 'cancelled';
+}
+
 function toCustomerKey(order: OrderRecord): string {
   const phone = String(order.customerPhone || '').trim();
-  const name = String(order.customerName || '').trim().toLowerCase();
+  const name = String(order.customerName || '')
+    .trim()
+    .toLowerCase();
   return phone || name;
 }
 
@@ -130,13 +136,7 @@ type QueueCardProps = {
   tone: QueueTone;
 };
 
-function QueueCard({
-  title,
-  description,
-  value,
-  href,
-  tone,
-}: QueueCardProps) {
+function QueueCard({ title, description, value, href, tone }: QueueCardProps) {
   return (
     <Link
       href={href}
@@ -156,7 +156,7 @@ function QueueCard({
       </div>
 
       <div className="mt-4 inline-flex items-center gap-2 text-sm font-medium">
-        Mo queue
+        Mở hàng đợi
         <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
       </div>
     </Link>
@@ -173,7 +173,7 @@ function QuickActionCard({ title, description, href }: QuickActionProps) {
   return (
     <Link
       href={href}
-      className="glass-card group block rounded-xl border border-border/80 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+      className="glass-card group border-border/80 block rounded-xl border p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -194,7 +194,6 @@ const Dashboard = () => {
     pathname,
     'orders/prescription-needed'
   );
-  const alertsPath = resolveDashboardSectionPath(pathname, 'orders/alerts');
   const refundsPath = resolveDashboardSectionPath(pathname, 'cases/refunds');
   const returnsPath = resolveDashboardSectionPath(pathname, 'cases/returns');
   const productsPath = resolveDashboardSectionPath(pathname, 'products');
@@ -236,7 +235,7 @@ const Dashboard = () => {
         ordersResult.status === 'rejected' &&
         productsResult.status === 'rejected'
       ) {
-        setErrorMessage('Khong tai duoc overview dashboard cua sale.');
+        setErrorMessage('Không tải được tổng quan dashboard của sale.');
       }
 
       setIsLoading(false);
@@ -253,7 +252,9 @@ const Dashboard = () => {
     const activeOrders = orders.filter(
       (order) => !['cancelled', 'returned'].includes(normalizeRawStatus(order))
     );
-    const todayOrders = activeOrders.filter((order) => isSameLocalDay(order.createdAt));
+    const todayOrders = activeOrders.filter((order) =>
+      isSameLocalDay(order.createdAt)
+    );
     const todayOrderCount = todayOrders.length;
     const todayGross = todayOrders.reduce((sum, order) => sum + order.total, 0);
     const todayCollected = todayOrders.reduce(
@@ -266,6 +267,7 @@ const Dashboard = () => {
     const menuCounts = computeOrderMenuCounts(orders);
     const activeRefundCases = orders.filter(isRefundCaseOpen).length;
     const activePreorders = orders.filter(isPreorderStillActive).length;
+    const cancelledOrders = orders.filter(isCancelledOrder).length;
     const urgentOrders = orders.filter(
       (order) =>
         needsActionOrder(order) ||
@@ -282,6 +284,7 @@ const Dashboard = () => {
       menuCounts,
       activeRefundCases,
       activePreorders,
+      cancelledOrders,
       urgentOrders,
     };
   }, [orders]);
@@ -289,87 +292,85 @@ const Dashboard = () => {
   const stats = useMemo(
     () => [
       {
-        title: 'Don moi hom nay',
+        title: 'Đơn mới hôm nay',
         value: isLoading ? '--' : String(overview.todayOrderCount),
         icon: ShoppingCart,
-        helper: `${overview.activePreorders} preorder dang theo doi`,
       },
       {
-        title: 'Gia tri don hom nay',
+        title: 'Giá trị đơn hôm nay',
         value: isLoading ? '--' : formatCompactCurrency(overview.todayGross),
         icon: Wallet,
-        helper: `${activeProductCount} SKU dang ban`,
       },
       {
-        title: 'Da thu / dat coc',
-        value: isLoading ? '--' : formatCompactCurrency(overview.todayCollected),
+        title: 'Đã thu / đặt cọc',
+        value: isLoading
+          ? '--'
+          : formatCompactCurrency(overview.todayCollected),
         icon: CreditCard,
-        helper: 'Tinh tren don tao trong ngay',
       },
       {
-        title: 'Khach dang theo doi',
+        title: 'Khách đang theo dõi',
         value: isLoading ? '--' : String(overview.activeCustomerCount),
         icon: Users,
-        helper: `${overview.urgentOrders.length} case can sale cham`,
       },
     ],
-    [activeProductCount, isLoading, overview]
+    [isLoading, overview]
   );
 
   const queueCards = useMemo(
     () => [
       {
-        title: 'Don can xu ly',
-        description: 'Cho xac nhan, thanh toan hoac can sale tiep tuc.',
+        title: 'Đơn cần xử lý',
+        description: 'Chờ xác nhận, thanh toán hoặc cần sale tiếp tục.',
         value: overview.menuCounts.needsAction,
         href: pendingPath,
         tone: 'warning' as const,
       },
       {
-        title: 'Bo sung toa kinh',
-        description: 'Prescription can sale lien he va bo sung thong tin.',
+        title: 'Bổ sung toa kính',
+        description: 'Prescription cần sale liên hệ và bổ sung thông tin.',
         value: overview.menuCounts.prescriptionNeeded,
         href: prescriptionNeededPath,
         tone: 'info' as const,
       },
       {
-        title: 'Canh bao SLA',
-        description: 'Don tre, preorder qua ETA hoac case co nguy co bi sot.',
-        value: overview.menuCounts.alerts,
-        href: alertsPath,
+        title: 'Đơn đã hủy',
+        description: 'Theo dõi các đơn đã hủy để kiểm tra lại lịch sử xử lý.',
+        value: overview.cancelledOrders,
+        href: ordersPath,
         tone: 'error' as const,
       },
       {
-        title: 'Case sau ban',
-        description: 'Refund, dieu chinh va cac case can sale theo doi.',
+        title: 'Case sau bán',
+        description: 'Hoàn tiền, điều chỉnh và các case cần sale theo dõi.',
         value: overview.activeRefundCases,
         href: refundsPath,
         tone: 'success' as const,
       },
     ],
-    [alertsPath, overview, pendingPath, prescriptionNeededPath, refundsPath]
+    [ordersPath, overview, pendingPath, prescriptionNeededPath, refundsPath]
   );
 
   const quickActions = useMemo(
     () => [
       {
-        title: 'Tao don moi',
-        description: 'Mo POS va bat dau len don nhanh cho khach tai quay.',
+        title: 'Tạo đơn mới',
+        description: 'Mở POS và bắt đầu lên đơn nhanh cho khách tại quầy.',
         href: productsPath,
       },
       {
-        title: 'Mo checkout',
-        description: 'Xu ly gio hang, quote va tao QR thanh toan SePay.',
+        title: 'Mở checkout',
+        description: 'Xử lý giỏ hàng, báo giá và tạo QR thanh toán SePay.',
         href: checkoutPath,
       },
       {
-        title: 'Tra cuu khach',
-        description: 'Xem lich su don, ghi chu va thong tin lien he.',
+        title: 'Tra cứu khách',
+        description: 'Xem lịch sử đơn, ghi chú và thông tin liên hệ.',
         href: customersPath,
       },
       {
-        title: 'Theo doi doi / tra',
-        description: 'Vao queue after-sales de cap nhat refund va returns.',
+        title: 'Theo dõi đổi / trả',
+        description: 'Vào hàng đợi sau bán để cập nhật hoàn tiền và đổi trả.',
         href: returnsPath,
       },
     ],
@@ -379,15 +380,15 @@ const Dashboard = () => {
   return (
     <>
       <Header
-        title="Dashboard Sale"
-        subtitle="Tong quan doanh so, queue uu tien va tac vu can xu ly trong ngay"
+        title="Bảng điều khiển Sale"
+        subtitle="Tổng quan doanh số, hàng đợi ưu tiên và tác vụ cần xử lý trong ngày"
       />
 
       <div className="space-y-8 p-6">
         <section className="animate-fade-in">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             {stats.map((stat) => (
-              <div key={stat.title} className="space-y-2">
+              <div key={stat.title}>
                 <StatCard
                   title={stat.title}
                   value={stat.value}
@@ -399,7 +400,6 @@ const Dashboard = () => {
                   iconWrapperClassName="gradient-gold rounded-md p-2"
                   iconSize="md"
                 />
-                <p className="text-muted-foreground px-1 text-xs">{stat.helper}</p>
               </div>
             ))}
           </div>
@@ -414,16 +414,18 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="font-display text-foreground flex items-center gap-2 text-lg font-semibold">
-                  <BellRing className="text-accent h-5 w-5" />
-                  Uu tien cua sale
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-amber-200 bg-amber-50 shadow-sm shadow-amber-500/10">
+                    <BellRing className="h-4.5 w-4.5 text-amber-700" />
+                  </span>
+                  Ưu tiên của sale
                 </h2>
                 <p className="text-muted-foreground text-sm">
-                  Nhom queue can sale cham va khong nen de tre trong ngay.
+                  Nhóm hàng đợi cần sale chăm và không nên để trễ trong ngày.
                 </p>
               </div>
               {overview.urgentOrders.length > 0 && (
                 <StatusBadge status="warning">
-                  {overview.urgentOrders.length} can xu ly
+                  {overview.urgentOrders.length} cần xử lý
                 </StatusBadge>
               )}
             </div>
@@ -438,11 +440,13 @@ const Dashboard = () => {
           <div className="animate-slide-in space-y-4">
             <div>
               <h2 className="font-display text-foreground flex items-center gap-2 text-lg font-semibold">
-                <Sparkles className="text-accent h-5 w-5" />
-                Loi tat nghiep vu
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-sky-200 bg-sky-50 shadow-sm shadow-sky-500/10">
+                  <Sparkles className="h-4.5 w-4.5 text-sky-700" />
+                </span>
+                Lối tắt nghiệp vụ
               </h2>
               <p className="text-muted-foreground text-sm">
-                Di nhanh vao cac tac vu ban hang ma sale dung nhieu nhat.
+                Đi nhanh vào các tác vụ bán hàng mà sale dùng nhiều nhất.
               </p>
             </div>
 
@@ -459,20 +463,24 @@ const Dashboard = () => {
             <div>
               <h2 className="font-display text-foreground flex items-center gap-2 text-lg font-semibold">
                 <ClipboardList className="text-accent h-5 w-5" />
-                Don hang gan day
+                Đơn hàng gần đây
               </h2>
               <p className="text-muted-foreground text-sm">
-                Theo doi nhanh cac don moi, trang thai van chuyen va chi tiet lien quan.
+                Theo dõi nhanh các đơn mới, trạng thái vận chuyển và chi tiết
+                liên quan.
               </p>
             </div>
-            <Link href={ordersPath} className="text-accent text-sm hover:underline">
-              Xem tat ca
+            <Link
+              href={ordersPath}
+              className="text-accent text-sm hover:underline"
+            >
+              Xem tất cả
             </Link>
           </div>
 
           <RecentOrdersTable
             limit={120}
-            emptyMessage="Chua co don hang nao de hien thi tren dashboard sale."
+            emptyMessage="Chưa có đơn hàng nào để hiển thị trên dashboard sale."
             detailHref={(order) => buildDetailPath(ordersPath, order.id)}
           />
         </section>
