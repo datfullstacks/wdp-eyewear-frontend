@@ -551,7 +551,9 @@
     },
     "stats": {
       "totalCount": "Total orders",
-      "selectedCount": "Selected"
+      "paidCount": "Paid orders",
+      "codCount": "COD orders",
+      "unpaidCount": "Unpaid orders"
     },
     "alerts_stats": {
       "critical": "Critical",

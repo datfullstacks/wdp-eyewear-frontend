@@ -120,7 +120,9 @@ function hasOutstandingSepayBalance(
   order: Pick<OrderRecord, 'payLaterMethod' | 'paidAmount' | 'total'>
 ): boolean {
   return (
-    String(order.payLaterMethod || '').trim().toLowerCase() === 'sepay' &&
+    String(order.payLaterMethod || '')
+      .trim()
+      .toLowerCase() === 'sepay' &&
     Number(order.total || 0) > Math.max(0, Number(order.paidAmount || 0))
   );
 }
@@ -242,7 +244,9 @@ function mapPreorderOpsStatus(order: OrderRecord): PreorderOrder['opsStatus'] {
     opsStage === 'delivered' ||
     opsStage === 'closed'
   ) {
-    return opsStage === 'closed' ? 'delivered' : (opsStage as PreorderOrder['opsStatus']);
+    return opsStage === 'closed'
+      ? 'delivered'
+      : (opsStage as PreorderOrder['opsStatus']);
   }
 
   if (shipmentStatus === 'returned') return 'returned';
@@ -353,8 +357,9 @@ function getRxItems(order: OrderRecord): OrderItem[] {
 function getFirstPrescriptionAttachmentUrl(
   rxItems: OrderItem[]
 ): string | undefined {
-  return rxItems.find((item) => (item.prescription?.attachmentUrls || []).length > 0)
-    ?.prescription?.attachmentUrls?.[0];
+  return rxItems.find(
+    (item) => (item.prescription?.attachmentUrls || []).length > 0
+  )?.prescription?.attachmentUrls?.[0];
 }
 
 function toProductFrame(item: OrderItem): string {
@@ -464,7 +469,8 @@ function resolvePrescriptionWorkflowStage(
 
   const rawStatus = getRawOrderStatus(order);
   if (rawStatus === 'shipped') return 'in_transit';
-  if (rawStatus === 'delivered' || rawStatus === 'completed') return 'delivered';
+  if (rawStatus === 'delivered' || rawStatus === 'completed')
+    return 'delivered';
   if (rawStatus === 'returned') return 'returned';
   if (rawStatus === 'processing') return 'lens_processing';
   return 'waiting_lab';
@@ -520,6 +526,22 @@ function buildDefaultMissingFields(): MissingField[] {
   ];
 }
 
+function toPendingPrescriptionSummary(
+  order: OrderRecord
+): PendingOrder['prescriptionSummary'] {
+  const rxItems = getRxItems(order);
+  if (rxItems.length === 0) return undefined;
+
+  const primaryItem =
+    rxItems.find((item) => item.prescriptionMode !== 'none') || rxItems[0];
+
+  return {
+    source: resolveRxSource(rxItems),
+    attachmentUrl: getFirstPrescriptionAttachmentUrl(rxItems),
+    prescription: primaryItem ? toPrescriptionData(primaryItem) : undefined,
+  };
+}
+
 export function toDashboardOrder(order: OrderRecord): DashboardOrder {
   return {
     id: order.code,
@@ -562,6 +584,7 @@ export function toPendingOrder(order: OrderRecord): PendingOrder {
     createdAt: formatDateTime(order.createdAt),
     note: order.note || '',
     hasPrescription: order.items.some(requiresPrescription),
+    prescriptionSummary: toPendingPrescriptionSummary(order),
     paymentStatus: mapPaymentStatus(order.paymentStatus),
     approvalState:
       order.opsExecution?.approvalState === 'manager_review_requested'
@@ -695,7 +718,9 @@ export function toPreorderOrder(order: OrderRecord): PreorderOrder {
   const products: PreorderProduct[] =
     order.items.length > 0
       ? order.items.map((item, index) => ({
-          sku: String(item.sku || '').trim() || toProductSku(order.id, item, index),
+          sku:
+            String(item.sku || '').trim() ||
+            toProductSku(order.id, item, index),
           name: item.name,
           variant: item.variant,
           supplier: item.supplier || '',
