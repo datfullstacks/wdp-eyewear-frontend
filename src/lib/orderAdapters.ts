@@ -795,7 +795,7 @@ export function toPreorderOrder(order: OrderRecord): PreorderOrder {
     paymentStatus:
       mappedPaymentStatus === 'cod'
         ? 'cod'
-        : hasOutstandingBalance(order)
+        : hasOutstandingSepayBalance(order)
           ? Number(order.paidAmount || 0) > 0
             ? 'partial'
             : 'pending'
