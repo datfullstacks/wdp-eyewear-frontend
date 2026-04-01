@@ -1,4 +1,17 @@
+import type { PrescriptionData } from '@/types/rxPrescription';
+
 export type PaymentStatus = 'paid' | 'pending' | 'partial' | 'cod';
+
+export type PendingPrescriptionSource =
+  | 'customer_upload'
+  | 'customer_input'
+  | 'pending';
+
+export interface PendingPrescriptionSummary {
+  source: PendingPrescriptionSource;
+  attachmentUrl?: string;
+  prescription?: PrescriptionData;
+}
 
 export interface PendingOrderProduct {
   name: string;
@@ -20,6 +33,7 @@ export interface PendingOrder {
   createdAt: string;
   note: string;
   hasPrescription: boolean;
+  prescriptionSummary?: PendingPrescriptionSummary;
   paymentStatus: PaymentStatus;
   approvalState: 'none' | 'manager_review_requested' | 'sent_back_to_sale';
   managerReviewRequestedAt?: string;
