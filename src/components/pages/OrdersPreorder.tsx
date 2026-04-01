@@ -37,6 +37,7 @@ import {
 import { useStatusRealtimeReload } from '@/hooks/useStatusRealtime';
 import { useDetailRoute } from '@/hooks/useDetailRoute';
 import { toPreorderOrder } from '@/lib/orderAdapters';
+import { preorderOpsFilterOptions } from '@/lib/preorderOps';
 import { hasOperationHandoff, isPreorderOrder } from '@/lib/orderWorkflow';
 import type { PreorderOrder } from '@/types/preorder';
 
@@ -151,6 +152,7 @@ const OrdersPreorder = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [opsStatusFilter, setOpsStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [orderDateFrom, setOrderDateFrom] = useState('');
   const [orderDateTo, setOrderDateTo] = useState('');
@@ -163,7 +165,9 @@ const OrdersPreorder = () => {
   const [shipmentOrder, setShipmentOrder] = useState<PreorderOrder | null>(
     null
   );
-  const [shipmentMode, setShipmentMode] = useState<'create' | 'sync'>('create');
+  const [shipmentMode, setShipmentMode] = useState<'create' | 'manage'>(
+    'create'
+  );
   const [isShipmentOpen, setIsShipmentOpen] = useState(false);
   const [shipmentInfo, setShipmentInfo] = useState<OrderShippingInfo | null>(
     null
@@ -298,6 +302,8 @@ const OrdersPreorder = () => {
               .includes(searchValue)
           );
         const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+        const matchesOpsStatus =
+          opsStatusFilter === 'all' || order.opsStatus === opsStatusFilter;
         const matchesPriority =
           priorityFilter === 'all' || order.priority === priorityFilter;
         const matchesDateFrom = !orderDateFrom || order.orderDate >= orderDateFrom;
@@ -306,12 +312,21 @@ const OrdersPreorder = () => {
         return (
           matchesSearch &&
           matchesStatus &&
+          matchesOpsStatus &&
           matchesPriority &&
           matchesDateFrom &&
           matchesDateTo
         );
       }),
-    [orderDateFrom, orderDateTo, orders, priorityFilter, searchQuery, statusFilter]
+    [
+      opsStatusFilter,
+      orderDateFrom,
+      orderDateTo,
+      orders,
+      priorityFilter,
+      searchQuery,
+      statusFilter,
+    ]
   );
 
   const stats = useMemo(
@@ -342,7 +357,7 @@ const OrdersPreorder = () => {
   };
 
   const openShipmentModal = useCallback(
-    async (order: PreorderOrder, mode: 'create' | 'sync') => {
+    async (order: PreorderOrder, mode: 'create' | 'manage') => {
       setShipmentOrder(order);
       setShipmentMode(mode);
       setShipmentInfo(null);
@@ -412,15 +427,38 @@ const OrdersPreorder = () => {
 
   const handleMoveToPacking = useCallback(
     async (order: PreorderOrder) => {
+      const nextOpsStage =
+        order.opsStatus === 'stocked'
+          ? 'ready_to_pack'
+          : order.opsStatus === 'ready_to_pack'
+            ? 'packing'
+            : order.opsStatus === 'packing'
+              ? 'ready_to_ship'
+              : null;
+
+      if (!nextOpsStage) return;
+
       try {
         setErrorMessage(null);
-        await orderApi.updateOpsStage(
-          order.id,
-          order.opsStatus === 'stocked' ? 'ready_to_pack' : 'packing'
-        );
+        await orderApi.updateOpsStage(order.id, nextOpsStage);
         await loadPreorderOrders();
       } catch {
         setErrorMessage('Khong the cap nhat don pre-order.');
+      }
+    },
+    [loadPreorderOrders]
+  );
+
+  const handleRequestDeliveryAgain = useCallback(
+    async (order: PreorderOrder) => {
+      try {
+        setErrorMessage(null);
+        await orderApi.requestDeliveryAgain(order.id);
+        await loadPreorderOrders();
+      } catch (error) {
+        setErrorMessage(
+          extractApiErrorMessage(error, 'Khong the yeu cau giao lai GHN.')
+        );
       }
     },
     [loadPreorderOrders]
@@ -474,6 +512,18 @@ const OrdersPreorder = () => {
                   onValueChange={setPriorityFilter}
                 >
                   {priorityFilterOptions.map((opt) => (
+                    <DropdownMenuRadioItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Van hanh</DropdownMenuLabel>
+                <DropdownMenuRadioGroup
+                  value={opsStatusFilter}
+                  onValueChange={setOpsStatusFilter}
+                >
+                  {preorderOpsFilterOptions.map((opt) => (
                     <DropdownMenuRadioItem key={opt.value} value={opt.value}>
                       {opt.label}
                     </DropdownMenuRadioItem>
@@ -566,9 +616,10 @@ const OrdersPreorder = () => {
           onCreateShipment={(order) => {
             void openShipmentModal(order, 'create');
           }}
-          onUpdateTracking={(order) => {
-            void openShipmentModal(order, 'sync');
+          onManageShipment={(order) => {
+            void openShipmentModal(order, 'manage');
           }}
+          onRequestDeliveryAgain={handleRequestDeliveryAgain}
         />
         {isLoading && (
           <p className="text-foreground/70 text-sm">
@@ -641,20 +692,13 @@ const OrdersPreorder = () => {
               setShipmentErrorMessage(null);
               if (shipmentMode === 'create') {
                 await orderApi.createShipment(shipmentOrder.id);
-              } else {
-                await orderApi.syncShipment(shipmentOrder.id);
               }
               setIsShipmentOpen(false);
               setShipmentOrder(null);
               await loadPreorderOrders();
             } catch (error) {
               setShipmentErrorMessage(
-                extractApiErrorMessage(
-                  error,
-                  shipmentMode === 'create'
-                    ? 'Khong the tao van don GHN.'
-                    : 'Khong the dong bo GHN.'
-                )
+                extractApiErrorMessage(error, 'Khong the tao van don GHN.')
               );
             } finally {
               setShipmentSubmitting(false);

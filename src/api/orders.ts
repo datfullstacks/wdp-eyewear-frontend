@@ -26,8 +26,18 @@ export type OrderShippingAction =
 export type OrderShippingTestStatus =
   | 'ready_to_pick'
   | 'picking'
+  | 'storing'
   | 'transporting'
+  | 'delivering'
+  | 'delivery_fail'
+  | 'waiting_to_return'
+  | 'return'
+  | 'return_transporting'
+  | 'returning'
   | 'delivered'
+  | 'return_fail'
+  | 'damage'
+  | 'lost'
   | 'returned';
 export type OrderOpsStage =
   | 'none'
@@ -1154,8 +1164,18 @@ function mapShippingInfo(raw: BackendShippingInfo): OrderShippingInfo {
             [
               'ready_to_pick',
               'picking',
+              'storing',
               'transporting',
+              'delivering',
+              'delivery_fail',
+              'waiting_to_return',
+              'return',
+              'return_transporting',
+              'returning',
               'delivered',
+              'return_fail',
+              'damage',
+              'lost',
               'returned',
             ].includes(status)
           )
