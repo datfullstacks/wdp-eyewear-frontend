@@ -67,12 +67,14 @@ export default function UsersPage() {
     try {
       const [adminRes, mgrRes, staffRes, opsRes, custRes] = await Promise.all([
         canManageAdmins
-          ? userApi.getAll({ role: 'admin', limit: 100 })
+          ? userApi.getAll({ role: 'admin', limit: 100 }).catch(() => ({ users: [], total: 0, page: 1, pageSize: 100 }))
           : Promise.resolve({ users: [], total: 0, page: 1, pageSize: 100 }),
-        userApi.getAll({ role: 'manager', limit: 100 }),
-        userApi.getAll({ role: 'staff', limit: 100 }),
-        userApi.getAll({ role: 'operation', limit: 100 }),
-        userApi.getAll({ role: 'customer', limit: 100 }),
+        canManageAdmins
+          ? userApi.getAll({ role: 'manager', limit: 100 }).catch(() => ({ users: [], total: 0, page: 1, pageSize: 100 }))
+          : Promise.resolve({ users: [], total: 0, page: 1, pageSize: 100 }),
+        userApi.getAll({ role: 'staff', limit: 100 }).catch(() => ({ users: [], total: 0, page: 1, pageSize: 100 })),
+        userApi.getAll({ role: 'operation', limit: 100 }).catch(() => ({ users: [], total: 0, page: 1, pageSize: 100 })),
+        userApi.getAll({ role: 'customer', limit: 100 }).catch(() => ({ users: [], total: 0, page: 1, pageSize: 100 })),
       ]);
 
       setAdmins(adminRes.users);
@@ -92,8 +94,8 @@ export default function UsersPage() {
   }, [loadUsers]);
 
   useEffect(() => {
-    if (!canManageAdmins && activeTab === 'admins') {
-      setActiveTab('managers');
+    if (!canManageAdmins && (activeTab === 'admins' || activeTab === 'managers')) {
+      setActiveTab('staff');
     }
   }, [activeTab, canManageAdmins]);
 
@@ -107,8 +109,8 @@ export default function UsersPage() {
         users: admins,
         icon: Shield,
         tabLabel: locale === 'vi' ? 'Admin' : 'Admins',
-        statLabel: locale === 'vi' ? 'Tong admin' : 'Total Admins',
-        addLabel: locale === 'vi' ? 'Them admin moi' : 'Add New Admin',
+        statLabel: t('stats.totalAdmins'),
+        addLabel: t('addAdmin'),
         activeClassName: 'border-red-500 text-red-600',
         inactiveClassName:
           'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
@@ -181,7 +183,7 @@ export default function UsersPage() {
   const currentTab = tabConfigs[activeTab];
   const visibleTabs = (canManageAdmins
     ? ['admins', 'managers', 'staff', 'operations', 'customers']
-    : ['managers', 'staff', 'operations', 'customers']) as ManagementTab[];
+    : ['staff', 'operations', 'customers']) as ManagementTab[];
   const resolvedCurrentTab = currentTab || tabConfigs[visibleTabs[0]];
 
   const handleView = (user: User) => {
