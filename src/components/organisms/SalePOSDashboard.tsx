@@ -18,6 +18,7 @@ import { useSaleCartStore } from '@/stores/saleCartStore';
 import type { SaleProduct } from '@/types/saleCheckout';
 
 const ITEMS_PER_PAGE = 16;
+const UNSUPPORTED_CHECKOUT_TYPES = new Set(['service', 'gift_card']);
 
 const typeLabels: Record<string, string> = {
   sunglasses: 'Kính mát',
@@ -67,12 +68,19 @@ export const SalePOSDashboard: React.FC = () => {
         const rows = await getProducts();
         if (!mounted) return;
 
-        setProducts(rows);
+        const supportedRows = rows.filter(
+          (product) =>
+            !UNSUPPORTED_CHECKOUT_TYPES.has(
+              String(product.type || '').trim().toLowerCase()
+            )
+        );
+
+        setProducts(supportedRows);
 
         const autoVariantMap: Record<string, string> = {};
         const autoQtyMap: Record<string, number> = {};
 
-        rows.forEach((product) => {
+        supportedRows.forEach((product) => {
           if (product.variants.length === 1 && product.variants[0]?._id) {
             autoVariantMap[product._id] = product.variants[0]._id;
           }

@@ -129,7 +129,7 @@ export function ProductDetailModalContent({ product }: Props) {
     variants.length > 0 ? variants.reduce((sum, v) => sum + Number(v.stock || 0), 0) : product.stock;
 
   const preOrderEnabled = !!product.preOrder?.enabled;
-  const allowCod = product.preOrder?.allowCod;
+  const allowCod = product.preOrder?.allowCod !== false;
 
   const availability = useMemo(() => {
     if (preOrderEnabled) {
@@ -313,7 +313,10 @@ export function ProductDetailModalContent({ product }: Props) {
               />
               <InfoItem label="Tiền tệ" value={currency} />
               <InfoItem label="Thuế" value={typeof taxRate === 'number' ? `${taxRate}%` : '-'} />
-              <InfoItem label="Cho COD" value={formatBoolean(allowCod)} />
+              <InfoItem
+                label="Cho COD phan con lai"
+                value={formatBoolean(preOrderEnabled && allowCod)}
+              />
               <InfoItem label="Cho đặt trước" value={formatBoolean(preOrderEnabled)} />
               <div className="col-span-2">
                 <p className="text-xs text-slate-500">Giá sau thuế</p>
@@ -607,7 +610,10 @@ export function ProductDetailModalContent({ product }: Props) {
           <p className="text-sm font-semibold text-indigo-900">8) Thông tin đặt trước</p>
           <div className="mt-3 grid grid-cols-1 gap-3 text-sm text-indigo-900 sm:grid-cols-2">
             <InfoItem label="Trạng thái đặt trước" value={formatBoolean(preOrderEnabled)} />
-            <InfoItem label="Cho COD" value={formatBoolean(allowCod)} />
+            <InfoItem
+              label="Cho COD phan con lai"
+              value={formatBoolean(preOrderEnabled && allowCod)}
+            />
             <InfoItem
               label="Thời gian chuẩn bị"
               value={formatLeadTime(product.fulfillment?.leadTime)}

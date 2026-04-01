@@ -40,6 +40,18 @@ function paymentBadgeType(status: OrderRecord['paymentStatus']) {
   }
 }
 
+function resolveDisplayPaymentStatus(order: OrderRecord): OrderRecord['paymentStatus'] {
+  if (
+    String(order.paymentMethod || '').trim().toLowerCase() === 'sepay' &&
+    Number(order.payLaterTotal || 0) > 0 &&
+    Number(order.total || 0) > Math.max(0, Number(order.paidAmount || 0))
+  ) {
+    return 'partial';
+  }
+
+  return order.paymentStatus;
+}
+
 const PAYMENT_STATUS_TEXT: Record<OrderRecord['paymentStatus'], string> = {
   paid: 'Đã thanh toán',
   pending: 'Chưa thanh toán',
@@ -224,6 +236,7 @@ export function OrderDetailContent({ order }: { order: OrderRecord }) {
   const shippingStatusMeta = getCustomerShippingStatusMeta(order);
   const trackingCode =
     order.shipment?.orderCode || order.shipment?.trackingCode || '-';
+  const displayPaymentStatus = resolveDisplayPaymentStatus(order);
   const serviceLabel =
     order.shipment?.serviceName ||
     (order.shipment?.provider
@@ -258,8 +271,8 @@ export function OrderDetailContent({ order }: { order: OrderRecord }) {
             <StatusBadge status={orderStatusMeta.type}>
               {orderStatusMeta.labelKey ? tc(`orderStatus.${orderStatusMeta.labelKey}` as any) : orderStatusMeta.label}
             </StatusBadge>
-            <StatusBadge status={paymentBadgeType(order.paymentStatus)}>
-              {PAYMENT_STATUS_TEXT[order.paymentStatus]}
+            <StatusBadge status={paymentBadgeType(displayPaymentStatus)}>
+              {PAYMENT_STATUS_TEXT[displayPaymentStatus]}
             </StatusBadge>
             <span className="inline-flex items-center rounded-full border border-amber-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-900">
               Loại đơn: {orderTypeText}
@@ -312,8 +325,8 @@ export function OrderDetailContent({ order }: { order: OrderRecord }) {
 
           <InfoTile label="Thanh toán">
             <div className="space-y-1.5">
-              <StatusBadge status={paymentBadgeType(order.paymentStatus)}>
-                {PAYMENT_STATUS_TEXT[order.paymentStatus]}
+              <StatusBadge status={paymentBadgeType(displayPaymentStatus)}>
+                {PAYMENT_STATUS_TEXT[displayPaymentStatus]}
               </StatusBadge>
               <p className="text-muted-foreground text-xs">
                 Phương thức: {paymentMethodLabel(order.paymentMethod)}

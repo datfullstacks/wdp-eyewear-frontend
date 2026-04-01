@@ -303,8 +303,10 @@ function LeftCheckoutPanel({
   subtotal,
   shippingForm,
   paymentMethod,
+  activeOrderType,
   paymentOptions,
   codEnabled,
+  paymentHint,
   onBackToProducts,
   onShippingChange,
   onPaymentMethodChange,
@@ -321,12 +323,14 @@ function LeftCheckoutPanel({
   subtotal: number;
   shippingForm: ShippingAddressForm;
   paymentMethod: SaleCheckoutPaymentMethod;
+  activeOrderType: string;
   paymentOptions: Array<{
     id: SaleCheckoutPaymentMethod;
     label: string;
     description: string;
   }>;
   codEnabled: boolean;
+  paymentHint: string;
   onBackToProducts: () => void;
   onShippingChange: (field: keyof ShippingAddressForm, value: string) => void;
   onPaymentMethodChange: (method: SaleCheckoutPaymentMethod) => void;
@@ -508,9 +512,10 @@ function LeftCheckoutPanel({
             })}
           </div>
           <p className="mt-2 text-xs font-medium text-[#876e2f]">
-            {codEnabled
-              ? 'COD chi ap dung cho don du dieu kien. Neu gio hang co pre-order, backend se yeu cau quay ve SePay.'
-              : 'COD dang tat trong system config. Don moi se duoc thu qua SePay.'}
+            {paymentHint ||
+              (codEnabled
+                ? 'COD chi ap dung cho don du dieu kien. Neu gio hang co pre-order, backend se yeu cau quay ve SePay.'
+                : 'COD dang tat trong system config. Don moi se duoc thu qua SePay.')}
           </p>
         </div>
 
@@ -560,7 +565,9 @@ function LeftCheckoutPanel({
                   <CreditCard className="h-5 w-5 text-[#0b5c2e]" />
                 )}
                 {paymentMethod === 'cod'
-                  ? 'Tao don COD'
+                  ? activeOrderType === 'pre_order'
+                    ? 'Tao don dat coc + COD'
+                    : 'Tao don COD'
                   : 'Thanh toan ngay'}
               </>
             )}
@@ -720,7 +727,9 @@ function SummaryPanel({
     .toLowerCase();
   const shippingTimingLabel =
     shippingCollectionTiming === 'on_delivery' || shippingCollectionTiming === 'with_balance'
-      ? 'Thu khi giao hang'
+      ? payLaterMethod === 'SEPAY'
+        ? 'Thu cung dot thanh toan con lai truoc giao hang'
+        : 'Thu khi giao hang'
       : 'Thu ngay';
 
   return (
@@ -774,7 +783,7 @@ function SummaryPanel({
             )}
             {payLater > 0 && (
               <div className="flex items-center justify-between border-b border-[#f1e8d1] pb-3 text-sm font-semibold text-[#4c3400]">
-                <span>{`Con lai (${payLaterMethod || 'COD'})`}</span>
+                <span>{`Con lai (${payLaterMethod || (payNowMethod === 'SEPAY' ? 'SEPAY' : 'COD')})`}</span>
                 <span>
                   {formatMoney(payLater)} {DONG_SYMBOL}
                 </span>
@@ -824,6 +833,11 @@ function PaymentPanel({
   const isCod = paymentMethod === 'cod';
   const payNow = Number(checkoutResult.breakdown?.payNow || 0);
   const payLater = Number(checkoutResult.breakdown?.payLater || 0);
+  const payLaterMethod = String(
+    checkoutResult.breakdown?.payLaterMethod || ''
+  )
+    .trim()
+    .toLowerCase();
   const amountDue = Number(
     checkoutResult.payment?.amount ?? (isCod ? payLater : payNow)
   );
@@ -906,7 +920,7 @@ function PaymentPanel({
 
       {payLater > 0 && (
         <div className="mt-4 rounded-[24px] border border-[#efe2be] bg-[#fffbf2] p-4 text-sm text-[#6e5a33]">
-          {'COD con lai: '}
+          {payLaterMethod === 'sepay' ? 'SePay con lai: ' : 'COD con lai: '}
           <span className="font-black text-[#201600]">
             {formatMoney(payLater)} {DONG_SYMBOL}
           </span>
@@ -968,13 +982,56 @@ export const SaleCheckoutPage: React.FC = () => {
 
   const codEnabled = runtimeConfig?.payments?.codEnabled !== false;
   const maintenanceMode = runtimeConfig?.maintenanceMode === true;
+  const activeOrderType = useMemo(
+    () =>
+      String(
+        checkoutResult?.orderType ||
+          checkoutResult?.breakdown?.orderType ||
+          quoteResult?.orderType ||
+          ''
+      )
+        .trim()
+        .toLowerCase(),
+    [checkoutResult, quoteResult]
+  );
+  const allowedPaymentMethods = useMemo(() => {
+    const rawMethods =
+      checkoutResult?.allowedPaymentMethods ||
+      checkoutResult?.breakdown?.allowedPaymentMethods ||
+      quoteResult?.allowedPaymentMethods ||
+      [];
+
+    if (!Array.isArray(rawMethods)) return [] as SaleCheckoutPaymentMethod[];
+
+    return rawMethods
+      .map((method) => String(method || '').trim().toLowerCase())
+      .filter(
+        (method): method is SaleCheckoutPaymentMethod =>
+          method === 'sepay' || method === 'cod'
+      );
+  }, [checkoutResult, quoteResult]);
   const paymentOptions = useMemo(
     () =>
       ALL_SALE_CHECKOUT_PAYMENT_OPTIONS.filter(
-        (option) => option.id !== 'cod' || codEnabled
+        (option) =>
+          (option.id !== 'cod' || codEnabled) &&
+          (allowedPaymentMethods.length === 0 ||
+            allowedPaymentMethods.includes(option.id))
       ),
-    [codEnabled]
+    [allowedPaymentMethods, codEnabled]
   );
+  const paymentHint = useMemo(() => {
+    if (activeOrderType === 'prescription') {
+      return 'Don prescription chi ho tro SePay trong V1.';
+    }
+    if (activeOrderType === 'pre_order') {
+      return 'Don pre-order ho tro SePay toan bo hoac dat coc SePay + COD cho phan con lai neu cau hinh cho phep.';
+    }
+    if (!codEnabled) {
+      return 'COD dang tat trong system config. Don moi se duoc thu qua SePay.';
+    }
+    return 'COD chi ap dung cho ready-stock va pre-order duoc phep dat coc. Sau khi tinh tien, frontend se tu khoa lai payment method theo workflow backend.';
+  }, [activeOrderType, codEnabled]);
 
   const {
     orderDetail,
@@ -1324,8 +1381,10 @@ export const SaleCheckoutPage: React.FC = () => {
                 subtotal={subtotal}
                 shippingForm={shippingForm}
                 paymentMethod={paymentMethod}
+                activeOrderType={activeOrderType}
                 paymentOptions={paymentOptions}
                 codEnabled={codEnabled}
+                paymentHint={paymentHint}
                 onBackToProducts={() => router.push('/sale/products')}
                 onShippingChange={handleShippingChange}
                 onPaymentMethodChange={handlePaymentMethodChange}
