@@ -346,6 +346,7 @@
       "allCategories": "All Categories",
       "warranty": "Warranty",
       "return": "Return",
+      "refund": "Refund",
       "shipping": "Shipping",
       "purchase": "Purchase",
       "privacy": "Privacy",
@@ -364,6 +365,7 @@
       "noData": "No policies found",
       "warranty": "Warranty",
       "return": "Return",
+      "refund": "Refund",
       "shipping": "Shipping",
       "purchase": "Purchase",
       "privacy": "Privacy",
@@ -419,18 +421,356 @@
       "deleteDiscount": "Delete promotion"
     }
   },
+  "reconciliation": {
+    "title": "Refund Reconciliation",
+    "subtitle": "Verify approved amounts, payout references, and invoice mismatches under business governance",
+    "filters": {
+      "search": "Search",
+      "searchPlaceholder": "Order / customer / tx ref",
+      "status": "Refund status",
+      "owner": "Owner",
+      "matchStatus": "Match status",
+      "payoutProof": "Payout proof",
+      "from": "From",
+      "to": "To",
+      "attentionOnly": "Attention only",
+      "reset": "Reset filters",
+      "exportCsv": "Export CSV",
+      "all": "All",
+      "hasProof": "Has proof",
+      "missingProof": "Missing proof",
+      "statusOpts": {
+        "requested": "Requested",
+        "reviewing": "Reviewing",
+        "waitingCustomer": "Waiting customer",
+        "escalated": "Escalated",
+        "approved": "Approved",
+        "returnPending": "Return pending",
+        "returnReceived": "Return received",
+        "processing": "Processing",
+        "completed": "Completed",
+        "rejected": "Rejected"
+      },
+      "ownerOpts": {
+        "sales": "Sale/Staff",
+        "manager": "Manager",
+        "operations": "Operations",
+        "customer": "Customer",
+        "none": "Closed"
+      },
+      "matchOpts": {
+        "matched": "Matched",
+        "awaitingPayout": "Awaiting payout",
+        "mismatch": "Mismatch",
+        "pending": "Pending",
+        "closed": "Closed"
+      }
+    },
+    "summary": {
+      "requestedTotal": "Requested total",
+      "approvedTotal": "Approved total",
+      "settledTotal": "Settled total",
+      "outstanding": "Outstanding",
+      "mismatches": "Mismatches",
+      "awaitingPayout": "Awaiting payout"
+    },
+    "charts": {
+      "settlementFlow": "Settlement flow",
+      "settlementFlowDesc": "Splits requested refund money into settled, outstanding, and not-yet-approved.",
+      "matchStatusMix": "Match status mix",
+      "matchStatusMixDesc": "Reflects the current filtered page of reconciliation rows.",
+      "readinessChecks": "Readiness checks",
+      "readinessChecksDesc": "Tracks proof coverage and owner concentration for the filtered slice.",
+      "requestedValue": "Requested value",
+      "matchStatusLabel": "Match status",
+      "noMoneyFlow": "No reconciliation money flow.",
+      "noMatchStatus": "No match status rows.",
+      "noPayoutProof": "No payout proof data.",
+      "noOwnerDist": "No owner distribution."
+    },
+    "matchStatusLabels": {
+      "matched": "Matched",
+      "awaitingPayout": "Awaiting payout",
+      "mismatch": "Mismatch",
+      "closed": "Closed",
+      "pending": "Pending"
+    },
+    "flow": {
+      "settled": "Settled",
+      "approvedNotSettled": "Approved not settled",
+      "notYetApproved": "Not yet approved",
+      "settledHint": "Already reconciled and paid out",
+      "approvedNotSettledHint": "Approved but still outstanding",
+      "notYetApprovedHint": "Gap between requested and approved amounts"
+    },
+    "proof": {
+      "withPayoutProof": "With payout proof",
+      "missingPayoutProof": "Missing payout proof",
+      "currentFilteredPage": "Current filtered page",
+      "proofLink": "Proof"
+    },
+    "table": {
+      "title": "Refund rows",
+      "pageInfo": "Page {page} / {total}, total {count} filtered cases",
+      "prev": "Prev",
+      "next": "Next",
+      "outstanding": "Outstanding {amount}",
+      "headers": {
+        "order": "Order",
+        "refund": "Refund",
+        "paid": "Paid",
+        "approved": "Approved",
+        "settled": "Settled",
+        "invoice": "Invoice",
+        "txRef": "Tx ref",
+        "processed": "Processed",
+        "match": "Match"
+      }
+    }
+  },
+  "monitoring": {
+    "title": "Refund Monitoring",
+    "subtitle": "Manager workspace for exception handling, payout backlog, and owner distribution",
+    "filters": {
+      "search": "Search",
+      "searchPlaceholder": "Order / customer / reason",
+      "status": "Refund status",
+      "owner": "Owner",
+      "from": "From",
+      "to": "To",
+      "attentionOnly": "Attention only",
+      "reset": "Reset",
+      "all": "All",
+      "statusOpts": {
+        "requested": "Requested",
+        "reviewing": "Reviewing",
+        "waitingCustomer": "Waiting customer",
+        "escalated": "Escalated",
+        "approved": "Approved",
+        "returnPending": "Return pending",
+        "returnReceived": "Return received",
+        "processing": "Processing",
+        "completed": "Completed",
+        "rejected": "Rejected"
+      },
+      "ownerOpts": {
+        "sales": "Sale/Staff",
+        "manager": "Manager",
+        "operations": "Operations",
+        "customer": "Customer",
+        "none": "Closed"
+      }
+    },
+    "stats": {
+      "totalCases": "Total cases",
+      "activeCases": "Active cases",
+      "waitingCustomer": "Waiting customer",
+      "escalated": "Escalated",
+      "payoutPending": "Payout pending",
+      "flagged": "Flagged"
+    },
+    "pressure": {
+      "flaggedCases": "Flagged cases",
+      "payoutPending": "Payout pending",
+      "escalated": "Escalated",
+      "waitingCustomer": "Waiting customer",
+      "completedThisMonth": "Completed this month",
+      "rejectedThisMonth": "Rejected this month",
+      "flaggedHint": "Require manual intervention",
+      "payoutHint": "Approved but not fully settled",
+      "escalatedHint": "Waiting manager decision",
+      "waitingHint": "Blocked on customer follow-up",
+      "completedHint": "Closed successfully in current month",
+      "rejectedHint": "Rejected in current month"
+    },
+    "status": {
+      "waitingCustomerInfo": "Waiting customer info",
+      "escalatedToManager": "Escalated to manager",
+      "returnPending": "Return pending",
+      "returnReceived": "Return received"
+    },
+    "nextAction": {
+      "customerSubmitInfo": "Customer submit info",
+      "managerApprove": "Manager decides",
+      "confirmReturnReceived": "Ops confirm / QC",
+      "startProcessing": "Start payout",
+      "complete": "Confirm transfer",
+      "startReview": "Staff review"
+    },
+    "owner": {
+      "sales": "Sale/Staff",
+      "manager": "Manager",
+      "operations": "Operations",
+      "customer": "Customer",
+      "closed": "Closed"
+    },
+    "charts": {
+      "statusMixTitle": "Status mix",
+      "statusMixDesc": "Current refund workload grouped by state.",
+      "ownerDistTitle": "Owner distribution",
+      "ownerDistDesc": "Shows where refund accountability is currently sitting.",
+      "pressureTitle": "Pressure snapshot",
+      "pressureDesc": "Highlights where the refund queue is under the most pressure.",
+      "refundStates": "Refund states",
+      "currentOwner": "Current owner",
+      "noStatusData": "No refund status data.",
+      "noOwnerData": "No owner distribution.",
+      "noPressure": "No pressure indicators."
+    },
+    "sections": {
+      "flaggedCasesTitle": "Flagged cases",
+      "flaggedCasesEmpty": "No refund case is currently flagged.",
+      "recentCompletedTitle": "Recently completed",
+      "recentCompletedEmpty": "No completed refund in the current preview.",
+      "reconciliationTitle": "Reconciliation",
+      "reconciliationDesc": "Open the reconciliation workspace to verify payout references, invoice state, and outstanding approved amounts.",
+      "openReconciliation": "Open reconciliation",
+      "openAuditTrail": "Open audit trail",
+      "byStatus": "By status",
+      "byOwner": "By owner"
+    },
+    "table": {
+      "order": "Order",
+      "customer": "Customer",
+      "refund": "Refund",
+      "owner": "Owner",
+      "nextStep": "Next step",
+      "amount": "Amount",
+      "updated": "Updated",
+      "action": "Action",
+      "override": "Override"
+    },
+    "dialog": {
+      "title": "Refund business override",
+      "overrideAction": "Override action",
+      "reason": "Reason",
+      "reasonPlaceholder": "Explain why this override is necessary...",
+      "cancel": "Cancel",
+      "apply": "Apply override",
+      "applying": "Applying...",
+      "actions": {
+        "reassignSales": "Reassign to sales",
+        "reassignManager": "Reassign to manager",
+        "reassignOperations": "Reassign to operations",
+        "resetReviewing": "Reset to reviewing",
+        "retryNotification": "Retry customer notification"
+      }
+    }
+  },
+  "audit": {
+    "title": "Refund Audit Trail",
+    "subtitle": "Trace refund transitions, actors, and decision notes under manager ownership",
+    "filters": {
+      "search": "Search",
+      "searchPlaceholder": "Order / actor / note",
+      "action": "Action",
+      "actorRole": "Actor role",
+      "currentOwner": "Current owner",
+      "status": "Current refund status",
+      "from": "From",
+      "to": "To",
+      "reset": "Reset",
+      "all": "All",
+      "actionOpts": {
+        "createRequest": "Create request",
+        "startReview": "Start review",
+        "requestCustomerInfo": "Request customer info",
+        "customerSubmitInfo": "Customer submit info",
+        "approve": "Approve",
+        "reject": "Reject",
+        "escalate": "Escalate",
+        "managerApprove": "Manager approve",
+        "managerReject": "Manager reject",
+        "sendBackToStaff": "Send back to staff",
+        "markReturnPending": "Mark return pending",
+        "confirmReturnReceived": "Confirm return received",
+        "inspectionFailed": "Inspection failed",
+        "startProcessing": "Start processing",
+        "complete": "Complete"
+      },
+      "roleOpts": {
+        "sales": "Sale/Staff",
+        "manager": "Manager",
+        "operations": "Operations",
+        "customer": "Customer",
+        "admin": "Admin",
+        "none": "Closed"
+      },
+      "statusOpts": {
+        "requested": "Requested",
+        "reviewing": "Reviewing",
+        "waitingCustomer": "Waiting customer",
+        "escalated": "Escalated",
+        "approved": "Approved",
+        "returnPending": "Return pending",
+        "returnReceived": "Return received",
+        "processing": "Processing",
+        "completed": "Completed",
+        "rejected": "Rejected"
+      }
+    },
+    "stats": {
+      "totalEvents": "Total events",
+      "uniqueOrders": "Unique orders",
+      "topAction": "Top action",
+      "topActorRole": "Top actor role"
+    },
+    "charts": {
+      "eventDensity": "Event density",
+      "eventDensityDesc": "Event volume over the currently filtered audit rows.",
+      "events": "Events",
+      "actionMix": "Action mix",
+      "actionMixDesc": "Most frequent refund workflow actions in the current filter.",
+      "actorMix": "Actor mix",
+      "actorMixDesc": "Shows which role is driving most refund activity.",
+      "actorRole": "Actor role",
+      "noActionBuckets": "No action buckets.",
+      "noActorBuckets": "No actor role buckets."
+    },
+    "table": {
+      "title": "Audit events",
+      "pageInfo": "Page {page} / {total}, total {count} filtered events",
+      "prev": "Prev",
+      "next": "Next",
+      "ownerLabel": "owner",
+      "headers": {
+        "when": "When",
+        "order": "Order",
+        "action": "Action",
+        "actor": "Actor",
+        "transition": "Transition",
+        "note": "Note"
+      }
+    },
+    "sidebar": {
+      "byAction": "By action",
+      "byActorRole": "By actor role"
+    }
+  },
   "revenue": {
-    "title": "Revenue Report",
-    "subtitle": "Track revenue and analyze trends",
+    "title": "Revenue Overview",
+    "subtitle": "Monitor booked revenue, collected cash, and the last six months of order performance",
+    "loadFailed": "Failed to load revenue summary.",
+    "analyticsTitle": "Revenue analytics",
+    "analyticsSubtitle": "Monthly trend, collection quality, and channel mix built from live order data.",
+    "trendTitle": "Recent monthly trend",
     "stats": {
       "monthlyRevenue": "Monthly Revenue",
-      "growth": "Growth",
+      "monthlyCollected": "Collected This Month",
+      "monthlyOrders": "Monthly Orders",
       "yearlyRevenue": "Yearly Revenue",
+      "growth": "Growth",
       "targetAchieved": "Target Achieved",
       "totalRevenue": "Total Revenue",
       "totalOrders": "Total Orders",
       "avgOrderValue": "Avg Order Value",
       "totalCustomers": "Total Customers"
+    },
+    "columns": {
+      "month": "Month",
+      "revenue": "Revenue",
+      "collected": "Collected",
+      "orders": "Orders"
     },
     "placeholder": "Revenue chart will be displayed here",
     "revenueChart": "Monthly Revenue",

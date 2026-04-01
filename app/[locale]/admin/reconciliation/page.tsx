@@ -9,6 +9,7 @@ import {
   Loader2,
   Search,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import analyticsApi, {
   type RefundReconciliation,
@@ -46,39 +47,10 @@ const formatDateTime = (value?: string | null) => {
   }).format(date);
 };
 
-function formatMatchStatus(status: RefundReconciliationRow['matchStatus']) {
-  switch (status) {
-    case 'matched':
-      return { label: 'Matched', className: 'bg-emerald-50 text-emerald-700' };
-    case 'awaiting_payout':
-      return { label: 'Awaiting payout', className: 'bg-amber-50 text-amber-700' };
-    case 'mismatch':
-      return { label: 'Mismatch', className: 'bg-red-50 text-red-700' };
-    case 'closed':
-      return { label: 'Closed', className: 'bg-slate-100 text-slate-700' };
-    default:
-      return { label: 'Pending', className: 'bg-blue-50 text-blue-700' };
-  }
-}
-
-function formatOwner(owner: string) {
-  switch (owner) {
-    case 'sales':
-      return 'Sale/Staff';
-    case 'manager':
-      return 'Manager';
-    case 'operations':
-      return 'Operations';
-    case 'customer':
-      return 'Customer';
-    default:
-      return 'Closed';
-  }
-}
-
 type ProofFilter = 'all' | 'with' | 'without';
 
 export function RefundReconciliationWorkspace() {
+  const t = useTranslations('manager.reconciliation');
   const [report, setReport] = useState<RefundReconciliation | null>(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -93,6 +65,21 @@ export function RefundReconciliationWorkspace() {
   const [attentionOnly, setAttentionOnly] = useState(false);
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+
+  const formatMatchStatus = (status: RefundReconciliationRow['matchStatus']) => {
+    switch (status) {
+      case 'matched':
+        return { label: t('matchStatusLabels.matched'), className: 'bg-emerald-50 text-emerald-700' };
+      case 'awaiting_payout':
+        return { label: t('matchStatusLabels.awaitingPayout'), className: 'bg-amber-50 text-amber-700' };
+      case 'mismatch':
+        return { label: t('matchStatusLabels.mismatch'), className: 'bg-red-50 text-red-700' };
+      case 'closed':
+        return { label: t('matchStatusLabels.closed'), className: 'bg-slate-100 text-slate-700' };
+      default:
+        return { label: t('matchStatusLabels.pending'), className: 'bg-blue-50 text-blue-700' };
+    }
+  };
 
   const filters = useMemo<RefundReconciliationFilters>(
     () => ({
@@ -162,12 +149,12 @@ export function RefundReconciliationWorkspace() {
   };
 
   const summaryCards = [
-    { label: 'Requested total', value: formatCurrency(report?.summary.requestedTotal || 0) },
-    { label: 'Approved total', value: formatCurrency(report?.summary.approvedTotal || 0) },
-    { label: 'Settled total', value: formatCurrency(report?.summary.settledTotal || 0) },
-    { label: 'Outstanding', value: formatCurrency(report?.summary.outstandingTotal || 0) },
-    { label: 'Mismatches', value: String(report?.summary.mismatchedCases || 0) },
-    { label: 'Awaiting payout', value: String(report?.summary.awaitingPayoutCases || 0) },
+    { label: t('summary.requestedTotal'), value: formatCurrency(report?.summary.requestedTotal || 0) },
+    { label: t('summary.approvedTotal'), value: formatCurrency(report?.summary.approvedTotal || 0) },
+    { label: t('summary.settledTotal'), value: formatCurrency(report?.summary.settledTotal || 0) },
+    { label: t('summary.outstanding'), value: formatCurrency(report?.summary.outstandingTotal || 0) },
+    { label: t('summary.mismatches'), value: String(report?.summary.mismatchedCases || 0) },
+    { label: t('summary.awaitingPayout'), value: String(report?.summary.awaitingPayoutCases || 0) },
   ];
   const rows = report?.rows || [];
   const matchStatusCounts = rows.reduce<Record<string, number>>((accumulator, row) => {
@@ -180,44 +167,44 @@ export function RefundReconciliationWorkspace() {
       label: formatMatchStatus(matchKey as RefundReconciliationRow['matchStatus']).label,
       value: count,
       color: ['#16a34a', '#d97706', '#dc2626', '#2563eb', '#64748b'][index % 5],
-      hint: 'Current filtered page',
+      hint: t('proof.currentFilteredPage'),
     }),
   );
   const settlementFlowData: ChartDatum[] = [
     {
-      label: 'Settled',
+      label: t('flow.settled'),
       value: report?.summary.settledTotal || 0,
       color: '#16a34a',
-      hint: 'Already reconciled and paid out',
+      hint: t('flow.settledHint'),
     },
     {
-      label: 'Approved not settled',
+      label: t('flow.approvedNotSettled'),
       value: report?.summary.outstandingTotal || 0,
       color: '#d97706',
-      hint: 'Approved but still outstanding',
+      hint: t('flow.approvedNotSettledHint'),
     },
     {
-      label: 'Not yet approved',
+      label: t('flow.notYetApproved'),
       value: Math.max(
         0,
         Number(report?.summary.requestedTotal || 0) - Number(report?.summary.approvedTotal || 0),
       ),
       color: '#64748b',
-      hint: 'Gap between requested and approved amounts',
+      hint: t('flow.notYetApprovedHint'),
     },
   ];
   const proofCoverageData: ChartDatum[] = [
     {
-      label: 'With payout proof',
+      label: t('proof.withPayoutProof'),
       value: rows.filter((row) => Boolean(row.payoutProofUrl)).length,
       color: '#2563eb',
-      hint: 'Current filtered page',
+      hint: t('proof.currentFilteredPage'),
     },
     {
-      label: 'Missing payout proof',
+      label: t('proof.missingPayoutProof'),
       value: rows.filter((row) => !row.payoutProofUrl).length,
       color: '#be123c',
-      hint: 'Current filtered page',
+      hint: t('proof.currentFilteredPage'),
     },
   ];
   const ownerMixCounts = rows.reduce<Record<string, number>>((accumulator, row) => {
@@ -226,11 +213,11 @@ export function RefundReconciliationWorkspace() {
     return accumulator;
   }, {});
   const ownerMixData: ChartDatum[] = Object.entries(ownerMixCounts).map(
-    ([ownerKey, count], index) => ({
-      label: formatOwner(ownerKey),
+    ([, count], index) => ({
+      label: ['#0f766e', '#d97706', '#2563eb', '#7c3aed', '#64748b'][index % 5],
       value: count,
       color: ['#0f766e', '#d97706', '#2563eb', '#7c3aed', '#64748b'][index % 5],
-      hint: 'Current filtered page',
+      hint: t('proof.currentFilteredPage'),
     }),
   );
 
@@ -239,8 +226,8 @@ export function RefundReconciliationWorkspace() {
   return (
     <>
       <Header
-        title="Refund Reconciliation"
-        subtitle="Verify approved amounts, payout references, and invoice mismatches under business governance"
+        title={t('title')}
+        subtitle={t('subtitle')}
       />
 
       <div className="space-y-6 p-6">
@@ -254,81 +241,81 @@ export function RefundReconciliationWorkspace() {
         <Card className="p-6">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
             <label className="space-y-2 text-sm">
-              <span className="font-medium text-gray-700">Search</span>
+              <span className="font-medium text-gray-700">{t('filters.search')}</span>
               <div className="flex items-center rounded-md border border-gray-300 px-3">
                 <Search className="h-4 w-4 text-gray-400" />
                 <input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Order / customer / tx ref"
+                  placeholder={t('filters.searchPlaceholder')}
                   className="h-10 w-full border-0 bg-transparent px-2 text-sm outline-none"
                 />
               </div>
             </label>
 
             <label className="space-y-2 text-sm">
-              <span className="font-medium text-gray-700">Refund status</span>
+              <span className="font-medium text-gray-700">{t('filters.status')}</span>
               <select
                 value={status}
                 onChange={(event) => setStatus(event.target.value)}
                 className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
               >
-                <option value="all">All</option>
-                <option value="requested">Requested</option>
-                <option value="reviewing">Reviewing</option>
-                <option value="waiting_customer_info">Waiting customer</option>
-                <option value="escalated_to_manager">Escalated</option>
-                <option value="approved">Approved</option>
-                <option value="return_pending">Return pending</option>
-                <option value="return_received">Return received</option>
-                <option value="processing">Processing</option>
-                <option value="completed">Completed</option>
-                <option value="rejected">Rejected</option>
+                <option value="all">{t('filters.all')}</option>
+                <option value="requested">{t('filters.statusOpts.requested')}</option>
+                <option value="reviewing">{t('filters.statusOpts.reviewing')}</option>
+                <option value="waiting_customer_info">{t('filters.statusOpts.waitingCustomer')}</option>
+                <option value="escalated_to_manager">{t('filters.statusOpts.escalated')}</option>
+                <option value="approved">{t('filters.statusOpts.approved')}</option>
+                <option value="return_pending">{t('filters.statusOpts.returnPending')}</option>
+                <option value="return_received">{t('filters.statusOpts.returnReceived')}</option>
+                <option value="processing">{t('filters.statusOpts.processing')}</option>
+                <option value="completed">{t('filters.statusOpts.completed')}</option>
+                <option value="rejected">{t('filters.statusOpts.rejected')}</option>
               </select>
             </label>
 
             <label className="space-y-2 text-sm">
-              <span className="font-medium text-gray-700">Owner</span>
+              <span className="font-medium text-gray-700">{t('filters.owner')}</span>
               <select
                 value={ownerRole}
                 onChange={(event) => setOwnerRole(event.target.value)}
                 className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
               >
-                <option value="all">All</option>
-                <option value="sales">Sale/Staff</option>
-                <option value="manager">Manager</option>
-                <option value="operations">Operations</option>
-                <option value="customer">Customer</option>
-                <option value="none">Closed</option>
+                <option value="all">{t('filters.all')}</option>
+                <option value="sales">{t('filters.ownerOpts.sales')}</option>
+                <option value="manager">{t('filters.ownerOpts.manager')}</option>
+                <option value="operations">{t('filters.ownerOpts.operations')}</option>
+                <option value="customer">{t('filters.ownerOpts.customer')}</option>
+                <option value="none">{t('filters.ownerOpts.none')}</option>
               </select>
             </label>
 
             <label className="space-y-2 text-sm">
-              <span className="font-medium text-gray-700">Match status</span>
+              <span className="font-medium text-gray-700">{t('filters.matchStatus')}</span>
               <select
                 value={matchStatus}
                 onChange={(event) => setMatchStatus(event.target.value)}
                 className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
               >
-                <option value="all">All</option>
-                <option value="matched">Matched</option>
-                <option value="awaiting_payout">Awaiting payout</option>
-                <option value="mismatch">Mismatch</option>
-                <option value="pending">Pending</option>
-                <option value="closed">Closed</option>
+                <option value="all">{t('filters.all')}</option>
+                <option value="matched">{t('filters.matchOpts.matched')}</option>
+                <option value="awaiting_payout">{t('filters.matchOpts.awaitingPayout')}</option>
+                <option value="mismatch">{t('filters.matchOpts.mismatch')}</option>
+                <option value="pending">{t('filters.matchOpts.pending')}</option>
+                <option value="closed">{t('filters.matchOpts.closed')}</option>
               </select>
             </label>
 
             <label className="space-y-2 text-sm">
-              <span className="font-medium text-gray-700">Payout proof</span>
+              <span className="font-medium text-gray-700">{t('filters.payoutProof')}</span>
               <select
                 value={proofFilter}
                 onChange={(event) => setProofFilter(event.target.value as ProofFilter)}
                 className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
               >
-                <option value="all">All</option>
-                <option value="with">Has proof</option>
-                <option value="without">Missing proof</option>
+                <option value="all">{t('filters.all')}</option>
+                <option value="with">{t('filters.hasProof')}</option>
+                <option value="without">{t('filters.missingProof')}</option>
               </select>
             </label>
 
@@ -339,7 +326,7 @@ export function RefundReconciliationWorkspace() {
                   checked={attentionOnly}
                   onChange={(event) => setAttentionOnly(event.target.checked)}
                 />
-                Attention only
+                {t('filters.attentionOnly')}
               </label>
               <Button
                 type="button"
@@ -349,12 +336,12 @@ export function RefundReconciliationWorkspace() {
                 disabled={exporting}
               >
                 {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                Export CSV
+                {t('filters.exportCsv')}
               </Button>
             </div>
 
             <label className="space-y-2 text-sm">
-              <span className="font-medium text-gray-700">From</span>
+              <span className="font-medium text-gray-700">{t('filters.from')}</span>
               <input
                 type="date"
                 value={fromDate}
@@ -364,7 +351,7 @@ export function RefundReconciliationWorkspace() {
             </label>
 
             <label className="space-y-2 text-sm">
-              <span className="font-medium text-gray-700">To</span>
+              <span className="font-medium text-gray-700">{t('filters.to')}</span>
               <input
                 type="date"
                 value={toDate}
@@ -388,7 +375,7 @@ export function RefundReconciliationWorkspace() {
                   setToDate('');
                 }}
               >
-                Reset filters
+                {t('filters.reset')}
               </Button>
             </div>
           </div>
@@ -411,47 +398,47 @@ export function RefundReconciliationWorkspace() {
 
             <section className="grid gap-6 xl:grid-cols-[1.2fr_1.2fr_1.5fr]">
               <Card className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900">Settlement flow</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{t('charts.settlementFlow')}</h3>
                 <p className="mt-1 text-sm text-gray-600">
-                  Splits requested refund money into settled, outstanding, and not-yet-approved.
+                  {t('charts.settlementFlowDesc')}
                 </p>
                 <div className="mt-6">
                   <DonutBreakdown
                     data={settlementFlowData}
-                    centerLabel="Requested value"
+                    centerLabel={t('charts.requestedValue')}
                     valueFormatter={formatCurrency}
-                    emptyLabel="No reconciliation money flow."
+                    emptyLabel={t('charts.noMoneyFlow')}
                   />
                 </div>
               </Card>
 
               <Card className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900">Match status mix</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{t('charts.matchStatusMix')}</h3>
                 <p className="mt-1 text-sm text-gray-600">
-                  Reflects the current filtered page of reconciliation rows.
+                  {t('charts.matchStatusMixDesc')}
                 </p>
                 <div className="mt-6">
                   <DonutBreakdown
                     data={matchStatusChartData}
-                    centerLabel="Match status"
-                    emptyLabel="No match status rows."
+                    centerLabel={t('charts.matchStatusLabel')}
+                    emptyLabel={t('charts.noMatchStatus')}
                   />
                 </div>
               </Card>
 
               <Card className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900">Readiness checks</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{t('charts.readinessChecks')}</h3>
                 <p className="mt-1 text-sm text-gray-600">
-                  Tracks proof coverage and owner concentration for the filtered slice.
+                  {t('charts.readinessChecksDesc')}
                 </p>
                 <div className="mt-6 space-y-6">
                   <DistributionBars
                     data={proofCoverageData}
-                    emptyLabel="No payout proof data."
+                    emptyLabel={t('charts.noPayoutProof')}
                   />
                   <DistributionBars
                     data={ownerMixData}
-                    emptyLabel="No owner distribution."
+                    emptyLabel={t('charts.noOwnerDist')}
                   />
                 </div>
               </Card>
@@ -460,10 +447,13 @@ export function RefundReconciliationWorkspace() {
             <Card className="p-6">
               <div className="mb-4 flex items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Refund rows</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">{t('table.title')}</h3>
                   <p className="mt-1 text-sm text-gray-500">
-                    Page {report?.pagination.page || 1} / {totalPages}, total{' '}
-                    {report?.pagination.total || 0} filtered cases
+                    {t('table.pageInfo', {
+                      page: report?.pagination.page || 1,
+                      total: totalPages,
+                      count: report?.pagination.total || 0,
+                    })}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -475,7 +465,7 @@ export function RefundReconciliationWorkspace() {
                     className="gap-2"
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    Prev
+                    {t('table.prev')}
                   </Button>
                   <Button
                     type="button"
@@ -484,7 +474,7 @@ export function RefundReconciliationWorkspace() {
                     disabled={page >= totalPages}
                     className="gap-2"
                   >
-                    Next
+                    {t('table.next')}
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
@@ -494,15 +484,15 @@ export function RefundReconciliationWorkspace() {
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200 text-left text-gray-500">
-                      <th className="pb-3 pr-4">Order</th>
-                      <th className="pb-3 pr-4">Refund</th>
-                      <th className="pb-3 pr-4">Paid</th>
-                      <th className="pb-3 pr-4">Approved</th>
-                      <th className="pb-3 pr-4">Settled</th>
-                      <th className="pb-3 pr-4">Invoice</th>
-                      <th className="pb-3 pr-4">Tx ref</th>
-                      <th className="pb-3 pr-4">Processed</th>
-                      <th className="pb-3">Match</th>
+                      <th className="pb-3 pr-4">{t('table.headers.order')}</th>
+                      <th className="pb-3 pr-4">{t('table.headers.refund')}</th>
+                      <th className="pb-3 pr-4">{t('table.headers.paid')}</th>
+                      <th className="pb-3 pr-4">{t('table.headers.approved')}</th>
+                      <th className="pb-3 pr-4">{t('table.headers.settled')}</th>
+                      <th className="pb-3 pr-4">{t('table.headers.invoice')}</th>
+                      <th className="pb-3 pr-4">{t('table.headers.txRef')}</th>
+                      <th className="pb-3 pr-4">{t('table.headers.processed')}</th>
+                      <th className="pb-3">{t('table.headers.match')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -527,7 +517,7 @@ export function RefundReconciliationWorkspace() {
                             <div>{formatCurrency(row.settledAmount)}</div>
                             {row.discrepancyAmount > 0 ? (
                               <div className="text-xs text-amber-600">
-                                Outstanding {formatCurrency(row.discrepancyAmount)}
+                                {t('table.outstanding', { amount: formatCurrency(row.discrepancyAmount) })}
                               </div>
                             ) : null}
                           </td>
@@ -546,7 +536,7 @@ export function RefundReconciliationWorkspace() {
                                 rel="noreferrer"
                                 className="text-xs text-blue-600 underline"
                               >
-                                Proof
+                                {t('proof.proofLink')}
                               </a>
                             ) : null}
                           </td>

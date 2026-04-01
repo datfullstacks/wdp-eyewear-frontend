@@ -11,6 +11,7 @@ import {
   Users,
 } from 'lucide-react';
 
+import { useTranslations } from 'next-intl';
 import { Header } from '@/components/organisms/Header';
 import { StatCard } from '@/components/molecules/StatCard';
 import { Card } from '@/components/ui/card';
@@ -33,6 +34,8 @@ export default function ManagerDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const t = useTranslations('manager.dashboard');
+
   useEffect(() => {
     let active = true;
 
@@ -54,7 +57,7 @@ export default function ManagerDashboardPage() {
             errors.push(
               overviewResult.reason instanceof Error
                 ? overviewResult.reason.message
-                : 'Failed to load manager overview.',
+                : t('loadOverviewFailed'),
             );
           }
 
@@ -65,7 +68,7 @@ export default function ManagerDashboardPage() {
             errors.push(
               revenueResult.reason instanceof Error
                 ? revenueResult.reason.message
-                : 'Failed to load revenue summary.',
+                : t('loadRevenueFailed'),
             );
           }
 
@@ -73,7 +76,7 @@ export default function ManagerDashboardPage() {
         }
       } catch (err) {
         if (active) {
-          setError(err instanceof Error ? err.message : 'Failed to load manager overview.');
+          setError(err instanceof Error ? err.message : t('loadOverviewFailed'));
         }
       } finally {
         if (active) {
@@ -87,14 +90,14 @@ export default function ManagerDashboardPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [t]);
 
   const stats = useMemo(
     () =>
       overview
         ? [
             {
-              title: 'Monthly revenue',
+              title: t('stats.monthlyRevenue'),
               value: formatCurrency(overview.monthlyRevenue),
               icon: DollarSign,
               trend: {
@@ -103,40 +106,40 @@ export default function ManagerDashboardPage() {
               },
             },
             {
-              title: 'Monthly orders',
+              title: t('stats.monthlyOrders'),
               value: overview.monthlyOrders,
               icon: ShoppingCart,
             },
             {
-              title: 'Collected this month',
+              title: t('stats.collectedThisMonth'),
               value: formatCurrency(overview.collectedThisMonth),
               icon: CreditCard,
             },
             {
-              title: 'Active products',
+              title: t('stats.activeProducts'),
               value: overview.activeProducts,
               icon: Box,
             },
             {
-              title: 'Active customers',
+              title: t('stats.activeCustomers'),
               value: overview.activeCustomers,
               icon: Users,
             },
             {
-              title: 'Active promotions',
+              title: t('stats.activePromotions'),
               value: overview.activePromotions,
               icon: CreditCard,
             },
           ]
         : [],
-    [overview],
+    [overview, t],
   );
 
   return (
     <>
       <Header
-        title="Manager Dashboard"
-        subtitle="Business control center for products, policies, promotions, users, and revenue"
+        title={t('title')}
+        subtitle={t('subtitle')}
       />
 
       <div className="space-y-6 p-6">
@@ -161,29 +164,29 @@ export default function ManagerDashboardPage() {
 
             <ManagerRevenueInsights
               summary={revenueSummary}
-              title="Manager analytics"
-              subtitle="Live revenue, collection, and channel mix for recent business performance."
+              title={t('analytics.title')}
+              subtitle={t('analytics.subtitle')}
             />
 
             {overview ? (
               <section className="grid gap-4 lg:grid-cols-3">
                 <Card className="p-6 lg:col-span-2">
-                  <h3 className="text-lg font-semibold text-gray-900">Operational summary</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">{t('operationalSummary.title')}</h3>
                   <div className="mt-4 grid gap-4 md:grid-cols-3">
                     <div className="rounded-lg border border-gray-100 bg-gray-50 p-4">
-                      <div className="text-sm text-gray-500">Total orders</div>
+                      <div className="text-sm text-gray-500">{t('operationalSummary.totalOrders')}</div>
                       <div className="mt-2 text-2xl font-semibold text-gray-900">
                         {overview.totalOrders}
                       </div>
                     </div>
                     <div className="rounded-lg border border-gray-100 bg-gray-50 p-4">
-                      <div className="text-sm text-gray-500">Cancelled orders</div>
+                      <div className="text-sm text-gray-500">{t('operationalSummary.cancelledOrders')}</div>
                       <div className="mt-2 text-2xl font-semibold text-gray-900">
                         {overview.cancelledOrders}
                       </div>
                     </div>
                     <div className="rounded-lg border border-gray-100 bg-gray-50 p-4">
-                      <div className="text-sm text-gray-500">MoM growth</div>
+                      <div className="text-sm text-gray-500">{t('operationalSummary.momGrowth')}</div>
                       <div className="mt-2 text-2xl font-semibold text-gray-900">
                         {overview.monthOverMonthGrowth >= 0 ? '+' : ''}
                         {overview.monthOverMonthGrowth}%
@@ -193,10 +196,9 @@ export default function ManagerDashboardPage() {
                 </Card>
 
                 <Card className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Manager scope</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">{t('managerScope.title')}</h3>
                   <p className="mt-3 text-sm leading-6 text-gray-600">
-                    This role now has live data for products, promotions, policies,
-                    escalated refunds, user management, and revenue monitoring.
+                    {t('managerScope.description')}
                   </p>
                 </Card>
               </section>

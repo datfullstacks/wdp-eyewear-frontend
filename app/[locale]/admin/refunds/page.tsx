@@ -3,6 +3,7 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { AlertTriangle, ArrowRight, Loader2, Search } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import analyticsApi, {
   type AdminRefundFilters,
@@ -51,84 +52,34 @@ const formatDateTime = (value?: string) => {
   }).format(date);
 };
 
-function formatOwner(owner: string) {
-  switch (owner) {
-    case 'sales':
-      return 'Sale/Staff';
-    case 'manager':
-      return 'Manager';
-    case 'operations':
-      return 'Operations';
-    case 'customer':
-      return 'Customer';
-    default:
-      return 'Closed';
-  }
-}
-
-function formatStatus(status: string) {
-  switch (status) {
-    case 'waiting_customer_info':
-      return 'Cho KH bo sung';
-    case 'escalated_to_manager':
-      return 'Cho manager';
-    case 'return_pending':
-      return 'Cho hang hoan';
-    case 'return_received':
-      return 'Da nhan hang';
-    default:
-      return status || '--';
-  }
-}
-
-function formatNextAction(code: string) {
-  switch (code) {
-    case 'customer_submit_info':
-      return 'Khach bo sung thong tin';
-    case 'manager_approve':
-      return 'Manager quyet dinh';
-    case 'confirm_return_received':
-      return 'Operation nhan / QC hang';
-    case 'start_processing':
-      return 'Bat dau payout';
-    case 'complete':
-      return 'Xac nhan da chuyen tien';
-    case 'start_review':
-      return 'Staff review';
-    default:
-      return '--';
-  }
-}
-
-function buildBucketChartData(
-  buckets: Array<{ status?: string; owner?: string; count: number }>,
-  kind: 'status' | 'owner',
-): ChartDatum[] {
-  const palette =
-    kind === 'status'
-      ? ['#be123c', '#ea580c', '#2563eb', '#7c3aed', '#16a34a', '#475569']
-      : ['#0f766e', '#d97706', '#2563eb', '#7c3aed', '#64748b'];
-
-  return (Array.isArray(buckets) ? buckets : []).map((bucket, index) => ({
-    label:
-      kind === 'status'
-        ? formatStatus(String(bucket.status || ''))
-        : formatOwner(String(bucket.owner || '')),
-    value: Number(bucket.count || 0),
-    color: palette[index % palette.length],
-  }));
-}
-
 function CaseTable({
   title,
   rows,
   emptyText,
   onOverride,
+  tableLabels,
+  formatStatusFn,
+  formatOwnerFn,
+  formatNextActionFn,
 }: {
   title: string;
   rows: RefundOpsCase[];
   emptyText: string;
   onOverride?: (row: RefundOpsCase) => void;
+  tableLabels: {
+    order: string;
+    customer: string;
+    refund: string;
+    owner: string;
+    nextStep: string;
+    amount: string;
+    updated: string;
+    action: string;
+    override: string;
+  };
+  formatStatusFn: (status: string) => string;
+  formatOwnerFn: (owner: string) => string;
+  formatNextActionFn: (code: string) => string;
 }) {
   return (
     <Card className="p-6">
@@ -141,14 +92,14 @@ function CaseTable({
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 text-left text-gray-500">
-                <th className="pb-3 pr-4">Order</th>
-                <th className="pb-3 pr-4">Customer</th>
-                <th className="pb-3 pr-4">Refund</th>
-                <th className="pb-3 pr-4">Owner</th>
-                <th className="pb-3 pr-4">Next step</th>
-                <th className="pb-3 pr-4">Amount</th>
-                <th className="pb-3 pr-4">Updated</th>
-                {onOverride ? <th className="pb-3">Action</th> : null}
+                <th className="pb-3 pr-4">{tableLabels.order}</th>
+                <th className="pb-3 pr-4">{tableLabels.customer}</th>
+                <th className="pb-3 pr-4">{tableLabels.refund}</th>
+                <th className="pb-3 pr-4">{tableLabels.owner}</th>
+                <th className="pb-3 pr-4">{tableLabels.nextStep}</th>
+                <th className="pb-3 pr-4">{tableLabels.amount}</th>
+                <th className="pb-3 pr-4">{tableLabels.updated}</th>
+                {onOverride ? <th className="pb-3">{tableLabels.action}</th> : null}
               </tr>
             </thead>
             <tbody>
@@ -165,17 +116,17 @@ function CaseTable({
                     <div className="text-xs text-gray-500">{row.customerPhone || '--'}</div>
                   </td>
                   <td className="py-3 pr-4">
-                    <div>{formatStatus(row.refundStatus)}</div>
+                    <div>{formatStatusFn(row.refundStatus)}</div>
                     <div className="text-xs text-gray-500">{row.ageHours}h</div>
                   </td>
-                  <td className="py-3 pr-4">{formatOwner(row.currentOwnerRole)}</td>
-                  <td className="py-3 pr-4">{formatNextAction(row.nextActionCode)}</td>
+                  <td className="py-3 pr-4">{formatOwnerFn(row.currentOwnerRole)}</td>
+                  <td className="py-3 pr-4">{formatNextActionFn(row.nextActionCode)}</td>
                   <td className="py-3 pr-4">{formatCurrency(row.approvedAmount || row.requestedAmount)}</td>
                   <td className="py-3 pr-4">{formatDateTime(row.updatedAt)}</td>
                   {onOverride ? (
                     <td className="py-3">
                       <Button type="button" variant="outline" onClick={() => onOverride(row)}>
-                        Override
+                        {tableLabels.override}
                       </Button>
                     </td>
                   ) : null}
@@ -190,6 +141,59 @@ function CaseTable({
 }
 
 export function RefundMonitoringWorkspace() {
+  const t = useTranslations('manager.monitoring');
+
+  const formatStatus = (status: string) => {
+    switch (status) {
+      case 'waiting_customer_info': return t('status.waitingCustomerInfo');
+      case 'escalated_to_manager': return t('status.escalatedToManager');
+      case 'return_pending': return t('status.returnPending');
+      case 'return_received': return t('status.returnReceived');
+      default: return status || '--';
+    }
+  };
+
+  const formatOwner = (owner: string) => {
+    switch (owner) {
+      case 'sales': return t('owner.sales');
+      case 'manager': return t('owner.manager');
+      case 'operations': return t('owner.operations');
+      case 'customer': return t('owner.customer');
+      default: return t('owner.closed');
+    }
+  };
+
+  const formatNextAction = (code: string) => {
+    switch (code) {
+      case 'customer_submit_info': return t('nextAction.customerSubmitInfo');
+      case 'manager_approve': return t('nextAction.managerApprove');
+      case 'confirm_return_received': return t('nextAction.confirmReturnReceived');
+      case 'start_processing': return t('nextAction.startProcessing');
+      case 'complete': return t('nextAction.complete');
+      case 'start_review': return t('nextAction.startReview');
+      default: return '--';
+    }
+  };
+
+  const buildBucketChartData = (
+    buckets: Array<{ status?: string; owner?: string; count: number }>,
+    kind: 'status' | 'owner',
+  ): ChartDatum[] => {
+    const palette =
+      kind === 'status'
+        ? ['#be123c', '#ea580c', '#2563eb', '#7c3aed', '#16a34a', '#475569']
+        : ['#0f766e', '#d97706', '#2563eb', '#7c3aed', '#64748b'];
+
+    return (Array.isArray(buckets) ? buckets : []).map((bucket, index) => ({
+      label:
+        kind === 'status'
+          ? formatStatus(String(bucket.status || ''))
+          : formatOwner(String(bucket.owner || '')),
+      value: Number(bucket.count || 0),
+      color: palette[index % palette.length],
+    }));
+  };
+
   const [overview, setOverview] = useState<AdminRefundOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -201,7 +205,9 @@ export function RefundMonitoringWorkspace() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [selectedCase, setSelectedCase] = useState<RefundOpsCase | null>(null);
-  const [overrideAction, setOverrideAction] = useState<'reassign_sales' | 'reassign_manager' | 'reassign_operations' | 'reset_reviewing' | 'retry_customer_notification'>('reassign_sales');
+  const [overrideAction, setOverrideAction] = useState<
+    'reassign_sales' | 'reassign_manager' | 'reassign_operations' | 'reset_reviewing' | 'retry_customer_notification'
+  >('reassign_sales');
   const [overrideReason, setOverrideReason] = useState('');
   const [overrideSubmitting, setOverrideSubmitting] = useState(false);
 
@@ -282,59 +288,73 @@ export function RefundMonitoringWorkspace() {
   };
 
   const stats = [
-    { label: 'Total cases', value: overview?.summary.totalCases || 0 },
-    { label: 'Active cases', value: overview?.summary.activeCases || 0 },
-    { label: 'Waiting customer', value: overview?.summary.waitingCustomer || 0 },
-    { label: 'Escalated', value: overview?.summary.escalated || 0 },
-    { label: 'Payout pending', value: overview?.summary.payoutPending || 0 },
-    { label: 'Flagged', value: overview?.summary.flaggedCases || 0 },
+    { label: t('stats.totalCases'), value: overview?.summary.totalCases || 0 },
+    { label: t('stats.activeCases'), value: overview?.summary.activeCases || 0 },
+    { label: t('stats.waitingCustomer'), value: overview?.summary.waitingCustomer || 0 },
+    { label: t('stats.escalated'), value: overview?.summary.escalated || 0 },
+    { label: t('stats.payoutPending'), value: overview?.summary.payoutPending || 0 },
+    { label: t('stats.flagged'), value: overview?.summary.flaggedCases || 0 },
   ];
+
   const statusChartData = buildBucketChartData(overview?.byStatus || [], 'status');
   const ownerChartData = buildBucketChartData(overview?.byOwner || [], 'owner');
+
   const pressureData: ChartDatum[] = [
     {
-      label: 'Flagged cases',
+      label: t('pressure.flaggedCases'),
       value: overview?.summary.flaggedCases || 0,
       color: '#be123c',
-      hint: 'Require manual intervention',
+      hint: t('pressure.flaggedHint'),
     },
     {
-      label: 'Payout pending',
+      label: t('pressure.payoutPending'),
       value: overview?.summary.payoutPending || 0,
       color: '#d97706',
-      hint: 'Approved but not fully settled',
+      hint: t('pressure.payoutHint'),
     },
     {
-      label: 'Escalated',
+      label: t('pressure.escalated'),
       value: overview?.summary.escalated || 0,
       color: '#ea580c',
-      hint: 'Waiting manager decision',
+      hint: t('pressure.escalatedHint'),
     },
     {
-      label: 'Waiting customer',
+      label: t('pressure.waitingCustomer'),
       value: overview?.summary.waitingCustomer || 0,
       color: '#2563eb',
-      hint: 'Blocked on customer follow-up',
+      hint: t('pressure.waitingHint'),
     },
     {
-      label: 'Completed this month',
+      label: t('pressure.completedThisMonth'),
       value: overview?.summary.completedThisMonth || 0,
       color: '#16a34a',
-      hint: 'Closed successfully in current month',
+      hint: t('pressure.completedHint'),
     },
     {
-      label: 'Rejected this month',
+      label: t('pressure.rejectedThisMonth'),
       value: overview?.summary.rejectedThisMonth || 0,
       color: '#64748b',
-      hint: 'Rejected in current month',
+      hint: t('pressure.rejectedHint'),
     },
   ];
+
+  const tableLabels = {
+    order: t('table.order'),
+    customer: t('table.customer'),
+    refund: t('table.refund'),
+    owner: t('table.owner'),
+    nextStep: t('table.nextStep'),
+    amount: t('table.amount'),
+    updated: t('table.updated'),
+    action: t('table.action'),
+    override: t('table.override'),
+  };
 
   return (
     <>
       <Header
-        title="Refund Monitoring"
-        subtitle="Manager workspace for exception handling, payout backlog, and owner distribution"
+        title={t('title')}
+        subtitle={t('subtitle')}
       />
 
       <div className="space-y-6 p-6">
@@ -354,57 +374,57 @@ export function RefundMonitoringWorkspace() {
             <Card className="p-6">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
                 <label className="space-y-2 text-sm">
-                  <span className="font-medium text-gray-700">Search</span>
+                  <span className="font-medium text-gray-700">{t('filters.search')}</span>
                   <div className="flex items-center rounded-md border border-gray-300 px-3">
                     <Search className="h-4 w-4 text-gray-400" />
                     <input
                       value={search}
                       onChange={(event) => setSearch(event.target.value)}
-                      placeholder="Order / customer / reason"
+                      placeholder={t('filters.searchPlaceholder')}
                       className="h-10 w-full border-0 bg-transparent px-2 text-sm outline-none"
                     />
                   </div>
                 </label>
 
                 <label className="space-y-2 text-sm">
-                  <span className="font-medium text-gray-700">Refund status</span>
+                  <span className="font-medium text-gray-700">{t('filters.status')}</span>
                   <select
                     value={status}
                     onChange={(event) => setStatus(event.target.value)}
                     className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
                   >
-                    <option value="all">All</option>
-                    <option value="requested">Requested</option>
-                    <option value="reviewing">Reviewing</option>
-                    <option value="waiting_customer_info">Waiting customer</option>
-                    <option value="escalated_to_manager">Escalated</option>
-                    <option value="approved">Approved</option>
-                    <option value="return_pending">Return pending</option>
-                    <option value="return_received">Return received</option>
-                    <option value="processing">Processing</option>
-                    <option value="completed">Completed</option>
-                    <option value="rejected">Rejected</option>
+                    <option value="all">{t('filters.all')}</option>
+                    <option value="requested">{t('filters.statusOpts.requested')}</option>
+                    <option value="reviewing">{t('filters.statusOpts.reviewing')}</option>
+                    <option value="waiting_customer_info">{t('filters.statusOpts.waitingCustomer')}</option>
+                    <option value="escalated_to_manager">{t('filters.statusOpts.escalated')}</option>
+                    <option value="approved">{t('filters.statusOpts.approved')}</option>
+                    <option value="return_pending">{t('filters.statusOpts.returnPending')}</option>
+                    <option value="return_received">{t('filters.statusOpts.returnReceived')}</option>
+                    <option value="processing">{t('filters.statusOpts.processing')}</option>
+                    <option value="completed">{t('filters.statusOpts.completed')}</option>
+                    <option value="rejected">{t('filters.statusOpts.rejected')}</option>
                   </select>
                 </label>
 
                 <label className="space-y-2 text-sm">
-                  <span className="font-medium text-gray-700">Owner</span>
+                  <span className="font-medium text-gray-700">{t('filters.owner')}</span>
                   <select
                     value={ownerRole}
                     onChange={(event) => setOwnerRole(event.target.value)}
                     className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
                   >
-                    <option value="all">All</option>
-                    <option value="sales">Sale/Staff</option>
-                    <option value="manager">Manager</option>
-                    <option value="operations">Operations</option>
-                    <option value="customer">Customer</option>
-                    <option value="none">Closed</option>
+                    <option value="all">{t('filters.all')}</option>
+                    <option value="sales">{t('filters.ownerOpts.sales')}</option>
+                    <option value="manager">{t('filters.ownerOpts.manager')}</option>
+                    <option value="operations">{t('filters.ownerOpts.operations')}</option>
+                    <option value="customer">{t('filters.ownerOpts.customer')}</option>
+                    <option value="none">{t('filters.ownerOpts.none')}</option>
                   </select>
                 </label>
 
                 <label className="space-y-2 text-sm">
-                  <span className="font-medium text-gray-700">From</span>
+                  <span className="font-medium text-gray-700">{t('filters.from')}</span>
                   <input
                     type="date"
                     value={fromDate}
@@ -414,7 +434,7 @@ export function RefundMonitoringWorkspace() {
                 </label>
 
                 <label className="space-y-2 text-sm">
-                  <span className="font-medium text-gray-700">To</span>
+                  <span className="font-medium text-gray-700">{t('filters.to')}</span>
                   <input
                     type="date"
                     value={toDate}
@@ -430,7 +450,7 @@ export function RefundMonitoringWorkspace() {
                       checked={attentionOnly}
                       onChange={(event) => setAttentionOnly(event.target.checked)}
                     />
-                    Attention only
+                    {t('filters.attentionOnly')}
                   </label>
                   <Button
                     type="button"
@@ -444,7 +464,7 @@ export function RefundMonitoringWorkspace() {
                       setToDate('');
                     }}
                   >
-                    Reset
+                    {t('filters.reset')}
                   </Button>
                 </div>
               </div>
@@ -461,42 +481,36 @@ export function RefundMonitoringWorkspace() {
 
             <section className="grid gap-6 xl:grid-cols-[1.1fr_1.1fr_1.4fr]">
               <Card className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900">Status mix</h3>
-                <p className="mt-1 text-sm text-gray-600">
-                  Current refund workload grouped by state.
-                </p>
+                <h3 className="text-lg font-semibold text-gray-900">{t('charts.statusMixTitle')}</h3>
+                <p className="mt-1 text-sm text-gray-600">{t('charts.statusMixDesc')}</p>
                 <div className="mt-6">
                   <DonutBreakdown
                     data={statusChartData}
-                    centerLabel="Refund states"
-                    emptyLabel="No refund status data."
+                    centerLabel={t('charts.refundStates')}
+                    emptyLabel={t('charts.noStatusData')}
                   />
                 </div>
               </Card>
 
               <Card className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900">Owner distribution</h3>
-                <p className="mt-1 text-sm text-gray-600">
-                  Shows where refund accountability is currently sitting.
-                </p>
+                <h3 className="text-lg font-semibold text-gray-900">{t('charts.ownerDistTitle')}</h3>
+                <p className="mt-1 text-sm text-gray-600">{t('charts.ownerDistDesc')}</p>
                 <div className="mt-6">
                   <DonutBreakdown
                     data={ownerChartData}
-                    centerLabel="Current owner"
-                    emptyLabel="No owner distribution."
+                    centerLabel={t('charts.currentOwner')}
+                    emptyLabel={t('charts.noOwnerData')}
                   />
                 </div>
               </Card>
 
               <Card className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900">Pressure snapshot</h3>
-                <p className="mt-1 text-sm text-gray-600">
-                  Highlights where the refund queue is under the most pressure.
-                </p>
+                <h3 className="text-lg font-semibold text-gray-900">{t('charts.pressureTitle')}</h3>
+                <p className="mt-1 text-sm text-gray-600">{t('charts.pressureDesc')}</p>
                 <div className="mt-6">
                   <DistributionBars
                     data={pressureData}
-                    emptyLabel="No pressure indicators."
+                    emptyLabel={t('charts.noPressure')}
                   />
                 </div>
               </Card>
@@ -504,19 +518,23 @@ export function RefundMonitoringWorkspace() {
 
             <section className="grid gap-6 xl:grid-cols-[2fr_1fr]">
               <CaseTable
-                title="Flagged cases"
+                title={t('sections.flaggedCasesTitle')}
                 rows={overview?.flaggedCases || []}
-                emptyText="No refund case is currently flagged."
+                emptyText={t('sections.flaggedCasesEmpty')}
                 onOverride={setSelectedCase}
+                tableLabels={tableLabels}
+                formatStatusFn={formatStatus}
+                formatOwnerFn={formatOwner}
+                formatNextActionFn={formatNextAction}
               />
 
               <div className="space-y-6">
                 <Card className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900">By status</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">{t('sections.byStatus')}</h3>
                   <div className="mt-4 space-y-3">
                     {(overview?.byStatus || []).map((bucket) => (
                       <div key={bucket.status} className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">{formatStatus(bucket.status)}</span>
+                        <span className="text-gray-600">{formatStatus(String(bucket.status || ''))}</span>
                         <span className="font-medium text-gray-900">{bucket.count}</span>
                       </div>
                     ))}
@@ -524,11 +542,11 @@ export function RefundMonitoringWorkspace() {
                 </Card>
 
                 <Card className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900">By owner</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">{t('sections.byOwner')}</h3>
                   <div className="mt-4 space-y-3">
                     {(overview?.byOwner || []).map((bucket) => (
                       <div key={bucket.owner} className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">{formatOwner(bucket.owner)}</span>
+                        <span className="text-gray-600">{formatOwner(String(bucket.owner || ''))}</span>
                         <span className="font-medium text-gray-900">{bucket.count}</span>
                       </div>
                     ))}
@@ -539,31 +557,32 @@ export function RefundMonitoringWorkspace() {
 
             <section className="grid gap-6 xl:grid-cols-[2fr_1fr]">
               <CaseTable
-                title="Recently completed"
+                title={t('sections.recentCompletedTitle')}
                 rows={overview?.recentCompleted || []}
-                emptyText="No completed refund in the current preview."
+                emptyText={t('sections.recentCompletedEmpty')}
                 onOverride={setSelectedCase}
+                tableLabels={tableLabels}
+                formatStatusFn={formatStatus}
+                formatOwnerFn={formatOwner}
+                formatNextActionFn={formatNextAction}
               />
 
               <Card className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900">Reconciliation</h3>
-                <p className="mt-2 text-sm text-gray-600">
-                  Open the reconciliation workspace to verify payout references,
-                  invoice state, and outstanding approved amounts.
-                </p>
+                <h3 className="text-lg font-semibold text-gray-900">{t('sections.reconciliationTitle')}</h3>
+                <p className="mt-2 text-sm text-gray-600">{t('sections.reconciliationDesc')}</p>
                 <div className="mt-4 flex flex-wrap gap-3">
                   <Link
                     href="/manager/reconciliation"
                     className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
                   >
-                    Open reconciliation
+                    {t('sections.openReconciliation')}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <Link
                     href="/manager/audit"
                     className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
                   >
-                    Open audit trail
+                    {t('sections.openAuditTrail')}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
@@ -586,18 +605,18 @@ export function RefundMonitoringWorkspace() {
         <DialogContent className="w-[92vw] max-w-md p-4 sm:p-5">
           <DialogHeader>
             <DialogTitle className="text-base font-semibold text-gray-900">
-              Refund business override
+              {t('dialog.title')}
             </DialogTitle>
             <DialogDescription className="text-gray-600">
               {selectedCase
                 ? `Apply guarded override for ${selectedCase.orderCode}. Every action is written to refund history.`
-                : 'Select a refund case first.'}
+                : t('dialog.title')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div>
-              <Label className="text-foreground/80">Override action</Label>
+              <Label className="text-foreground/80">{t('dialog.overrideAction')}</Label>
               <select
                 value={overrideAction}
                 onChange={(event) =>
@@ -612,20 +631,20 @@ export function RefundMonitoringWorkspace() {
                 }
                 className="mt-1 flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
               >
-                <option value="reassign_sales">Reassign to sales</option>
-                <option value="reassign_manager">Reassign to manager</option>
-                <option value="reassign_operations">Reassign to operations</option>
-                <option value="reset_reviewing">Reset to reviewing</option>
-                <option value="retry_customer_notification">Retry customer notification</option>
+                <option value="reassign_sales">{t('dialog.actions.reassignSales')}</option>
+                <option value="reassign_manager">{t('dialog.actions.reassignManager')}</option>
+                <option value="reassign_operations">{t('dialog.actions.reassignOperations')}</option>
+                <option value="reset_reviewing">{t('dialog.actions.resetReviewing')}</option>
+                <option value="retry_customer_notification">{t('dialog.actions.retryNotification')}</option>
               </select>
             </div>
 
             <div>
-              <Label className="text-foreground/80">Reason</Label>
+              <Label className="text-foreground/80">{t('dialog.reason')}</Label>
               <Textarea
                 value={overrideReason}
                 onChange={(event) => setOverrideReason(event.target.value)}
-                placeholder="Explain why this override is necessary..."
+                placeholder={t('dialog.reasonPlaceholder')}
                 className="mt-1"
               />
             </div>
@@ -642,14 +661,14 @@ export function RefundMonitoringWorkspace() {
               }}
               disabled={overrideSubmitting}
             >
-              Cancel
+              {t('dialog.cancel')}
             </Button>
             <Button
               type="button"
               onClick={() => void handleOverrideSubmit()}
               disabled={overrideSubmitting || !overrideReason.trim()}
             >
-              {overrideSubmitting ? 'Applying...' : 'Apply override'}
+              {overrideSubmitting ? t('dialog.applying') : t('dialog.apply')}
             </Button>
           </DialogFooter>
         </DialogContent>
