@@ -125,6 +125,12 @@ function hasOutstandingSepayBalance(
   );
 }
 
+function hasOutstandingBalance(
+  order: Pick<OrderRecord, 'paidAmount' | 'total'>
+): boolean {
+  return Number(order.total || 0) > Math.max(0, Number(order.paidAmount || 0));
+}
+
 function resolvePendingOrderType(order: OrderRecord): string {
   const normalized = String(order.orderType || '')
     .trim()
@@ -204,6 +210,9 @@ function mapPreorderOpsStatus(order: OrderRecord): PreorderOrder['opsStatus'] {
   const opsStage = String(order.opsStage || '')
     .trim()
     .toLowerCase();
+  const shipmentStatus = String(order.shipment?.latestStatus || '')
+    .trim()
+    .toLowerCase();
   const shipmentState = String(order.shipment?.state || '')
     .trim()
     .toLowerCase();
@@ -219,6 +228,7 @@ function mapPreorderOpsStatus(order: OrderRecord): PreorderOrder['opsStatus'] {
   if (opsStage === 'stocked') return 'stocked';
   if (opsStage === 'ready_to_pack') return 'ready_to_pack';
   if (opsStage === 'packing') return 'packing';
+  if (opsStage === 'ready_to_ship') return 'ready_to_ship';
   if (
     opsStage === 'shipment_created' ||
     opsStage === 'handover_to_carrier' ||
@@ -232,17 +242,65 @@ function mapPreorderOpsStatus(order: OrderRecord): PreorderOrder['opsStatus'] {
     opsStage === 'delivered' ||
     opsStage === 'closed'
   ) {
-    return 'shipment_created';
+    return opsStage === 'closed' ? 'delivered' : (opsStage as PreorderOrder['opsStatus']);
+  }
+
+  if (shipmentStatus === 'returned') return 'returned';
+  if (shipmentStatus === 'delivered') return 'delivered';
+  if (shipmentStatus === 'delivery_fail') return 'delivery_failed';
+  if (shipmentStatus === 'waiting_to_return') return 'waiting_redelivery';
+  if (shipmentStatus === 'return') return 'return_pending';
+
+  if (
+    ['return_transporting', 'return_sorting', 'returning'].includes(
+      shipmentStatus
+    )
+  ) {
+    return 'return_in_transit';
   }
 
   if (
-    shipmentState === 'created' ||
-    shipmentState === 'in_transit' ||
-    hasShipment
-  )
-    return 'shipment_created';
-  if (rawStatus === 'shipped' || rawStatus === 'delivered')
-    return 'shipment_created';
+    [
+      'return_fail',
+      'exception',
+      'damage',
+      'lost',
+      'cancel',
+      'cancelled',
+    ].includes(shipmentStatus)
+  ) {
+    return 'exception_hold';
+  }
+
+  if (
+    [
+      'transporting',
+      'sorting',
+      'delivering',
+      'money_collect_delivering',
+    ].includes(shipmentStatus)
+  ) {
+    return 'in_transit';
+  }
+
+  if (
+    ['picking', 'money_collect_picking', 'picked', 'storing'].includes(
+      shipmentStatus
+    )
+  ) {
+    return 'handover_to_carrier';
+  }
+
+  if (shipmentStatus === 'ready_to_pick') return 'shipment_created';
+
+  if (shipmentState === 'returned') return 'returned';
+  if (shipmentState === 'delivered') return 'delivered';
+  if (shipmentState === 'failed') return 'delivery_failed';
+  if (shipmentState === 'returning') return 'return_in_transit';
+  if (shipmentState === 'in_transit') return 'in_transit';
+  if (shipmentState === 'created' || hasShipment) return 'shipment_created';
+  if (rawStatus === 'shipped') return 'shipment_created';
+  if (rawStatus === 'delivered') return 'delivered';
   if (rawStatus === 'processing') return 'stocked';
   return 'waiting_arrival';
 }
@@ -633,6 +691,7 @@ export function toSupplementOrder(order: OrderRecord): SupplementOrder | null {
 }
 
 export function toPreorderOrder(order: OrderRecord): PreorderOrder {
+  const mappedPaymentStatus = mapPaymentStatus(order.paymentStatus);
   const products: PreorderProduct[] =
     order.items.length > 0
       ? order.items.map((item, index) => ({
@@ -675,9 +734,14 @@ export function toPreorderOrder(order: OrderRecord): PreorderOrder {
     expectedDate: estimateExpectedDate(order.createdAt),
     products,
     totalAmount: order.total,
-    paymentStatus: hasOutstandingSepayBalance(order)
-      ? 'partial'
-      : mapPaymentStatus(order.paymentStatus),
+    paymentStatus:
+      mappedPaymentStatus === 'cod'
+        ? 'cod'
+        : hasOutstandingBalance(order)
+          ? Number(order.paidAmount || 0) > 0
+            ? 'partial'
+            : 'pending'
+          : mappedPaymentStatus,
     depositAmount: Math.min(order.paidAmount, order.payNowTotal),
     status: mapPreorderStatus(order),
     notes: order.note || '',

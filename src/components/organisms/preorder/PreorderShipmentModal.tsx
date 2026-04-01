@@ -20,11 +20,21 @@ function formatDateTime(value?: string) {
 }
 
 const TEST_STATUS_LABEL: Record<OrderShippingTestStatus, string> = {
-  ready_to_pick: 'Chờ lấy hàng',
-  picking: 'Shipper đang lấy',
-  transporting: 'Đang giao',
-  delivered: 'Đã giao',
-  returned: 'Hoàn hàng',
+  ready_to_pick: 'Cho lay hang',
+  picking: 'Dang lay hang',
+  storing: 'Dang luu kho',
+  transporting: 'Dang van chuyen',
+  delivering: 'Dang giao hang',
+  delivery_fail: 'Giao that bai',
+  waiting_to_return: 'Cho giao lai / hoan',
+  return: 'Bat dau hoan hang',
+  return_transporting: 'Dang van chuyen hoan',
+  returning: 'Dang tra ve shop',
+  delivered: 'Da giao',
+  return_fail: 'Hoan that bai',
+  damage: 'Hu hong',
+  lost: 'That lac',
+  returned: 'Da hoan hang',
 };
 
 export function PreorderShipmentModal({
@@ -42,7 +52,7 @@ export function PreorderShipmentModal({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   order: PreorderOrder | null;
-  mode: 'create' | 'sync';
+  mode: 'create' | 'manage';
   shippingInfo: OrderShippingInfo | null;
   isLoading: boolean;
   isSubmitting: boolean;
@@ -54,16 +64,15 @@ export function PreorderShipmentModal({
 
   const isCreate = mode === 'create';
   const shipment = shippingInfo?.shipment;
-  const canSubmit = isCreate
-    ? Boolean(shippingInfo?.permissions.create_shipment)
-    : Boolean(shippingInfo?.permissions.sync_shipment);
+  const canSubmit = isCreate && Boolean(shippingInfo?.permissions.create_shipment);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="text-foreground w-[92vw] max-w-[560px] p-4 shadow-2xl">
         <DialogHeader>
           <DialogTitle>
-            {isCreate ? 'Tạo vận đơn GHN' : 'Đồng bộ GHN'} • {order.orderCode}
+            {isCreate ? 'Tao van don GHN' : 'Quan ly luong GHN'} •{' '}
+            {order.orderCode}
           </DialogTitle>
         </DialogHeader>
 
@@ -71,23 +80,23 @@ export function PreorderShipmentModal({
           <div className="border-border bg-muted/10 rounded-lg border p-3 text-sm">
             <div className="font-medium">
               {isCreate
-                ? 'Pre-order đã sẵn sàng đóng gói, có thể tạo vận đơn GHN.'
-                : 'Đồng bộ lại GHN để cập nhật trạng thái shipment và tracking.'}
+                ? 'Pre-order da san sang giao van va co the tao van don GHN.'
+                : 'Tam thoi dung test-status de mo phong callback GHN cho luong shipment.'}
             </div>
             <div className="text-foreground/70 mt-1">
-              Carrier hiện tại: GHN - Giao Hàng Nhanh
+              Carrier hien tai: GHN - Giao Hang Nhanh
             </div>
           </div>
 
           {isLoading ? (
             <div className="text-foreground/70 text-sm">
-              Đang tải thông tin GHN...
+              Dang tai thong tin GHN...
             </div>
           ) : (
             <>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
-                  <Label>Trạng thái order</Label>
+                  <Label>Trang thai order</Label>
                   <div className="text-sm font-semibold">
                     {shippingInfo?.orderStatus || order.rawOrderStatus || '-'}
                   </div>
@@ -99,19 +108,19 @@ export function PreorderShipmentModal({
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <Label>Mã vận đơn GHN</Label>
+                  <Label>Ma van don GHN</Label>
                   <div className="font-mono text-sm">
                     {shipment?.orderCode || shipment?.trackingCode || '-'}
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <Label>Trạng thái GHN</Label>
+                  <Label>Trang thai GHN</Label>
                   <div className="text-sm font-semibold">
                     {shipment?.latestStatus || shipment?.state || '-'}
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <Label>Dịch vụ</Label>
+                  <Label>Dich vu</Label>
                   <div className="text-sm font-semibold">
                     {shipment?.serviceName || 'GHN'}
                   </div>
@@ -127,7 +136,7 @@ export function PreorderShipmentModal({
               {shipment?.latestFailReason && (
                 <div className="border-destructive/20 bg-destructive/5 rounded-lg border p-3 text-sm">
                   <div className="text-destructive font-medium">
-                    Lý do lỗi GHN
+                    Ly do loi GHN
                   </div>
                   <div className="mt-1">{shipment.latestFailReason}</div>
                 </div>
@@ -138,10 +147,10 @@ export function PreorderShipmentModal({
                 shippingInfo.testStatusOptions.length > 0 && (
                   <div className="border-border bg-muted/10 rounded-lg border p-3 text-sm">
                     <div className="font-medium">
-                      Cập nhật trạng thái GHN theo thứ tự (test mode)
+                      Cap nhat trang thai GHN theo thu tu (test mode)
                     </div>
                     <div className="text-foreground/70 mt-1">
-                      Chỉ cho phép chuyển sang bước tiếp theo hợp lệ.
+                      Chi cho phep chuyen sang buoc tiep theo hop le.
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {shippingInfo.testStatusOptions.map((status) => (
@@ -167,18 +176,16 @@ export function PreorderShipmentModal({
 
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Đóng
+            Dong
           </Button>
-          <Button
-            onClick={onSubmit}
-            disabled={!canSubmit || isLoading || isSubmitting}
-          >
-            {isSubmitting
-              ? 'Đang xử lý...'
-              : isCreate
-                ? 'Tạo vận đơn GHN'
-                : 'Đồng bộ GHN'}
-          </Button>
+          {isCreate && (
+            <Button
+              onClick={onSubmit}
+              disabled={!canSubmit || isLoading || isSubmitting}
+            >
+              {isSubmitting ? 'Dang xu ly...' : 'Tao van don GHN'}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
