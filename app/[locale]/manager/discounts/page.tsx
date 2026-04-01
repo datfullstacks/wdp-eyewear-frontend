@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertTriangle, Calendar, Loader2, Percent, Tag } from 'lucide-react';
 
+import { useTranslations } from 'next-intl';
 import { Header } from '@/components/organisms/Header';
 import { StatCard } from '@/components/molecules/StatCard';
 import { DiscountTable } from '@/components/organisms/manager';
@@ -15,6 +16,7 @@ type TypeFilter = 'all' | 'percentage' | 'fixed';
 
 export default function DiscountsPage() {
   const router = useRouter();
+  const t = useTranslations('manager.discounts');
   const [discounts, setDiscounts] = useState<PromotionRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState('');
@@ -35,7 +37,7 @@ export default function DiscountsPage() {
         }
       } catch (error) {
         if (active) {
-          setApiError(error instanceof Error ? error.message : 'Failed to load promotions.');
+          setApiError(error instanceof Error ? error.message : t('deleteFailed'));
         }
       } finally {
         if (active) {
@@ -49,7 +51,7 @@ export default function DiscountsPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [t]);
 
   const filteredDiscounts = useMemo(() => {
     return discounts.filter((discount) => {
@@ -75,31 +77,31 @@ export default function DiscountsPage() {
     }).length;
 
     return [
-      { title: 'Active promotions', value: activePromotions, icon: Percent },
-      { title: 'Expiring soon', value: expiringSoon, icon: Calendar },
-      { title: 'Total promotions', value: discounts.length, icon: Tag },
+      { title: t('stats.activePromotions'), value: activePromotions, icon: Percent },
+      { title: t('stats.expiringSoon'), value: expiringSoon, icon: Calendar },
+      { title: t('stats.totalCoupons'), value: discounts.length, icon: Tag },
     ];
-  }, [discounts]);
+  }, [discounts, t]);
 
   const handleDelete = async (discount: PromotionRecord) => {
-    if (!window.confirm(`Delete promotion "${discount.name}"?`)) return;
+    if (!window.confirm(t('deleteConfirm', { name: discount.name }))) return;
 
     try {
       await promotionApi.remove(discount.id);
       setDiscounts((current) => current.filter((item) => item.id !== discount.id));
       setApiError('');
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Failed to delete promotion.');
+      setApiError(error instanceof Error ? error.message : t('deleteFailed'));
     }
   };
 
   return (
     <>
       <Header
-        title="Promotions & Discounts"
-        subtitle="Create and manage voucher programs, validity windows, and usage limits"
+        title={t('title')}
+        subtitle={t('subtitle')}
         showAddButton
-        addButtonLabel="Add promotion"
+        addButtonLabel={t('addDiscount')}
         onAdd={() => router.push('/manager/discounts/create')}
       />
 
@@ -126,7 +128,7 @@ export default function DiscountsPage() {
             <section className="flex flex-col gap-4 sm:flex-row">
               <div className="flex-1">
                 <Input
-                  placeholder="Search by code, name, or description"
+                  placeholder={t('searchPlaceholder')}
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
                 />
@@ -137,11 +139,11 @@ export default function DiscountsPage() {
                   onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
                   className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
                 >
-                  <option value="all">All status</option>
-                  <option value="active">Active</option>
-                  <option value="scheduled">Scheduled</option>
-                  <option value="expired">Expired</option>
-                  <option value="inactive">Inactive</option>
+                  <option value="all">{t('filters.allStatus')}</option>
+                  <option value="active">{t('filters.active')}</option>
+                  <option value="scheduled">{t('filters.scheduled')}</option>
+                  <option value="expired">{t('filters.expired')}</option>
+                  <option value="inactive">{t('filters.inactive')}</option>
                 </select>
               </div>
               <div className="w-full sm:w-48">
@@ -150,15 +152,15 @@ export default function DiscountsPage() {
                   onChange={(event) => setTypeFilter(event.target.value as TypeFilter)}
                   className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
                 >
-                  <option value="all">All types</option>
-                  <option value="percentage">Percentage</option>
-                  <option value="fixed">Fixed amount</option>
+                  <option value="all">{t('filters.allTypes')}</option>
+                  <option value="percentage">{t('filters.percentage')}</option>
+                  <option value="fixed">{t('filters.fixed')}</option>
                 </select>
               </div>
             </section>
 
             <div className="text-sm text-gray-600">
-              Showing {filteredDiscounts.length} promotion(s)
+              {t('showingResults', { count: filteredDiscounts.length })}
             </div>
 
             <section className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
@@ -167,24 +169,24 @@ export default function DiscountsPage() {
                 onView={(discount) => router.push(`/manager/discounts/${discount.id}`)}
                 onDelete={handleDelete}
                 translations={{
-                  code: 'Code',
-                  name: 'Promotion',
-                  type: 'Type',
-                  value: 'Value',
-                  period: 'Period',
-                  usage: 'Usage',
-                  status: 'Status',
-                  actions: 'Actions',
-                  noData: 'No promotions found',
-                  percentage: 'Percentage',
-                  fixed: 'Fixed',
-                  active: 'Active',
-                  inactive: 'Inactive',
-                  expired: 'Expired',
-                  scheduled: 'Scheduled',
-                  unlimited: 'Unlimited',
-                  viewDetails: 'View',
-                  deleteDiscount: 'Delete',
+                  code: t('table.code'),
+                  name: t('table.name'),
+                  type: t('table.type'),
+                  value: t('table.value'),
+                  period: t('table.period'),
+                  usage: t('table.usage'),
+                  status: t('table.status'),
+                  actions: t('table.actions'),
+                  noData: t('table.noData'),
+                  percentage: t('table.percentage'),
+                  fixed: t('table.fixed'),
+                  active: t('table.active'),
+                  inactive: t('table.inactive'),
+                  expired: t('table.expired'),
+                  scheduled: t('table.scheduled'),
+                  unlimited: t('table.unlimited'),
+                  viewDetails: t('table.viewDetails'),
+                  deleteDiscount: t('table.deleteDiscount'),
                 }}
               />
             </section>

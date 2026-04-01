@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, DollarSign, Loader2, Package, Tag, TrendingUp } from 'lucide-react';
 
+import { useTranslations } from 'next-intl';
 import { Header } from '@/components/organisms/Header';
 import { StatCard } from '@/components/molecules/StatCard';
 import { Card } from '@/components/ui/card';
@@ -22,6 +23,8 @@ export default function PricingPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const t = useTranslations('manager.pricing');
+
   useEffect(() => {
     let active = true;
 
@@ -40,7 +43,7 @@ export default function PricingPage() {
         setPromotionCount(promotionResult.total);
       } catch (err) {
         if (active) {
-          setError(err instanceof Error ? err.message : 'Failed to load pricing data.');
+          setError(err instanceof Error ? err.message : t('loadFailed'));
         }
       } finally {
         if (active) {
@@ -54,7 +57,7 @@ export default function PricingPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [t]);
 
   const stats = useMemo(() => {
     const activeProducts = products.filter((product) => product.status === 'active');
@@ -68,33 +71,33 @@ export default function PricingPage() {
 
     return [
       {
-        title: 'Average listed price',
+        title: t('stats.avgPrice'),
         value: formatCurrency(avgPrice),
         icon: DollarSign,
       },
       {
-        title: 'Active products',
+        title: t('stats.activeProducts'),
         value: activeProducts.length,
         icon: Package,
       },
       {
-        title: 'Active promotions',
+        title: t('stats.activePromotions'),
         value: promotionCount,
         icon: Tag,
       },
       {
-        title: 'In-stock products',
+        title: t('stats.inStockProducts'),
         value: products.filter((product) => product.stock > 0).length,
         icon: TrendingUp,
       },
     ];
-  }, [products, promotionCount]);
+  }, [products, promotionCount, t]);
 
   return (
     <>
       <Header
-        title="Pricing Overview"
-        subtitle="Use this view to monitor list prices, stock health, and promotion pressure across the catalog"
+        title={t('title')}
+        subtitle={t('subtitle')}
       />
 
       <div className="space-y-6 p-6">
@@ -118,17 +121,17 @@ export default function PricingPage() {
             </section>
 
             <Card className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900">Catalog price watch</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t('catalogPriceWatch')}</h3>
               <div className="mt-4 overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200 text-left text-gray-500">
-                      <th className="pb-3 pr-4">Product</th>
-                      <th className="pb-3 pr-4">Brand</th>
-                      <th className="pb-3 pr-4">Type</th>
-                      <th className="pb-3 pr-4">Price</th>
-                      <th className="pb-3 pr-4">Stock</th>
-                      <th className="pb-3">Status</th>
+                      <th className="pb-3 pr-4">{t('columns.product')}</th>
+                      <th className="pb-3 pr-4">{t('columns.brand')}</th>
+                      <th className="pb-3 pr-4">{t('columns.type')}</th>
+                      <th className="pb-3 pr-4">{t('columns.price')}</th>
+                      <th className="pb-3 pr-4">{t('columns.stock')}</th>
+                      <th className="pb-3">{t('columns.status')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -142,7 +145,7 @@ export default function PricingPage() {
                         <td className="py-3 pr-4">{product.type}</td>
                         <td className="py-3 pr-4">{formatCurrency(product.price)}</td>
                         <td className="py-3 pr-4">{product.stock}</td>
-                        <td className="py-3">{product.status}</td>
+                        <td className="py-3">{product.status === 'active' ? t('columns.status') : product.status}</td>
                       </tr>
                     ))}
                   </tbody>

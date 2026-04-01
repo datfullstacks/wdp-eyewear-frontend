@@ -8,6 +8,7 @@ import {
   Loader2,
   Search,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import analyticsApi, { type RefundAuditFilters, type RefundAuditTrail } from '@/api/analytics';
 import { Button } from '@/components/atoms';
@@ -55,6 +56,8 @@ function formatEventDate(value?: string | null) {
 }
 
 export function RefundAuditWorkspace() {
+  const t = useTranslations('manager.audit');
+
   const [audit, setAudit] = useState<RefundAuditTrail | null>(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -142,8 +145,8 @@ export function RefundAuditWorkspace() {
   return (
     <>
       <Header
-        title="Refund Audit Trail"
-        subtitle="Trace refund transitions, actors, and decision notes under manager ownership"
+        title={t('title')}
+        subtitle={t('subtitle')}
       />
 
       <div className="space-y-6 p-6">
@@ -157,100 +160,100 @@ export function RefundAuditWorkspace() {
         <Card className="p-6">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
             <label className="space-y-2 text-sm">
-              <span className="font-medium text-gray-700">Search</span>
+              <span className="font-medium text-gray-700">{t('filters.search')}</span>
               <div className="flex items-center rounded-md border border-gray-300 px-3">
                 <Search className="h-4 w-4 text-gray-400" />
                 <input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Order / actor / note"
+                  placeholder={t('filters.searchPlaceholder')}
                   className="h-10 w-full border-0 bg-transparent px-2 text-sm outline-none"
                 />
               </div>
             </label>
 
             <label className="space-y-2 text-sm">
-              <span className="font-medium text-gray-700">Action</span>
+              <span className="font-medium text-gray-700">{t('filters.action')}</span>
               <select
                 value={action}
                 onChange={(event) => setAction(event.target.value)}
                 className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
               >
-                <option value="all">All</option>
-                <option value="create_request">Create request</option>
-                <option value="start_review">Start review</option>
-                <option value="request_customer_info">Request customer info</option>
-                <option value="customer_submit_info">Customer submit info</option>
-                <option value="approve">Approve</option>
-                <option value="reject">Reject</option>
-                <option value="escalate">Escalate</option>
-                <option value="manager_approve">Manager approve</option>
-                <option value="manager_reject">Manager reject</option>
-                <option value="send_back_to_staff">Send back to staff</option>
-                <option value="mark_return_pending">Mark return pending</option>
-                <option value="confirm_return_received">Confirm return received</option>
-                <option value="inspection_failed">Inspection failed</option>
-                <option value="start_processing">Start processing</option>
-                <option value="complete">Complete</option>
+                <option value="all">{t('filters.all')}</option>
+                <option value="create_request">{t('filters.actionOpts.createRequest')}</option>
+                <option value="start_review">{t('filters.actionOpts.startReview')}</option>
+                <option value="request_customer_info">{t('filters.actionOpts.requestCustomerInfo')}</option>
+                <option value="customer_submit_info">{t('filters.actionOpts.customerSubmitInfo')}</option>
+                <option value="approve">{t('filters.actionOpts.approve')}</option>
+                <option value="reject">{t('filters.actionOpts.reject')}</option>
+                <option value="escalate">{t('filters.actionOpts.escalate')}</option>
+                <option value="manager_approve">{t('filters.actionOpts.managerApprove')}</option>
+                <option value="manager_reject">{t('filters.actionOpts.managerReject')}</option>
+                <option value="send_back_to_staff">{t('filters.actionOpts.sendBackToStaff')}</option>
+                <option value="mark_return_pending">{t('filters.actionOpts.markReturnPending')}</option>
+                <option value="confirm_return_received">{t('filters.actionOpts.confirmReturnReceived')}</option>
+                <option value="inspection_failed">{t('filters.actionOpts.inspectionFailed')}</option>
+                <option value="start_processing">{t('filters.actionOpts.startProcessing')}</option>
+                <option value="complete">{t('filters.actionOpts.complete')}</option>
               </select>
             </label>
 
             <label className="space-y-2 text-sm">
-              <span className="font-medium text-gray-700">Actor role</span>
+              <span className="font-medium text-gray-700">{t('filters.actorRole')}</span>
               <select
                 value={actorRole}
                 onChange={(event) => setActorRole(event.target.value)}
                 className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
               >
-                <option value="all">All</option>
-                <option value="sales">Sale/Staff</option>
-                <option value="manager">Manager</option>
-                <option value="operations">Operations</option>
-                <option value="customer">Customer</option>
-                <option value="admin">Admin</option>
+                <option value="all">{t('filters.all')}</option>
+                <option value="sales">{t('filters.roleOpts.sales')}</option>
+                <option value="manager">{t('filters.roleOpts.manager')}</option>
+                <option value="operations">{t('filters.roleOpts.operations')}</option>
+                <option value="customer">{t('filters.roleOpts.customer')}</option>
+                <option value="admin">{t('filters.roleOpts.admin')}</option>
               </select>
             </label>
 
             <label className="space-y-2 text-sm">
-              <span className="font-medium text-gray-700">Current owner</span>
+              <span className="font-medium text-gray-700">{t('filters.currentOwner')}</span>
               <select
                 value={ownerRole}
                 onChange={(event) => setOwnerRole(event.target.value)}
                 className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
               >
-                <option value="all">All</option>
-                <option value="sales">Sale/Staff</option>
-                <option value="manager">Manager</option>
-                <option value="operations">Operations</option>
-                <option value="customer">Customer</option>
-                <option value="none">Closed</option>
+                <option value="all">{t('filters.all')}</option>
+                <option value="sales">{t('filters.roleOpts.sales')}</option>
+                <option value="manager">{t('filters.roleOpts.manager')}</option>
+                <option value="operations">{t('filters.roleOpts.operations')}</option>
+                <option value="customer">{t('filters.roleOpts.customer')}</option>
+                <option value="none">{t('filters.roleOpts.none')}</option>
               </select>
             </label>
 
             <label className="space-y-2 text-sm">
-              <span className="font-medium text-gray-700">Current refund status</span>
+              <span className="font-medium text-gray-700">{t('filters.status')}</span>
               <select
                 value={status}
                 onChange={(event) => setStatus(event.target.value)}
                 className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
               >
-                <option value="all">All</option>
-                <option value="requested">Requested</option>
-                <option value="reviewing">Reviewing</option>
-                <option value="waiting_customer_info">Waiting customer</option>
-                <option value="escalated_to_manager">Escalated</option>
-                <option value="approved">Approved</option>
-                <option value="return_pending">Return pending</option>
-                <option value="return_received">Return received</option>
-                <option value="processing">Processing</option>
-                <option value="completed">Completed</option>
-                <option value="rejected">Rejected</option>
+                <option value="all">{t('filters.all')}</option>
+                <option value="requested">{t('filters.statusOpts.requested')}</option>
+                <option value="reviewing">{t('filters.statusOpts.reviewing')}</option>
+                <option value="waiting_customer_info">{t('filters.statusOpts.waitingCustomer')}</option>
+                <option value="escalated_to_manager">{t('filters.statusOpts.escalated')}</option>
+                <option value="approved">{t('filters.statusOpts.approved')}</option>
+                <option value="return_pending">{t('filters.statusOpts.returnPending')}</option>
+                <option value="return_received">{t('filters.statusOpts.returnReceived')}</option>
+                <option value="processing">{t('filters.statusOpts.processing')}</option>
+                <option value="completed">{t('filters.statusOpts.completed')}</option>
+                <option value="rejected">{t('filters.statusOpts.rejected')}</option>
               </select>
             </label>
 
             <div className="flex items-end gap-3">
               <label className="space-y-2 text-sm">
-                <span className="font-medium text-gray-700">From</span>
+                <span className="font-medium text-gray-700">{t('filters.from')}</span>
                 <input
                   type="date"
                   value={fromDate}
@@ -259,7 +262,7 @@ export function RefundAuditWorkspace() {
                 />
               </label>
               <label className="space-y-2 text-sm">
-                <span className="font-medium text-gray-700">To</span>
+                <span className="font-medium text-gray-700">{t('filters.to')}</span>
                 <input
                   type="date"
                   value={toDate}
@@ -280,7 +283,7 @@ export function RefundAuditWorkspace() {
                   setToDate('');
                 }}
               >
-                Reset
+                {t('filters.reset')}
               </Button>
             </div>
           </div>
@@ -294,25 +297,25 @@ export function RefundAuditWorkspace() {
           <>
             <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               <Card className="p-5">
-                <div className="text-sm text-gray-500">Total events</div>
+                <div className="text-sm text-gray-500">{t('stats.totalEvents')}</div>
                 <div className="mt-2 text-2xl font-semibold text-gray-900">
                   {audit?.summary.totalEvents || 0}
                 </div>
               </Card>
               <Card className="p-5">
-                <div className="text-sm text-gray-500">Unique orders</div>
+                <div className="text-sm text-gray-500">{t('stats.uniqueOrders')}</div>
                 <div className="mt-2 text-2xl font-semibold text-gray-900">
                   {audit?.summary.uniqueOrders || 0}
                 </div>
               </Card>
               <Card className="p-5">
-                <div className="text-sm text-gray-500">Top action</div>
+                <div className="text-sm text-gray-500">{t('stats.topAction')}</div>
                 <div className="mt-2 text-lg font-semibold text-gray-900">
                   {formatToken(audit?.byAction?.[0]?.action || '')}
                 </div>
               </Card>
               <Card className="p-5">
-                <div className="text-sm text-gray-500">Top actor role</div>
+                <div className="text-sm text-gray-500">{t('stats.topActorRole')}</div>
                 <div className="mt-2 text-lg font-semibold text-gray-900">
                   {formatToken(audit?.byActorRole?.[0]?.role || '')}
                 </div>
@@ -321,16 +324,14 @@ export function RefundAuditWorkspace() {
 
             <section className="grid gap-6 xl:grid-cols-[1.5fr_1.1fr_1.1fr]">
               <Card className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900">Event density</h3>
-                <p className="mt-1 text-sm text-gray-600">
-                  Event volume over the currently filtered audit rows.
-                </p>
+                <h3 className="text-lg font-semibold text-gray-900">{t('charts.eventDensity')}</h3>
+                <p className="mt-1 text-sm text-gray-600">{t('charts.eventDensityDesc')}</p>
                 <div className="mt-6">
                   <TrendComparisonChart
                     labels={eventTrendLabels}
                     series={[
                       {
-                        label: 'Events',
+                        label: t('charts.events'),
                         color: '#2563eb',
                         values: eventTrendValues,
                         fill: true,
@@ -341,28 +342,24 @@ export function RefundAuditWorkspace() {
               </Card>
 
               <Card className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900">Action mix</h3>
-                <p className="mt-1 text-sm text-gray-600">
-                  Most frequent refund workflow actions in the current filter.
-                </p>
+                <h3 className="text-lg font-semibold text-gray-900">{t('charts.actionMix')}</h3>
+                <p className="mt-1 text-sm text-gray-600">{t('charts.actionMixDesc')}</p>
                 <div className="mt-6">
                   <DistributionBars
                     data={actionChartData}
-                    emptyLabel="No action buckets."
+                    emptyLabel={t('charts.noActionBuckets')}
                   />
                 </div>
               </Card>
 
               <Card className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900">Actor mix</h3>
-                <p className="mt-1 text-sm text-gray-600">
-                  Shows which role is driving most refund activity.
-                </p>
+                <h3 className="text-lg font-semibold text-gray-900">{t('charts.actorMix')}</h3>
+                <p className="mt-1 text-sm text-gray-600">{t('charts.actorMixDesc')}</p>
                 <div className="mt-6">
                   <DonutBreakdown
                     data={actorChartData}
-                    centerLabel="Actor role"
-                    emptyLabel="No actor role buckets."
+                    centerLabel={t('charts.actorRole')}
+                    emptyLabel={t('charts.noActorBuckets')}
                   />
                 </div>
               </Card>
@@ -372,10 +369,13 @@ export function RefundAuditWorkspace() {
               <Card className="p-6">
                 <div className="mb-4 flex items-center justify-between gap-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Audit events</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">{t('table.title')}</h3>
                     <p className="mt-1 text-sm text-gray-500">
-                      Page {audit?.pagination.page || 1} / {totalPages}, total{' '}
-                      {audit?.pagination.total || 0} filtered events
+                      {t('table.pageInfo', {
+                        page: audit?.pagination.page || 1,
+                        total: totalPages,
+                        count: audit?.pagination.total || 0,
+                      })}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -387,7 +387,7 @@ export function RefundAuditWorkspace() {
                       className="gap-2"
                     >
                       <ChevronLeft className="h-4 w-4" />
-                      Prev
+                      {t('table.prev')}
                     </Button>
                     <Button
                       type="button"
@@ -396,7 +396,7 @@ export function RefundAuditWorkspace() {
                       disabled={page >= totalPages}
                       className="gap-2"
                     >
-                      Next
+                      {t('table.next')}
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
@@ -406,12 +406,12 @@ export function RefundAuditWorkspace() {
                   <table className="min-w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-200 text-left text-gray-500">
-                        <th className="pb-3 pr-4">When</th>
-                        <th className="pb-3 pr-4">Order</th>
-                        <th className="pb-3 pr-4">Action</th>
-                        <th className="pb-3 pr-4">Actor</th>
-                        <th className="pb-3 pr-4">Transition</th>
-                        <th className="pb-3">Note</th>
+                        <th className="pb-3 pr-4">{t('table.headers.when')}</th>
+                        <th className="pb-3 pr-4">{t('table.headers.order')}</th>
+                        <th className="pb-3 pr-4">{t('table.headers.action')}</th>
+                        <th className="pb-3 pr-4">{t('table.headers.actor')}</th>
+                        <th className="pb-3 pr-4">{t('table.headers.transition')}</th>
+                        <th className="pb-3">{t('table.headers.note')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -425,7 +425,7 @@ export function RefundAuditWorkspace() {
                           <td className="py-3 pr-4">
                             <div>{formatToken(row.action)}</div>
                             <div className="text-xs text-gray-500">
-                              owner {formatToken(row.currentOwnerRole)}
+                              {t('table.ownerLabel')} {formatToken(row.currentOwnerRole)}
                             </div>
                           </td>
                           <td className="py-3 pr-4">
@@ -434,7 +434,7 @@ export function RefundAuditWorkspace() {
                           </td>
                           <td className="py-3 pr-4">
                             <div>
-                              {formatToken(row.fromStatus)} {'->'} {formatToken(row.toStatus)}
+                              {formatToken(row.fromStatus)} {'→'} {formatToken(row.toStatus)}
                             </div>
                             {row.transactionRef ? (
                               <div className="text-xs text-gray-500">Tx {row.transactionRef}</div>
@@ -455,7 +455,7 @@ export function RefundAuditWorkspace() {
 
               <div className="space-y-6">
                 <Card className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900">By action</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">{t('sidebar.byAction')}</h3>
                   <div className="mt-4 space-y-3">
                     {(audit?.byAction || []).slice(0, 8).map((bucket) => (
                       <div key={bucket.action} className="flex items-center justify-between text-sm">
@@ -467,7 +467,7 @@ export function RefundAuditWorkspace() {
                 </Card>
 
                 <Card className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900">By actor role</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">{t('sidebar.byActorRole')}</h3>
                   <div className="mt-4 space-y-3">
                     {(audit?.byActorRole || []).map((bucket) => (
                       <div key={bucket.role} className="flex items-center justify-between text-sm">

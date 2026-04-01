@@ -49,16 +49,34 @@
     "collapseSidebar": "Thu gọn sidebar"
   },
   "dashboard": {
-    "title": "Bảng Điều Khiển",
-    "subtitle": "Tổng quan quản lý - Sản phẩm, Giá, Người dùng và Doanh thu",
+    "title": "Bảng Điều Khiển Quản Lý",
+    "subtitle": "Trung tâm kiểm soát sản phẩm, chính sách, khuyến mãi, người dùng và doanh thu",
     "stats": {
       "monthlyRevenue": "Doanh thu tháng này",
+      "monthlyOrders": "Đơn hàng tháng này",
+      "collectedThisMonth": "Tiền thu tháng này",
       "totalOrders": "Tổng đơn hàng",
       "activeProducts": "Sản phẩm đang bán",
       "activeCustomers": "Khách hàng hoạt động",
       "revenueTarget": "Mục tiêu doanh thu",
-      "activePromotions": "Chương trình KM active"
-    }
+      "activePromotions": "Khuyến mãi khả dụng"
+    },
+    "analytics": {
+      "title": "Phân tích Quản lý",
+      "subtitle": "Cập nhật doanh thu, thu tiền và kênh phân phối cho các hoạt động gần đây."
+    },
+    "operationalSummary": {
+      "title": "Tóm tắt vận hành",
+      "totalOrders": "Tổng đơn hàng",
+      "cancelledOrders": "Đơn hàng đã hủy",
+      "momGrowth": "Tăng trưởng MoM"
+    },
+    "managerScope": {
+      "title": "Phạm vi quản lý",
+      "description": "Vai trò này có dữ liệu trực tiếp về sản phẩm, khuyến mãi, chính sách, hoàn tiền, quản lý người dùng và theo dõi doanh thu."
+    },
+    "loadOverviewFailed": "Tải tổng quan quản lý thất bại.",
+    "loadRevenueFailed": "Tải tóm tắt doanh thu thất bại."
   },
   "products": {
     "title": "Quản Lý Sản Phẩm",
@@ -237,27 +255,35 @@
     }
   },
   "pricing": {
-    "title": "Quản Lý Giá",
-    "subtitle": "Quản lý giá sản phẩm và chính sách giá",
+    "title": "Tổng Quan Về Giá",
+    "subtitle": "Sử dụng chế độ xem này để theo dõi giá niêm yết, tình trạng tồn kho và áp lực khuyến mãi trên toàn bộ danh mục",
     "createPromotion": "Tạo Khuyến Mãi",
     "stats": {
-      "avgPrice": "Giá trung bình",
+      "avgPrice": "Giá niêm yết trung bình",
+      "activeProducts": "Sản phẩm đang bán",
       "promotionProducts": "Sản phẩm có khuyến mãi",
       "recentPriceChanges": "Tăng giá gần đây",
       "activePromotions": "Khuyến Mãi Đang Hoạt Động",
       "totalUsage": "Tổng Lượt Sử Dụng",
-      "avgDiscount": "Giảm Giá Trung Bình"
+      "avgDiscount": "Giảm Giá Trung Bình",
+      "inStockProducts": "Sản phẩm còn hàng"
     },
     "placeholder": "Danh sách giá sẽ được hiển thị ở đây",
     "promotionsList": "Danh Sách Khuyến Mãi",
+    "catalogPriceWatch": "Theo dõi giá danh mục",
     "columns": {
       "name": "Tên Khuyến Mãi",
       "type": "Loại",
       "discount": "Giảm Giá",
       "period": "Thời Gian",
       "usage": "Đã Sử Dụng",
-      "status": "Trạng Thái"
-    }
+      "status": "Đang hoạt động",
+      "product": "Sản phẩm",
+      "brand": "Thương hiệu",
+      "price": "Giá",
+      "stock": "Tồn kho"
+    },
+    "loadFailed": "Tải dữ liệu giá thất bại."
   },
   "users": {
     "title": "Quản Lý Nhân Sự",
@@ -346,6 +372,7 @@
       "allCategories": "Tất cả danh mục",
       "warranty": "Bảo hành",
       "return": "Đổi trả",
+      "refund": "Hoàn tiền",
       "shipping": "Vận chuyển",
       "purchase": "Mua hàng",
       "privacy": "Bảo mật",
@@ -364,6 +391,7 @@
       "noData": "Không có chính sách",
       "warranty": "Bảo hành",
       "return": "Đổi trả",
+      "refund": "Hoàn tiền",
       "shipping": "Vận chuyển",
       "purchase": "Mua hàng",
       "privacy": "Bảo mật",
@@ -419,18 +447,356 @@
       "deleteDiscount": "Xóa khuyến mãi"
     }
   },
+  "reconciliation": {
+    "title": "Đối Soát Hoàn Tiền",
+    "subtitle": "Xác minh số tiền đã duyệt, tham chiếu thanh toán và sai lệch hóa đơn theo quản trị kinh doanh",
+    "filters": {
+      "search": "Tìm kiếm",
+      "searchPlaceholder": "Đơn hàng / khách hàng / mã giao dịch",
+      "status": "Trạng thái hoàn tiền",
+      "owner": "Chủ sở hữu",
+      "matchStatus": "Trạng thái đối soát",
+      "payoutProof": "Bằng chứng thanh toán",
+      "from": "Từ ngày",
+      "to": "Đến ngày",
+      "attentionOnly": "Chỉ cần chú ý",
+      "reset": "Đặt lại bộ lọc",
+      "exportCsv": "Xuất CSV",
+      "all": "Tất cả",
+      "hasProof": "Có bằng chứng",
+      "missingProof": "Thiếu bằng chứng",
+      "statusOpts": {
+        "requested": "Đã yêu cầu",
+        "reviewing": "Đang xem xét",
+        "waitingCustomer": "Chờ khách hàng",
+        "escalated": "Đã chuyển lên",
+        "approved": "Đã duyệt",
+        "returnPending": "Chờ hàng trả",
+        "returnReceived": "Đã nhận hàng",
+        "processing": "Đang xử lý",
+        "completed": "Hoàn thành",
+        "rejected": "Từ chối"
+      },
+      "ownerOpts": {
+        "sales": "Sale/Nhân viên",
+        "manager": "Manager",
+        "operations": "Vận hành",
+        "customer": "Khách hàng",
+        "none": "Đã đóng"
+      },
+      "matchOpts": {
+        "matched": "Khớp",
+        "awaitingPayout": "Chờ thanh toán",
+        "mismatch": "Sai lệch",
+        "pending": "Đang chờ",
+        "closed": "Đã đóng"
+      }
+    },
+    "summary": {
+      "requestedTotal": "Tổng yêu cầu",
+      "approvedTotal": "Tổng đã duyệt",
+      "settledTotal": "Tổng đã thanh toán",
+      "outstanding": "Còn tồn đọng",
+      "mismatches": "Sai lệch",
+      "awaitingPayout": "Chờ thanh toán"
+    },
+    "charts": {
+      "settlementFlow": "Luồng thanh toán",
+      "settlementFlowDesc": "Phân tách số tiền hoàn tiền thành đã thanh toán, tồn đọng và chưa duyệt.",
+      "matchStatusMix": "Trạng thái đối soát",
+      "matchStatusMixDesc": "Phản ánh trang hiện tại của các hàng đối soát.",
+      "readinessChecks": "Kiểm tra sẵn sàng",
+      "readinessChecksDesc": "Theo dõi độ phủ bằng chứng và phân bổ chủ sở hữu.",
+      "requestedValue": "Giá trị yêu cầu",
+      "matchStatusLabel": "Trạng thái đối soát",
+      "noMoneyFlow": "Không có dữ liệu luồng tiền.",
+      "noMatchStatus": "Không có dữ liệu trạng thái đối soát.",
+      "noPayoutProof": "Không có dữ liệu bằng chứng thanh toán.",
+      "noOwnerDist": "Không có phân bổ chủ sở hữu."
+    },
+    "matchStatusLabels": {
+      "matched": "Khớp",
+      "awaitingPayout": "Chờ thanh toán",
+      "mismatch": "Sai lệch",
+      "closed": "Đã đóng",
+      "pending": "Đang chờ"
+    },
+    "flow": {
+      "settled": "Đã thanh toán",
+      "approvedNotSettled": "Đã duyệt chưa thanh toán",
+      "notYetApproved": "Chưa duyệt",
+      "settledHint": "Đã đối soát và thanh toán",
+      "approvedNotSettledHint": "Đã duyệt nhưng còn tồn đọng",
+      "notYetApprovedHint": "Khoảng cách giữa số yêu cầu và số đã duyệt"
+    },
+    "proof": {
+      "withPayoutProof": "Có bằng chứng thanh toán",
+      "missingPayoutProof": "Thiếu bằng chứng thanh toán",
+      "currentFilteredPage": "Trang đã lọc hiện tại",
+      "proofLink": "Bằng chứng"
+    },
+    "table": {
+      "title": "Các hàng hoàn tiền",
+      "pageInfo": "Trang {page} / {total}, tổng {count} ca đã lọc",
+      "prev": "Trước",
+      "next": "Tiếp theo",
+      "outstanding": "Tồn đọng {amount}",
+      "headers": {
+        "order": "Đơn hàng",
+        "refund": "Hoàn tiền",
+        "paid": "Đã trả",
+        "approved": "Đã duyệt",
+        "settled": "Đã thanh toán",
+        "invoice": "Hóa đơn",
+        "txRef": "Mã GD",
+        "processed": "Đã xử lý",
+        "match": "Đối soát"
+      }
+    }
+  },
+  "monitoring": {
+    "title": "Theo Dõi Hoàn Tiền",
+    "subtitle": "Không gian làm việc xử lý ngoại lệ, hàng chờ thanh toán và phân bổ chủ sở hữu",
+    "filters": {
+      "search": "Tìm kiếm",
+      "searchPlaceholder": "Đơn hàng / khách hàng / lý do",
+      "status": "Trạng thái hoàn tiền",
+      "owner": "Chủ sở hữu",
+      "from": "Từ ngày",
+      "to": "Đến ngày",
+      "attentionOnly": "Chỉ cần chú ý",
+      "reset": "Đặt lại",
+      "all": "Tất cả",
+      "statusOpts": {
+        "requested": "Đã yêu cầu",
+        "reviewing": "Đang xem xét",
+        "waitingCustomer": "Chờ khách hàng",
+        "escalated": "Đã chuyển lên",
+        "approved": "Đã duyệt",
+        "returnPending": "Chờ hàng trả",
+        "returnReceived": "Đã nhận hàng",
+        "processing": "Đang xử lý",
+        "completed": "Hoàn thành",
+        "rejected": "Từ chối"
+      },
+      "ownerOpts": {
+        "sales": "Sale/Nhân viên",
+        "manager": "Manager",
+        "operations": "Vận hành",
+        "customer": "Khách hàng",
+        "none": "Đã đóng"
+      }
+    },
+    "stats": {
+      "totalCases": "Tổng ca",
+      "activeCases": "Ca đang hoạt động",
+      "waitingCustomer": "Chờ KH bổ sung",
+      "escalated": "Đã chuyển lên",
+      "payoutPending": "Chờ thanh toán",
+      "flagged": "Đã gắn cờ"
+    },
+    "pressure": {
+      "flaggedCases": "Ca gắn cờ",
+      "payoutPending": "Chờ thanh toán",
+      "escalated": "Đã chuyển lên",
+      "waitingCustomer": "Chờ KH bổ sung",
+      "completedThisMonth": "Hoàn thành tháng này",
+      "rejectedThisMonth": "Từ chối tháng này",
+      "flaggedHint": "Cần can thiệp thủ công",
+      "payoutHint": "Đã duyệt nhưng chưa thanh toán đủ",
+      "escalatedHint": "Chờ quyết định manager",
+      "waitingHint": "Cần khách hàng bổ sung",
+      "completedHint": "Đóng thành công trong tháng hiện tại",
+      "rejectedHint": "Từ chối trong tháng hiện tại"
+    },
+    "status": {
+      "waitingCustomerInfo": "Chờ KH bổ sung",
+      "escalatedToManager": "Chờ manager",
+      "returnPending": "Chờ hàng hoàn",
+      "returnReceived": "Đã nhận hàng"
+    },
+    "nextAction": {
+      "customerSubmitInfo": "Khách bổ sung thông tin",
+      "managerApprove": "Manager quyết định",
+      "confirmReturnReceived": "Vận hành nhận / QC hàng",
+      "startProcessing": "Bắt đầu payout",
+      "complete": "Xác nhận đã chuyển tiền",
+      "startReview": "Nhân viên review"
+    },
+    "owner": {
+      "sales": "Sale/Nhân viên",
+      "manager": "Manager",
+      "operations": "Vận hành",
+      "customer": "Khách hàng",
+      "closed": "Đã đóng"
+    },
+    "charts": {
+      "statusMixTitle": "Trạng thái hiện tại",
+      "statusMixDesc": "Khối lượng hoàn tiền hiện tại theo trạng thái.",
+      "ownerDistTitle": "Phân bổ chủ sở hữu",
+      "ownerDistDesc": "Trách nhiệm hoàn tiền đang nằm ở đâu.",
+      "pressureTitle": "Tổng quan áp lực",
+      "pressureDesc": "Nơi hàng đợi hoàn tiền chịu áp lực nhiều nhất.",
+      "refundStates": "Trạng thái hoàn tiền",
+      "currentOwner": "Chủ sở hữu",
+      "noStatusData": "Không có dữ liệu trạng thái.",
+      "noOwnerData": "Không có phân bổ chủ sở hữu.",
+      "noPressure": "Không có chỉ số áp lực."
+    },
+    "sections": {
+      "flaggedCasesTitle": "Ca gắn cờ",
+      "flaggedCasesEmpty": "Không có ca nào bị gắn cờ.",
+      "recentCompletedTitle": "Hoàn thành gần đây",
+      "recentCompletedEmpty": "Không có hoàn tiền nào hoàn thành.",
+      "reconciliationTitle": "Đối soát",
+      "reconciliationDesc": "Mở không gian đối soát để xác minh tham chiếu thanh toán, trạng thái hóa đơn và số tiền đã duyệt.",
+      "openReconciliation": "Mở đối soát",
+      "openAuditTrail": "Mở lịch sử kiểm toán",
+      "byStatus": "Theo trạng thái",
+      "byOwner": "Theo chủ sở hữu"
+    },
+    "table": {
+      "order": "Đơn hàng",
+      "customer": "Khách hàng",
+      "refund": "Hoàn tiền",
+      "owner": "Chủ sở hữu",
+      "nextStep": "Bước tiếp theo",
+      "amount": "Số tiền",
+      "updated": "Cập nhật",
+      "action": "Hành động",
+      "override": "Ghi đè"
+    },
+    "dialog": {
+      "title": "Ghi đè hoàn tiền kinh doanh",
+      "overrideAction": "Hành động ghi đè",
+      "reason": "Lý do",
+      "reasonPlaceholder": "Giải thích lý do ghi đè...",
+      "cancel": "Hủy",
+      "apply": "Áp dụng ghi đè",
+      "applying": "Đang áp dụng...",
+      "actions": {
+        "reassignSales": "Chuyển cho Sale",
+        "reassignManager": "Chuyển cho Manager",
+        "reassignOperations": "Chuyển cho Vận hành",
+        "resetReviewing": "Đặt lại thành Xem xét",
+        "retryNotification": "Thử lại thông báo KH"
+      }
+    }
+  },
+  "audit": {
+    "title": "Lịch Sử Kiểm Toán Hoàn Tiền",
+    "subtitle": "Theo dõi các chuyển đổi hoàn tiền, người thực hiện và ghi chú quyết định",
+    "filters": {
+      "search": "Tìm kiếm",
+      "searchPlaceholder": "Đơn hàng / người thực hiện / ghi chú",
+      "action": "Hành động",
+      "actorRole": "Vai trò",
+      "currentOwner": "Chủ sở hữu",
+      "status": "Trạng thái hoàn tiền",
+      "from": "Từ ngày",
+      "to": "Đến ngày",
+      "reset": "Đặt lại",
+      "all": "Tất cả",
+      "actionOpts": {
+        "createRequest": "Tạo yêu cầu",
+        "startReview": "Bắt đầu xem xét",
+        "requestCustomerInfo": "Yêu cầu thông tin KH",
+        "customerSubmitInfo": "KH cung cấp thông tin",
+        "approve": "Duyệt",
+        "reject": "Từ chối",
+        "escalate": "Chuyển lên",
+        "managerApprove": "Manager duyệt",
+        "managerReject": "Manager từ chối",
+        "sendBackToStaff": "Trả về nhân viên",
+        "markReturnPending": "Đánh dấu chờ hàng",
+        "confirmReturnReceived": "Xác nhận nhận hàng",
+        "inspectionFailed": "Kiểm tra thất bại",
+        "startProcessing": "Bắt đầu xử lý",
+        "complete": "Hoàn thành"
+      },
+      "roleOpts": {
+        "sales": "Sale/Nhân viên",
+        "manager": "Manager",
+        "operations": "Vận hành",
+        "customer": "Khách hàng",
+        "admin": "Admin",
+        "none": "Đã đóng"
+      },
+      "statusOpts": {
+        "requested": "Đã yêu cầu",
+        "reviewing": "Đang xem xét",
+        "waitingCustomer": "Chờ khách hàng",
+        "escalated": "Đã chuyển lên",
+        "approved": "Đã duyệt",
+        "returnPending": "Chờ hàng trả",
+        "returnReceived": "Đã nhận hàng",
+        "processing": "Đang xử lý",
+        "completed": "Hoàn thành",
+        "rejected": "Từ chối"
+      }
+    },
+    "stats": {
+      "totalEvents": "Tổng sự kiện",
+      "uniqueOrders": "Đơn hàng duy nhất",
+      "topAction": "Hành động nhiều nhất",
+      "topActorRole": "Vai trò nhiều nhất"
+    },
+    "charts": {
+      "eventDensity": "Mật độ sự kiện",
+      "eventDensityDesc": "Thể tích sự kiện theo hàng kiểm toán đã lọc.",
+      "events": "Sự kiện",
+      "actionMix": "Hành động",
+      "actionMixDesc": "Hành động quy trình hoàn tiền phổ biến nhất.",
+      "actorMix": "Người thực hiện",
+      "actorMixDesc": "Vai trò nào đang thúc đẩy hoạt động hoàn tiền.",
+      "actorRole": "Vai trò",
+      "noActionBuckets": "Không có dữ liệu hành động.",
+      "noActorBuckets": "Không có dữ liệu vai trò."
+    },
+    "table": {
+      "title": "Sự kiện kiểm toán",
+      "pageInfo": "Trang {page} / {total}, tổng {count} sự kiện",
+      "prev": "Trước",
+      "next": "Tiếp theo",
+      "ownerLabel": "chủ sở hữu",
+      "headers": {
+        "when": "Thời gian",
+        "order": "Đơn hàng",
+        "action": "Hành động",
+        "actor": "Người thực hiện",
+        "transition": "Chuyển trạng thái",
+        "note": "Ghi chú"
+      }
+    },
+    "sidebar": {
+      "byAction": "Theo hành động",
+      "byActorRole": "Theo vai trò"
+    }
+  },
   "revenue": {
-    "title": "Báo Cáo Doanh Thu",
-    "subtitle": "Theo dõi doanh thu và phân tích xu hướng",
+    "title": "Tổng Quan Doanh Thu",
+    "subtitle": "Theo dõi doanh thu, tiền đã thu và hiệu quả đơn hàng 6 tháng gần nhất",
+    "loadFailed": "Không thể tải dữ liệu doanh thu.",
+    "analyticsTitle": "Thống kê doanh thu",
+    "analyticsSubtitle": "Xu hướng theo tháng, chất lượng thu tiền và cơ cấu kênh thanh toán từ dữ liệu đơn hàng thực.",
+    "trendTitle": "Xu hướng tháng gần đây",
     "stats": {
       "monthlyRevenue": "Doanh thu tháng này",
-      "growth": "Tăng trưởng",
+      "monthlyCollected": "Đã thu tháng này",
+      "monthlyOrders": "Đơn hàng tháng này",
       "yearlyRevenue": "Doanh thu năm",
+      "growth": "Tăng trưởng",
       "targetAchieved": "Đạt mục tiêu",
       "totalRevenue": "Tổng Doanh Thu",
       "totalOrders": "Tổng Đơn Hàng",
       "avgOrderValue": "Giá Trị ĐH Trung Bình",
       "totalCustomers": "Tổng Khách Hàng"
+    },
+    "columns": {
+      "month": "Tháng",
+      "revenue": "Doanh thu",
+      "collected": "Đã thu",
+      "orders": "Đơn hàng"
     },
     "placeholder": "Biểu đồ doanh thu sẽ được hiển thị ở đây",
     "revenueChart": "Doanh Thu Theo Tháng",
