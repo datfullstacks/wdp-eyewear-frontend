@@ -112,14 +112,6 @@ export const CATEGORY_OPTIONS = [
   { value: 'other', label: 'Khac' },
 ];
 
-const PREORDER_SHIPPING_TIMING_OPTIONS: Array<{
-  value: PreOrderShippingCollectionTiming;
-  label: string;
-}> = [
-  { value: 'upfront', label: 'Collect upfront' },
-  { value: 'on_delivery', label: 'Collect on delivery' },
-];
-
 const TRY_ON_STATUS_OPTIONS: Array<{ value: ProductTryOnStatus; label: string }> = [
   { value: 'draft', label: 'Draft' },
   { value: 'pending_review', label: 'Cho review' },
@@ -292,20 +284,13 @@ export function ProductForm({
         />
       </div>
 
-      {/* Row 2: Price + Stock + Category */}
-      <div className="grid grid-cols-3 gap-3">
+      {/* Row 2: Price + Category */}
+      <div className="grid grid-cols-2 gap-3">
         <Input
           label={tF('price')}
           type="number"
           value={formData.price}
           onChange={(e) => onChange((prev) => ({ ...prev, price: e.target.value }))}
-          placeholder="0"
-        />
-        <Input
-          label={tF('stock')}
-          type="number"
-          value={formData.stock}
-          onChange={(e) => onChange((prev) => ({ ...prev, stock: e.target.value }))}
           placeholder="0"
         />
         <div>
@@ -483,6 +468,9 @@ export function ProductForm({
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{tF('variantsTitle')}</p>
             <p className="mt-1 text-xs text-gray-500">{tF('variantsDesc')}</p>
+            <p className="mt-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-900">
+              {tF('inventoryManagedNote')}
+            </p>
             <p className="mt-2 text-xs font-medium text-amber-800">
               {tF('tryOnLimit', { max: MAX_TRY_ON_MODELS, current: mappedTryOnModelCount })}
             </p>
@@ -510,10 +498,9 @@ export function ProductForm({
                 <Input label={tF('color')} value={variant.color} onChange={(e) => updateVariant(index, (c) => ({ ...c, color: e.target.value }))} placeholder="Black" />
                 <Input label={tF('size')} value={variant.size} onChange={(e) => updateVariant(index, (c) => ({ ...c, size: e.target.value }))} placeholder="M" />
               </div>
-              {/* Row 2: price + stock */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Row 2: price */}
+              <div className="grid grid-cols-1 gap-3">
                 <Input label={tF('variantPrice')} type="number" value={variant.price} onChange={(e) => updateVariant(index, (c) => ({ ...c, price: e.target.value }))} placeholder={formData.price || '0'} />
-                <Input label={tF('variantStock')} type="number" value={variant.stock} onChange={(e) => updateVariant(index, (c) => ({ ...c, stock: e.target.value }))} placeholder="0" />
               </div>
 
               {/* Asset uploads: Image | Poster | GLB in 3 cols */}
@@ -920,43 +907,15 @@ export function ProductForm({
                 <label className="mb-2 block text-sm font-medium text-gray-700">
                   Shipping collection timing
                 </label>
-                <Select
-                  value={formData.preOrderShippingCollectionTiming}
-                  onValueChange={(value) =>
-                    onChange((prev) => ({
-                      ...prev,
-                      preOrderShippingCollectionTiming:
-                        value as PreOrderShippingCollectionTiming,
-                    }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select timing" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PREORDER_SHIPPING_TIMING_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-900">
+                  Collect upfront with deposit
+                </div>
               </div>
 
               <div className="flex items-end">
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <input
-                    type="checkbox"
-                    checked={formData.preOrderAllowCod}
-                    onChange={(event) =>
-                      onChange((prev) => ({
-                        ...prev,
-                        preOrderAllowCod: event.target.checked,
-                      }))
-                    }
-                  />
-                  Allow COD for pay-later leg
-                </label>
+                <div className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-900">
+                  Remaining balance can be collected by COD in V1. Shipping fee stays in the upfront deposit.
+                </div>
               </div>
             </div>
 
@@ -986,14 +945,14 @@ export function ProductForm({
                 <div>Base price: {previewBasePrice.toLocaleString('vi-VN')} VND</div>
                 <div>Deposit: {previewDepositPercent}%</div>
                 <div>Pay now: {previewPayNow.toLocaleString('vi-VN')} VND</div>
-                <div>COD later: {previewPayLater.toLocaleString('vi-VN')} VND</div>
+                <div>Pay later (COD): {previewPayLater.toLocaleString('vi-VN')} VND</div>
               </div>
               <p className="mt-2 text-xs text-amber-800">
-                Shipping is shown separately to customers and will be collected based on the selected timing.
+                Shipping fee is collected with the deposit for pre-order COD flows.
               </p>
-              {!formData.preOrderAllowCod && previewPayLater > 0 ? (
-                <p className="mt-2 text-xs font-semibold text-red-700">
-                  V1 currently collects the pay-later leg as COD. Keep this enabled if deposit percent is below 100%.
+              {previewPayLater > 0 ? (
+                <p className="mt-2 text-xs font-semibold text-amber-900">
+                  Customers pay the deposit via SePay first. The remaining product balance can be collected by COD on delivery.
                 </p>
               ) : null}
             </div>

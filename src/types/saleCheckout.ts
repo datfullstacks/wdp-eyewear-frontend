@@ -103,6 +103,8 @@ export interface QuoteData {
   shippingFee: number;
   discountAmount: number;
   total: number;
+  orderType?: string;
+  allowedPaymentMethods?: string[];
   payNow: number;
   payLater: number;
   payNowTotal: number;
@@ -143,6 +145,8 @@ export interface CheckoutBreakdown {
   shippingFee?: number;
   discountAmount?: number;
   total?: number;
+  orderType?: string;
+  allowedPaymentMethods?: string[];
   payNow?: number;
   payLater?: number;
   paymentMethod?: string;
@@ -157,6 +161,8 @@ export interface CheckoutData {
   invoice?: CheckoutInvoice;
   payment?: CheckoutPayment;
   breakdown?: CheckoutBreakdown;
+  orderType?: string;
+  allowedPaymentMethods?: string[];
   paymentMethod?: string;
   paymentStatus?: string;
 }
@@ -180,7 +186,7 @@ export interface RealtimeOrderStatuses {
 
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'cod' | 'unknown';
 export type OrderStatus = 'pending' | 'confirmed' | 'cancelled' | 'unknown';
-export type InvoiceStatus = 'issued' | 'paid' | 'void' | 'unknown';
+export type InvoiceStatus = 'issued' | 'partial' | 'paid' | 'void' | 'unknown';
 
 export interface SaleProductOption {
   id: string;

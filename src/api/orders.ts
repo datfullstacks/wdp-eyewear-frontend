@@ -26,8 +26,18 @@ export type OrderShippingAction =
 export type OrderShippingTestStatus =
   | 'ready_to_pick'
   | 'picking'
+  | 'storing'
   | 'transporting'
+  | 'delivering'
+  | 'delivery_fail'
+  | 'waiting_to_return'
+  | 'return'
+  | 'return_transporting'
+  | 'returning'
   | 'delivered'
+  | 'return_fail'
+  | 'damage'
+  | 'lost'
   | 'returned';
 export type OrderOpsStage =
   | 'none'
@@ -270,6 +280,7 @@ interface BackendOrder {
   payNowTotal?: number;
   payLaterTotal?: number;
   paidAmount?: number;
+  payLaterMethod?: string;
   paymentMethod?: string;
   paymentStatus?: string;
   orderType?: string;
@@ -495,6 +506,7 @@ export interface OrderRecord {
   payNowTotal: number;
   payLaterTotal: number;
   paidAmount: number;
+  payLaterMethod?: string;
   note: string;
   createdAt?: string;
   shipment?: OrderShipment | null;
@@ -1003,6 +1015,9 @@ function mapBackendOrder(raw: BackendOrder): OrderRecord {
     payNowTotal: Number(raw.payNowTotal || 0),
     payLaterTotal: Number(raw.payLaterTotal || 0),
     paidAmount: Number(raw.paidAmount || 0),
+    payLaterMethod: String(raw.payLaterMethod || '')
+      .trim()
+      .toLowerCase(),
     note: String(raw.note || '').trim(),
     createdAt: raw.createdAt,
     shipment: mapShipment(raw.shipment),
@@ -1149,8 +1164,18 @@ function mapShippingInfo(raw: BackendShippingInfo): OrderShippingInfo {
             [
               'ready_to_pick',
               'picking',
+              'storing',
               'transporting',
+              'delivering',
+              'delivery_fail',
+              'waiting_to_return',
+              'return',
+              'return_transporting',
+              'returning',
               'delivered',
+              'return_fail',
+              'damage',
+              'lost',
               'returned',
             ].includes(status)
           )

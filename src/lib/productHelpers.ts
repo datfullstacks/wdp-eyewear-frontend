@@ -192,7 +192,7 @@ function getEffectiveVariants(form: ProductFormState): ProductVariantFormState[]
       color: form.variantColor,
       size: form.variantSize,
       price: form.price,
-      stock: form.stock,
+      stock: '',
       warehouseLocation: form.variantWarehouseLocation,
       imageUrl: '',
       posterUrl: form.tryOnPosterUrl,
@@ -544,17 +544,6 @@ export function buildUpsertPayload(
       : firstVariantWithPrice != null
         ? Number(firstVariantWithPrice.price)
         : 0;
-  const hasVariantStock = variants.some(
-    (variant) => toText(variant.stock) && Number.isFinite(Number(variant.stock))
-  );
-  const topLevelStock = hasVariantStock
-    ? variants.reduce((sum, variant) => {
-        const value = Number(variant.stock);
-        return sum + (toText(variant.stock) && Number.isFinite(value) && value >= 0 ? value : 0);
-      }, 0)
-    : Number.isFinite(Number(form.stock))
-      ? Number(form.stock)
-      : 0;
 
   return {
     name: form.name.trim(),
@@ -562,13 +551,13 @@ export function buildUpsertPayload(
     category: form.category,
     type: resolvedType,
     price: topLevelPrice,
-    stock: topLevelStock,
+    stock: 0,
     description: form.description.trim() || undefined,
     imageUrl: form.heroImageUrl || undefined,
     mediaAssets: assets,
     preOrder: {
       enabled: form.preOrderEnabled,
-      allowCod: form.preOrderAllowCod,
+      allowCod: true,
       depositPercent:
         Number.isFinite(Number(form.preOrderDepositPercent)) &&
         Number(form.preOrderDepositPercent) >= 0
@@ -583,7 +572,7 @@ export function buildUpsertPayload(
       endAt: form.preOrderEndAt || undefined,
       shipFrom: form.preOrderShipFrom || undefined,
       shipTo: form.preOrderShipTo || undefined,
-      shippingCollectionTiming: form.preOrderShippingCollectionTiming,
+      shippingCollectionTiming: 'upfront',
       note: form.preOrderNote.trim() || undefined,
     },
     storeScope: {
@@ -611,16 +600,6 @@ export function buildUpsertPayload(
         Number(variant.price) >= 0
           ? Number(variant.price)
           : topLevelPrice,
-      stock:
-        toText(variant.stock) &&
-        Number.isFinite(Number(variant.stock)) &&
-        Number(variant.stock) >= 0
-          ? Number(variant.stock)
-          : variants.length === 1 &&
-              Number.isFinite(Number(form.stock)) &&
-              Number(form.stock) >= 0
-            ? Number(form.stock)
-            : 0,
     })),
     specs: buildFrameSpecsPayload(form, resolvedType),
     tryOn: buildTryOnInput(form, resolvedType, variants, ids.tryOnAssetIds),
@@ -716,7 +695,7 @@ export function buildProductFormState(product?: ProductDetail | null): ProductFo
     thumbnailUrl: fallbackThumbnail,
     galleryUrls: getGalleryUrls(product),
     preOrderEnabled: Boolean(product.preOrder?.enabled),
-    preOrderAllowCod: Boolean(product.preOrder?.allowCod ?? true),
+    preOrderAllowCod: false,
     preOrderDepositPercent:
       product.preOrder?.depositPercent != null ? String(product.preOrder.depositPercent) : '30',
     preOrderMaxQuantityPerOrder:

@@ -619,16 +619,6 @@ export default function OrdersReadyStock() {
             </Button>
           </div>
 
-          <div className="flex items-center justify-end gap-2">
-            <Button
-              variant="outline"
-              className="border-slate-300 bg-white text-slate-900 shadow-sm hover:border-slate-400 hover:bg-slate-50 hover:text-slate-950"
-              onClick={loadOrders}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Đang tải...' : 'Tải lại'}
-            </Button>
-          </div>
         </div>
 
         {errorMessage && (

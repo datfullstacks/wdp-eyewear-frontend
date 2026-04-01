@@ -160,6 +160,7 @@
       "noAddress": "No address",
       "variantsTitle": "Variants and asset mapping",
       "variantsDesc": "Map image and GLB per color or size so mobile can switch assets correctly when the customer changes variant.",
+      "inventoryManagedNote": "Inventory is managed by Operations. Total stock is calculated from variant stock movements, and new variants start at 0 until Operations updates them.",
       "tryOnLimit": "Try-on supports up to {max} models per product. Mapped: {current}/{max}",
       "addVariant": "Add variant",
       "variant": "Variant",

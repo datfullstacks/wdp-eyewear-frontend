@@ -216,10 +216,12 @@ export const PendingOrderRow = ({
               </DropdownMenuItem>
             )}
 
-            <DropdownMenuItem>
-              <Printer className="mr-2 h-4 w-4" />
-              {t('printOrder')}
-            </DropdownMenuItem>
+            {scope !== 'sale' && (
+              <DropdownMenuItem>
+                <Printer className="mr-2 h-4 w-4" />
+                {t('printOrder')}
+              </DropdownMenuItem>
+            )}
 
             {scope !== 'sale' && (
               <DropdownMenuItem>

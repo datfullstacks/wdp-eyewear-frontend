@@ -16,7 +16,17 @@ export type PreorderOpsStatus =
   | 'stocked'
   | 'ready_to_pack'
   | 'packing'
-  | 'shipment_created';
+  | 'ready_to_ship'
+  | 'shipment_created'
+  | 'handover_to_carrier'
+  | 'in_transit'
+  | 'delivery_failed'
+  | 'waiting_redelivery'
+  | 'return_pending'
+  | 'return_in_transit'
+  | 'exception_hold'
+  | 'delivered'
+  | 'returned';
 
 export interface PreorderOrder {
   id: string;
