@@ -262,17 +262,23 @@
   "users": {
     "title": "Quản Lý Nhân Sự",
     "subtitle": "Quản lý Manager, Sales và Customer",
+    "addAdmin": "Thêm Admin mới",
     "addManager": "Thêm Manager mới",
+    "addOperation": "Thêm nhân viên Vận Hành",
     "addStaff": "Thêm Nhân viên Sales mới",
     "addUser": "Thêm Người Dùng Mới",
     "searchPlaceholder": "Tìm kiếm theo tên hoặc email...",
     "tabs": {
+      "admins": "Quản lý Admin",
       "managers": "Quản lý Manager",
+      "operations": "Quản lý Vận hành",
       "staff": "Quản lý Sales",
       "customers": "Chăm sóc Customer"
     },
     "stats": {
+      "totalAdmins": "Tổng Admin",
       "totalManagers": "Tổng Manager",
+      "totalOperations": "Tổng Vận Hành",
       "totalStaff": "Tổng Sales (Bán hàng)",
       "totalCustomers": "Tổng khách hàng",
       "staff": "Nhân Viên Sales",
