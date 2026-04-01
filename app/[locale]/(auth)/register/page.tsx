@@ -77,7 +77,7 @@ export default function RegisterPage() {
             </div>
             <div>
               <div className="text-xl font-semibold tracking-tight">
-                OptiManager
+                Eyes Dream
               </div>
               <div className="text-sm text-slate-300">
                 Hệ thống quản lý cửa hàng mắt kính
@@ -87,8 +87,7 @@ export default function RegisterPage() {
 
           <div className="mt-24 max-w-xl">
             <h2 className="text-5xl leading-[1.08] font-semibold tracking-tight text-white">
-              Tham gia cùng{' '}
-              <span className="text-amber-400">OptiManager</span>
+              Tham gia cùng <span className="text-amber-400">OptiManager</span>
             </h2>
             <p className="mt-6 text-base leading-relaxed text-slate-300">
               Tạo tài khoản để bắt đầu sử dụng hệ thống quản lý cửa hàng mắt
@@ -128,9 +127,7 @@ export default function RegisterPage() {
             <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
               {t('signUpTitle')}
             </h1>
-            <p className="mt-2 text-sm text-slate-500">
-              {t('signUpSubtitle')}
-            </p>
+            <p className="mt-2 text-sm text-slate-500">{t('signUpSubtitle')}</p>
           </div>
 
           <div className="rounded-2xl border border-slate-100 bg-white p-8 shadow-sm">
@@ -226,7 +223,7 @@ export default function RegisterPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     placeholder="••••••••"
-                    className="h-11 border-slate-200 bg-slate-50 pr-10 pl-10 text-slate-900 placeholder:text-slate-400 focus:border-amber-400 focus:ring-amber-400 [&::-ms-reveal]:hidden [&::-ms-clear]:hidden [&::-webkit-credentials-auto-fill-button]:hidden [&::-webkit-contacts-auto-fill-button]:hidden"
+                    className="h-11 border-slate-200 bg-slate-50 pr-10 pl-10 text-slate-900 placeholder:text-slate-400 focus:border-amber-400 focus:ring-amber-400 [&::-ms-clear]:hidden [&::-ms-reveal]:hidden [&::-webkit-contacts-auto-fill-button]:hidden [&::-webkit-credentials-auto-fill-button]:hidden"
                     autoComplete="new-password"
                   />
                   <button
@@ -246,7 +243,10 @@ export default function RegisterPage() {
 
               {/* Confirm Password */}
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm text-slate-700">
+                <Label
+                  htmlFor="confirmPassword"
+                  className="text-sm text-slate-700"
+                >
                   {t('confirmPassword')}
                 </Label>
                 <div className="relative">
@@ -261,14 +261,16 @@ export default function RegisterPage() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     placeholder="••••••••"
-                    className="h-11 border-slate-200 bg-slate-50 pr-10 pl-10 text-slate-900 placeholder:text-slate-400 focus:border-amber-400 focus:ring-amber-400 [&::-ms-reveal]:hidden [&::-ms-clear]:hidden [&::-webkit-credentials-auto-fill-button]:hidden [&::-webkit-contacts-auto-fill-button]:hidden"
+                    className="h-11 border-slate-200 bg-slate-50 pr-10 pl-10 text-slate-900 placeholder:text-slate-400 focus:border-amber-400 focus:ring-amber-400 [&::-ms-clear]:hidden [&::-ms-reveal]:hidden [&::-webkit-contacts-auto-fill-button]:hidden [&::-webkit-credentials-auto-fill-button]:hidden"
                     autoComplete="new-password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword((prev) => !prev)}
                     className="absolute top-1/2 right-2 grid h-9 w-9 -translate-y-1/2 place-content-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-                    aria-label={showConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                    aria-label={
+                      showConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'
+                    }
                   >
                     {showConfirmPassword ? (
                       <EyeOff className="h-4 w-4" aria-hidden="true" />
@@ -291,7 +293,10 @@ export default function RegisterPage() {
 
           <div className="mt-8 text-center text-sm text-slate-500">
             {t('haveAccount')}{' '}
-            <Link href="/login" className="font-medium text-amber-600 hover:text-amber-700">
+            <Link
+              href="/login"
+              className="font-medium text-amber-600 hover:text-amber-700"
+            >
               {t('login')}
             </Link>
           </div>

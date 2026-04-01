@@ -75,7 +75,7 @@ export default function LoginPage() {
             </div>
             <div>
               <div className="text-xl font-semibold tracking-tight">
-                OptiManager
+                Eyes Dream
               </div>
               <div className="text-sm text-slate-300">
                 Hệ thống quản lý cửa hàng mắt kính
@@ -86,7 +86,9 @@ export default function LoginPage() {
           <div className="mt-16 max-w-[760px]">
             <h2 className="text-[clamp(2.9rem,4.8vw,4.3rem)] leading-[0.98] font-extrabold tracking-[-0.055em] text-white">
               Quản lý cửa hàng{' '}
-              <span className="block text-amber-400">thông minh & hiệu quả</span>
+              <span className="block text-amber-400">
+                thông minh & hiệu quả
+              </span>
             </h2>
             <p className="mt-8 max-w-[650px] text-[15px] leading-8 text-slate-200/90">
               Chào mừng trở lại. Trải nghiệm giải pháp quản lý toàn diện — nơi
@@ -98,8 +100,12 @@ export default function LoginPage() {
           <div className="mt-16 max-w-[760px]">
             <div className="grid grid-cols-3 gap-12">
               <div>
-                <div className="text-[2.1rem] font-semibold text-amber-400">24/7</div>
-                <div className="mt-1 text-sm text-slate-200/90">Hỗ trợ liên tục</div>
+                <div className="text-[2.1rem] font-semibold text-amber-400">
+                  24/7
+                </div>
+                <div className="mt-1 text-sm text-slate-200/90">
+                  Hỗ trợ liên tục
+                </div>
               </div>
               <div>
                 <div className="text-[2.1rem] font-semibold text-amber-400">
@@ -169,12 +175,12 @@ export default function LoginPage() {
                   <Label htmlFor="password" className="text-sm text-slate-700">
                     {t('password')}
                   </Label>
-                  <Link
+                  {/* <Link
                     href="/forgot-password"
-                    className="text-sm text-amber-600 hover:text-amber-700 font-medium"
+                    className="text-sm font-medium text-amber-600 hover:text-amber-700"
                   >
                     {t('forgotPassword')}
-                  </Link>
+                  </Link> */}
                 </div>
 
                 <div className="relative">
@@ -189,7 +195,7 @@ export default function LoginPage() {
                     onChange={(event) => setPassword(event.target.value)}
                     required
                     placeholder="••••••••"
-                    className="h-11 border-slate-200 bg-slate-50 pr-10 pl-10 text-slate-900 placeholder:text-slate-400 focus:border-amber-400 focus:ring-amber-400 [&::-ms-reveal]:hidden [&::-ms-clear]:hidden [&::-webkit-credentials-auto-fill-button]:hidden [&::-webkit-contacts-auto-fill-button]:hidden"
+                    className="h-11 border-slate-200 bg-slate-50 pr-10 pl-10 text-slate-900 placeholder:text-slate-400 focus:border-amber-400 focus:ring-amber-400 [&::-ms-clear]:hidden [&::-ms-reveal]:hidden [&::-webkit-contacts-auto-fill-button]:hidden [&::-webkit-credentials-auto-fill-button]:hidden"
                     autoComplete="current-password"
                   />
                   <button
@@ -231,12 +237,15 @@ export default function LoginPage() {
             </form>
           </div>
 
-          <div className="mt-8 text-center text-sm text-slate-500">
+          {/* <div className="mt-8 text-center text-sm text-slate-500">
             {t('noAccount')}{' '}
-            <Link href="/register" className="font-medium text-amber-600 hover:text-amber-700">
+            <Link
+              href="/register"
+              className="font-medium text-amber-600 hover:text-amber-700"
+            >
               {t('register')}
             </Link>
-          </div>
+          </div> */}
         </div>
       </main>
     </div>
