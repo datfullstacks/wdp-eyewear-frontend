@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { XCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -8,13 +7,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
 import { PendingOrder } from '@/types/pending';
 
 interface RejectModalProps {
   order: PendingOrder | null;
   onClose: () => void;
-  onConfirm: (reason: string) => void;
+  onConfirm: () => void;
 }
 
 export const RejectModal = ({
@@ -22,18 +20,14 @@ export const RejectModal = ({
   onClose,
   onConfirm,
 }: RejectModalProps) => {
-  const [reason, setReason] = useState('');
-
   if (!order) return null;
 
   const handleConfirm = () => {
-    onConfirm(reason);
-    setReason('');
+    onConfirm();
   };
 
   const handleClose = () => {
     onClose();
-    setReason('');
   };
 
   return (
@@ -47,25 +41,17 @@ export const RejectModal = ({
             Từ chối đơn hàng <strong>{order.id}</strong> của khách hàng{' '}
             <strong>{order.customer}</strong>?
           </p>
-          <div>
-            <label className="text-sm font-medium text-foreground/80">
-              Lý do từ chối *
-            </label>
-            <Textarea
-              placeholder="Nhập lý do từ chối đơn hàng..."
-              value={reason}
-              onChange={(event) => setReason(event.target.value)}
-              className="mt-1.5"
-            />
-          </div>
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={handleClose}>
+            <Button
+              variant="outline"
+              onClick={handleClose}
+              className="border-slate-300 bg-white font-semibold text-slate-950 hover:bg-slate-100 hover:text-slate-950"
+            >
               Hủy
             </Button>
             <Button
               variant="destructive"
               onClick={handleConfirm}
-              disabled={!reason.trim()}
             >
               <XCircle className="mr-2 h-4 w-4" />
               Xác nhận từ chối

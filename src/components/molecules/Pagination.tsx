@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface PaginationProps {
   currentPage: number;
@@ -10,6 +11,7 @@ interface PaginationProps {
   itemsPerPage?: number;
   totalItems?: number;
   className?: string;
+  navButtonClassName?: string;
 }
 
 export const Pagination = ({
@@ -19,6 +21,7 @@ export const Pagination = ({
   itemsPerPage = 10,
   totalItems,
   className = '',
+  navButtonClassName = '',
 }: PaginationProps) => {
   if (totalPages <= 1) return null;
 
@@ -80,7 +83,7 @@ export const Pagination = ({
           size="sm"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="h-9 w-9 p-0"
+          className={cn('h-9 w-9 p-0', navButtonClassName)}
           aria-label="Trang trước"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -118,7 +121,7 @@ export const Pagination = ({
           size="sm"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="h-9 w-9 p-0"
+          className={cn('h-9 w-9 p-0', navButtonClassName)}
           aria-label="Trang sau"
         >
           <ChevronRight className="h-4 w-4" />

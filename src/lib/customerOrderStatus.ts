@@ -30,11 +30,11 @@ export function getCustomerOrderStatusMeta(
   const shipmentStatus = normalize(order.shipment?.latestStatus);
 
   if (rawStatus === 'cancelled') {
-    return { category: 'cancelled', label: 'Đã hủy đơn', labelKey: 'cancelled', type: 'error' };
+    return { category: 'cancelled', label: 'Đã hủy đơn', type: 'error' };
   }
 
   if (rawStatus === 'returned') {
-    return { category: 'cancelled', label: 'Đã hoàn hàng', labelKey: 'returned', type: 'error' };
+    return { category: 'cancelled', label: 'Đã hoàn hàng', type: 'error' };
   }
 
   if (
@@ -51,7 +51,12 @@ export function getCustomerOrderStatusMeta(
   }
 
   if (opsStage === 'return_in_transit') {
-    return { category: 'processing', label: 'Đang hoàn hàng', labelKey: 'return_in_transit', type: 'warning' };
+    return {
+      category: 'processing',
+      label: 'Đang hoàn hàng',
+      labelKey: 'return_in_transit',
+      type: 'warning',
+    };
   }
 
   if (opsStage === 'return_pending') {
@@ -73,7 +78,12 @@ export function getCustomerOrderStatusMeta(
   }
 
   if (opsStage === 'delivery_failed' || shipmentStatus === 'delivery_fail') {
-    return { category: 'processing', label: 'Giao thất bại', labelKey: 'delivery_failed', type: 'error' };
+    return {
+      category: 'processing',
+      label: 'Giao thất bại',
+      labelKey: 'delivery_failed',
+      type: 'error',
+    };
   }
 
   if (opsStage === 'picking') {
@@ -157,7 +167,12 @@ export function getCustomerOrderStatusMeta(
       'money_collect_delivering',
     ].includes(shipmentStatus)
   ) {
-    return { category: 'processing', label: 'Đang vận chuyển', labelKey: 'in_transit', type: 'info' };
+    return {
+      category: 'processing',
+      label: 'Đang vận chuyển',
+      labelKey: 'in_transit',
+      type: 'info',
+    };
   }
 
   if (
@@ -175,15 +190,30 @@ export function getCustomerOrderStatusMeta(
   }
 
   if (opsStage === 'shipment_created' || shipmentStatus === 'ready_to_pick') {
-    return { category: 'processing', label: 'Đã tạo vận đơn', labelKey: 'shipment_created', type: 'info' };
+    return {
+      category: 'processing',
+      label: 'Đã tạo vận đơn',
+      labelKey: 'shipment_created',
+      type: 'info',
+    };
   }
 
   if (opsStage === 'packing' || rawStatus === 'processing') {
-    return { category: 'processing', label: 'Đang xử lý đơn', labelKey: 'processing', type: 'warning' };
+    return {
+      category: 'processing',
+      label: 'Đang xử lý đơn',
+      labelKey: 'processing',
+      type: 'warning',
+    };
   }
 
   if (rawStatus === 'confirmed') {
-    return { category: 'processing', label: 'Đã xác nhận đơn', labelKey: 'confirmed', type: 'info' };
+    return {
+      category: 'processing',
+      label: 'Đã xác nhận đơn',
+      labelKey: 'confirmed',
+      type: 'info',
+    };
   }
 
   if (
@@ -199,7 +229,12 @@ export function getCustomerOrderStatusMeta(
     };
   }
 
-  return { category: 'pending', label: 'Chờ xác nhận', labelKey: 'pending', type: 'info' };
+  return {
+    category: 'pending',
+    label: 'Chờ xác nhận',
+    labelKey: 'pending',
+    type: 'info',
+  };
 }
 
 export function getCustomerShippingStatusMeta(
@@ -231,7 +266,12 @@ export function getCustomerShippingStatusMeta(
   }
 
   if (shipmentStatus === 'returned') {
-    return { label: 'Đã hoàn hàng', labelKey: 'returned', type: 'error', rawStatus: shipmentStatus };
+    return {
+      label: 'Đã hoàn hàng',
+      labelKey: 'returned',
+      type: 'error',
+      rawStatus: shipmentStatus,
+    };
   }
 
   if (
@@ -262,7 +302,12 @@ export function getCustomerShippingStatusMeta(
   }
 
   if (shipmentStatus === 'delivery_fail' || opsStage === 'delivery_failed') {
-    return { label: 'Giao thất bại', labelKey: 'delivery_fail', type: 'error', rawStatus: shipmentStatus };
+    return {
+      label: 'Giao thất bại',
+      labelKey: 'delivery_fail',
+      type: 'error',
+      rawStatus: shipmentStatus,
+    };
   }
 
   if (
@@ -301,7 +346,12 @@ export function getCustomerShippingStatusMeta(
     opsStage === 'shipment_created' ||
     shipmentCode
   ) {
-    return { label: 'Đã tạo vận đơn', labelKey: 'ready_to_pick', type: 'info', rawStatus: shipmentStatus };
+    return {
+      label: 'Đã tạo vận đơn',
+      labelKey: 'ready_to_pick',
+      type: 'info',
+      rawStatus: shipmentStatus,
+    };
   }
 
   if (opsStage === 'ready_to_ship') {

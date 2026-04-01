@@ -289,7 +289,7 @@ export function ReadyStockOrderDetailModal({
   const addr = parseAddress(order.customerAddress);
   const email =
     (String(order.customerPhone || '').replace(/\D/g, '') ||
-      String(order.code || '').replace(/\s/g, '')) + '@example.com';
+      String(order.code || '').replace(/\s/g, '')) + '@gmail.com';
 
   const allPicked = order.items.every((item, idx) => {
     const key = getReadyStockItemKey(order.id, item, idx);
@@ -887,7 +887,7 @@ export function ReadyStockOrderDetailModal({
                 </div>
 
                 <div className="space-y-1">
-                  <Label>{'Email (m\u1eabu)'}</Label>
+                  <Label>{'Email '}</Label>
                   <div className="flex items-center justify-between gap-2">
                     <div className="text-sm font-semibold">{email}</div>
                     <Button
@@ -1111,9 +1111,7 @@ export function ReadyStockOrderDetailModal({
 
                       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div className="space-y-1">
-                          <Label>
-                            {'V\u1ecb tr\u00ed kho'}
-                          </Label>
+                          <Label>{'V\u1ecb tr\u00ed kho'}</Label>
                           <Input
                             value={location}
                             readOnly
@@ -1159,7 +1157,11 @@ export function ReadyStockOrderDetailModal({
                 </div>
                 {shippingStatusMeta ? (
                   <StatusBadge status={shippingStatusMeta.type}>
-                    {shippingStatusMeta.labelKey ? tc(`shippingStatus.${shippingStatusMeta.labelKey}` as any) : shippingStatusMeta.label}
+                    {shippingStatusMeta.labelKey
+                      ? tc(
+                          `shippingStatus.${shippingStatusMeta.labelKey}` as any
+                        )
+                      : shippingStatusMeta.label}
                   </StatusBadge>
                 ) : (
                   <div className="text-sm font-semibold">-</div>

@@ -250,7 +250,7 @@ export default function OrdersPending() {
     }
   };
 
-  const handleRejectOrder = async (reason: string) => {
+  const handleRejectOrder = async () => {
     if (!rejectModal?.orderDbId) {
       setRejectModal(null);
       return;
@@ -260,7 +260,7 @@ export default function OrdersPending() {
       setIsSubmittingAction(true);
       setErrorMessage(null);
       await orderApi.cancel(rejectModal.orderDbId, {
-        reason: reason || 'Đơn bị từ chối bởi nhân viên',
+        reason: 'Đơn bị từ chối bởi nhân viên',
       });
       await loadPendingOrders();
       setRejectModal(null);
@@ -480,6 +480,11 @@ export default function OrdersPending() {
               onPageChange={setCurrentPage}
               itemsPerPage={ITEMS_PER_PAGE}
               totalItems={filteredOrders.length}
+              navButtonClassName={
+                scope === 'sale'
+                  ? 'border-slate-300 bg-white text-slate-900 shadow-sm hover:bg-slate-100 hover:text-slate-950 disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400'
+                  : ''
+              }
             />
           </div>
         )}
@@ -515,8 +520,8 @@ export default function OrdersPending() {
       <RejectModal
         order={rejectModal}
         onClose={() => setRejectModal(null)}
-        onConfirm={(reason) => {
-          void handleRejectOrder(reason);
+        onConfirm={() => {
+          void handleRejectOrder();
         }}
       />
 

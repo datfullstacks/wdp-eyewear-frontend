@@ -5,7 +5,6 @@ import {
   Hand,
   Package,
   PackageCheck,
-  PauseCircle,
   Truck,
 } from 'lucide-react';
 import type {
@@ -18,8 +17,7 @@ type Stats = {
   picking: number;
   packing: number;
   awaitingShipment: number;
-  handedOver: number;
-  hold: number;
+  delivered: number;
 };
 
 function isIn(
@@ -44,11 +42,8 @@ export function ReadyStockStatsGrid({
       if (isIn(ops, ['picking'])) acc.picking += 1;
       if (isIn(ops, ['packing'])) acc.packing += 1;
       if (isIn(ops, ['ready_to_ship'])) acc.awaitingShipment += 1;
-      if (isIn(ops, ['shipment_created', 'handover_to_carrier', 'in_transit'])) {
-        acc.handedOver += 1;
-      }
-      if (isIn(ops, ['waiting_customer_info', 'on_hold', 'exception_hold'])) {
-        acc.hold += 1;
+      if (isIn(ops, ['delivered', 'closed'])) {
+        acc.delivered += 1;
       }
 
       return acc;
@@ -58,13 +53,12 @@ export function ReadyStockStatsGrid({
       picking: 0,
       packing: 0,
       awaitingShipment: 0,
-      handedOver: 0,
-      hold: 0,
+      delivered: 0,
     }
   );
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
       <StatCard
         title={'Ch\u1edd nh\u1eadn x\u1eed l\u00fd'}
         value={stats.awaitingAccept.toString()}
@@ -109,21 +103,10 @@ export function ReadyStockStatsGrid({
         inline
       />
       <StatCard
-        title={'\u0110\u00e3 v\u00e0o lu\u1ed3ng GHN'}
-        value={stats.handedOver.toString()}
+        title={'T\u1ed5ng s\u1ed1 \u0111\u01a1n \u0111\u00e3 giao'}
+        value={stats.delivered.toString()}
         icon={PackageCheck}
         iconColor="text-success"
-        className="p-3"
-        titleClassName="text-foreground/90 text-sm"
-        valueClassName="text-2xl"
-        showIcon={false}
-        inline
-      />
-      <StatCard
-        title={'\u0110ang hold'}
-        value={stats.hold.toString()}
-        icon={PauseCircle}
-        iconColor="text-destructive"
         className="p-3"
         titleClassName="text-foreground/90 text-sm"
         valueClassName="text-2xl"
