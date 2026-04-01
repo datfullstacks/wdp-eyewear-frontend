@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, AlertTriangle, FileText, Loader2, Shield } from 'lucide-react';
 
+import { useTranslations } from 'next-intl';
 import { Header } from '@/components/organisms/Header';
 import { RuntimeFeatureBlockedPage } from '@/components/pages/RuntimeFeatureBlockedPage';
 import { StatCard } from '@/components/molecules/StatCard';
@@ -25,6 +26,7 @@ type CategoryFilter =
 
 export default function PoliciesPage() {
   const router = useRouter();
+  const t = useTranslations('manager.policies');
   const {
     config: runtimeConfig,
     loading: loadingRuntimeConfig,
@@ -62,7 +64,7 @@ export default function PoliciesPage() {
         }
       } catch (error) {
         if (active) {
-          setApiError(error instanceof Error ? error.message : 'Failed to load policies.');
+          setApiError(error instanceof Error ? error.message : t('deleteFailed'));
         }
       } finally {
         if (active) {
@@ -80,6 +82,7 @@ export default function PoliciesPage() {
     loadingRuntimeConfig,
     runtimeConfig,
     runtimeConfigError,
+    t,
   ]);
 
   const filteredPolicies = useMemo(() => {
@@ -107,16 +110,16 @@ export default function PoliciesPage() {
     }).length;
 
     return [
-      { title: 'Total policies', value: policies.length, icon: FileText },
-      { title: 'Active policies', value: activePolicies, icon: Shield },
-      { title: 'Needs review', value: needsReview, icon: AlertCircle },
+      { title: t('stats.totalPolicies'), value: policies.length, icon: FileText },
+      { title: t('stats.activePolicies'), value: activePolicies, icon: Shield },
+      { title: t('stats.needsUpdate'), value: needsReview, icon: AlertCircle },
     ];
-  }, [policies]);
+  }, [policies, t]);
 
   if (loadingRuntimeConfig) {
     return (
       <>
-        <Header title="Policy Management" subtitle="Loading runtime policy access..." />
+        <Header title={t('title')} subtitle="Loading runtime policy access..." />
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         </div>
@@ -127,7 +130,7 @@ export default function PoliciesPage() {
   if (runtimeConfigError) {
     return (
       <RuntimeFeatureBlockedPage
-        title="Policy Management"
+        title={t('title')}
         subtitle="Unable to load runtime system config"
         heading="Cannot verify policy editor availability"
         message={runtimeConfigError}
@@ -140,7 +143,7 @@ export default function PoliciesPage() {
   if (runtimeConfig?.maintenanceMode) {
     return (
       <RuntimeFeatureBlockedPage
-        title="Policy Management"
+        title={t('title')}
         subtitle="System maintenance is active"
         heading="Policy editing is temporarily unavailable"
         message="Admin has enabled maintenance mode, so manager policy actions are paused until the system is reopened."
@@ -153,7 +156,7 @@ export default function PoliciesPage() {
   if (runtimeConfig?.featureFlags?.managerPolicyEditorEnabled === false) {
     return (
       <RuntimeFeatureBlockedPage
-        title="Policy Management"
+        title={t('title')}
         subtitle="Manager policy editor is disabled"
         heading="Policy editing is currently locked"
         message="Admin has turned off manager access for policy governance. You can still ask an admin to update the rule set."
@@ -164,24 +167,24 @@ export default function PoliciesPage() {
   }
 
   const handleDelete = async (policy: PolicyRecord) => {
-    if (!window.confirm(`Delete policy "${policy.title}"?`)) return;
+    if (!window.confirm(t('deleteConfirm', { name: policy.title }))) return;
 
     try {
       await policyApi.remove(policy.id);
       setPolicies((current) => current.filter((item) => item.id !== policy.id));
       setApiError('');
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Failed to delete policy.');
+      setApiError(error instanceof Error ? error.message : t('deleteFailed'));
     }
   };
 
   return (
     <>
       <Header
-        title="Policy Management"
-        subtitle="Control business rules for refund, return, warranty, shipping, purchase, and privacy"
+        title={t('title')}
+        subtitle={t('subtitle')}
         showAddButton
-        addButtonLabel="Create policy"
+        addButtonLabel={t('createPolicy')}
         onAdd={() => router.push('/manager/policies/create')}
       />
 
@@ -208,7 +211,7 @@ export default function PoliciesPage() {
             <section className="flex flex-col gap-4 sm:flex-row">
               <div className="flex-1">
                 <Input
-                  placeholder="Search by title, summary, or content"
+                  placeholder={t('searchPlaceholder')}
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
                 />
@@ -219,14 +222,14 @@ export default function PoliciesPage() {
                   onChange={(event) => setCategoryFilter(event.target.value as CategoryFilter)}
                   className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
                 >
-                  <option value="all">All categories</option>
-                  <option value="warranty">Warranty</option>
-                  <option value="return">Return</option>
-                  <option value="refund">Refund</option>
-                  <option value="shipping">Shipping</option>
-                  <option value="purchase">Purchase</option>
-                  <option value="privacy">Privacy</option>
-                  <option value="terms">Terms</option>
+                  <option value="all">{t('filters.allCategories')}</option>
+                  <option value="warranty">{t('filters.warranty')}</option>
+                  <option value="return">{t('filters.return')}</option>
+                  <option value="refund">{t('filters.refund')}</option>
+                  <option value="shipping">{t('filters.shipping')}</option>
+                  <option value="purchase">{t('filters.purchase')}</option>
+                  <option value="privacy">{t('filters.privacy')}</option>
+                  <option value="terms">{t('filters.terms')}</option>
                 </select>
               </div>
               <div className="w-full sm:w-48">
@@ -235,16 +238,16 @@ export default function PoliciesPage() {
                   onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
                   className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
                 >
-                  <option value="all">All status</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="draft">Draft</option>
+                  <option value="all">{t('filters.allStatus')}</option>
+                  <option value="active">{t('filters.active')}</option>
+                  <option value="inactive">{t('filters.inactive')}</option>
+                  <option value="draft">{t('filters.draft')}</option>
                 </select>
               </div>
             </section>
 
             <div className="text-sm text-gray-600">
-              Showing {filteredPolicies.length} policy item(s)
+              {t('showingResults', { count: filteredPolicies.length })}
             </div>
 
             <section className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
@@ -253,24 +256,24 @@ export default function PoliciesPage() {
                 onView={(policy) => router.push(`/manager/policies/${policy.id}`)}
                 onDelete={handleDelete}
                 translations={{
-                  title: 'Policy',
-                  category: 'Category',
-                  lastUpdated: 'Last updated',
-                  status: 'Status',
-                  actions: 'Actions',
-                  noData: 'No policies found',
-                  warranty: 'Warranty',
-                  return: 'Return',
-                  refund: 'Refund',
-                  shipping: 'Shipping',
-                  purchase: 'Purchase',
-                  privacy: 'Privacy',
-                  terms: 'Terms',
-                  active: 'Active',
-                  inactive: 'Inactive',
-                  draft: 'Draft',
-                  viewDetails: 'View',
-                  deletePolicy: 'Delete',
+                  title: t('table.title'),
+                  category: t('table.category'),
+                  lastUpdated: t('table.lastUpdated'),
+                  status: t('table.status'),
+                  actions: t('table.actions'),
+                  noData: t('table.noData'),
+                  warranty: t('table.warranty'),
+                  return: t('table.return'),
+                  refund: t('table.refund'),
+                  shipping: t('table.shipping'),
+                  purchase: t('table.purchase'),
+                  privacy: t('table.privacy'),
+                  terms: t('table.terms'),
+                  active: t('table.active'),
+                  inactive: t('table.inactive'),
+                  draft: t('table.draft'),
+                  viewDetails: t('table.viewDetails'),
+                  deletePolicy: t('table.deletePolicy'),
                 }}
               />
             </section>
