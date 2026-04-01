@@ -7,11 +7,9 @@ import { ProductForm, type ProductFormState } from '@/components/organisms/manag
 import { Card } from '@/components/ui/card';
 import {
   productApi,
-  storeApi,
   uploadApi,
   type ProductDetail,
   type ProductMediaAsset,
-  type StoreRecord,
 } from '@/api';
 import { buildProductFormState, buildUpsertPayload, EMPTY_PRODUCT_FORM } from '@/lib/productHelpers';
 import { AlertTriangle, Loader2 } from 'lucide-react';
@@ -27,19 +25,14 @@ export default function EditProductPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingKey, setUploadingKey] = useState('');
   const [apiError, setApiError] = useState('');
-  const [storeOptions, setStoreOptions] = useState<StoreRecord[]>([]);
 
   useEffect(() => {
     const loadProduct = async () => {
       try {
         setIsLoading(true);
-        const [data, storesResult] = await Promise.all([
-          productApi.getById(productId),
-          storeApi.getAll({ status: 'all', limit: 100 }),
-        ]);
+        const data = await productApi.getById(productId);
         setProduct(data);
         setFormData(buildProductFormState(data));
-        setStoreOptions(storesResult.stores);
       } catch (error) {
         setApiError(error instanceof Error ? error.message : 'Failed to load product');
       } finally {
@@ -196,7 +189,6 @@ export default function EditProductPage() {
         <Card className="p-6">
           <ProductForm
             formData={formData}
-            storeOptions={storeOptions}
             isSubmitting={isSubmitting}
             uploadingKey={uploadingKey}
             onChange={setFormData}

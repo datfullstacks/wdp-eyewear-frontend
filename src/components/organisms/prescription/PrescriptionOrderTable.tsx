@@ -9,6 +9,7 @@ import {
   User,
 } from 'lucide-react';
 
+import { StatusBadge } from '@/components/atoms/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -26,8 +27,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { getPrescriptionFollowUpMeta } from '@/lib/prescriptionFollowUp';
 import { cn } from '@/lib/utils';
-import type { SupplementOrder } from '@/types/prescription';
+import type {
+  PrescriptionFollowUpStatus,
+  SupplementOrder,
+} from '@/types/prescription';
 
 interface PrescriptionOrderTableProps {
   orders: SupplementOrder[];
@@ -38,6 +43,11 @@ interface PrescriptionOrderTableProps {
   onContact: (order: SupplementOrder) => void;
   onViewHistory: (order: SupplementOrder) => void;
   onUploadImage: (order: SupplementOrder) => void;
+  onUpdateFollowUpStatus: (
+    order: SupplementOrder,
+    status: PrescriptionFollowUpStatus
+  ) => void;
+  isUpdatingStatus?: boolean;
 }
 
 const missingTypeTextClass: Record<SupplementOrder['missingType'], string> = {
@@ -48,11 +58,25 @@ const missingTypeTextClass: Record<SupplementOrder['missingType'], string> = {
 };
 
 const missingTypeLabel: Record<SupplementOrder['missingType'], string> = {
-  no_prescription: 'Chưa có Rx',
-  incomplete_data: 'Thiếu dữ liệu',
-  unclear_image: 'Ảnh không rõ',
-  need_verification: 'Cần xác nhận',
+  no_prescription: 'Chua co Rx',
+  incomplete_data: 'Thieu du lieu',
+  unclear_image: 'Anh khong ro',
+  need_verification: 'Can xac nhan',
 };
+
+const followUpActions: PrescriptionFollowUpStatus[] = [
+  'needs_review',
+  'needs_customer_contact',
+  'waiting_customer_response',
+  'customer_responded',
+];
+
+function formatFollowUpDate(value?: string) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleString('vi-VN');
+}
 
 export const PrescriptionOrderTable = ({
   orders,
@@ -63,6 +87,8 @@ export const PrescriptionOrderTable = ({
   onContact,
   onViewHistory,
   onUploadImage,
+  onUpdateFollowUpStatus,
+  isUpdatingStatus = false,
 }: PrescriptionOrderTableProps) => {
   const allSelected =
     orders.length > 0 && selectedOrders.length === orders.length;
@@ -79,17 +105,20 @@ export const PrescriptionOrderTable = ({
                 aria-label="Select all orders"
               />
             </TableHead>
-            <TableHead>Đơn hàng</TableHead>
-            <TableHead>Khách hàng</TableHead>
-            <TableHead>Thông tin thiếu</TableHead>
-            <TableHead>Liên hệ</TableHead>
-            <TableHead>Chờ</TableHead>
+            <TableHead>Don hang</TableHead>
+            <TableHead>Khach hang</TableHead>
+            <TableHead>Thong tin thieu</TableHead>
+            <TableHead>Theo doi sale</TableHead>
+            <TableHead>Lien he</TableHead>
+            <TableHead>Cho</TableHead>
             <TableHead className="w-[60px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {orders.map((order) => {
             const checked = selectedOrders.includes(order.id);
+            const followUpMeta = getPrescriptionFollowUpMeta(order.followUpStatus);
+            const followUpUpdatedAt = formatFollowUpDate(order.followUpUpdatedAt);
 
             return (
               <TableRow key={order.id} className="hover:bg-muted/30">
@@ -143,6 +172,23 @@ export const PrescriptionOrderTable = ({
                             .map((field) => field.label)
                             .join(', ')}
                     </p>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="space-y-1">
+                    <StatusBadge status={followUpMeta.badge}>
+                      {followUpMeta.label}
+                    </StatusBadge>
+                    {order.followUpUpdatedBy ? (
+                      <p className="text-foreground/70 text-xs">
+                        Boi: {order.followUpUpdatedBy}
+                      </p>
+                    ) : null}
+                    {followUpUpdatedAt ? (
+                      <p className="text-foreground/70 text-xs">
+                        Luc: {followUpUpdatedAt}
+                      </p>
+                    ) : null}
                   </div>
                 </TableCell>
                 <TableCell>
@@ -215,6 +261,21 @@ export const PrescriptionOrderTable = ({
                         Lich su lien he
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
+                      {followUpActions.map((status) => {
+                        const meta = getPrescriptionFollowUpMeta(status);
+                        return (
+                          <DropdownMenuItem
+                            key={status}
+                            onClick={() => onUpdateFollowUpStatus(order, status)}
+                            disabled={
+                              isUpdatingStatus || order.followUpStatus === status
+                            }
+                          >
+                            {meta.label}
+                          </DropdownMenuItem>
+                        );
+                      })}
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => onUploadImage(order)}>
                         <Upload className="mr-2 h-4 w-4" />
                         Prescription attachment
@@ -235,10 +296,10 @@ export const PrescriptionOrderTable = ({
           {orders.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={7}
+                colSpan={8}
                 className="text-foreground/80 py-8 text-center"
               >
-                Không có đơn hàng nào cần xử lý
+                Khong co don hang nao can xu ly
               </TableCell>
             </TableRow>
           ) : null}

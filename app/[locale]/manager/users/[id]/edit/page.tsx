@@ -16,7 +16,7 @@ import {
 import { Header } from '@/components/organisms/Header';
 import { UserForm, type UserFormData } from '@/components/organisms/manager';
 import { Card } from '@/components/ui/card';
-import { storeApi, userApi, toFrontendRole, type StoreRecord } from '@/api';
+import { userApi, toFrontendRole } from '@/api';
 import { normalizeRole } from '@/lib/roles';
 import { getUserManagementBasePath, isAdminAreaPath } from '@/lib/userManagement';
 
@@ -81,7 +81,6 @@ export default function EditUserPage() {
   const pathname = usePathname();
   const userId = params.id as string;
   const [viewerRole, setViewerRole] = useState('');
-  const [storeOptions, setStoreOptions] = useState<StoreRecord[]>([]);
 
   const [role, setRole] = useState<EditRole>('customer');
   const [formData, setFormData] = useState<UserFormData>({
@@ -119,27 +118,6 @@ export default function EditUserPage() {
       if (!mounted) return;
 
       setViewerRole(normalizeRole(session?.user?.role));
-
-      try {
-        const [storesRes, viewerUser] = await Promise.all([
-          storeApi.getAll({ limit: 200, status: 'all' }),
-          session?.user?.id ? userApi.getById(session.user.id) : Promise.resolve(null),
-        ]);
-
-        const actorStoreIds =
-          viewerUser?.storeAccess?.mode === 'selected'
-            ? viewerUser.storeAccess.storeIds
-            : null;
-        const filteredStores = actorStoreIds
-          ? storesRes.stores.filter((store) => actorStoreIds.includes(store.id))
-          : storesRes.stores;
-
-        if (!mounted) return;
-        setStoreOptions(filteredStores);
-      } catch {
-        if (!mounted) return;
-        setStoreOptions([]);
-      }
     };
 
     void loadContext();
@@ -306,7 +284,6 @@ export default function EditUserPage() {
             onSubmit={handleSubmit}
             onCancel={() => router.push(userBasePath)}
             isSubmitting={isSubmitting}
-            storeOptions={storeOptions}
           />
         </Card>
       </div>
