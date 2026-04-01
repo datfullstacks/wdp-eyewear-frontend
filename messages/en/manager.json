@@ -50,15 +50,33 @@
   },
   "dashboard": {
     "title": "Manager Dashboard",
-    "subtitle": "Overview - Products, Pricing, Users and Revenue",
+    "subtitle": "Control center for products, policies, promotions, users and revenue",
     "stats": {
       "monthlyRevenue": "Monthly Revenue",
+      "monthlyOrders": "Monthly Orders",
+      "collectedThisMonth": "Collected This Month",
       "totalOrders": "Total Orders",
       "activeProducts": "Active Products",
       "activeCustomers": "Active Customers",
       "revenueTarget": "Revenue Target",
       "activePromotions": "Active Promotions"
-    }
+    },
+    "analytics": {
+      "title": "Manager Analytics",
+      "subtitle": "Live revenue, collection, and channel breakdown for recent activity."
+    },
+    "operationalSummary": {
+      "title": "Operational Summary",
+      "totalOrders": "Total Orders",
+      "cancelledOrders": "Cancelled Orders",
+      "momGrowth": "MoM Growth"
+    },
+    "managerScope": {
+      "title": "Manager Scope",
+      "description": "This role has live data over products, promotions, policies, refunds, user management, and revenue tracking."
+    },
+    "loadOverviewFailed": "Failed to load manager overview.",
+    "loadRevenueFailed": "Failed to load revenue summary."
   },
   "products": {
     "title": "Product Management",
@@ -240,24 +258,32 @@
     "title": "Pricing Management",
     "subtitle": "Manage product prices and pricing strategies",
     "createPromotion": "Create Promotion",
+    "loadFailed": "Failed to load pricing data.",
+    "catalogPriceWatch": "Catalog price watch",
     "stats": {
       "avgPrice": "Average Price",
+      "activeProducts": "Active Products",
+      "inStockProducts": "In Stock Products",
       "promotionProducts": "Products on Promotion",
       "recentPriceChanges": "Recent Price Changes",
       "activePromotions": "Active Promotions",
       "totalUsage": "Total Usage",
       "avgDiscount": "Average Discount"
     },
-    "placeholder": "Pricing list will be displayed here",
-    "promotionsList": "Promotions List",
     "columns": {
-      "name": "Promotion Name",
+      "product": "Product",
+      "brand": "Brand",
       "type": "Type",
+      "price": "Price",
+      "stock": "Stock",
+      "status": "Active",
+      "name": "Promotion Name",
       "discount": "Discount",
       "period": "Period",
-      "usage": "Usage",
-      "status": "Status"
-    }
+      "usage": "Usage"
+    },
+    "placeholder": "Pricing list will be displayed here",
+    "promotionsList": "Promotions List"
   },
   "users": {
     "title": "User Management",
