@@ -187,7 +187,7 @@ export function PendingOrderDetailPage({
   );
 
   const handleRejectOrder = useCallback(
-    async (reason: string) => {
+    async () => {
       if (!rejectModal?.orderDbId) {
         setRejectModal(null);
         return;
@@ -197,7 +197,7 @@ export function PendingOrderDetailPage({
         setIsSubmittingAction(true);
         setErrorMessage(null);
         await orderApi.cancel(rejectModal.orderDbId, {
-          reason: reason || 'Đơn bị từ chối bởi nhân viên',
+          reason: 'Đơn bị từ chối bởi nhân viên',
         });
         setRejectModal(null);
         leaveDetail();
@@ -311,9 +311,9 @@ export function PendingOrderDetailPage({
           if (isSubmittingAction) return;
           setRejectModal(null);
         }}
-        onConfirm={(reason) => {
+        onConfirm={() => {
           if (isSubmittingAction) return;
-          void handleRejectOrder(reason);
+          void handleRejectOrder();
         }}
       />
 

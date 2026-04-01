@@ -32,7 +32,10 @@ import {
 
 import { orderApi } from '@/api';
 import { Button } from '@/components/atoms';
-import { computeOrderMenuCounts, type OrderMenuCounts } from '@/lib/orderWorkflow';
+import {
+  computeOrderMenuCounts,
+  type OrderMenuCounts,
+} from '@/lib/orderWorkflow';
 import { cn } from '@/lib/utils';
 import { useSidebar } from '@/contexts/SidebarContext';
 
@@ -203,7 +206,9 @@ export const Sidebar: React.FC = () => {
     const map = new Map<string, boolean>();
     for (const item of resolvedMenuItems) {
       if (!item.children) continue;
-      const open = item.children.some((c) => isActivePath(pathname, c.path, c.exact));
+      const open = item.children.some((c) =>
+        isActivePath(pathname, c.path, c.exact)
+      );
       map.set(item.label, open);
     }
     return map;
@@ -212,7 +217,8 @@ export const Sidebar: React.FC = () => {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const obj: Record<string, boolean> = {};
     for (const item of menuItems) {
-      if (item.children) obj[item.label] = defaultOpenMap.get(item.label) ?? false;
+      if (item.children)
+        obj[item.label] = defaultOpenMap.get(item.label) ?? false;
     }
     return obj;
   });
@@ -248,8 +254,8 @@ export const Sidebar: React.FC = () => {
       <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4">
         {!collapsed ? (
           <div className="flex items-center gap-2">
-            <div className="gradient-gold flex h-10 w-10 items-center justify-center rounded-lg">
-              <Glasses className="text-primary h-6 w-6" />
+            <div className="grid h-12 w-12 place-content-center rounded-2xl bg-amber-400 text-slate-950 shadow-sm">
+              <Glasses className="h-6 w-6" aria-hidden="true" />
             </div>
             <div className="leading-tight">
               <span className="font-display text-lg font-semibold text-gray-900">
@@ -273,7 +279,11 @@ export const Sidebar: React.FC = () => {
         className="absolute top-20 -right-3 h-6 w-6 rounded-full border border-gray-200 bg-gray-100 p-0 shadow-sm hover:bg-gray-200"
         aria-label={collapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
       >
-        {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        {collapsed ? (
+          <ChevronRight className="h-4 w-4" />
+        ) : (
+          <ChevronLeft className="h-4 w-4" />
+        )}
       </Button>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
@@ -294,12 +304,16 @@ export const Sidebar: React.FC = () => {
                 )}
               >
                 <item.icon className="h-5 w-5 flex-shrink-0" />
-                {!collapsed && <span className="font-medium">{item.label}</span>}
+                {!collapsed && (
+                  <span className="font-medium">{item.label}</span>
+                )}
               </Link>
             );
           }
 
-          const hasActiveChild = item.children.some((c) => isActivePath(pathname, c.path, c.exact));
+          const hasActiveChild = item.children.some((c) =>
+            isActivePath(pathname, c.path, c.exact)
+          );
           const isOpen = !!openGroups[item.label];
 
           return (
@@ -322,7 +336,9 @@ export const Sidebar: React.FC = () => {
                 <item.icon className="h-5 w-5 flex-shrink-0" />
                 {!collapsed && (
                   <>
-                    <span className="flex-1 text-left font-medium">{item.label}</span>
+                    <span className="flex-1 text-left font-medium">
+                      {item.label}
+                    </span>
                     <ChevronDown
                       className={cn(
                         'h-4 w-4 transition-transform duration-200',
@@ -336,7 +352,11 @@ export const Sidebar: React.FC = () => {
               {!collapsed && isOpen && (
                 <div className="mt-1 space-y-1">
                   {item.children.map((child) => {
-                    const active = isActivePath(pathname, child.path, child.exact);
+                    const active = isActivePath(
+                      pathname,
+                      child.path,
+                      child.exact
+                    );
                     return (
                       <Link
                         key={child.path}
@@ -352,7 +372,10 @@ export const Sidebar: React.FC = () => {
                         <child.icon className="h-4 w-4 flex-shrink-0" />
                         <span className="flex-1 truncate">{child.label}</span>
                         {child.badge && (
-                          <MenuItemBadge badge={child.badge} type={child.badgeType} />
+                          <MenuItemBadge
+                            badge={child.badge}
+                            type={child.badgeType}
+                          />
                         )}
                       </Link>
                     );
@@ -365,7 +388,12 @@ export const Sidebar: React.FC = () => {
       </nav>
 
       <div className="border-t border-gray-200 p-4">
-        <div className={cn('flex items-center gap-3', collapsed && 'justify-center')}>
+        <div
+          className={cn(
+            'flex items-center gap-3',
+            collapsed && 'justify-center'
+          )}
+        >
           <div className="gradient-gold text-primary flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full font-semibold">
             NV
           </div>

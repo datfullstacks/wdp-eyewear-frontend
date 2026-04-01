@@ -1,5 +1,5 @@
 import { ManagerDashboardLayout } from '@/components/templates/ManagerDashboardLayout';
-import NextTopLoader from 'nextjs-toploader';
+import NextTopLoader from '@/components/ui/NextTopLoader';
 
 export default function ManagerLayout({
   children,
