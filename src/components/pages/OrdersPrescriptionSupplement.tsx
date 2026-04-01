@@ -40,27 +40,27 @@ import type {
 } from '@/types/prescription';
 
 const typeOptions = [
-  { value: 'no_prescription', label: 'Chua co Rx' },
-  { value: 'incomplete_data', label: 'Thieu du lieu' },
-  { value: 'unclear_image', label: 'Anh khong ro' },
-  { value: 'need_verification', label: 'Can xac nhan' },
+  { value: 'no_prescription', label: 'Chưa có Rx' },
+  { value: 'incomplete_data', label: 'Thiếu dữ liệu' },
+  { value: 'unclear_image', label: 'Ảnh không rõ' },
+  { value: 'need_verification', label: 'Cần xác nhận' },
 ];
 
 const priorityOptions = [
-  { value: 'urgent', label: 'Gap' },
+  { value: 'urgent', label: 'Gấp' },
   { value: 'high', label: 'Cao' },
-  { value: 'normal', label: 'Binh thuong' },
+  { value: 'normal', label: 'Bình thường' },
 ];
 
 const followUpOptions: Array<{
   value: 'all' | PrescriptionFollowUpStatus;
   label: string;
 }> = [
-  { value: 'all', label: 'Tat ca tien do' },
-  { value: 'needs_review', label: 'Can kiem tra' },
-  { value: 'needs_customer_contact', label: 'Can lien he khach' },
-  { value: 'waiting_customer_response', label: 'Cho khach phan hoi' },
-  { value: 'customer_responded', label: 'Khach da phan hoi' },
+  { value: 'all', label: 'Tất cả tiến độ' },
+  { value: 'needs_review', label: 'Cần kiểm tra' },
+  { value: 'needs_customer_contact', label: 'Cần liên hệ khách' },
+  { value: 'waiting_customer_response', label: 'Chờ khách phản hồi' },
+  { value: 'customer_responded', label: 'Khách đã phản hồi' },
 ];
 
 const CONTACT_PREFIX: Record<ContactType, string> = {
@@ -242,7 +242,7 @@ export default function OrdersPrescriptionSupplement() {
         orderApi.getAll({ page: 1, limit: 200 }),
         supportApi.getTickets({
           page: 1,
-          limit: 200,
+          limit: 100,
           category: 'prescription',
         }),
       ]);
@@ -288,7 +288,7 @@ export default function OrdersPrescriptionSupplement() {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : 'Khong tai duoc danh sach don can bo sung thong so.'
+          : 'Không tải được danh sách đơn cần bổ sung thông số.'
       );
     } finally {
       setIsLoading(false);
@@ -340,10 +340,7 @@ export default function OrdersPrescriptionSupplement() {
           followUpFilter === 'all' || order.followUpStatus === followUpFilter;
 
         return (
-          matchesSearch &&
-          matchesType &&
-          matchesPriority &&
-          matchesFollowUp
+          matchesSearch && matchesType && matchesPriority && matchesFollowUp
         );
       }),
     [followUpFilter, orders, priorityFilter, searchTerm, typeFilter]
@@ -358,8 +355,9 @@ export default function OrdersPrescriptionSupplement() {
 
   const stats = {
     total: orders.length,
-    needsReview: orders.filter((order) => order.followUpStatus === 'needs_review')
-      .length,
+    needsReview: orders.filter(
+      (order) => order.followUpStatus === 'needs_review'
+    ).length,
     needsCustomerContact: orders.filter(
       (order) => order.followUpStatus === 'needs_customer_contact'
     ).length,
@@ -433,7 +431,7 @@ export default function OrdersPrescriptionSupplement() {
         prescriptionFollowUpStatus: nextStatus,
       });
       setSuccessMessage(
-        `Da chuyen ${order.orderId} sang "${getPrescriptionFollowUpLabel(
+        `Đã chuyển ${order.orderId} sang "${getPrescriptionFollowUpLabel(
           nextStatus
         )}".`
       );
@@ -442,7 +440,7 @@ export default function OrdersPrescriptionSupplement() {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : 'Khong cap nhat duoc trang thai bo sung thong so.'
+          : 'Không cập nhật được trạng thái bổ sung thông số.'
       );
     } finally {
       setIsSubmitting(false);
@@ -466,14 +464,14 @@ export default function OrdersPrescriptionSupplement() {
       setContactOpen(false);
       setSelectedOrders([]);
       setSuccessMessage(
-        'Da gui yeu cau bo sung thong so va chuyen sang trang thai cho khach phan hoi.'
+        'Đã gửi yêu cầu bổ sung thông số và chuyển sang trạng thái chờ khách phản hồi.'
       );
       await loadOrders();
     } catch (error) {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : 'Khong gui duoc yeu cau bo sung thong so.'
+          : 'Không gửi được yêu cầu bổ sung thông số.'
       );
     } finally {
       setIsSubmitting(false);
@@ -504,14 +502,14 @@ export default function OrdersPrescriptionSupplement() {
       setBulkContactOpen(false);
       setSelectedOrders([]);
       setSuccessMessage(
-        'Da gui lien he hang loat va cap nhat cac don sang trang thai cho khach phan hoi.'
+        'Đã gửi liên hệ hàng loạt và cập nhật các đơn sang trạng thái chờ khách phản hồi.'
       );
       await loadOrders();
     } catch (error) {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : 'Khong gui duoc lien he hang loat.'
+          : 'Không gửi được liên hệ hàng loạt.'
       );
     } finally {
       setIsSubmitting(false);
@@ -521,8 +519,8 @@ export default function OrdersPrescriptionSupplement() {
   return (
     <>
       <Header
-        title="Don can bo sung thong so"
-        subtitle="Sale kiem tra don kinh thieu thong so, doi trang thai follow-up va lien he khach hang de hoan tat du lieu."
+        title="Đơn cần bổ sung thông số"
+        subtitle="Sale kiểm tra đơn kính thiếu thông số, đổi trạng thái follow-up và liên hệ khách hàng để hoàn tất dữ liệu."
       />
 
       <div className="space-y-6 p-6">
@@ -544,7 +542,7 @@ export default function OrdersPrescriptionSupplement() {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
             <div className="w-full sm:max-w-[240px]">
               <SearchBar
-                placeholder="Tim theo ma don, ten khach, SDT..."
+                placeholder="Tìm theo mã đơn, tên khách, SĐT..."
                 value={searchTerm}
                 onChange={setSearchTerm}
               />
@@ -555,20 +553,20 @@ export default function OrdersPrescriptionSupplement() {
                   <Button
                     variant="outline"
                     size="icon"
-                    aria-label="Bo loc"
+                    aria-label="Bộ lọc"
                     className="text-foreground/80 hover:text-foreground"
                   >
                     <Filter />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-72">
-                  <DropdownMenuLabel>Loai thieu</DropdownMenuLabel>
+                  <DropdownMenuLabel>Loại thiếu</DropdownMenuLabel>
                   <DropdownMenuRadioGroup
                     value={typeFilter}
                     onValueChange={setTypeFilter}
                   >
                     <DropdownMenuRadioItem value="all">
-                      Tat ca loai
+                      Tất cả loại
                     </DropdownMenuRadioItem>
                     {typeOptions.map((option) => (
                       <DropdownMenuRadioItem
@@ -580,13 +578,13 @@ export default function OrdersPrescriptionSupplement() {
                     ))}
                   </DropdownMenuRadioGroup>
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel>Do uu tien</DropdownMenuLabel>
+                  <DropdownMenuLabel>Độ ưu tiên</DropdownMenuLabel>
                   <DropdownMenuRadioGroup
                     value={priorityFilter}
                     onValueChange={setPriorityFilter}
                   >
                     <DropdownMenuRadioItem value="all">
-                      Tat ca
+                      Tất cả
                     </DropdownMenuRadioItem>
                     {priorityOptions.map((option) => (
                       <DropdownMenuRadioItem
@@ -598,11 +596,13 @@ export default function OrdersPrescriptionSupplement() {
                     ))}
                   </DropdownMenuRadioGroup>
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel>Theo doi sale</DropdownMenuLabel>
+                  <DropdownMenuLabel>Theo dõi sale</DropdownMenuLabel>
                   <DropdownMenuRadioGroup
                     value={followUpFilter}
                     onValueChange={(value) =>
-                      setFollowUpFilter(value as 'all' | PrescriptionFollowUpStatus)
+                      setFollowUpFilter(
+                        value as 'all' | PrescriptionFollowUpStatus
+                      )
                     }
                   >
                     {followUpOptions.map((option) => (
@@ -626,7 +626,7 @@ export default function OrdersPrescriptionSupplement() {
               disabled={selectedOrders.length === 0 || isSubmitting}
             >
               <Send className="mr-2 h-4 w-4" />
-              Bulk contact ({selectedOrders.length})
+              Liên hệ hàng loạt ({selectedOrders.length})
             </Button>
             <Button
               variant="outline"
@@ -636,14 +636,14 @@ export default function OrdersPrescriptionSupplement() {
               disabled={isLoading || isSubmitting}
             >
               <RefreshCw className="h-4 w-4" />
-              Lam moi
+              Làm mới
             </Button>
           </div>
         </div>
 
         {isLoading ? (
           <p className="text-foreground/70 text-sm">
-            Dang tai du lieu don can bo sung...
+            Đang tải dữ liệu đơn cần bổ sung...
           </p>
         ) : null}
 
@@ -651,11 +651,11 @@ export default function OrdersPrescriptionSupplement() {
           <TabsList>
             <TabsTrigger value="pending" className="gap-2">
               <Clock className="h-4 w-4" />
-              Dang cho ({pendingOrders.length})
+              Đang chờ ({pendingOrders.length})
             </TabsTrigger>
             <TabsTrigger value="escalated" className="gap-2">
               <AlertTriangle className="h-4 w-4" />
-              Leo thang ({escalatedOrders.length})
+              Xử lý đặc biệt ({escalatedOrders.length})
             </TabsTrigger>
           </TabsList>
 
@@ -681,7 +681,7 @@ export default function OrdersPrescriptionSupplement() {
           <TabsContent value="escalated" className="space-y-3">
             <div className="text-foreground/80 flex items-center gap-2 text-sm">
               <AlertTriangle className="h-4 w-4 text-amber-600" />
-              Don da lien he nhieu lan ({'>=3'}) can xu ly dac biet
+              Đơn đã liên hệ nhiều lần ({'>=3'}) cần xử lý đặc biệt
             </div>
             <PrescriptionOrderTable
               orders={escalatedOrders}

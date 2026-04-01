@@ -27,7 +27,7 @@ export function UploadImageModal({
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="text-foreground text-base font-semibold">
-            Prescription attachment
+            Ảnh toa đính kèm
           </DialogTitle>
           <DialogDescription className="text-foreground/70">
             {order?.orderId} - {order?.customer}
@@ -38,22 +38,22 @@ export function UploadImageModal({
           <div className="border-foreground/30 rounded-lg border-2 border-dashed p-8 text-center">
             <FileUp className="text-foreground/70 mx-auto mb-2 h-10 w-10" />
             <p className="text-foreground/80 text-sm">
-              This screen no longer pretends to upload files into local-only state.
+              Màn này không còn giả lập upload ảnh chỉ trong local state.
             </p>
             <p className="text-foreground/70 mt-1 text-xs">
-              The current backend support contract does not expose attachment upload for
-              prescription clarification, so the action stays disabled.
+              Backend support hiện chưa mở API upload ảnh đính kèm cho luồng bổ
+              sung toa, nên hành động này đang bị khóa.
             </p>
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Close
+            Đóng
           </Button>
           <Button disabled>
             <Upload className="mr-2 h-4 w-4" />
-            Upload unavailable
+            Chưa khả dụng
           </Button>
         </DialogFooter>
       </DialogContent>
