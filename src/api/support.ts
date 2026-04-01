@@ -288,7 +288,9 @@ function toSupportMessage(raw: RawSupportMessage): SupportMessageRecord {
   };
 }
 
-function toSupportUser(raw?: RawSupportRef | string | null): SupportUserSummary | null {
+function toSupportUser(
+  raw?: RawSupportRef | string | null
+): SupportUserSummary | null {
   if (!raw || typeof raw === 'string') return null;
   return {
     id: toId(raw),
@@ -298,7 +300,9 @@ function toSupportUser(raw?: RawSupportRef | string | null): SupportUserSummary 
   };
 }
 
-function toSupportOrder(raw?: RawSupportRef | string | null): SupportOrderSummary | null {
+function toSupportOrder(
+  raw?: RawSupportRef | string | null
+): SupportOrderSummary | null {
   if (!raw || typeof raw === 'string') return null;
   return {
     id: toId(raw),
@@ -312,7 +316,9 @@ function toSupportOrder(raw?: RawSupportRef | string | null): SupportOrderSummar
   };
 }
 
-function toSupportStore(raw?: RawSupportRef | string | null): SupportStoreSummary | null {
+function toSupportStore(
+  raw?: RawSupportRef | string | null
+): SupportStoreSummary | null {
   if (!raw || typeof raw === 'string') return null;
   return {
     id: toId(raw),
@@ -326,7 +332,7 @@ function toSupportStore(raw?: RawSupportRef | string | null): SupportStoreSummar
 }
 
 function toWarrantyMetadata(
-  raw?: RawWarrantyMetadata | null,
+  raw?: RawWarrantyMetadata | null
 ): SupportWarrantyMetadata | null {
   if (!raw) return null;
   return {
@@ -349,9 +355,13 @@ function toWarrantyMetadata(
 
 function mapSupportTicket(raw: RawSupportTicket): SupportTicketRecord {
   const orderId =
-    raw.orderId && typeof raw.orderId !== 'string' ? toId(raw.orderId) : toId(raw.orderId);
+    raw.orderId && typeof raw.orderId !== 'string'
+      ? toId(raw.orderId)
+      : toId(raw.orderId);
   const storeId =
-    raw.storeId && typeof raw.storeId !== 'string' ? toId(raw.storeId) : toId(raw.storeId);
+    raw.storeId && typeof raw.storeId !== 'string'
+      ? toId(raw.storeId)
+      : toId(raw.storeId);
 
   return {
     id: toId(raw) || String(raw.subject || raw.createdAt || Math.random()),
@@ -366,10 +376,13 @@ function mapSupportTicket(raw: RawSupportTicket): SupportTicketRecord {
     storeId: storeId || null,
     store: toSupportStore(raw.storeId),
     warranty: toWarrantyMetadata(raw.warranty),
-    currentOwnerRole: (raw.currentOwnerRole || 'none') as SupportTicketOwnerRole,
+    currentOwnerRole: (raw.currentOwnerRole ||
+      'none') as SupportTicketOwnerRole,
     currentOwnerUserId: toId(raw.currentOwnerUserId) || null,
     nextActionCode: String(raw.nextActionCode || ''),
-    messages: Array.isArray(raw.messages) ? raw.messages.map(toSupportMessage) : [],
+    messages: Array.isArray(raw.messages)
+      ? raw.messages.map(toSupportMessage)
+      : [],
     lastMessageAt: raw.lastMessageAt || undefined,
     createdAt: raw.createdAt || undefined,
     updatedAt: raw.updatedAt || undefined,
@@ -420,7 +433,7 @@ function mapSupportRefundCase(raw: SupportRefundCase): RefundRequest {
 function toPagination<T>(
   payload: BackendEnvelope<T>,
   params?: { page?: number; limit?: number },
-  fallbackLength = 0,
+  fallbackLength = 0
 ) {
   return {
     page: payload?.pagination?.page || params?.page || 1,
@@ -430,58 +443,82 @@ function toPagination<T>(
   };
 }
 
+function normalizeSupportListParams<
+  T extends { page?: number; limit?: number },
+>(params?: T): T | undefined {
+  if (!params) return undefined;
+
+  const normalizedLimit = Number(params.limit);
+  return {
+    ...params,
+    limit:
+      Number.isFinite(normalizedLimit) && normalizedLimit > 0
+        ? Math.min(normalizedLimit, 100)
+        : params.limit,
+  };
+}
+
 const supportApi = {
-  async getTickets(params?: ListSupportTicketsParams): Promise<SupportTicketsResponse> {
+  async getTickets(
+    params?: ListSupportTicketsParams
+  ): Promise<SupportTicketsResponse> {
+    const requestParams = normalizeSupportListParams(params);
     const { data } = await apiClient.get<BackendEnvelope<RawSupportTicket[]>>(
       '/api/support',
-      { params },
+      { params: requestParams }
     );
 
     const rows = Array.isArray(data?.data) ? data.data : [];
 
     return {
       items: rows.map(mapSupportTicket),
-      pagination: toPagination(data || {}, params, rows.length),
+      pagination: toPagination(data || {}, requestParams, rows.length),
     };
   },
 
   async getWarrantyCases(
-    params?: Omit<ListSupportTicketsParams, 'category'>,
+    params?: Omit<ListSupportTicketsParams, 'category'>
   ): Promise<SupportTicketsResponse> {
+    const requestParams = normalizeSupportListParams(params);
     const { data } = await apiClient.get<BackendEnvelope<RawSupportTicket[]>>(
       '/api/support/warranties',
-      { params },
+      { params: requestParams }
     );
 
     const rows = Array.isArray(data?.data) ? data.data : [];
 
     return {
       items: rows.map(mapSupportTicket),
-      pagination: toPagination(data || {}, params, rows.length),
+      pagination: toPagination(data || {}, requestParams, rows.length),
     };
   },
 
   async getTicket(id: string): Promise<SupportTicketRecord> {
     const { data } = await apiClient.get<BackendEnvelope<RawSupportTicket>>(
-      `/api/support/${id}`,
+      `/api/support/${id}`
     );
 
     return mapSupportTicket((data?.data || {}) as RawSupportTicket);
   },
 
-  async createTicket(payload: CreateSupportTicketInput): Promise<SupportTicketRecord> {
+  async createTicket(
+    payload: CreateSupportTicketInput
+  ): Promise<SupportTicketRecord> {
     const { data } = await apiClient.post<BackendEnvelope<RawSupportTicket>>(
       '/api/support',
-      payload,
+      payload
     );
 
     return mapSupportTicket((data?.data || {}) as RawSupportTicket);
   },
 
-  async replyTicket(id: string, payload: { message: string }): Promise<SupportTicketRecord> {
+  async replyTicket(
+    id: string,
+    payload: { message: string }
+  ): Promise<SupportTicketRecord> {
     const { data } = await apiClient.post<BackendEnvelope<RawSupportTicket>>(
       `/api/support/${id}/replies`,
-      payload,
+      payload
     );
 
     return mapSupportTicket((data?.data || {}) as RawSupportTicket);
@@ -489,11 +526,11 @@ const supportApi = {
 
   async updateTicketStatus(
     id: string,
-    payload: UpdateSupportTicketStatusInput,
+    payload: UpdateSupportTicketStatusInput
   ): Promise<SupportTicketRecord> {
     const { data } = await apiClient.put<BackendEnvelope<RawSupportTicket>>(
       `/api/support/${id}/status`,
-      payload,
+      payload
     );
 
     return mapSupportTicket((data?.data || {}) as RawSupportTicket);
@@ -506,18 +543,19 @@ const supportApi = {
     ownerRole?: string;
     q?: string;
   }): Promise<SupportRefundCasesResponse> {
+    const requestParams = normalizeSupportListParams(params);
     const { data } = await apiClient.get<BackendEnvelope<SupportRefundCase[]>>(
       '/api/support/refunds',
       {
-        params,
-      },
+        params: requestParams,
+      }
     );
 
     const rows = Array.isArray(data?.data) ? data.data : [];
 
     return {
       items: rows.map(mapSupportRefundCase),
-      pagination: toPagination(data || {}, params, rows.length),
+      pagination: toPagination(data || {}, requestParams, rows.length),
     };
   },
 };

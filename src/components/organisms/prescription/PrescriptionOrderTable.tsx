@@ -58,10 +58,10 @@ const missingTypeTextClass: Record<SupplementOrder['missingType'], string> = {
 };
 
 const missingTypeLabel: Record<SupplementOrder['missingType'], string> = {
-  no_prescription: 'Chua co Rx',
-  incomplete_data: 'Thieu du lieu',
-  unclear_image: 'Anh khong ro',
-  need_verification: 'Can xac nhan',
+  no_prescription: 'Chưa có Rx',
+  incomplete_data: 'Thiếu dữ liệu',
+  unclear_image: 'Ảnh không rõ',
+  need_verification: 'Cần xác nhận',
 };
 
 const followUpActions: PrescriptionFollowUpStatus[] = [
@@ -102,23 +102,27 @@ export const PrescriptionOrderTable = ({
               <Checkbox
                 checked={allSelected}
                 onCheckedChange={(checked) => onSelectAll(Boolean(checked))}
-                aria-label="Select all orders"
+                aria-label="Chọn tất cả đơn hàng"
               />
             </TableHead>
-            <TableHead>Don hang</TableHead>
-            <TableHead>Khach hang</TableHead>
-            <TableHead>Thong tin thieu</TableHead>
-            <TableHead>Theo doi sale</TableHead>
-            <TableHead>Lien he</TableHead>
-            <TableHead>Cho</TableHead>
+            <TableHead>Đơn hàng</TableHead>
+            <TableHead>Khách hàng</TableHead>
+            <TableHead>Thông tin thiếu</TableHead>
+            <TableHead>Theo dõi sale</TableHead>
+            <TableHead>Liên hệ</TableHead>
+            <TableHead>Chờ</TableHead>
             <TableHead className="w-[60px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {orders.map((order) => {
             const checked = selectedOrders.includes(order.id);
-            const followUpMeta = getPrescriptionFollowUpMeta(order.followUpStatus);
-            const followUpUpdatedAt = formatFollowUpDate(order.followUpUpdatedAt);
+            const followUpMeta = getPrescriptionFollowUpMeta(
+              order.followUpStatus
+            );
+            const followUpUpdatedAt = formatFollowUpDate(
+              order.followUpUpdatedAt
+            );
 
             return (
               <TableRow key={order.id} className="hover:bg-muted/30">
@@ -128,17 +132,17 @@ export const PrescriptionOrderTable = ({
                     onCheckedChange={(value) =>
                       onSelectOrder(order.id, Boolean(value))
                     }
-                    aria-label={`Select ${order.orderId}`}
+                    aria-label={`Chọn ${order.orderId}`}
                   />
                 </TableCell>
                 <TableCell>
                   <div className="font-medium">{order.orderId}</div>
                   <p className="text-foreground/85 mt-1 text-xs">
-                    Dat: {order.orderDate}
+                    Đặt: {order.orderDate}
                   </p>
                   {order.supportStatus ? (
                     <p className="text-foreground/70 mt-1 text-xs">
-                      Support status: {order.supportStatus}
+                      Trạng thái support: {order.supportStatus}
                     </p>
                   ) : null}
                 </TableCell>
@@ -167,7 +171,7 @@ export const PrescriptionOrderTable = ({
                     </span>
                     <p className="text-foreground/85 mt-1 text-xs">
                       {order.missingFields.length > 2
-                        ? `${order.missingFields.length} thong so thieu`
+                        ? `${order.missingFields.length} thông số thiếu`
                         : order.missingFields
                             .map((field) => field.label)
                             .join(', ')}
@@ -181,12 +185,12 @@ export const PrescriptionOrderTable = ({
                     </StatusBadge>
                     {order.followUpUpdatedBy ? (
                       <p className="text-foreground/70 text-xs">
-                        Boi: {order.followUpUpdatedBy}
+                        Bởi: {order.followUpUpdatedBy}
                       </p>
                     ) : null}
                     {followUpUpdatedAt ? (
                       <p className="text-foreground/70 text-xs">
-                        Luc: {followUpUpdatedAt}
+                        Lúc: {followUpUpdatedAt}
                       </p>
                     ) : null}
                   </div>
@@ -195,7 +199,7 @@ export const PrescriptionOrderTable = ({
                   <div className="flex items-center gap-2">
                     {order.contactAttempts === 0 ? (
                       <span className="text-foreground/80 text-sm">
-                        Chua lien he
+                        Chưa liên hệ
                       </span>
                     ) : (
                       <span
@@ -206,13 +210,13 @@ export const PrescriptionOrderTable = ({
                             : 'text-foreground/80'
                         )}
                       >
-                        {order.contactAttempts} lan
+                        {order.contactAttempts} lần
                       </span>
                     )}
                   </div>
                   {order.lastContactDate ? (
                     <p className="text-foreground/85 mt-1 text-xs">
-                      Lan cuoi: {order.lastContactDate}
+                      Lần cuối: {order.lastContactDate}
                     </p>
                   ) : null}
                 </TableCell>
@@ -232,7 +236,7 @@ export const PrescriptionOrderTable = ({
                           : 'text-foreground'
                       }
                     >
-                      {order.daysPending} ngay
+                      {order.daysPending} ngày
                     </span>
                   </div>
                 </TableCell>
@@ -250,15 +254,15 @@ export const PrescriptionOrderTable = ({
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => onViewDetail(order)}>
                         <Eye className="mr-2 h-4 w-4" />
-                        Xem chi tiet
+                        Xem chi tiết
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onContact(order)}>
                         <Send className="mr-2 h-4 w-4" />
-                        Lien he khach
+                        Liên hệ khách
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onViewHistory(order)}>
                         <History className="mr-2 h-4 w-4" />
-                        Lich su lien he
+                        Lịch sử liên hệ
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       {followUpActions.map((status) => {
@@ -266,9 +270,12 @@ export const PrescriptionOrderTable = ({
                         return (
                           <DropdownMenuItem
                             key={status}
-                            onClick={() => onUpdateFollowUpStatus(order, status)}
+                            onClick={() =>
+                              onUpdateFollowUpStatus(order, status)
+                            }
                             disabled={
-                              isUpdatingStatus || order.followUpStatus === status
+                              isUpdatingStatus ||
+                              order.followUpStatus === status
                             }
                           >
                             {meta.label}
@@ -278,12 +285,12 @@ export const PrescriptionOrderTable = ({
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => onUploadImage(order)}>
                         <Upload className="mr-2 h-4 w-4" />
-                        Prescription attachment
+                        Ảnh toa đính kèm
                       </DropdownMenuItem>
                       {order.prescriptionImage ? (
                         <DropdownMenuItem>
                           <Image className="mr-2 h-4 w-4" />
-                          Xem anh Rx
+                          Xem ảnh Rx
                         </DropdownMenuItem>
                       ) : null}
                     </DropdownMenuContent>
@@ -299,7 +306,7 @@ export const PrescriptionOrderTable = ({
                 colSpan={8}
                 className="text-foreground/80 py-8 text-center"
               >
-                Khong co don hang nao can xu ly
+                Không có đơn hàng nào cần xử lý
               </TableCell>
             </TableRow>
           ) : null}
