@@ -73,7 +73,7 @@ export const PrescriptionStatsGrid = ({
       />
       <StatCard
         icon={AlertTriangle}
-        title="Escalated"
+        title="Xử lý đặc biệt"
         value={stats.escalated.toString()}
         className="p-3"
         titleClassName="text-foreground/90 text-sm"

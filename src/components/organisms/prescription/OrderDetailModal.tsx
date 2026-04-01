@@ -23,13 +23,13 @@ interface OrderDetailModalProps {
 const getMissingTypeBadge = (type: SupplementOrder['missingType']) => {
   switch (type) {
     case 'no_prescription':
-      return <StatusBadge status="error">Chua co Rx</StatusBadge>;
+      return <StatusBadge status="error">Chưa có Rx</StatusBadge>;
     case 'incomplete_data':
-      return <StatusBadge status="warning">Thieu du lieu</StatusBadge>;
+      return <StatusBadge status="warning">Thiếu dữ liệu</StatusBadge>;
     case 'unclear_image':
-      return <StatusBadge status="warning">Anh khong ro</StatusBadge>;
+      return <StatusBadge status="warning">Ảnh không rõ</StatusBadge>;
     case 'need_verification':
-      return <StatusBadge status="info">Can xac nhan</StatusBadge>;
+      return <StatusBadge status="info">Cần xác nhận</StatusBadge>;
   }
 };
 
@@ -57,20 +57,20 @@ export const OrderDetailModal = ({
         <DialogHeader>
           <DialogTitle className="text-foreground flex items-center gap-2 text-base font-semibold">
             <Glasses className="h-5 w-5" />
-            Chi tiet don can bo sung - {order.orderId}
+            Chi tiết đơn cần bổ sung - {order.orderId}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-foreground/80">Khach hang</Label>
+              <Label className="text-foreground/80">Khách hàng</Label>
               <div className="flex items-center gap-2">
                 <User className="text-foreground/80 h-4 w-4" />
                 <span className="font-medium">{order.customer}</span>
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="text-foreground/80">Lien he</Label>
+              <Label className="text-foreground/80">Liên hệ</Label>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <Phone className="text-foreground/80 h-4 w-4" />
@@ -85,7 +85,7 @@ export const OrderDetailModal = ({
           </div>
 
           <div className="space-y-2">
-            <Label className="text-foreground/80">San pham</Label>
+            <Label className="text-foreground/80">Sản phẩm</Label>
             <div className="bg-muted/30 rounded-lg p-3">
               {order.products.map((product, index) => (
                 <div
@@ -102,7 +102,9 @@ export const OrderDetailModal = ({
           </div>
 
           <div className="space-y-2">
-            <Label className="text-foreground/80">Trang thai theo doi sale</Label>
+            <Label className="text-foreground/80">
+              Trạng thái theo dõi sale
+            </Label>
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
               <div className="flex flex-wrap items-center gap-2">
                 <StatusBadge status={followUpMeta.badge}>
@@ -110,12 +112,12 @@ export const OrderDetailModal = ({
                 </StatusBadge>
                 {order.followUpUpdatedBy ? (
                   <span className="text-foreground/70 text-xs">
-                    Boi: {order.followUpUpdatedBy}
+                    Bởi: {order.followUpUpdatedBy}
                   </span>
                 ) : null}
                 {followUpUpdatedAt ? (
                   <span className="text-foreground/70 text-xs">
-                    Luc: {followUpUpdatedAt}
+                    Lúc: {followUpUpdatedAt}
                   </span>
                 ) : null}
               </div>
@@ -130,7 +132,7 @@ export const OrderDetailModal = ({
           <div className="space-y-2">
             <Label className="text-foreground/80 flex items-center gap-2">
               <AlertTriangle className="text-warning h-4 w-4" />
-              Thong tin thieu
+              Thông tin thiếu
             </Label>
             <div className="bg-warning/10 border-warning/20 rounded-lg border p-3">
               <div className="mb-2 flex items-center gap-2">
@@ -144,10 +146,10 @@ export const OrderDetailModal = ({
                       <span className="text-foreground/70 ml-1">
                         (
                         {field.eye === 'OD'
-                          ? 'Mat phai'
+                          ? 'Mắt phải'
                           : field.eye === 'OS'
-                            ? 'Mat trai'
-                            : 'Ca 2 mat'}
+                            ? 'Mắt trái'
+                            : 'Cả 2 mắt'}
                         )
                       </span>
                     ) : null}
@@ -159,7 +161,7 @@ export const OrderDetailModal = ({
 
           {order.prescriptionImage ? (
             <div className="space-y-2">
-              <Label className="text-foreground/80">Anh don thuoc da gui</Label>
+              <Label className="text-foreground/80">Ảnh đơn thuốc đã gửi</Label>
               <div className="bg-muted/30 flex items-center justify-center rounded-lg p-4">
                 <img
                   src={order.prescriptionImage}
@@ -172,28 +174,30 @@ export const OrderDetailModal = ({
 
           {order.notes ? (
             <div className="space-y-2">
-              <Label className="text-foreground/80">Ghi chu</Label>
-              <p className="bg-muted/30 rounded-lg p-3 text-sm">{order.notes}</p>
+              <Label className="text-foreground/80">Ghi chú</Label>
+              <p className="bg-muted/30 rounded-lg p-3 text-sm">
+                {order.notes}
+              </p>
             </div>
           ) : null}
 
           <div className="space-y-2">
-            <Label className="text-foreground/80">Lich su lien he</Label>
+            <Label className="text-foreground/80">Lịch sử liên hệ</Label>
             <div className="flex items-center gap-4 text-sm">
               <span>
-                Da lien he: <strong>{order.contactAttempts} lan</strong>
+                Đã liên hệ: <strong>{order.contactAttempts} lần</strong>
               </span>
               {order.lastContactDate ? (
                 <span>
-                  Lan cuoi: <strong>{order.lastContactDate}</strong>
+                  Lần cuối: <strong>{order.lastContactDate}</strong>
                 </span>
               ) : null}
               <span>
-                Cho:{' '}
+                Chờ:{' '}
                 <strong
                   className={order.daysPending >= 3 ? 'text-destructive' : ''}
                 >
-                  {order.daysPending} ngay
+                  {order.daysPending} ngày
                 </strong>
               </span>
             </div>
@@ -201,7 +205,7 @@ export const OrderDetailModal = ({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Dong
+            Đóng
           </Button>
           <Button
             onClick={() => {
@@ -210,7 +214,7 @@ export const OrderDetailModal = ({
             }}
           >
             <Send className="mr-2 h-4 w-4" />
-            Lien he khach
+            Liên hệ khách
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,7 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AlertTriangle, ChevronLeft, ChevronRight, Loader2, Search } from 'lucide-react';
+import {
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  Search,
+} from 'lucide-react';
 
 import { Button } from '@/components/atoms';
 import { Header } from '@/components/organisms/Header';
@@ -58,7 +64,9 @@ export default function CustomerHistoryPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [selectedRefund, setSelectedRefund] = useState<RefundRequest | null>(null);
+  const [selectedRefund, setSelectedRefund] = useState<RefundRequest | null>(
+    null
+  );
 
   useEffect(() => {
     let active = true;
@@ -80,7 +88,11 @@ export default function CustomerHistoryPage() {
         }
       } catch (err) {
         if (active) {
-          setError(err instanceof Error ? err.message : 'Failed to load refund support workspace.');
+          setError(
+            err instanceof Error
+              ? err.message
+              : 'Failed to load refund support workspace.'
+          );
         }
       } finally {
         if (active) {
@@ -111,7 +123,7 @@ export default function CustomerHistoryPage() {
     let active = true;
 
     void supportApi
-      .getRefundCases({ page: 1, limit: 200, q: detailId })
+      .getRefundCases({ page: 1, limit: 100, q: detailId })
       .then((response) => {
         if (!active) return;
         setSelectedRefund(
@@ -155,7 +167,9 @@ export default function CustomerHistoryPage() {
             <Card className="p-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Refund support workspace</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Refund support workspace
+                  </h3>
                   <p className="mt-1 text-sm text-gray-500">
                     Page {page} / {totalPages}, total {totalItems} refund cases
                   </p>
@@ -206,37 +220,56 @@ export default function CustomerHistoryPage() {
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200 text-left text-gray-500">
-                      <th className="pb-3 pr-4">Order</th>
-                      <th className="pb-3 pr-4">Customer</th>
-                      <th className="pb-3 pr-4">Refund</th>
-                      <th className="pb-3 pr-4">Owner</th>
-                      <th className="pb-3 pr-4">Next step</th>
-                      <th className="pb-3 pr-4">Amount</th>
-                      <th className="pb-3 pr-4">Updated</th>
+                      <th className="pr-4 pb-3">Order</th>
+                      <th className="pr-4 pb-3">Customer</th>
+                      <th className="pr-4 pb-3">Refund</th>
+                      <th className="pr-4 pb-3">Owner</th>
+                      <th className="pr-4 pb-3">Next step</th>
+                      <th className="pr-4 pb-3">Amount</th>
+                      <th className="pr-4 pb-3">Updated</th>
                       <th className="pb-3">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {refunds.map((refund) => (
-                      <tr key={refund.id} className="border-b border-gray-100 text-gray-700">
+                      <tr
+                        key={refund.id}
+                        className="border-b border-gray-100 text-gray-700"
+                      >
                         <td className="py-3 pr-4">
-                          <div className="font-medium text-gray-900">{refund.orderId}</div>
-                          <div className="text-xs text-gray-500">{refund.id}</div>
+                          <div className="font-medium text-gray-900">
+                            {refund.orderId}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {refund.id}
+                          </div>
                         </td>
                         <td className="py-3 pr-4">
                           <div>{refund.customerName}</div>
-                          <div className="text-xs text-gray-500">{refund.customerPhone}</div>
+                          <div className="text-xs text-gray-500">
+                            {refund.customerPhone}
+                          </div>
                         </td>
                         <td className="py-3 pr-4">
                           <span className="font-medium text-gray-900">
                             {statusConfig[refund.status].label}
                           </span>
-                          <div className="text-xs text-gray-500">{refund.reason}</div>
+                          <div className="text-xs text-gray-500">
+                            {refund.reason}
+                          </div>
                         </td>
-                        <td className="py-3 pr-4">{formatOwner(refund.currentOwnerRole)}</td>
-                        <td className="py-3 pr-4">{formatNextAction(refund.nextActionCode)}</td>
-                        <td className="py-3 pr-4">{formatCurrency(refund.amount)}</td>
-                        <td className="py-3 pr-4">{refund.processedAt || refund.createdAt}</td>
+                        <td className="py-3 pr-4">
+                          {formatOwner(refund.currentOwnerRole)}
+                        </td>
+                        <td className="py-3 pr-4">
+                          {formatNextAction(refund.nextActionCode)}
+                        </td>
+                        <td className="py-3 pr-4">
+                          {formatCurrency(refund.amount)}
+                        </td>
+                        <td className="py-3 pr-4">
+                          {refund.processedAt || refund.createdAt}
+                        </td>
                         <td className="py-3">
                           <Button
                             type="button"
