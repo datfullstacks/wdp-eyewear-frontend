@@ -116,6 +116,15 @@ function mapPaymentStatus(status: OrderRecord['paymentStatus']): PaymentStatus {
   return 'pending';
 }
 
+function hasOutstandingSepayBalance(
+  order: Pick<OrderRecord, 'payLaterMethod' | 'paidAmount' | 'total'>
+): boolean {
+  return (
+    String(order.payLaterMethod || '').trim().toLowerCase() === 'sepay' &&
+    Number(order.total || 0) > Math.max(0, Number(order.paidAmount || 0))
+  );
+}
+
 function resolvePendingOrderType(order: OrderRecord): string {
   const normalized = String(order.orderType || '')
     .trim()
@@ -551,7 +560,9 @@ export function toPrescriptionOrder(
     dueDate: plusDaysIso(createdDate, 3),
     notes: order.note || '',
     source,
-    paymentStatus: mapPaymentStatus(order.paymentStatus),
+    paymentStatus: hasOutstandingSepayBalance(order)
+      ? 'partial'
+      : mapPaymentStatus(order.paymentStatus),
     attachmentUrl,
     workflowStage,
     trackingCode: order.shipment?.trackingCode || undefined,
@@ -664,7 +675,9 @@ export function toPreorderOrder(order: OrderRecord): PreorderOrder {
     expectedDate: estimateExpectedDate(order.createdAt),
     products,
     totalAmount: order.total,
-    paymentStatus: mapPaymentStatus(order.paymentStatus),
+    paymentStatus: hasOutstandingSepayBalance(order)
+      ? 'partial'
+      : mapPaymentStatus(order.paymentStatus),
     depositAmount: Math.min(order.paidAmount, order.payNowTotal),
     status: mapPreorderStatus(order),
     notes: order.note || '',

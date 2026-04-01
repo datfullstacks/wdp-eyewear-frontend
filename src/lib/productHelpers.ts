@@ -557,7 +557,7 @@ export function buildUpsertPayload(
     mediaAssets: assets,
     preOrder: {
       enabled: form.preOrderEnabled,
-      allowCod: form.preOrderAllowCod,
+      allowCod: true,
       depositPercent:
         Number.isFinite(Number(form.preOrderDepositPercent)) &&
         Number(form.preOrderDepositPercent) >= 0
@@ -572,7 +572,7 @@ export function buildUpsertPayload(
       endAt: form.preOrderEndAt || undefined,
       shipFrom: form.preOrderShipFrom || undefined,
       shipTo: form.preOrderShipTo || undefined,
-      shippingCollectionTiming: form.preOrderShippingCollectionTiming,
+      shippingCollectionTiming: 'upfront',
       note: form.preOrderNote.trim() || undefined,
     },
     storeScope: {
@@ -695,7 +695,7 @@ export function buildProductFormState(product?: ProductDetail | null): ProductFo
     thumbnailUrl: fallbackThumbnail,
     galleryUrls: getGalleryUrls(product),
     preOrderEnabled: Boolean(product.preOrder?.enabled),
-    preOrderAllowCod: Boolean(product.preOrder?.allowCod ?? true),
+    preOrderAllowCod: false,
     preOrderDepositPercent:
       product.preOrder?.depositPercent != null ? String(product.preOrder.depositPercent) : '30',
     preOrderMaxQuantityPerOrder:
