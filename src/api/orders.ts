@@ -137,6 +137,10 @@ interface BackendOpsExecution {
   managerReviewRequestedAt?: string;
   managerReviewRequestedBy?: string;
   managerReviewReason?: string;
+  prescriptionFollowUpStatus?: string;
+  prescriptionFollowUpNote?: string;
+  prescriptionFollowUpUpdatedAt?: string;
+  prescriptionFollowUpUpdatedBy?: string;
   internalNote?: string;
   holdReason?: string | null;
   holdNote?: string;
@@ -395,6 +399,10 @@ export interface OrderOpsExecutionPatch {
   managerReviewRequestedAt?: string;
   managerReviewRequestedBy?: string;
   managerReviewReason?: string;
+  prescriptionFollowUpStatus?: ReadyStockOrderOpsState['prescriptionFollowUpStatus'];
+  prescriptionFollowUpNote?: string;
+  prescriptionFollowUpUpdatedAt?: string;
+  prescriptionFollowUpUpdatedBy?: string;
   internalNote?: string;
   holdReason?: ReadyStockOrderOpsState['holdReason'];
   holdNote?: string;
@@ -663,6 +671,30 @@ function mapOpsExecution(
         : undefined,
     managerReviewRequestedBy: String(raw.managerReviewRequestedBy || '').trim(),
     managerReviewReason: String(raw.managerReviewReason || '').trim(),
+    prescriptionFollowUpStatus: (() => {
+      const followUpStatus = String(raw.prescriptionFollowUpStatus || '')
+        .trim()
+        .toLowerCase();
+      if (followUpStatus === 'needs_review') return 'needs_review';
+      if (followUpStatus === 'needs_customer_contact') {
+        return 'needs_customer_contact';
+      }
+      if (followUpStatus === 'waiting_customer_response') {
+        return 'waiting_customer_response';
+      }
+      if (followUpStatus === 'customer_responded') {
+        return 'customer_responded';
+      }
+      return 'none';
+    })(),
+    prescriptionFollowUpNote: String(raw.prescriptionFollowUpNote || '').trim(),
+    prescriptionFollowUpUpdatedAt:
+      typeof raw.prescriptionFollowUpUpdatedAt === 'string'
+        ? raw.prescriptionFollowUpUpdatedAt
+        : '',
+    prescriptionFollowUpUpdatedBy: String(
+      raw.prescriptionFollowUpUpdatedBy || ''
+    ).trim(),
     internalNote: String(raw.internalNote || '').trim(),
     holdReason: (String(raw.holdReason || '')
       .trim()

@@ -2,10 +2,8 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { getSession } from 'next-auth/react';
 import { Filter } from 'lucide-react';
 import inventoryApi from '@/api/inventory';
-import { userApi } from '@/api/users';
 import { SearchBar } from '@/components/molecules/SearchBar';
 import { Header } from '@/components/organisms/Header';
 import {
@@ -25,13 +23,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   INVENTORY_STATUS_LABELS,
   InventoryItem,
@@ -56,13 +47,6 @@ const Inventory = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [availableStores, setAvailableStores] = useState<
-    Array<{ id: string; name: string }>
-  >([]);
-  const [resolvedStoreId, setResolvedStoreId] = useState('');
-  const [resolvedStoreLabel, setResolvedStoreLabel] = useState('');
-  const [storeScopeError, setStoreScopeError] = useState('');
-  const [isResolvingStoreScope, setIsResolvingStoreScope] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -87,7 +71,7 @@ const Inventory = () => {
             }
           )?.response?.data?.message ||
           (err as { message?: string })?.message ||
-          'Không thể tải tồn kho. Vui lòng thử lại.';
+          'Khong the tai ton kho. Vui long thu lai.';
         setError(message);
       } finally {
         if (isMounted) setIsLoading(false);
@@ -98,91 +82,6 @@ const Inventory = () => {
 
     return () => {
       isMounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const loadStoreScope = async () => {
-      setIsResolvingStoreScope(true);
-      setStoreScopeError('');
-
-      try {
-        const session = await getSession();
-        const currentUserId = String(session?.user?.id || '').trim();
-        if (!currentUserId) {
-          throw new Error('Không xác định dược tài khỏan đang nhập.');
-        }
-
-        const currentUser = await userApi.getById(currentUserId);
-        const scope = currentUser.storeAccess;
-        const scopeStores = Array.isArray(scope?.stores)
-          ? scope.stores
-              .map((store) => ({
-                id: String(store?.id || '').trim(),
-                name:
-                  String(store?.name || '').trim() ||
-                  String(store?.id || '').trim(),
-              }))
-              .filter((store) => store.id)
-          : [];
-
-        const storesById = new Map(
-          scopeStores.map((store) => [store.id, store])
-        );
-        const primaryStoreId = String(scope?.primaryStoreId || '').trim();
-        const primaryStoreName = String(scope?.primaryStore?.name || '').trim();
-        if (primaryStoreId && !storesById.has(primaryStoreId)) {
-          storesById.set(primaryStoreId, {
-            id: primaryStoreId,
-            name: primaryStoreName || primaryStoreId,
-          });
-        }
-
-        const stores = Array.from(storesById.values());
-        const nextStoreId =
-          primaryStoreId ||
-          String(scope?.storeIds?.[0] || '').trim() ||
-          stores[0]?.id ||
-          '';
-
-        if (!nextStoreId) {
-          throw new Error(
-            'Tài khoản operation chưa được gán cửa hàng để nhập kho.'
-          );
-        }
-
-        const nextStoreLabel = storesById.get(nextStoreId)?.name || '';
-
-        if (!mounted) return;
-        setAvailableStores(stores);
-        setResolvedStoreId(nextStoreId);
-        setResolvedStoreLabel(nextStoreLabel);
-      } catch (err) {
-        if (!mounted) return;
-        setAvailableStores([]);
-        setResolvedStoreId('');
-        setResolvedStoreLabel('');
-        const message =
-          (
-            err as {
-              response?: { data?: { message?: string } };
-              message?: string;
-            }
-          )?.response?.data?.message ||
-          (err as { message?: string })?.message ||
-          'Không tải đuọc phạm vi cửa hàng của tài khoản operation.';
-        setStoreScopeError(message);
-      } finally {
-        if (mounted) setIsResolvingStoreScope(false);
-      }
-    };
-
-    void loadStoreScope();
-
-    return () => {
-      mounted = false;
     };
   }, []);
 
@@ -266,7 +165,6 @@ const Inventory = () => {
   };
 
   const handleEditStock = (item: InventoryItem) => {
-    if (!resolvedStoreId) return;
     setSelectedItem(item);
     setIsEditOpen(true);
   };
@@ -291,22 +189,14 @@ const Inventory = () => {
     }
   ) => {
     if (item.trackInventory === false) {
-      throw new Error('Sản phẩm này không theo dõi tồn kho.');
-    }
-
-    if (!resolvedStoreId) {
-      throw new Error(
-        storeScopeError ||
-          'Tài khoản operation chưa được gán cửa hàng để nhập kho.'
-      );
+      throw new Error('San pham nay khong theo doi ton kho.');
     }
 
     if (!item.productId || !item.variantId) {
-      throw new Error('Không tìm thấy biến thể hợp lệ để tạo phiếu nhập kho.');
+      throw new Error('Khong tim thay bien the hop le de tao phieu nhap kho.');
     }
 
     await inventoryApi.createReceipt({
-      storeId: resolvedStoreId,
       supplier: payload.supplier,
       warehouseLocation: payload.warehouseLocation,
       note: payload.note,
@@ -327,40 +217,33 @@ const Inventory = () => {
   return (
     <>
       <Header
-        title="Tồn kho và tình trạng hàng"
-        subtitle="Operation theo dõi tồn kho và tạo phiếu nhập kho cho từng biến thể."
+        title="Quan ly kho"
+        subtitle="Operation theo doi ton hien tai, vi tri kho va chi ghi nhan nhap kho thu cong cho cac truong hop dieu chinh."
       />
 
       <div className="space-y-6 p-6">
         <InventoryStatsGrid stats={stats} />
 
-        {storeScopeError ? (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-            {storeScopeError}
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-            <p className="font-medium">
-              {resolvedStoreLabel
-                ? `Phiếu nhập kho sẽ được tạo cho ${resolvedStoreLabel}.`
-                : 'Operation có thể nhập kho trực tiếp từ màn này.'}
-            </p>
-            <p className="mt-1">
-              Hàng nhập theo batch pre-order vẫn có thể xử lý tại{' '}
-              <Link
-                href="/operation/inventory/import"
-                className="font-semibold underline underline-offset-4"
-              >
-                Nhập hàng pre-order
-              </Link>
-              .
-            </p>
-          </div>
-        )}
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+          <p className="font-medium">
+            Man nay dung de quan ly ton hien tai, xem vi tri kho va ghi nhan
+            nhap kho thu cong khi can dieu chinh.
+          </p>
+          <p className="mt-1">
+            Luong nhap hang pre-order duoc xu ly rieng tai{' '}
+            <Link
+              href="/operation/inventory/import"
+              className="font-semibold underline underline-offset-4"
+            >
+              Nhap hang pre-order
+            </Link>
+            .
+          </p>
+        </div>
 
         {isLoading ? (
           <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-6 text-sm text-slate-600">
-            Đang tải tồn kho...
+            Dang tai ton kho...
           </div>
         ) : null}
 
@@ -373,36 +256,11 @@ const Inventory = () => {
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-start">
           <div className="w-full sm:max-w-[240px]">
             <SearchBar
-              placeholder="Tìm theo tên, SKU, thương hiệu..."
+              placeholder="Tim theo ten, SKU, thuong hieu..."
               value={searchTerm}
               onChange={setSearchTerm}
             />
           </div>
-
-          {availableStores.length > 1 ? (
-            <Select
-              value={resolvedStoreId}
-              onValueChange={(value) => {
-                setResolvedStoreId(value);
-                setResolvedStoreLabel(
-                  availableStores.find((store) => store.id === value)?.name ||
-                    ''
-                );
-              }}
-              disabled={isResolvingStoreScope}
-            >
-              <SelectTrigger className="w-full sm:w-[260px]">
-                <SelectValue placeholder="Chọn cửa hàng" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableStores.map((store) => (
-                  <SelectItem key={store.id} value={store.id}>
-                    {store.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : null}
 
           <div className="flex justify-start">
             <DropdownMenu>
@@ -410,7 +268,7 @@ const Inventory = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  aria-label="Bộ lọc"
+                  aria-label="Bo loc"
                   className="text-foreground/80 hover:text-foreground"
                 >
                   <Filter />
@@ -418,13 +276,13 @@ const Inventory = () => {
               </DropdownMenuTrigger>
 
               <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuLabel>Trạng thái</DropdownMenuLabel>
+                <DropdownMenuLabel>Trang thai</DropdownMenuLabel>
                 <DropdownMenuRadioGroup
                   value={statusFilter}
                   onValueChange={setStatusFilter}
                 >
                   <DropdownMenuRadioItem value="all">
-                    Tất cả trạng thái
+                    Tat ca trang thai
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="in_stock">
                     {INVENTORY_STATUS_LABELS.in_stock}
@@ -436,13 +294,13 @@ const Inventory = () => {
 
                 <DropdownMenuSeparator />
 
-                <DropdownMenuLabel>Danh mục</DropdownMenuLabel>
+                <DropdownMenuLabel>Danh muc</DropdownMenuLabel>
                 <DropdownMenuRadioGroup
                   value={categoryFilter}
                   onValueChange={setCategoryFilter}
                 >
                   <DropdownMenuRadioItem value="all">
-                    Tất cả danh mục
+                    Tat ca danh muc
                   </DropdownMenuRadioItem>
                   {inventoryCategories.map((category) => (
                     <DropdownMenuRadioItem key={category} value={category}>
@@ -463,10 +321,8 @@ const Inventory = () => {
               onEditStock={handleEditStock}
               onViewHistory={handleViewHistory}
               historyEnabled={false}
-              stockEditEnabled={
-                Boolean(resolvedStoreId) && !isResolvingStoreScope
-              }
-              stockEditLabel="Nhập kho"
+              stockEditEnabled
+              stockEditLabel="Nhap kho thu cong"
             />
 
             {filteredInventory.length > 0 && totalPages > 1 ? (
@@ -475,30 +331,26 @@ const Inventory = () => {
                   Trang <span className="font-semibold">{currentPage}</span>/
                   {totalPages}{' '}
                   <span className="text-slate-500">
-                    ({filteredInventory.length} dòng tồn kho)
+                    ({filteredInventory.length} dong ton kho)
                   </span>
                 </p>
 
                 <div className="flex items-center gap-2">
-                  <Select
+                  <select
+                    className="h-9 rounded-md border border-input bg-background px-3 text-sm"
                     value={String(pageSize)}
-                    onValueChange={(value) =>
+                    onChange={(event) =>
                       setPageSize(
-                        Number(value) as (typeof PAGE_SIZE_OPTIONS)[number]
+                        Number(event.target.value) as (typeof PAGE_SIZE_OPTIONS)[number]
                       )
                     }
                   >
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue placeholder="20 / trang" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PAGE_SIZE_OPTIONS.map((option) => (
-                        <SelectItem key={option} value={String(option)}>
-                          {option} / trang
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    {PAGE_SIZE_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {option} / trang
+                      </option>
+                    ))}
+                  </select>
 
                   <Button
                     variant="outline"
@@ -508,7 +360,7 @@ const Inventory = () => {
                     }
                     disabled={currentPage <= 1}
                   >
-                    Trang trước
+                    Trang truoc
                   </Button>
                   <Button
                     variant="outline"
@@ -544,7 +396,6 @@ const Inventory = () => {
           item={selectedItem}
           open={isEditOpen}
           onOpenChange={setIsEditOpen}
-          storeLabel={resolvedStoreLabel}
           onUpdate={handleUpdateStock}
         />
 

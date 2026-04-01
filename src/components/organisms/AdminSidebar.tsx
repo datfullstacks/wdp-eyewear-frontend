@@ -46,7 +46,7 @@ export function AdminSidebar() {
       },
       {
         icon: Building2,
-        label: 'Store Network',
+        label: 'Flagship Store',
         path: '/admin/stores',
       },
       {

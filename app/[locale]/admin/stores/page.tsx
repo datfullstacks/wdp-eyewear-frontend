@@ -7,8 +7,8 @@ export default function AdminStoresPage() {
   return (
     <>
       <Header
-        title="Store Network"
-        subtitle="System-level overview for the retail store network"
+        title="Flagship Store"
+        subtitle="Single-store configuration for the active flagship"
       />
       <div className="p-6">
         <StoreNetworkPage workspace="admin" />
