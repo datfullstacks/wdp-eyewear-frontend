@@ -37,6 +37,7 @@ function normalizeOrderStatus(value?: string): OrderStatus {
 function normalizeInvoiceStatus(value?: string): InvoiceStatus {
   const status = String(value || '').trim().toLowerCase();
   if (status === 'issued') return 'issued';
+  if (status === 'partial') return 'partial';
   if (status === 'paid') return 'paid';
   if (status === 'void') return 'void';
   return 'unknown';
