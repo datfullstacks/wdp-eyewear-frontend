@@ -22,7 +22,8 @@ interface PreorderTableProps {
   onStockIn: (order: PreorderOrder) => void;
   onMoveToPacking: (order: PreorderOrder) => void;
   onCreateShipment: (order: PreorderOrder) => void;
-  onUpdateTracking: (order: PreorderOrder) => void;
+  onManageShipment: (order: PreorderOrder) => void;
+  onRequestDeliveryAgain: (order: PreorderOrder) => void;
 }
 
 export const PreorderTable = ({
@@ -36,7 +37,8 @@ export const PreorderTable = ({
   onStockIn,
   onMoveToPacking,
   onCreateShipment,
-  onUpdateTracking,
+  onManageShipment,
+  onRequestDeliveryAgain,
 }: PreorderTableProps) => (
   <div className="glass-card overflow-hidden rounded-xl">
     {selectedOrders.length > 0 && (
@@ -80,7 +82,8 @@ export const PreorderTable = ({
               onStockIn={onStockIn}
               onMoveToPacking={onMoveToPacking}
               onCreateShipment={onCreateShipment}
-              onUpdateTracking={onUpdateTracking}
+              onManageShipment={onManageShipment}
+              onRequestDeliveryAgain={onRequestDeliveryAgain}
             />
           ))}
         </TableBody>
