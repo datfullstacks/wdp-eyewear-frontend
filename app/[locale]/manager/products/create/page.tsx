@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Header } from '@/components/organisms/Header';
 import { ProductForm, type ProductFormState } from '@/components/organisms/manager';
 import { Card } from '@/components/ui/card';
-import { productApi, storeApi, uploadApi, type ProductMediaAsset, type StoreRecord } from '@/api';
+import { productApi, uploadApi, type ProductMediaAsset } from '@/api';
 import { buildUpsertPayload, EMPTY_PRODUCT_FORM } from '@/lib/productHelpers';
 import { AlertTriangle } from 'lucide-react';
 
@@ -15,14 +15,6 @@ export default function CreateProductPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingKey, setUploadingKey] = useState('');
   const [apiError, setApiError] = useState('');
-  const [storeOptions, setStoreOptions] = useState<StoreRecord[]>([]);
-
-  useEffect(() => {
-    void storeApi
-      .getAll({ status: 'all', limit: 100 })
-      .then((result) => setStoreOptions(result.stores))
-      .catch(() => setStoreOptions([]));
-  }, []);
 
   const handleUploadSingle = useCallback(
     async (file: File, role: ProductMediaAsset['role']) => {
@@ -149,7 +141,6 @@ export default function CreateProductPage() {
         <Card className="p-6">
           <ProductForm
             formData={formData}
-            storeOptions={storeOptions}
             availableTryOnStatuses={['draft', 'pending_review']}
             isSubmitting={isSubmitting}
             uploadingKey={uploadingKey}

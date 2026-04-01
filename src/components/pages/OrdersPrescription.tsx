@@ -201,6 +201,45 @@ function isWithinDateRange(
   return true;
 }
 
+function matchesPrescriptionStageFilter(
+  order: PrescriptionOrder,
+  filterValue: string
+) {
+  switch (filterValue) {
+    case 'pending_review':
+      return order.prescriptionStatus === 'pending_review';
+    case 'approved':
+      return order.prescriptionStatus === 'approved';
+    case 'waiting_lab':
+      return order.workflowStage === 'waiting_lab';
+    case 'lab_in_progress':
+      return ['lens_processing', 'lens_fitting', 'qc_check'].includes(
+        order.workflowStage
+      );
+    case 'ready_for_shipping':
+      return ['ready_to_pack', 'packing', 'ready_to_ship'].includes(
+        order.workflowStage
+      );
+    case 'shipping_active':
+      return [
+        'shipment_created',
+        'handover_to_carrier',
+        'in_transit',
+        'delivery_failed',
+        'waiting_redelivery',
+        'return_pending',
+        'return_in_transit',
+        'exception_hold',
+      ].includes(order.workflowStage);
+    case 'delivered':
+      return order.workflowStage === 'delivered';
+    case 'returned':
+      return order.workflowStage === 'returned';
+    default:
+      return true;
+  }
+}
+
 function buildContactMessage(order: PrescriptionOrder, note: string) {
   const trimmed = note.trim();
   if (trimmed.length > 0) {
@@ -340,7 +379,8 @@ export default function OrdersPrescription() {
       order.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.phone.includes(searchTerm);
     const matchesStatus =
-      statusFilter === 'all' || order.prescriptionStatus === statusFilter;
+      statusFilter === 'all' ||
+      matchesPrescriptionStageFilter(order, statusFilter);
     const matchesOrderDate = isWithinDateRange(
       order.orderDate,
       orderDateFrom,
@@ -365,6 +405,21 @@ export default function OrdersPrescription() {
       ['ready_to_pack', 'packing', 'ready_to_ship'].includes(
         order.workflowStage
       )
+    ).length,
+    shippingActive: orders.filter((order) =>
+      [
+        'shipment_created',
+        'handover_to_carrier',
+        'in_transit',
+        'delivery_failed',
+        'waiting_redelivery',
+        'return_pending',
+        'return_in_transit',
+        'exception_hold',
+      ].includes(order.workflowStage)
+    ).length,
+    closedFlow: orders.filter((order) =>
+      ['delivered', 'returned'].includes(order.workflowStage)
     ).length,
   };
 
@@ -633,6 +688,24 @@ export default function OrdersPrescription() {
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="approved">
                     Đã duyệt
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="waiting_lab">
+                    Cho vao gia cong
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="lab_in_progress">
+                    Dang gia cong
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="ready_for_shipping">
+                    Dong goi / cho van don
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="shipping_active">
+                    Dang giao / theo GHN
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="delivered">
+                    Da giao
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="returned">
+                    Da hoan hang
                   </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
                 <DropdownMenuSeparator />

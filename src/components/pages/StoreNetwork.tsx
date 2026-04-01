@@ -152,7 +152,6 @@ function buildPayload(form: StoreFormState) {
 export function StoreNetworkPage({ workspace }: { workspace: Workspace }) {
   const canManageStores = workspace === 'admin';
   const [stores, setStores] = useState<StoreRecord[]>([]);
-  const [search, setSearch] = useState('');
   const [editingId, setEditingId] = useState('');
   const [form, setForm] = useState<StoreFormState>(EMPTY_FORM);
   const [isLoading, setIsLoading] = useState(true);
@@ -179,6 +178,14 @@ export function StoreNetworkPage({ workspace }: { workspace: Workspace }) {
   useEffect(() => {
     void loadStores();
   }, [loadStores]);
+
+  useEffect(() => {
+    if (stores.length === 0) return;
+    const activeStore = stores[0];
+    if (!activeStore) return;
+    setEditingId(activeStore.id);
+    setForm(mapStoreToForm(activeStore));
+  }, [stores]);
 
   useEffect(() => {
     if (workspace !== 'admin') return;
@@ -256,31 +263,17 @@ export function StoreNetworkPage({ workspace }: { workspace: Workspace }) {
     };
   }, [form.ghnDistrictId, workspace]);
 
-  const visibleStores = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    if (!query) return stores;
-    return stores.filter((store) =>
-      [store.name, store.code, store.city, store.district]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(query))
-    );
-  }, [search, stores]);
+  const flagshipStore = stores[0] || null;
 
   const stats = useMemo(
     () => [
       { label: 'Tong cua hang', value: stores.length, icon: Building2 },
-      { label: 'Dang hoat dong', value: stores.filter((store) => store.status === 'active').length, icon: MapPin },
-      { label: 'Co try-on', value: stores.filter((store) => store.supportsTryOn).length, icon: Sparkles },
-      { label: 'GHN san sang', value: stores.filter((store) => isGhnReady(store)).length, icon: MapPin },
+      { label: 'Che do', value: stores.length === 1 ? 'Single store' : 'Multi store', icon: MapPin },
+      { label: 'Try-on', value: flagshipStore?.supportsTryOn ? 'Bat' : 'Tat', icon: Sparkles },
+      { label: 'GHN', value: flagshipStore && isGhnReady(flagshipStore) ? 'San sang' : 'Chua xong', icon: MapPin },
     ],
-    [stores]
+    [flagshipStore, stores]
   );
-
-  const startCreate = () => {
-    setEditingId('');
-    setForm(EMPTY_FORM);
-    setApiError('');
-  };
 
   const startEdit = (store: StoreRecord) => {
     setEditingId(store.id);
@@ -311,29 +304,16 @@ export function StoreNetworkPage({ workspace }: { workspace: Workspace }) {
     setIsSaving(true);
     setApiError('');
     try {
-      const payload = buildPayload(form);
-      if (editingId) {
-        await storeApi.update(editingId, payload);
-      } else {
-        await storeApi.create(payload);
+      if (!editingId) {
+        throw new Error('Single-store mode requires an existing flagship store');
       }
+      const payload = buildPayload(form);
+      await storeApi.update(editingId, payload);
       await loadStores();
-      startCreate();
     } catch (error) {
       setApiError(error instanceof Error ? error.message : 'Failed to save store');
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const handleDelete = async (store: StoreRecord) => {
-    if (!confirm(`Delete store "${store.name}"?`)) return;
-    try {
-      await storeApi.remove(store.id);
-      await loadStores();
-      if (editingId === store.id) startCreate();
-    } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Failed to delete store');
     }
   };
 
@@ -365,102 +345,78 @@ export function StoreNetworkPage({ workspace }: { workspace: Workspace }) {
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.4fr_1fr]">
         <Card className="p-6">
           <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <div className="text-lg font-semibold text-gray-900">Danh sach cua hang</div>
-              <div className="text-sm text-gray-500">
-                Workspace: {workspace === 'admin' ? 'System Admin' : 'Manager'}
+              <div>
+                <div className="text-lg font-semibold text-gray-900">Flagship store hien tai</div>
+                <div className="text-sm text-gray-500">
+                  Single-store mode keeps one active store for all business flows.
+                </div>
               </div>
-            </div>
-            <div className="flex gap-3">
-              <Input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Tim theo ten, ma, thanh pho..."
-              />
-              {canManageStores ? (
-                <Button type="button" variant="outline" onClick={startCreate}>
-                  Them moi
-                </Button>
-              ) : null}
-            </div>
           </div>
 
           {isLoading ? (
             <div className="py-12 text-center text-gray-500">Loading stores...</div>
-          ) : visibleStores.length === 0 ? (
+          ) : !flagshipStore ? (
             <div className="rounded-md border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">
-              Chua co cua hang nao.
+              Chua co flagship store nao duoc cau hinh.
             </div>
           ) : (
-            <div className="space-y-3">
-              {visibleStores.map((store) => (
-                <div
-                  key={store.id}
-                  className="rounded-lg border border-gray-200 p-4"
-                >
-                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <div className="font-semibold text-gray-900">
-                          {store.name} ({store.code})
-                        </div>
-                        <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">
-                          {store.type}
-                        </span>
-                        <span
-                          className={`rounded-full px-2 py-1 text-xs ${
-                            store.status === 'active'
-                              ? 'bg-emerald-100 text-emerald-700'
-                              : 'bg-gray-200 text-gray-700'
-                          }`}
-                        >
-                          {store.status}
-                        </span>
-                        {store.isDefault ? (
-                          <span className="rounded-full bg-amber-100 px-2 py-1 text-xs text-amber-800">
-                            Default
-                          </span>
-                        ) : null}
-                        <span
-                          className={`rounded-full px-2 py-1 text-xs ${
-                            isGhnReady(store)
-                              ? 'bg-emerald-100 text-emerald-700'
-                              : 'bg-orange-100 text-orange-700'
-                          }`}
-                        >
-                          {isGhnReady(store) ? 'GHN ready' : 'GHN chua xong'}
-                        </span>
-                      </div>
-                      <div className="mt-2 text-sm text-gray-600">
-                        {[store.addressLine1, store.district, store.city].filter(Boolean).join(', ') || 'Chua co dia chi'}
-                      </div>
-                      <div className="mt-2 text-xs text-gray-500">
-                        Try-on: {store.supportsTryOn ? 'Co' : 'Khong'} | Pickup:{' '}
-                        {store.supportsPickup ? 'Co' : 'Khong'} | Gio mo cua:{' '}
-                        {store.openingHours || 'Chua cap nhat'}
-                      </div>
-                      <div className="mt-1 text-xs text-gray-500">
-                        Shop GHN: {store.ghn?.shopId || 'Chua gan'} | District:{' '}
-                        {store.ghn?.districtName || store.ghn?.districtId || 'Chua gan'} | Ward:{' '}
-                        {store.ghn?.wardName || store.ghn?.wardCode || 'Chua gan'}
-                      </div>
-                      {store.ghn?.lastSyncError ? (
-                        <div className="mt-1 text-xs text-red-600">{store.ghn.lastSyncError}</div>
-                      ) : null}
+            <div className="rounded-lg border border-gray-200 p-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="font-semibold text-gray-900">
+                      {flagshipStore.name} ({flagshipStore.code})
                     </div>
-                    {canManageStores ? (
-                      <div className="flex gap-2">
-                        <Button type="button" variant="outline" onClick={() => startEdit(store)}>
-                          Sua
-                        </Button>
-                        <Button type="button" variant="destructive" onClick={() => handleDelete(store)}>
-                          Xoa
-                        </Button>
-                      </div>
-                    ) : null}
+                    <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">
+                      {flagshipStore.type}
+                    </span>
+                    <span
+                      className={`rounded-full px-2 py-1 text-xs ${
+                        flagshipStore.status === 'active'
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-gray-200 text-gray-700'
+                      }`}
+                    >
+                      {flagshipStore.status}
+                    </span>
+                    <span className="rounded-full bg-amber-100 px-2 py-1 text-xs text-amber-800">
+                      Default
+                    </span>
+                    <span
+                      className={`rounded-full px-2 py-1 text-xs ${
+                        isGhnReady(flagshipStore)
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-orange-100 text-orange-700'
+                      }`}
+                    >
+                      {isGhnReady(flagshipStore) ? 'GHN ready' : 'GHN chua xong'}
+                    </span>
                   </div>
+                  <div className="mt-2 text-sm text-gray-600">
+                    {[flagshipStore.addressLine1, flagshipStore.district, flagshipStore.city].filter(Boolean).join(', ') || 'Chua co dia chi'}
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500">
+                    Try-on: {flagshipStore.supportsTryOn ? 'Co' : 'Khong'} | Pickup:{' '}
+                    {flagshipStore.supportsPickup ? 'Co' : 'Khong'} | Gio mo cua:{' '}
+                    {flagshipStore.openingHours || 'Chua cap nhat'}
+                  </div>
+                  <div className="mt-1 text-xs text-gray-500">
+                    Shop GHN: {flagshipStore.ghn?.shopId || 'Chua gan'} | District:{' '}
+                    {flagshipStore.ghn?.districtName || flagshipStore.ghn?.districtId || 'Chua gan'} | Ward:{' '}
+                    {flagshipStore.ghn?.wardName || flagshipStore.ghn?.wardCode || 'Chua gan'}
+                  </div>
+                  {flagshipStore.ghn?.lastSyncError ? (
+                    <div className="mt-1 text-xs text-red-600">{flagshipStore.ghn.lastSyncError}</div>
+                  ) : null}
                 </div>
-              ))}
+                {canManageStores ? (
+                  <div className="flex gap-2">
+                    <Button type="button" variant="outline" onClick={() => startEdit(flagshipStore)}>
+                      Sua cau hinh
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
             </div>
           )}
         </Card>
@@ -469,20 +425,15 @@ export function StoreNetworkPage({ workspace }: { workspace: Workspace }) {
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
               <div className="text-lg font-semibold text-gray-900">
-                {editingId ? 'Cap nhat cua hang' : 'Tao cua hang moi'}
+                Cap nhat flagship store
               </div>
               <div className="text-sm text-gray-500">
-                Quan ly chi nhanh, showroom va kho trung tam trong chuoi.
+                Chinh sua duy nhat mot store dang duoc su dung cho toan he thong.
               </div>
             </div>
-            {editingId && canManageStores ? (
-              <Button type="button" variant="ghost" onClick={startCreate}>
-                Bo chon
-              </Button>
-            ) : null}
           </div>
 
-          {canManageStores ? (
+          {canManageStores && editingId ? (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <Input
@@ -777,12 +728,14 @@ export function StoreNetworkPage({ workspace }: { workspace: Workspace }) {
             ) : null}
 
             <Button type="button" onClick={handleSubmit} isLoading={isSaving}>
-              {editingId ? 'Cap nhat cua hang' : 'Tao cua hang'}
+              Cap nhat flagship store
             </Button>
           </div>
           ) : (
             <div className="rounded-lg border border-dashed border-gray-300 p-6 text-sm text-gray-600">
-              Manager chi xem danh sach cua hang. Admin la role tao, cap nhat va gan GHN store de tinh phi giao hang.
+              {canManageStores
+                ? 'Chua tim thay flagship store de cap nhat.'
+                : 'Manager chi xem cau hinh flagship. Admin la role cap nhat store va gan GHN de tinh phi giao hang.'}
             </div>
           )}
         </Card>

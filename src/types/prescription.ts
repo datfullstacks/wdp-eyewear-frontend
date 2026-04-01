@@ -13,6 +13,12 @@ export interface ContactHistory {
   staff: string;
 }
 
+export type PrescriptionFollowUpStatus =
+  | 'needs_review'
+  | 'needs_customer_contact'
+  | 'waiting_customer_response'
+  | 'customer_responded';
+
 export interface SupplementOrder {
   id: string;
   orderId: string;
@@ -44,6 +50,10 @@ export interface SupplementOrder {
   prescriptionImage?: string;
   notes?: string;
   assignedTo?: string;
+  followUpStatus: PrescriptionFollowUpStatus;
+  followUpNote?: string;
+  followUpUpdatedAt?: string;
+  followUpUpdatedBy?: string;
 }
 
 export type ContactType = 'sms' | 'email' | 'phone' | 'zalo';

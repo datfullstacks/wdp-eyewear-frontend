@@ -1,3 +1,5 @@
+import type { PrescriptionFollowUpStatus } from '@/types/prescription';
+
 export type ReadyStockOpsStatus =
   | 'pending_operations'
   | 'picking'
@@ -62,6 +64,10 @@ export type ReadyStockOrderOpsState = {
   managerReviewRequestedAt: string;
   managerReviewRequestedBy: string;
   managerReviewReason: string;
+  prescriptionFollowUpStatus?: 'none' | PrescriptionFollowUpStatus;
+  prescriptionFollowUpNote?: string;
+  prescriptionFollowUpUpdatedAt?: string;
+  prescriptionFollowUpUpdatedBy?: string;
   internalNote: string;
   holdReason: ReadyStockHoldReason | null;
   holdNote: string;
