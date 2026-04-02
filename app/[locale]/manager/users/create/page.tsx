@@ -21,7 +21,7 @@ import { userApi } from '@/api';
 import { normalizeRole } from '@/lib/roles';
 import { getUserManagementBasePath, isAdminAreaPath } from '@/lib/userManagement';
 
-type CreateRole = 'admin' | 'manager' | 'staff' | 'operation';
+type CreateRole = 'admin' | 'staff' | 'operation';
 
 type RoleCard = {
   role: CreateRole;
@@ -47,13 +47,6 @@ const ROLE_CARDS: RoleCard[] = [
     activeClassName: 'border-blue-500 bg-blue-50 shadow-sm',
   },
   {
-    role: 'manager',
-    title: 'Manager',
-    description: 'Pricing, policies, approvals, KPI and business oversight.',
-    icon: Shield,
-    activeClassName: 'border-amber-500 bg-amber-50 shadow-sm',
-  },
-  {
     role: 'admin',
     title: 'System Admin',
     description: 'Auth, permissions, security, integrations and platform control.',
@@ -66,8 +59,7 @@ function resolveInitialRole(rawRole: string | null, canManageAdmins: boolean): C
   const normalized = normalizeRole(rawRole);
   if (
     normalized === 'staff' ||
-    normalized === 'operation' ||
-    normalized === 'manager'
+    normalized === 'operation'
   ) {
     return normalized;
   }

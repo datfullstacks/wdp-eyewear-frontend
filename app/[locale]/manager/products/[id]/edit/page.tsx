@@ -20,6 +20,7 @@ export default function EditProductPage() {
   const router = useRouter();
   const params = useParams();
   const productId = params.id as string;
+  const tCommon = useTranslations('common');
 
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [formData, setFormData] = useState<ProductFormState>(EMPTY_PRODUCT_FORM);
