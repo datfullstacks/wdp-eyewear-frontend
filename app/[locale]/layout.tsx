@@ -1,6 +1,7 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { QueryProvider } from '@/lib/query-provider';
+import { Toaster } from '@/components/ui/sonner';
 import type { ReactNode } from 'react';
 
 export default async function LocaleLayout({
@@ -14,7 +15,10 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider messages={messages}>
-      <QueryProvider>{children}</QueryProvider>
+      <QueryProvider>
+        {children}
+        <Toaster richColors position="top-right" />
+      </QueryProvider>
     </NextIntlClientProvider>
   );
 }

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import { getSession } from 'next-auth/react';
 import {
   AlertTriangle,
@@ -41,6 +42,7 @@ export default function UsersPage() {
   const pathname = usePathname();
   const locale = useLocale();
   const t = useTranslations('manager.users');
+  const tCommon = useTranslations('common');
   const [viewerRole, setViewerRole] = useState('');
   const [activeTab, setActiveTab] = useState<ManagementTab>(
     isAdminAreaPath(pathname) ? 'admins' : 'managers'
@@ -194,9 +196,12 @@ export default function UsersPage() {
     if (!confirm(t('confirmDelete', { name: user.name }))) return;
     try {
       await userApi.remove(user.id);
+      toast.success(tCommon('deleteSuccess'));
       await loadUsers();
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : t('deleteFailed'));
+      const msg = error instanceof Error ? error.message : t('deleteFailed');
+      setApiError(msg);
+      toast.error(msg);
     }
   };
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import { Header } from '@/components/organisms/Header';
 import { StatCard } from '@/components/molecules/StatCard';
 import { ProductTable } from '@/components/organisms/manager';
@@ -20,6 +21,7 @@ const LOW_STOCK_THRESHOLD = 10;
 export default function ProductsPage() {
   const router = useRouter();
   const t = useTranslations('manager.products');
+  const tCommon = useTranslations('common');
   const [products, setProducts] = useState<Product[]>([]);
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -98,7 +100,9 @@ export default function ProductsPage() {
       await productApi.updateStatus(product.id, newStatus);
       await loadProducts();
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Failed to update status');
+      const msg = error instanceof Error ? error.message : 'Failed to update status';
+      setApiError(msg);
+      toast.error(msg);
     }
   };
 
@@ -108,7 +112,9 @@ export default function ProductsPage() {
       await productApi.remove(product.id);
       await loadProducts();
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Failed to delete product');
+      const msg = error instanceof Error ? error.message : 'Failed to delete product';
+      setApiError(msg);
+      toast.error(msg);
     }
   };
 

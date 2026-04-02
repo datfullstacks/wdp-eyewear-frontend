@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import Link from 'next/link';
 import { Header } from '@/components/organisms/Header';
 import { ProductForm, type ProductFormState } from '@/components/organisms/manager';
@@ -32,6 +33,7 @@ export default function ProductDetailPage() {
   const productId = params.id as string;
   const t = useTranslations('manager.products');
   const tDetail = useTranslations('manager.products.detail');
+  const tCommon = useTranslations('common');
 
   // Sync edit mode with URL param ?mode=edit so locale reload preserves state
   const [product, setProduct] = useState<ProductDetail | null>(null);
@@ -180,7 +182,9 @@ export default function ProductDetailPage() {
       await productApi.updateStatus(productId, newStatus);
       await loadProduct();
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Update failed');
+      const msg = error instanceof Error ? error.message : 'Update failed';
+      setApiError(msg);
+      toast.error(msg);
     }
   };
 
@@ -189,7 +193,9 @@ export default function ProductDetailPage() {
       await productApi.remove(productId);
       router.push('/manager/products');
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Delete failed');
+      const msg = error instanceof Error ? error.message : 'Delete failed';
+      setApiError(msg);
+      toast.error(msg);
     }
   };
 

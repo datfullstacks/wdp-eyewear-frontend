@@ -9,5 +9,9 @@
   "edit": "Sửa",
   "search": "Tìm kiếm",
   "filter": "Lọc",
-  "sort": "Sắp xếp"
+  "sort": "Sắp xếp",
+  "createSuccess": "Tạo thành công",
+  "updateSuccess": "Cập nhật thành công",
+  "deleteSuccess": "Xóa thành công",
+  "actionFailed": "Thao tác thất bại"
 }

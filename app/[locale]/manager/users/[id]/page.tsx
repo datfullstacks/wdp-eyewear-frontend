@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams, usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import Link from 'next/link';
 import { Header } from '@/components/organisms/Header';
 import { Button } from '@/components/atoms';
@@ -55,6 +56,7 @@ export default function UserDetailPage() {
   const userId = params.id as string;
   const t = useTranslations('manager.users');
   const tDetail = useTranslations('manager.users.detail');
+  const tCommon = useTranslations('common');
   const userBasePath = getUserManagementBasePath(pathname);
 
   const [user, setUser] = useState<User | null>(null);
@@ -132,10 +134,13 @@ export default function UserDetailPage() {
         email: editEmail,
         phone: editPhone || undefined,
       });
+      toast.success(tCommon('updateSuccess'));
       await loadUser();
       setIsEditing(false);
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : tDetail('updateFailed'));
+      const msg = error instanceof Error ? error.message : tDetail('updateFailed');
+      setApiError(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -149,9 +154,12 @@ export default function UserDetailPage() {
 
     try {
       await userApi.remove(userId);
+      toast.success(tCommon('deleteSuccess'));
       router.push(userBasePath);
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : t('deleteFailed'));
+      const msg = error instanceof Error ? error.message : t('deleteFailed');
+      setApiError(msg);
+      toast.error(msg);
     }
   };
 

@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import { AlertTriangle, ArrowLeft, Percent } from 'lucide-react';
 
 import { Header } from '@/components/organisms/Header';
@@ -26,6 +28,7 @@ const EMPTY_FORM: DiscountFormData = {
 
 export default function CreateDiscountPage() {
   const router = useRouter();
+  const tCommon = useTranslations('common');
   const [formData, setFormData] = useState<DiscountFormData>(EMPTY_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState('');
@@ -42,7 +45,9 @@ export default function CreateDiscountPage() {
       await promotionApi.create(formData as unknown as Record<string, unknown>);
       router.push('/manager/discounts');
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Failed to create promotion.');
+      const msg = error instanceof Error ? error.message : 'Failed to create promotion.';
+      setApiError(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }

@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import { AlertTriangle, ArrowLeft, Edit, Loader2, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/atoms';
@@ -44,6 +46,7 @@ export default function DiscountDetailPage() {
   const params = useParams();
   const discountId = params.id as string;
 
+  const tCommon = useTranslations('common');
   const [discount, setDiscount] = useState<PromotionRecord | null>(null);
   const [formData, setFormData] = useState<DiscountFormData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -83,7 +86,9 @@ export default function DiscountDetailPage() {
       setFormData(toFormData(updated));
       setEditing(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save promotion.');
+      const msg = err instanceof Error ? err.message : 'Failed to save promotion.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
@@ -98,7 +103,9 @@ export default function DiscountDetailPage() {
       await promotionApi.remove(discount.id);
       router.push('/manager/discounts');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete promotion.');
+      const msg = err instanceof Error ? err.message : 'Failed to delete promotion.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }

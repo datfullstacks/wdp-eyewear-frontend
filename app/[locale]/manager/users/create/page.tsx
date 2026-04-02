@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { getSession } from 'next-auth/react';
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -81,6 +83,7 @@ export default function CreateUserPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const tCommon = useTranslations('common');
   const [selectedRole, setSelectedRole] = useState<CreateRole>('staff');
   const [viewerRole, setViewerRole] = useState('');
   const [formData, setFormData] = useState<UserFormData>({
@@ -140,7 +143,9 @@ export default function CreateUserPage() {
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.email || !formData.password) {
-      setApiError('Vui long dien day du cac truong bat buoc');
+      const msg = 'Vui lòng điền đầy đủ các trường bắt buộc';
+      setApiError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -167,11 +172,12 @@ export default function CreateUserPage() {
                 note: formData.storeScopeNote || undefined,
               },
       });
+      toast.success(tCommon('createSuccess'));
       router.push(userBasePath);
     } catch (error) {
-      setApiError(
-        error instanceof Error ? error.message : 'Tao nguoi dung that bai'
-      );
+      const msg = error instanceof Error ? error.message : tCommon('actionFailed');
+      setApiError(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
