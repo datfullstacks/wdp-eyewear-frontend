@@ -690,22 +690,22 @@ export default function OrdersPrescription() {
                     Đã duyệt
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="waiting_lab">
-                    Cho vao gia cong
+                    Chờ vào gia công
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="lab_in_progress">
-                    Dang gia cong
+                    Đang gia công
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="ready_for_shipping">
-                    Dong goi / cho van don
+                    Đóng gói / chờ vận đơn
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="shipping_active">
-                    Dang giao / theo GHN
+                    Đang giao / theo GHN
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="delivered">
-                    Da giao
+                    Đã giao
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="returned">
-                    Da hoan hang
+                    Đã hoàn hàng
                   </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
                 <DropdownMenuSeparator />
