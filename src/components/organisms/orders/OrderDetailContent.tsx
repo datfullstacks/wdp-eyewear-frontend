@@ -158,7 +158,7 @@ function PrescriptionSummary({
 
       {prescription ? (
         <div className="bg-background/70 border-border rounded-lg border p-3">
-          <div className="grid grid-cols-5 gap-2 text-center text-xs font-medium text-slate-500">
+          <div className="grid grid-cols-5 gap-2 text-center text-xs font-semibold text-slate-700">
             <div />
             <div>SPH</div>
             <div>CYL</div>
@@ -166,16 +166,16 @@ function PrescriptionSummary({
             <div>ADD</div>
           </div>
 
-          <div className="mt-2 grid grid-cols-5 gap-2 text-center text-sm">
-            <div className="font-semibold">OD</div>
+          <div className="mt-2 grid grid-cols-5 gap-2 text-center text-sm font-medium text-slate-900">
+            <div className="font-semibold text-slate-950">OD</div>
             <div>{prescription.sphereRight || '-'}</div>
             <div>{prescription.cylinderRight || '-'}</div>
             <div>{prescription.axisRight || '-'}</div>
             <div>{prescription.addRight || '-'}</div>
           </div>
 
-          <div className="mt-2 grid grid-cols-5 gap-2 text-center text-sm">
-            <div className="font-semibold">OS</div>
+          <div className="mt-2 grid grid-cols-5 gap-2 text-center text-sm font-medium text-slate-900">
+            <div className="font-semibold text-slate-950">OS</div>
             <div>{prescription.sphereLeft || '-'}</div>
             <div>{prescription.cylinderLeft || '-'}</div>
             <div>{prescription.axisLeft || '-'}</div>
@@ -183,8 +183,10 @@ function PrescriptionSummary({
           </div>
 
           <div className="mt-3 border-t border-slate-200 pt-3 text-sm">
-            <span className="text-muted-foreground">PD: </span>
-            <span className="font-semibold">{prescription.pd || '-'} mm</span>
+            <span className="font-medium text-slate-700">PD: </span>
+            <span className="font-semibold text-slate-950">
+              {prescription.pd || '-'} mm
+            </span>
           </div>
 
           {prescription.notes ? (

@@ -917,7 +917,9 @@
     },
     "stats": {
       "totalCount": "Tổng đơn",
-      "selectedCount": "Đã chọn"
+      "paidCount": "Đã thanh toán",
+      "codCount": "Đơn COD",
+      "unpaidCount": "Chưa thanh toán"
     },
     "alerts_stats": {
       "critical": "Nghiêm trọng",

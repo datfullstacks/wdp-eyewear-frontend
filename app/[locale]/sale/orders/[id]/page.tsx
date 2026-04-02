@@ -6,7 +6,7 @@ export default function SaleOrderDetailPage() {
   return (
     <OrderDetailPage
       backHref="/sale/orders"
-      backLabel="Quay lai danh sach don"
+      backLabel="Quay lại danh sách đơn"
     />
   );
 }

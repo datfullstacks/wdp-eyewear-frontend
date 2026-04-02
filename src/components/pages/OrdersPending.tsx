@@ -168,8 +168,14 @@ export default function OrdersPending() {
     }
   }, [detailId, isLoading, orders]);
 
-  const visibleSelectedCount = selectedOrders.filter((id) =>
-    paginatedOrders.some((order) => order.id === id)
+  const paidOrdersCount = filteredOrders.filter(
+    (order) => order.paymentStatus === 'paid'
+  ).length;
+  const codOrdersCount = filteredOrders.filter(
+    (order) => order.paymentStatus === 'cod'
+  ).length;
+  const unpaidOrdersCount = filteredOrders.filter(
+    (order) => order.paymentStatus === 'pending'
   ).length;
   const selectedBlockedCount = filteredOrders.filter(
     (order) =>
@@ -355,7 +361,9 @@ export default function OrdersPending() {
       <div className="space-y-6 p-6">
         <PendingStatsGrid
           totalCount={filteredOrders.length}
-          selectedCount={visibleSelectedCount}
+          paidCount={paidOrdersCount}
+          codCount={codOrdersCount}
+          unpaidCount={unpaidOrdersCount}
         />
 
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">

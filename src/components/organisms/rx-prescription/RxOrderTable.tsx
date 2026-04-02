@@ -35,7 +35,7 @@ interface RxOrderTableProps {
   onApprove: (order: PrescriptionOrder) => void;
   onAdvanceWorkflow: (order: PrescriptionOrder) => void;
   onCreateShipment: (order: PrescriptionOrder) => void;
-  onSyncShipment: (order: PrescriptionOrder) => void;
+  onManageShipment: (order: PrescriptionOrder) => void;
 }
 
 type StatusTone = 'success' | 'warning' | 'error' | 'info' | 'default';
@@ -176,7 +176,11 @@ function canCreateShipment(order: PrescriptionOrder) {
   return order.workflowStage === 'ready_to_ship';
 }
 
-function canSyncShipment(order: PrescriptionOrder) {
+function canManageShipment(order: PrescriptionOrder) {
+  if (String(order.trackingCode || '').trim()) {
+    return true;
+  }
+
   return [
     'shipment_created',
     'handover_to_carrier',
@@ -221,7 +225,7 @@ function buildMainActions(
     | 'onApprove'
     | 'onAdvanceWorkflow'
     | 'onCreateShipment'
-    | 'onSyncShipment'
+    | 'onManageShipment'
   >
 ): MainAction[] {
   const canInputPrescription =
@@ -230,8 +234,8 @@ function buildMainActions(
   const canApprovePrescription = order.prescriptionStatus === 'pending_review';
   const canCreatePrescriptionShipment =
     order.prescriptionStatus === 'approved' && canCreateShipment(order);
-  const canSyncPrescriptionShipment =
-    order.prescriptionStatus === 'approved' && canSyncShipment(order);
+  const canOpenPrescriptionShipmentManager =
+    order.prescriptionStatus === 'approved' && canManageShipment(order);
   const currentStageIndex = getWorkflowStageIndex(order.workflowStage);
   const shipmentCreatedIndex = getWorkflowStageIndex('shipment_created');
 
@@ -332,19 +336,19 @@ function buildMainActions(
         : undefined,
     },
     {
-      key: 'sync_shipment',
-      label: 'Đồng bộ GHN',
+      key: 'manage_shipment',
+      label: 'Quan ly luong GHN',
       icon: Truck,
-      disabled: !canSyncPrescriptionShipment,
-      title: canSyncPrescriptionShipment
+      disabled: !canOpenPrescriptionShipmentManager,
+      title: canOpenPrescriptionShipmentManager
         ? ''
         : order.prescriptionStatus !== 'approved'
-          ? 'Cần có vận đơn GHN trước khi đồng bộ.'
+          ? 'Can co van don GHN truoc khi quan ly shipment.'
           : currentStageIndex < shipmentCreatedIndex
-            ? 'Cần tạo vận đơn GHN trước khi đồng bộ.'
-            : 'Đơn đã kết thúc giao vận hoặc chưa có thay đổi cần đồng bộ.',
-      onClick: canSyncPrescriptionShipment
-        ? () => handlers.onSyncShipment(order)
+            ? 'Can tao van don GHN truoc khi quan ly shipment.'
+            : 'Don chua co van don GHN de thao tac.',
+      onClick: canOpenPrescriptionShipmentManager
+        ? () => handlers.onManageShipment(order)
         : undefined,
     },
   ];
@@ -358,7 +362,7 @@ export const RxOrderTable = ({
   onApprove,
   onAdvanceWorkflow,
   onCreateShipment,
-  onSyncShipment,
+  onManageShipment,
 }: RxOrderTableProps) => {
   return (
     <div className="glass-card overflow-hidden rounded-xl">
@@ -389,7 +393,7 @@ export const RxOrderTable = ({
               onApprove,
               onAdvanceWorkflow,
               onCreateShipment,
-              onSyncShipment,
+              onManageShipment,
             });
 
             return (

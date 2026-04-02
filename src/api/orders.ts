@@ -155,6 +155,11 @@ interface BackendOpsExecution {
 
 interface BackendItemCustomization {
   orderMadeFromPrescriptionImage?: boolean;
+  combineWith?: {
+    productId?: string;
+    variantId?: string;
+    note?: string;
+  };
   prescription?: {
     mode?: PrescriptionMode | string;
     isMyopic?: boolean;
@@ -315,6 +320,11 @@ export interface OrderItem {
   id: string;
   productId: string;
   variantId: string;
+  combineWith: {
+    productId: string;
+    variantId: string;
+    note: string;
+  } | null;
   sku: string;
   name: string;
   type: string;
@@ -962,11 +972,24 @@ function mapOrderItem(raw: BackendOrderItem): OrderItem {
   const supplier = String(productRef?.fulfillment?.supplier || '').trim();
   const sku = String(matchedVariant?.sku || '').trim();
   const warehouseLocation = String(matchedVariant?.warehouseLocation || '').trim();
+  const combineWithPayload = raw?.customization?.combineWith;
+  const combineWithProductId = toEntityId(combineWithPayload?.productId);
+  const combineWithVariantId = toEntityId(combineWithPayload?.variantId);
+  const combineWithNote = String(combineWithPayload?.note || '').trim();
+  const combineWith =
+    combineWithProductId || combineWithVariantId || combineWithNote
+      ? {
+          productId: combineWithProductId,
+          variantId: combineWithVariantId,
+          note: combineWithNote,
+        }
+      : null;
 
   return {
     id: String(raw?._id || '').trim(),
     productId: toEntityId(raw?.productId),
     variantId,
+    combineWith,
     sku,
     name: String(raw?.name || '').trim() || 'Sản phẩm',
     type: String(raw?.type || '')

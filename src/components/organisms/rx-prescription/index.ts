@@ -4,3 +4,4 @@ export { RxDetailModal } from './RxDetailModal';
 export { RxInputModal } from './RxInputModal';
 export { RxContactModal } from './RxContactModal';
 export { RxApproveModal } from './RxApproveModal';
+export { RxShipmentModal } from './RxShipmentModal';
