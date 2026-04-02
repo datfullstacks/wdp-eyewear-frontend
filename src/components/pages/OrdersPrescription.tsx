@@ -587,23 +587,9 @@ export default function OrdersPrescription() {
     }
   };
 
-  const handleCreateShipment = async (order: PrescriptionOrder) => {
-    try {
-      setIsSubmittingAction(true);
-      setErrorMessage(null);
-      await orderApi.createShipment(order.id);
-      await loadOrders();
-      setSuccessMessage(`Đã tạo vận đơn GHN cho đơn ${order.orderId}.`);
-      if (selectedOrder?.id === order.id) {
-        setSelectedOrder(null);
-      }
-    } catch (error) {
-      setErrorMessage(
-        extractApiErrorMessage(error, 'Không thể tạo vận đơn GHN.')
-      );
-    } finally {
-      setIsSubmittingAction(false);
-    }
+  const handleCreateShipment = (order: PrescriptionOrder) => {
+    setSuccessMessage(null);
+    void openShipmentModal(order, 'create');
   };
 
   const handleManageShipment = (order: PrescriptionOrder) => {
@@ -623,10 +609,13 @@ export default function OrdersPrescription() {
           ? await orderApi.createShipment(shipmentOrder.id)
           : await orderApi.syncShipment(shipmentOrder.id);
       setShipmentInfo(result);
+      if (shipmentMode === 'create') {
+        setShipmentMode('manage');
+      }
       await loadOrders();
       setSuccessMessage(
         shipmentMode === 'create'
-          ? `Da tao van don GHN cho don ${shipmentOrder.orderId}.`
+          ? `Da tao van don GHN cho don ${shipmentOrder.orderId}. Tiep tuc cap nhat luong GHN trong modal nay.`
           : `Da dong bo GHN cho don ${shipmentOrder.orderId}.`
       );
     } catch (error) {

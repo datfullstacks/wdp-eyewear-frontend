@@ -6,6 +6,7 @@ import { AlertTriangle, ExternalLink, Loader2, MessageSquare, RefreshCw } from '
 import { useTranslations } from 'next-intl';
 
 import supportApi, {
+  type SupportAttachmentRecord,
   type SupportMessageRecord,
   type SupportTicketCategory,
   type SupportTicketOwnerRole,
@@ -87,6 +88,13 @@ const ELIGIBILITY_LABELS: Record<WarrantyEligibility, string> = {
   not_covered: 'Không thuộc phạm vi',
 };
 
+const WARRANTY_ORDER_STATUS_LABELS: Record<string, string> = {
+  created: 'Đã tạo đơn bảo hành',
+  in_service: 'Đang xử lý bảo hành',
+  completed: 'Đã hoàn tất bảo hành',
+  cancelled: 'Đã hủy đơn bảo hành',
+};
+
 const PRIORITY_LABELS: Record<string, string> = {
   low: 'Thấp',
   normal: 'Trung bình',
@@ -156,12 +164,95 @@ function getStatusOptions(scope: AfterSalesScope, category: SupportTicketCategor
     return ['open', 'in_progress', 'resolved', 'closed'] as SupportTicketStatus[];
   }
   if (scope === 'sale' && category === 'warranty') {
-    return ['under_review', 'approved', 'rejected'] as SupportTicketStatus[];
+    return ['under_review', 'rejected'] as SupportTicketStatus[];
   }
   if (scope === 'operation' && category === 'warranty') {
     return ['in_service', 'completed'] as SupportTicketStatus[];
   }
   return [] as SupportTicketStatus[];
+}
+
+function getWarrantyOrderTone(status?: string) {
+  if (status === 'completed') return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+  if (status === 'cancelled') return 'bg-rose-50 text-rose-700 border-rose-200';
+  if (status === 'in_service') return 'bg-sky-50 text-sky-700 border-sky-200';
+  return 'bg-amber-50 text-amber-700 border-amber-200';
+}
+
+function canCreateWarrantyOrder(ticket: SupportTicketRecord | null, scope: AfterSalesScope) {
+  if (!ticket || scope !== 'sale' || ticket.category !== 'warranty' || !ticket.warranty) {
+    return false;
+  }
+
+  if (ticket.warranty.eligibility !== 'eligible') {
+    return false;
+  }
+
+  if (ticket.warranty.serviceOrder?.code) {
+    return false;
+  }
+
+  return !['rejected', 'completed'].includes(ticket.status);
+}
+
+function canCreateWarrantyRefund(ticket: SupportTicketRecord | null, scope: AfterSalesScope) {
+  if (!ticket || scope !== 'sale' || ticket.category !== 'warranty' || !ticket.warranty) {
+    return false;
+  }
+
+  if (ticket.warranty.eligibility !== 'eligible') {
+    return false;
+  }
+
+  if (ticket.warranty.serviceOrder?.code) {
+    return false;
+  }
+
+  return !['rejected', 'completed'].includes(ticket.status);
+}
+
+function SupportAttachmentGallery({ attachments }: { attachments: SupportAttachmentRecord[] }) {
+  if (!attachments.length) return null;
+
+  return (
+    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+      {attachments.map((attachment) => (
+        <div
+          key={attachment.id}
+          className="overflow-hidden rounded-xl border border-slate-200 bg-white transition-colors hover:border-amber-300"
+        >
+          {attachment.type === 'video' ? (
+            <video
+              src={attachment.url}
+              controls
+              preload="metadata"
+              className="h-40 w-full bg-slate-950 object-cover"
+            />
+          ) : (
+            <img
+              src={attachment.url}
+              alt={attachment.name || 'Evidence attachment'}
+              className="h-40 w-full object-cover"
+            />
+          )}
+          <div className="flex items-center justify-between gap-3 px-3 py-2 text-xs">
+            <span className="truncate font-medium text-slate-700">
+              {attachment.name ||
+                (attachment.type === 'video' ? 'Video chứng minh' : 'Ảnh chứng minh')}
+            </span>
+            <a
+              href={attachment.url}
+              target="_blank"
+              rel="noreferrer"
+              className="shrink-0 font-medium text-amber-700 hover:text-amber-800"
+            >
+              {attachment.type === 'video' ? 'Mở video' : 'Mở ảnh'}
+            </a>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function getOwnerRoleFilter(
@@ -185,6 +276,8 @@ function TicketDetailDialog({
   scope,
   onReply,
   onUpdateStatus,
+  onCreateWarrantyOrder,
+  onCreateWarrantyRefund,
   isSubmitting,
 }: {
   ticket: SupportTicketRecord | null;
@@ -193,6 +286,8 @@ function TicketDetailDialog({
   scope: AfterSalesScope;
   onReply: (message: string) => Promise<void>;
   onUpdateStatus: (status: SupportTicketStatus, note: string) => Promise<void>;
+  onCreateWarrantyOrder: (note: string) => Promise<void>;
+  onCreateWarrantyRefund: (note: string) => Promise<void>;
   isSubmitting: boolean;
 }) {
   const [replyMessage, setReplyMessage] = useState('');
@@ -210,6 +305,8 @@ function TicketDetailDialog({
 
   const statusOptions = getStatusOptions(scope, ticket.category);
   const isReadOnly = scope === 'manager';
+  const allowCreateWarrantyOrder = canCreateWarrantyOrder(ticket, scope);
+  const allowCreateWarrantyRefund = canCreateWarrantyRefund(ticket, scope);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -340,6 +437,53 @@ function TicketDetailDialog({
                     <dd className="font-medium text-gray-900">{ticket.warranty.serviceNote}</dd>
                   </div>
                 ) : null}
+                {ticket.warranty.serviceOrder ? (
+                  <>
+                    <div>
+                      <dt>Đơn bảo hành</dt>
+                      <dd className="font-medium text-gray-900">
+                        {ticket.warranty.serviceOrder.code}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Trạng thái đơn</dt>
+                      <dd>
+                        <span
+                          className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${getWarrantyOrderTone(ticket.warranty.serviceOrder.status)}`}
+                        >
+                          {WARRANTY_ORDER_STATUS_LABELS[ticket.warranty.serviceOrder.status] ||
+                            ticket.warranty.serviceOrder.status}
+                        </span>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Tạo lúc</dt>
+                      <dd className="font-medium text-gray-900">
+                        {formatDateTime(ticket.warranty.serviceOrder.createdAt)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Cập nhật đơn</dt>
+                      <dd className="font-medium text-gray-900">
+                        {formatDateTime(ticket.warranty.serviceOrder.updatedAt)}
+                      </dd>
+                    </div>
+                    {ticket.warranty.serviceOrder.note ? (
+                      <div className="md:col-span-2">
+                        <dt>Ghi chú đơn bảo hành</dt>
+                        <dd className="font-medium text-gray-900">
+                          {ticket.warranty.serviceOrder.note}
+                        </dd>
+                      </div>
+                    ) : null}
+                  </>
+                ) : (
+                  <div className="md:col-span-2 rounded-xl border border-dashed border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-800">
+                    Sale phải xác nhận chứng cứ. Nếu còn hàng thay thế thì tạo đơn bảo hành để
+                    chuyển cho operations; nếu hết hàng thì có thể tạo hoàn tiền cho đúng sản phẩm
+                    đang bảo hành.
+                  </div>
+                )}
               </dl>
             </Card>
           ) : null}
@@ -368,6 +512,7 @@ function TicketDetailDialog({
                       </span>
                     </div>
                     <p className="mt-2 whitespace-pre-wrap text-gray-700">{message.message}</p>
+                    <SupportAttachmentGallery attachments={message.attachments} />
                   </div>
                 ))
               )}
@@ -397,6 +542,12 @@ function TicketDetailDialog({
 
               <Card className="p-4">
                 <Label className="text-sm font-semibold text-gray-900">Cập nhật trạng thái</Label>
+                {allowCreateWarrantyOrder || allowCreateWarrantyRefund ? (
+                  <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+                    Sau khi sale xác nhận ảnh hoặc video hiện trạng, tạo đơn bảo hành nếu còn hàng
+                    thay thế. Nếu hết hàng, tạo hoàn tiền để chuyển case sang luồng refund.
+                  </div>
+                ) : null}
                 <select
                   value={nextStatus}
                   onChange={(event) =>
@@ -422,7 +573,24 @@ function TicketDetailDialog({
                   onChange={(event) => setStatusNote(event.target.value)}
                   rows={4}
                 />
-                <div className="mt-3 flex justify-end">
+                <div className="mt-3 flex flex-wrap justify-end gap-3">
+                  {allowCreateWarrantyOrder ? (
+                    <Button
+                      onClick={() => void onCreateWarrantyOrder(statusNote)}
+                      disabled={isSubmitting}
+                    >
+                      Tạo đơn bảo hành
+                    </Button>
+                  ) : null}
+                  {allowCreateWarrantyRefund ? (
+                    <Button
+                      variant="outline"
+                      onClick={() => void onCreateWarrantyRefund(statusNote)}
+                      disabled={isSubmitting}
+                    >
+                      Tạo hoàn tiền
+                    </Button>
+                  ) : null}
                   <Button
                     variant="outline"
                     onClick={() => {
@@ -600,6 +768,44 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : 'Không thể cập nhật trạng thái hỗ trợ.',
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCreateWarrantyOrder = async (note: string) => {
+    if (!selectedTicket || !canCreateWarrantyOrder(selectedTicket, scope)) return;
+
+    try {
+      setSubmitting(true);
+      await supportApi.createWarrantyOrder(selectedTicket.id, {
+        note: note.trim() || undefined,
+      });
+      await Promise.all([refreshSelectedTicket(selectedTicket.id), loadTickets()]);
+      setSuccessMessage('Đã tạo đơn bảo hành và chuyển phiếu sang operations.');
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : 'Không thể tạo đơn bảo hành.',
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCreateWarrantyRefund = async (note: string) => {
+    if (!selectedTicket || !canCreateWarrantyRefund(selectedTicket, scope)) return;
+
+    try {
+      setSubmitting(true);
+      await supportApi.createWarrantyRefund(selectedTicket.id, {
+        note: note.trim() || undefined,
+      });
+      await Promise.all([refreshSelectedTicket(selectedTicket.id), loadTickets()]);
+      setSuccessMessage('Đã tạo yêu cầu hoàn tiền cho case bảo hành. Theo dõi tiếp ở màn hoàn tiền.');
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : 'Không thể tạo yêu cầu hoàn tiền cho case bảo hành.',
       );
     } finally {
       setSubmitting(false);
@@ -810,6 +1016,8 @@ export default function AfterSalesConsole({ scope }: { scope: AfterSalesScope })
         scope={scope}
         onReply={handleReply}
         onUpdateStatus={handleStatusUpdate}
+        onCreateWarrantyOrder={handleCreateWarrantyOrder}
+        onCreateWarrantyRefund={handleCreateWarrantyRefund}
         isSubmitting={submitting}
       />
     </>
