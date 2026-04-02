@@ -343,6 +343,13 @@ export interface ProductUpsertInput {
     shippingCollectionTiming?: PreOrderShippingCollectionTiming;
     note?: string;
   };
+  fulfillment?: {
+    supplier?: string;
+    leadTime?: string;
+    returnWindowDays?: number | null;
+    warrantyMonths?: number | null;
+    warehouseDefaultLocation?: string;
+  };
   storeScope?: {
     mode: 'all' | 'selected';
     primaryStoreId?: string;
@@ -822,6 +829,39 @@ function toBackendUpsertPayload(
   const preOrder = buildPreOrderPayload(input);
   if (preOrder) {
     payload.preOrder = preOrder;
+  }
+
+  if (input.fulfillment) {
+    const fulfillmentPayload: Record<string, unknown> = {};
+
+    if (typeof input.fulfillment.supplier === 'string') {
+      fulfillmentPayload.supplier = input.fulfillment.supplier;
+    }
+    if (typeof input.fulfillment.leadTime === 'string') {
+      fulfillmentPayload.leadTime = input.fulfillment.leadTime;
+    }
+    if (typeof input.fulfillment.warehouseDefaultLocation === 'string') {
+      fulfillmentPayload.warehouseDefaultLocation =
+        input.fulfillment.warehouseDefaultLocation;
+    }
+    if (
+      input.fulfillment.returnWindowDays === null ||
+      (typeof input.fulfillment.returnWindowDays === 'number' &&
+        Number.isFinite(input.fulfillment.returnWindowDays))
+    ) {
+      fulfillmentPayload.returnWindowDays = input.fulfillment.returnWindowDays;
+    }
+    if (
+      input.fulfillment.warrantyMonths === null ||
+      (typeof input.fulfillment.warrantyMonths === 'number' &&
+        Number.isFinite(input.fulfillment.warrantyMonths))
+    ) {
+      fulfillmentPayload.warrantyMonths = input.fulfillment.warrantyMonths;
+    }
+
+    if (Object.keys(fulfillmentPayload).length > 0) {
+      payload.fulfillment = fulfillmentPayload;
+    }
   }
 
   if (input.storeScope) {

@@ -477,53 +477,7 @@ const Refunds = ({ scope = 'sale' }: RefundsProps) => {
       <Header title={pageTitle} subtitle={pageSubtitle} />
 
       <div className="space-y-6 p-6">
-        {scope === 'manager' && (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-              <div className="space-y-1">
-                <div className="text-sm font-semibold text-amber-900">
-                  Chính sách hoàn tiền cho manager
-                </div>
-                {isRefundPolicyLoading ? (
-                  <p className="text-sm text-amber-800">
-                    Đang tải chính sách hoàn tiền đang áp dụng...
-                  </p>
-                ) : activeRefundPolicy ? (
-                  <>
-                    <p className="text-sm font-medium text-amber-900">
-                      {activeRefundPolicy.title} • Version{' '}
-                      {activeRefundPolicy.version}
-                    </p>
-                    <p className="text-sm text-amber-800">
-                      {activeRefundPolicy.summary}
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-sm text-amber-800">
-                    Chưa có policy hoàn tiền active. Manager nên ban hành policy
-                    để làm chuẩn cho các case refund bị đẩy lên phê duyệt.
-                  </p>
-                )}
-                {refundPolicyError && (
-                  <p className="text-sm text-red-700">{refundPolicyError}</p>
-                )}
-              </div>
 
-              <Link
-                href={
-                  activeRefundPolicy
-                    ? `/manager/policies/${activeRefundPolicy.id}`
-                    : '/manager/policies/create'
-                }
-                className="inline-flex items-center justify-center rounded-lg border border-amber-300 bg-white px-4 py-2 text-sm font-medium text-amber-900 transition-colors hover:border-amber-400 hover:bg-amber-100"
-              >
-                {activeRefundPolicy
-                  ? 'Mở policy hoàn tiền'
-                  : 'Tạo policy hoàn tiền'}
-              </Link>
-            </div>
-          </div>
-        )}
 
         <RefundStatsGrid stats={stats} scope={scope} />
 

@@ -9,5 +9,9 @@
   "edit": "Edit",
   "search": "Search",
   "filter": "Filter",
-  "sort": "Sort"
+  "sort": "Sort",
+  "createSuccess": "Created successfully",
+  "updateSuccess": "Updated successfully",
+  "deleteSuccess": "Deleted successfully",
+  "actionFailed": "Action failed"
 }

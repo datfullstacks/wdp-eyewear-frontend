@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AlertTriangle, Calendar, Loader2, Percent, Tag } from 'lucide-react';
 
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import { Header } from '@/components/organisms/Header';
 import { StatCard } from '@/components/molecules/StatCard';
 import { DiscountTable } from '@/components/organisms/manager';
@@ -17,6 +18,7 @@ type TypeFilter = 'all' | 'percentage' | 'fixed';
 export default function DiscountsPage() {
   const router = useRouter();
   const t = useTranslations('manager.discounts');
+  const tCommon = useTranslations('common');
   const [discounts, setDiscounts] = useState<PromotionRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState('');
@@ -37,7 +39,9 @@ export default function DiscountsPage() {
         }
       } catch (error) {
         if (active) {
-          setApiError(error instanceof Error ? error.message : t('deleteFailed'));
+          const msg = error instanceof Error ? error.message : t('deleteFailed');
+      setApiError(msg);
+      toast.error(msg);
         }
       } finally {
         if (active) {

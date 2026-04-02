@@ -57,6 +57,7 @@ export const EMPTY_PRODUCT_FORM: ProductFormState = {
   preOrderShipTo: '',
   preOrderShippingCollectionTiming: 'upfront',
   preOrderNote: '',
+  warrantyMonths: '',
   storeScopeMode: 'all',
   primaryStoreId: '',
   storeIds: [],
@@ -528,11 +529,12 @@ export function buildMediaAssets(form: ProductFormState): ProductMediaAsset[] {
 
 export function buildUpsertPayload(
   form: ProductFormState,
-  _options: { existingProduct?: ProductDetail | null } = {}
+  options: { existingProduct?: ProductDetail | null } = {}
 ): ProductUpsertInput {
   const resolvedType = resolveTryOnCategory(form.category);
   const { assets, ids } = buildMediaBundle(form);
   const variants = getEffectiveVariants(form);
+  const existingFulfillment = options.existingProduct?.fulfillment;
   const hasBasePrice = Boolean(toText(form.price));
   const resolvedBasePrice = Number(form.price);
   const firstVariantWithPrice = variants.find(
@@ -544,6 +546,29 @@ export function buildUpsertPayload(
       : firstVariantWithPrice != null
         ? Number(firstVariantWithPrice.price)
         : 0;
+  const warrantyMonths = toOptionalNumber(form.warrantyMonths);
+  const shouldClearWarranty =
+    Boolean(options.existingProduct) && !toText(form.warrantyMonths);
+  const fulfillmentPayload: NonNullable<ProductUpsertInput['fulfillment']> = {
+    supplier: toOptionalText(existingFulfillment?.supplier),
+    leadTime: toOptionalText(existingFulfillment?.leadTime),
+    warehouseDefaultLocation: toOptionalText(
+      existingFulfillment?.warehouseDefaultLocation
+    ),
+    ...(typeof existingFulfillment?.returnWindowDays === 'number'
+      ? { returnWindowDays: existingFulfillment.returnWindowDays }
+      : {}),
+    ...(warrantyMonths !== undefined
+      ? { warrantyMonths }
+      : shouldClearWarranty
+        ? { warrantyMonths: null }
+        : typeof existingFulfillment?.warrantyMonths === 'number'
+          ? { warrantyMonths: existingFulfillment.warrantyMonths }
+          : {}),
+  };
+  const hasFulfillmentPayload = Object.values(fulfillmentPayload).some(
+    (value) => value !== undefined
+  );
 
   return {
     name: form.name.trim(),
@@ -601,6 +626,7 @@ export function buildUpsertPayload(
           ? Number(variant.price)
           : topLevelPrice,
     })),
+    fulfillment: hasFulfillmentPayload ? fulfillmentPayload : undefined,
     specs: buildFrameSpecsPayload(form, resolvedType),
     tryOn: buildTryOnInput(form, resolvedType, variants, ids.tryOnAssetIds),
   };
@@ -712,6 +738,7 @@ export function buildProductFormState(product?: ProductDetail | null): ProductFo
         ? 'on_delivery'
         : product.preOrder?.shippingCollectionTiming || 'upfront',
     preOrderNote: product.preOrder?.note || '',
+    warrantyMonths: toNumberString(product.fulfillment?.warrantyMonths),
     storeScopeMode: product.storeScope?.mode === 'selected' ? 'selected' : 'all',
     primaryStoreId: toText(product.storeScope?.primaryStoreId),
     storeIds: Array.isArray(product.storeScope?.storeIds)

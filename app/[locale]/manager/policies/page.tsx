@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AlertCircle, AlertTriangle, FileText, Loader2, Shield } from 'lucide-react';
 
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import { Header } from '@/components/organisms/Header';
 import { RuntimeFeatureBlockedPage } from '@/components/pages/RuntimeFeatureBlockedPage';
 import { StatCard } from '@/components/molecules/StatCard';
@@ -27,6 +28,7 @@ type CategoryFilter =
 export default function PoliciesPage() {
   const router = useRouter();
   const t = useTranslations('manager.policies');
+  const tCommon = useTranslations('common');
   const {
     config: runtimeConfig,
     loading: loadingRuntimeConfig,
@@ -64,7 +66,9 @@ export default function PoliciesPage() {
         }
       } catch (error) {
         if (active) {
-          setApiError(error instanceof Error ? error.message : t('deleteFailed'));
+          const msg = error instanceof Error ? error.message : t('deleteFailed');
+      setApiError(msg);
+      toast.error(msg);
         }
       } finally {
         if (active) {

@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import { AlertTriangle, ArrowLeft, Edit, Loader2, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/atoms';
@@ -36,6 +38,7 @@ export default function PolicyDetailPage() {
     error: runtimeConfigError,
   } = useRuntimeSystemConfig();
 
+  const tCommon = useTranslations('common');
   const [policy, setPolicy] = useState<PolicyRecord | null>(null);
   const [formData, setFormData] = useState<PolicyFormData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -136,7 +139,9 @@ export default function PolicyDetailPage() {
       setFormData(toFormData(updated));
       setEditing(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save policy.');
+      const msg = err instanceof Error ? err.message : 'Failed to save policy.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
@@ -151,7 +156,9 @@ export default function PolicyDetailPage() {
       await policyApi.remove(policy.id);
       router.push('/manager/policies');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete policy.');
+      const msg = err instanceof Error ? err.message : 'Failed to delete policy.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }

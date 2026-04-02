@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { getSession } from 'next-auth/react';
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -19,7 +21,7 @@ import { userApi } from '@/api';
 import { normalizeRole } from '@/lib/roles';
 import { getUserManagementBasePath, isAdminAreaPath } from '@/lib/userManagement';
 
-type CreateRole = 'admin' | 'manager' | 'staff' | 'operation';
+type CreateRole = 'admin' | 'staff' | 'operation';
 
 type RoleCard = {
   role: CreateRole;
@@ -45,13 +47,6 @@ const ROLE_CARDS: RoleCard[] = [
     activeClassName: 'border-blue-500 bg-blue-50 shadow-sm',
   },
   {
-    role: 'manager',
-    title: 'Manager',
-    description: 'Pricing, policies, approvals, KPI and business oversight.',
-    icon: Shield,
-    activeClassName: 'border-amber-500 bg-amber-50 shadow-sm',
-  },
-  {
     role: 'admin',
     title: 'System Admin',
     description: 'Auth, permissions, security, integrations and platform control.',
@@ -64,8 +59,7 @@ function resolveInitialRole(rawRole: string | null, canManageAdmins: boolean): C
   const normalized = normalizeRole(rawRole);
   if (
     normalized === 'staff' ||
-    normalized === 'operation' ||
-    normalized === 'manager'
+    normalized === 'operation'
   ) {
     return normalized;
   }
@@ -81,6 +75,7 @@ export default function CreateUserPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const tCommon = useTranslations('common');
   const [selectedRole, setSelectedRole] = useState<CreateRole>('staff');
   const [viewerRole, setViewerRole] = useState('');
   const [formData, setFormData] = useState<UserFormData>({
@@ -140,7 +135,9 @@ export default function CreateUserPage() {
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.email || !formData.password) {
-      setApiError('Vui long dien day du cac truong bat buoc');
+      const msg = 'Vui lòng điền đầy đủ các trường bắt buộc';
+      setApiError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -167,11 +164,12 @@ export default function CreateUserPage() {
                 note: formData.storeScopeNote || undefined,
               },
       });
+      toast.success(tCommon('createSuccess'));
       router.push(userBasePath);
     } catch (error) {
-      setApiError(
-        error instanceof Error ? error.message : 'Tao nguoi dung that bai'
-      );
+      const msg = error instanceof Error ? error.message : tCommon('actionFailed');
+      setApiError(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }

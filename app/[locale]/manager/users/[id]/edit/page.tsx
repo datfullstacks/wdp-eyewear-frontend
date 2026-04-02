@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { getSession } from 'next-auth/react';
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -80,6 +82,7 @@ export default function EditUserPage() {
   const params = useParams();
   const pathname = usePathname();
   const userId = params.id as string;
+  const tCommon = useTranslations('common');
   const [viewerRole, setViewerRole] = useState('');
 
   const [role, setRole] = useState<EditRole>('customer');
@@ -168,12 +171,15 @@ export default function EditUserPage() {
 
   const handleSubmit = async () => {
     if (isLockedAdminRole) {
+      toast.error('Only System Admin can edit admin accounts');
       setApiError('Only System Admin can edit admin accounts');
       return;
     }
 
     if (!formData.name || !formData.email) {
-      setApiError('Vui long dien day du cac truong bat buoc');
+      const msg = 'Vui lòng điền đầy đủ các trường bắt buộc';
+      setApiError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -199,9 +205,12 @@ export default function EditUserPage() {
                 note: formData.storeScopeNote || undefined,
               },
       });
+      toast.success(tCommon('updateSuccess'));
       router.push(userBasePath);
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Cap nhat that bai');
+      const msg = error instanceof Error ? error.message : tCommon('actionFailed');
+      setApiError(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }

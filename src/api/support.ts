@@ -37,6 +37,7 @@ export type SupportTicketStatus =
 
 export type SupportPriority = 'low' | 'normal' | 'high';
 export type SupportMessageSender = 'user' | 'staff';
+export type SupportAttachmentType = 'image' | 'video';
 export type WarrantyEligibility = 'eligible' | 'expired' | 'not_covered';
 export type SupportTicketOwnerRole =
   | 'none'
@@ -45,10 +46,21 @@ export type SupportTicketOwnerRole =
   | 'operations'
   | 'manager';
 
+interface RawSupportAttachment {
+  _id?: string;
+  url?: string;
+  type?: SupportAttachmentType;
+  mimeType?: string;
+  name?: string;
+  path?: string;
+  size?: number | string | null;
+}
+
 interface RawSupportMessage {
   _id?: string;
   sender?: SupportMessageSender;
   message?: string;
+  attachments?: RawSupportAttachment[];
   createdAt?: string | null;
   updatedAt?: string | null;
 }
@@ -87,6 +99,16 @@ interface RawWarrantyMetadata {
   approvedAt?: string | null;
   completedBy?: string | null;
   completedAt?: string | null;
+  serviceOrder?: RawWarrantyServiceOrder | null;
+}
+
+interface RawWarrantyServiceOrder {
+  code?: string;
+  status?: 'created' | 'in_service' | 'completed' | 'cancelled';
+  note?: string;
+  createdBy?: RawSupportRef | string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
 }
 
 interface RawSupportTicket {
@@ -151,8 +173,19 @@ export interface SupportMessageRecord {
   id: string;
   sender: SupportMessageSender;
   message: string;
+  attachments: SupportAttachmentRecord[];
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface SupportAttachmentRecord {
+  id: string;
+  url: string;
+  type: SupportAttachmentType;
+  mimeType: string;
+  name: string;
+  path: string;
+  size: number | null;
 }
 
 export interface SupportUserSummary {
@@ -198,6 +231,16 @@ export interface SupportWarrantyMetadata {
   approvedAt?: string;
   completedBy: string | null;
   completedAt?: string;
+  serviceOrder: SupportWarrantyServiceOrder | null;
+}
+
+export interface SupportWarrantyServiceOrder {
+  code: string;
+  status: 'created' | 'in_service' | 'completed' | 'cancelled';
+  note: string;
+  createdBy: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface SupportTicketRecord {
@@ -272,10 +315,48 @@ export interface UpdateSupportTicketStatusInput {
   serviceNote?: string;
 }
 
+export interface CreateWarrantyOrderInput {
+  note?: string;
+  decisionNote?: string;
+  serviceNote?: string;
+}
+
+export interface CreateWarrantyRefundInput {
+  note?: string;
+  decisionNote?: string;
+  serviceNote?: string;
+}
+
 function toId(value?: string | { _id?: string; id?: string } | null): string {
   if (!value) return '';
   if (typeof value === 'string') return value;
   return String(value._id || value.id || '');
+}
+
+function toSupportAttachment(
+  raw?: RawSupportAttachment | null
+): SupportAttachmentRecord | null {
+  if (!raw) return null;
+
+  const url = String(raw.url || '').trim();
+  if (!url) return null;
+
+  const normalizedType =
+    raw.type === 'video' ? 'video' : 'image';
+  const normalizedSize = Number(raw.size);
+
+  return {
+    id: String(raw._id || raw.url || Math.random()),
+    url,
+    type: normalizedType,
+    mimeType: String(raw.mimeType || ''),
+    name: String(raw.name || ''),
+    path: String(raw.path || ''),
+    size:
+      Number.isFinite(normalizedSize) && normalizedSize >= 0
+        ? normalizedSize
+        : null,
+  };
 }
 
 function toSupportMessage(raw: RawSupportMessage): SupportMessageRecord {
@@ -283,6 +364,11 @@ function toSupportMessage(raw: RawSupportMessage): SupportMessageRecord {
     id: String(raw._id || raw.createdAt || Math.random()),
     sender: raw.sender === 'staff' ? 'staff' : 'user',
     message: String(raw.message || ''),
+    attachments: Array.isArray(raw.attachments)
+      ? raw.attachments
+          .map(toSupportAttachment)
+          .filter((value): value is SupportAttachmentRecord => value !== null)
+      : [],
     createdAt: raw.createdAt || undefined,
     updatedAt: raw.updatedAt || undefined,
   };
@@ -350,6 +436,32 @@ function toWarrantyMetadata(
     approvedAt: raw.approvedAt || undefined,
     completedBy: raw.completedBy ? String(raw.completedBy) : null,
     completedAt: raw.completedAt || undefined,
+    serviceOrder: toWarrantyServiceOrder(raw.serviceOrder),
+  };
+}
+
+function toWarrantyServiceOrder(
+  raw?: RawWarrantyServiceOrder | null
+): SupportWarrantyServiceOrder | null {
+  if (!raw) return null;
+
+  const code = String(raw.code || '').trim();
+  if (!code) return null;
+
+  const status =
+    raw.status === 'in_service' ||
+    raw.status === 'completed' ||
+    raw.status === 'cancelled'
+      ? raw.status
+      : 'created';
+
+  return {
+    code,
+    status,
+    note: String(raw.note || ''),
+    createdBy: toId(raw.createdBy) || null,
+    createdAt: raw.createdAt || undefined,
+    updatedAt: raw.updatedAt || undefined,
   };
 }
 
@@ -514,7 +626,7 @@ const supportApi = {
 
   async replyTicket(
     id: string,
-    payload: { message: string }
+    payload: { message: string; attachments?: RawSupportAttachment[] }
   ): Promise<SupportTicketRecord> {
     const { data } = await apiClient.post<BackendEnvelope<RawSupportTicket>>(
       `/api/support/${id}/replies`,
@@ -530,6 +642,30 @@ const supportApi = {
   ): Promise<SupportTicketRecord> {
     const { data } = await apiClient.put<BackendEnvelope<RawSupportTicket>>(
       `/api/support/${id}/status`,
+      payload
+    );
+
+    return mapSupportTicket((data?.data || {}) as RawSupportTicket);
+  },
+
+  async createWarrantyOrder(
+    id: string,
+    payload: CreateWarrantyOrderInput = {}
+  ): Promise<SupportTicketRecord> {
+    const { data } = await apiClient.post<BackendEnvelope<RawSupportTicket>>(
+      `/api/support/${id}/warranty-order`,
+      payload
+    );
+
+    return mapSupportTicket((data?.data || {}) as RawSupportTicket);
+  },
+
+  async createWarrantyRefund(
+    id: string,
+    payload: CreateWarrantyRefundInput = {}
+  ): Promise<SupportTicketRecord> {
+    const { data } = await apiClient.post<BackendEnvelope<RawSupportTicket>>(
+      `/api/support/${id}/warranty-refund`,
       payload
     );
 

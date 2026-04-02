@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import { Header } from '@/components/organisms/Header';
 import { ProductForm, type ProductFormState } from '@/components/organisms/manager';
 import { Card } from '@/components/ui/card';
@@ -18,6 +20,7 @@ export default function EditProductPage() {
   const router = useRouter();
   const params = useParams();
   const productId = params.id as string;
+  const tCommon = useTranslations('common');
 
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [formData, setFormData] = useState<ProductFormState>(EMPTY_PRODUCT_FORM);
@@ -134,7 +137,9 @@ export default function EditProductPage() {
       formData.price || formData.variants.some((variant) => variant.price)
     );
     if (!formData.name.trim() || !formData.category || !hasAnyPrice) {
-      setApiError('Please fill all required fields');
+      const msg = 'Please fill all required fields';
+      setApiError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -144,9 +149,12 @@ export default function EditProductPage() {
     try {
       const payload = buildUpsertPayload(formData, { existingProduct: product });
       await productApi.update(productId, payload);
+      toast.success(tCommon('updateSuccess'));
       router.push('/manager/products');
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Update failed');
+      const msg = error instanceof Error ? error.message : 'Update failed';
+      setApiError(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }

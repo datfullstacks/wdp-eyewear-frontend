@@ -11,6 +11,7 @@ function item(
     id,
     productId: '',
     variantId: '',
+    combineWith: null,
     sku: '',
     name,
     type: 'frame',
@@ -97,4 +98,3 @@ export const mockReadyStockOrders: OrderRecord[] = [
     createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
   },
 ];
-

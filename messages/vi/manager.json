@@ -202,6 +202,11 @@
       "preOrderTitle": "Cấu hình đặt trước",
       "preOrderDesc": "Cấu hình quản lý cho đặt cọc, thanh toán chia đôi và thời điểm thu vận chuyển.",
       "enablePreOrder": "Bật đặt trước",
+      "warrantyTitle": "Thời gian bảo hành",
+      "warrantyDesc": "Nhập số tháng bảo hành để sale và operations xác định đúng điều kiện bảo hành.",
+      "warrantyMonths": "Số tháng bảo hành",
+      "warrantyMonthsPlaceholder": "Ví dụ: 12",
+      "warrantyHint": "Để trống hoặc nhập 0 nếu sản phẩm không áp dụng bảo hành.",
       "mediaTitle": "Media",
       "heroImage": "Ảnh chính (Hero)",
       "thumbnailImage": "Ảnh thu nhỏ",
@@ -251,7 +256,7 @@
       "cancelButton": "Hủy",
       "saveButton": "Lưu",
       "savingButton": "Đang lưu...",
-      "inventoryManagedNote": "T?n kho do b? ph?n Operations qu?n l?. T?ng t?n ???c t?nh t? bi?n ??ng t?n kho c?a t?ng bi?n th?, v? bi?n th? m?i s? b?t ??u t? 0 cho ??n khi Operations c?p nh?t."
+      "inventoryManagedNote": "Tồn kho do bộ phận Operations quản lý. Tổng tồn được tính từ biến động tồn kho của từng biến thể, và biến thể mới sẽ bắt đầu từ 0 cho đến khi Operations cập nhật."
     }
   },
   "pricing": {

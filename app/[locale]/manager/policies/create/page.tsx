@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import { AlertTriangle, ArrowLeft, Loader2, Shield } from 'lucide-react';
 
 import { RuntimeFeatureBlockedPage } from '@/components/pages/RuntimeFeatureBlockedPage';
@@ -29,6 +31,7 @@ export default function CreatePolicyPage() {
     loading: loadingRuntimeConfig,
     error: runtimeConfigError,
   } = useRuntimeSystemConfig();
+  const tCommon = useTranslations('common');
   const [formData, setFormData] = useState<PolicyFormData>(EMPTY_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState('');
@@ -95,7 +98,9 @@ export default function CreatePolicyPage() {
       await policyApi.create(formData as unknown as Record<string, unknown>);
       router.push('/manager/policies');
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Failed to create policy.');
+      const msg = error instanceof Error ? error.message : 'Failed to create policy.';
+      setApiError(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }

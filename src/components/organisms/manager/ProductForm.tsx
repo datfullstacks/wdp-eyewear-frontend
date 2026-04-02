@@ -63,6 +63,7 @@ export interface ProductFormState {
   preOrderShipTo: string;
   preOrderShippingCollectionTiming: PreOrderShippingCollectionTiming;
   preOrderNote: string;
+  warrantyMonths: string;
   storeScopeMode: 'all' | 'selected';
   primaryStoreId: string;
   storeIds: string[];
@@ -836,6 +837,37 @@ export function ProductForm({
             </div>
           </div>
         ) : null}
+      </div>
+
+      <div className="rounded-md border border-gray-200 p-3">
+        <div className="mb-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            {tF('warrantyTitle')}
+          </p>
+          <p className="mt-0.5 text-xs text-gray-400">{tF('warrantyDesc')}</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Input
+            label={tF('warrantyMonths')}
+            type="number"
+            min={0}
+            value={formData.warrantyMonths}
+            onChange={(event) =>
+              onChange((prev) => ({
+                ...prev,
+                warrantyMonths: event.target.value,
+              }))
+            }
+            placeholder={tF('warrantyMonthsPlaceholder')}
+          />
+
+          <div className="flex items-end">
+            <div className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900">
+              {tF('warrantyHint')}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ── Media uploads ── */}

@@ -354,6 +354,59 @@ function getRxItems(order: OrderRecord): OrderItem[] {
   return order.items.filter(requiresPrescription);
 }
 
+function getRxFrameItems(order: OrderRecord): OrderItem[] {
+  return order.items.filter(
+    (item) => item.type === 'frame' && !requiresPrescription(item)
+  );
+}
+
+function matchesOrderItemRef(
+  item: OrderItem,
+  productId?: string,
+  variantId?: string
+): boolean {
+  const normalizedProductId = String(productId || '').trim();
+  if (!normalizedProductId || item.productId !== normalizedProductId) {
+    return false;
+  }
+
+  const normalizedVariantId = String(variantId || '').trim();
+  return !normalizedVariantId || item.variantId === normalizedVariantId;
+}
+
+function findLinkedFrameItem(
+  rxItem: OrderItem,
+  rxItems: OrderItem[],
+  frameItems: OrderItem[]
+): OrderItem | undefined {
+  const combineWith = rxItem.combineWith;
+  if (combineWith?.productId) {
+    const directMatch = frameItems.find((frameItem) =>
+      matchesOrderItemRef(
+        frameItem,
+        combineWith.productId,
+        combineWith.variantId
+      )
+    );
+    if (directMatch) return directMatch;
+  }
+
+  const reverseMatch = frameItems.find((frameItem) =>
+    matchesOrderItemRef(
+      rxItem,
+      frameItem.combineWith?.productId,
+      frameItem.combineWith?.variantId
+    )
+  );
+  if (reverseMatch) return reverseMatch;
+
+  if (rxItems.length === 1 && frameItems.length === 1) {
+    return frameItems[0];
+  }
+
+  return undefined;
+}
+
 function getFirstPrescriptionAttachmentUrl(
   rxItems: OrderItem[]
 ): string | undefined {
@@ -392,6 +445,22 @@ function toProductSku(orderId: string, item: OrderItem, index: number): string {
   if (item.id) return item.id.slice(-6).toUpperCase();
   const seed = orderId ? orderId.slice(-6).toUpperCase() : 'ITEM';
   return `${seed}-${index + 1}`;
+}
+
+function toLinkedProductFrame(
+  item: OrderItem,
+  linkedFrameItem?: OrderItem
+): string {
+  const linkedFrameName = String(linkedFrameItem?.name || '').trim();
+  const linkedFrameVariant = String(linkedFrameItem?.variant || '').trim();
+  if (linkedFrameName) {
+    if (linkedFrameVariant && linkedFrameVariant !== 'Mặc định') {
+      return `${linkedFrameName} - ${linkedFrameVariant}`;
+    }
+    return linkedFrameName;
+  }
+
+  return toProductFrame(item);
 }
 
 function toPrescriptionData(item: OrderItem): PrescriptionData | undefined {
@@ -638,6 +707,7 @@ export function toPrescriptionOrder(
     rxItems.find((item) => item.prescriptionMode !== 'none') || rxItems[0];
   const attachmentUrl = getFirstPrescriptionAttachmentUrl(rxItems);
   const rxItemIds = rxItems.map((item) => item.id).filter(Boolean);
+  const frameItems = getRxFrameItems(order);
 
   return {
     id: order.id,
@@ -649,13 +719,17 @@ export function toPrescriptionOrder(
     email: '-',
     address: order.customerAddress || '-',
     orderDate: createdDate,
-    products: rxItems.map((item, index) => ({
-      name: item.name,
-      sku: String(item.sku || '').trim() || toProductSku(order.id, item, index),
-      frame: toProductFrame(item),
-      warehouseLocation: String(item.warehouseLocation || '').trim(),
-      quantity: item.quantity,
-    })),
+    products: rxItems.map((item, index) => {
+      const linkedFrameItem = findLinkedFrameItem(item, rxItems, frameItems);
+      return {
+        name: item.name,
+        sku:
+          String(item.sku || '').trim() || toProductSku(order.id, item, index),
+        frame: toLinkedProductFrame(item, linkedFrameItem),
+        warehouseLocation: String(item.warehouseLocation || '').trim(),
+        quantity: item.quantity,
+      };
+    }),
     prescriptionStatus,
     prescription: toPrescriptionData(itemForPrescription),
     priority: inferRxPriority(order),

@@ -17,7 +17,13 @@ import { Label } from '@/components/ui/label';
 import { Filter } from 'lucide-react';
 import { orderApi, productApi, supportApi, type ProductDetail } from '@/api';
 import type { SupportTicketRecord } from '@/api';
-import type { OrderItem, OrderOpsStage, OrderRecord } from '@/api/orders';
+import type {
+  OrderItem,
+  OrderOpsStage,
+  OrderRecord,
+  OrderShippingInfo,
+  OrderShippingTestStatus,
+} from '@/api/orders';
 import { Header } from '@/components/organisms/Header';
 import {
   RxApproveModal,
@@ -25,6 +31,7 @@ import {
   RxDetailModal,
   RxInputModal,
   RxOrderTable,
+  RxShipmentModal,
   RxStatsGrid,
 } from '@/components/organisms/rx-prescription';
 import { useDetailRoute } from '@/hooks/useDetailRoute';
@@ -279,6 +286,21 @@ export default function OrdersPrescription() {
   const [inputPrescriptionOpen, setInputPrescriptionOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [approveOpen, setApproveOpen] = useState(false);
+  const [shipmentOrder, setShipmentOrder] = useState<PrescriptionOrder | null>(
+    null
+  );
+  const [shipmentOpen, setShipmentOpen] = useState(false);
+  const [shipmentMode, setShipmentMode] = useState<'create' | 'manage'>(
+    'manage'
+  );
+  const [shipmentInfo, setShipmentInfo] = useState<OrderShippingInfo | null>(
+    null
+  );
+  const [shipmentLoading, setShipmentLoading] = useState(false);
+  const [shipmentSubmitting, setShipmentSubmitting] = useState(false);
+  const [shipmentErrorMessage, setShipmentErrorMessage] = useState<
+    string | null
+  >(null);
   const [prescriptionForm, setPrescriptionForm] = useState<PrescriptionData>(
     emptyPrescriptionForm
   );
@@ -452,6 +474,27 @@ export default function OrdersPrescription() {
     setApproveOpen(true);
   };
 
+  const openShipmentModal = useCallback(
+    async (order: PrescriptionOrder, mode: 'create' | 'manage') => {
+      setShipmentOrder(order);
+      setShipmentMode(mode);
+      setShipmentInfo(null);
+      setShipmentErrorMessage(null);
+      setShipmentOpen(true);
+      setShipmentLoading(true);
+
+      try {
+        const info = await orderApi.getShipping(order.id);
+        setShipmentInfo(info);
+      } catch {
+        setShipmentErrorMessage('Khong tai duoc thong tin GHN cho don nay.');
+      } finally {
+        setShipmentLoading(false);
+      }
+    },
+    []
+  );
+
   const handleSavePrescription = async () => {
     if (!selectedOrder) return;
 
@@ -544,43 +587,81 @@ export default function OrdersPrescription() {
     }
   };
 
-  const handleCreateShipment = async (order: PrescriptionOrder) => {
-    try {
-      setIsSubmittingAction(true);
-      setErrorMessage(null);
-      await orderApi.createShipment(order.id);
-      await loadOrders();
-      setSuccessMessage(`Đã tạo vận đơn GHN cho đơn ${order.orderId}.`);
-      if (selectedOrder?.id === order.id) {
-        setSelectedOrder(null);
-      }
-    } catch (error) {
-      setErrorMessage(
-        extractApiErrorMessage(error, 'Không thể tạo vận đơn GHN.')
-      );
-    } finally {
-      setIsSubmittingAction(false);
-    }
+  const handleCreateShipment = (order: PrescriptionOrder) => {
+    setSuccessMessage(null);
+    void openShipmentModal(order, 'create');
   };
 
-  const handleSyncShipment = async (order: PrescriptionOrder) => {
+  const handleManageShipment = (order: PrescriptionOrder) => {
+    setSuccessMessage(null);
+    void openShipmentModal(order, 'manage');
+  };
+
+  const handleSubmitShipmentAction = useCallback(async () => {
+    if (!shipmentOrder) return;
+
+    setShipmentSubmitting(true);
+    setShipmentErrorMessage(null);
+
     try {
-      setIsSubmittingAction(true);
-      setErrorMessage(null);
-      await orderApi.syncShipment(order.id);
-      await loadOrders();
-      setSuccessMessage(`Đã đồng bộ GHN cho đơn ${order.orderId}.`);
-      if (selectedOrder?.id === order.id) {
-        setSelectedOrder(null);
+      const result =
+        shipmentMode === 'create'
+          ? await orderApi.createShipment(shipmentOrder.id)
+          : await orderApi.syncShipment(shipmentOrder.id);
+      setShipmentInfo(result);
+      if (shipmentMode === 'create') {
+        setShipmentMode('manage');
       }
+      await loadOrders();
+      setSuccessMessage(
+        shipmentMode === 'create'
+          ? `Da tao van don GHN cho don ${shipmentOrder.orderId}. Tiep tuc cap nhat luong GHN trong modal nay.`
+          : `Da dong bo GHN cho don ${shipmentOrder.orderId}.`
+      );
     } catch (error) {
-      setErrorMessage(
-        extractApiErrorMessage(error, 'Không thể đồng bộ trạng thái GHN.')
+      setShipmentErrorMessage(
+        extractApiErrorMessage(
+          error,
+          shipmentMode === 'create'
+            ? 'Khong the tao van don GHN.'
+            : 'Khong the dong bo trang thai GHN.'
+        )
       );
     } finally {
-      setIsSubmittingAction(false);
+      setShipmentSubmitting(false);
     }
-  };
+  }, [loadOrders, shipmentMode, shipmentOrder]);
+
+  const handleAdvanceShipmentTestStatus = useCallback(
+    async (status: OrderShippingTestStatus) => {
+      if (!shipmentOrder) return;
+
+      setShipmentSubmitting(true);
+      setShipmentErrorMessage(null);
+
+      try {
+        const result = await orderApi.updateShipmentTestStatus(
+          shipmentOrder.id,
+          status
+        );
+        setShipmentInfo(result);
+        await loadOrders();
+        setSuccessMessage(
+          `Da cap nhat trang thai GHN cho don ${shipmentOrder.orderId}.`
+        );
+      } catch (error) {
+        setShipmentErrorMessage(
+          extractApiErrorMessage(
+            error,
+            'Khong the cap nhat trang thai shipment GHN.'
+          )
+        );
+      } finally {
+        setShipmentSubmitting(false);
+      }
+    },
+    [loadOrders, shipmentOrder]
+  );
 
   const handleSendContact = async () => {
     if (!selectedOrder) return;
@@ -781,7 +862,7 @@ export default function OrdersPrescription() {
           onApprove={handleOpenApprove}
           onAdvanceWorkflow={handleAdvanceWorkflow}
           onCreateShipment={handleCreateShipment}
-          onSyncShipment={handleSyncShipment}
+          onManageShipment={handleManageShipment}
         />
 
         <RxDetailModal
@@ -829,6 +910,30 @@ export default function OrdersPrescription() {
           order={selectedOrder}
           onApprove={() => {
             void handleApprovePrescription();
+          }}
+        />
+
+        <RxShipmentModal
+          open={shipmentOpen}
+          onOpenChange={(open) => {
+            setShipmentOpen(open);
+            if (!open) {
+              setShipmentOrder(null);
+              setShipmentInfo(null);
+              setShipmentErrorMessage(null);
+            }
+          }}
+          order={shipmentOrder}
+          mode={shipmentMode}
+          shippingInfo={shipmentInfo}
+          isLoading={shipmentLoading}
+          isSubmitting={shipmentSubmitting}
+          errorMessage={shipmentErrorMessage}
+          onSubmit={() => {
+            void handleSubmitShipmentAction();
+          }}
+          onAdvanceStatus={(status) => {
+            void handleAdvanceShipmentTestStatus(status);
           }}
         />
       </div>

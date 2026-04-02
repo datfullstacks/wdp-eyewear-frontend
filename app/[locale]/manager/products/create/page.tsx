@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import { Header } from '@/components/organisms/Header';
 import { ProductForm, type ProductFormState } from '@/components/organisms/manager';
 import { Card } from '@/components/ui/card';
@@ -11,6 +13,7 @@ import { AlertTriangle } from 'lucide-react';
 
 export default function CreateProductPage() {
   const router = useRouter();
+  const tCommon = useTranslations('common');
   const [formData, setFormData] = useState<ProductFormState>(EMPTY_PRODUCT_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingKey, setUploadingKey] = useState('');
@@ -105,7 +108,9 @@ export default function CreateProductPage() {
       formData.price || formData.variants.some((variant) => variant.price)
     );
     if (!formData.name.trim() || !formData.category || !hasAnyPrice) {
-      setApiError('Please fill all required fields');
+      const msg = 'Please fill all required fields';
+      setApiError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -115,9 +120,12 @@ export default function CreateProductPage() {
     try {
       const payload = buildUpsertPayload(formData);
       await productApi.create(payload);
+      toast.success(tCommon('createSuccess'));
       router.push('/manager/products');
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Create failed');
+      const msg = error instanceof Error ? error.message : 'Create failed';
+      setApiError(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
