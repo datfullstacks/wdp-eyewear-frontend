@@ -41,6 +41,44 @@ export interface RevenueSummary {
   byPaymentMethod: RevenueGroup[];
 }
 
+export interface ProductCadencePoint {
+  label: string;
+  orders: number;
+  units: number;
+  revenue: number;
+}
+
+export interface TopOrderedProduct {
+  productId: string;
+  name: string;
+  brand: string;
+  type: string;
+  orders: number;
+  unitsSold: number;
+  revenue: number;
+  lastOrderedAt: string | null;
+}
+
+export interface ManagerProductAnalytics {
+  summary: {
+    ordersToday: number;
+    unitsToday: number;
+    ordersThisMonth: number;
+    unitsThisMonth: number;
+    ordersThisQuarter: number;
+    unitsThisQuarter: number;
+    ordersThisYear: number;
+    unitsThisYear: number;
+  };
+  timelines: {
+    daily: ProductCadencePoint[];
+    monthly: ProductCadencePoint[];
+    quarterly: ProductCadencePoint[];
+    yearly: ProductCadencePoint[];
+  };
+  topProducts: TopOrderedProduct[];
+}
+
 export interface RefundOwnerBucket {
   owner: string;
   count: number;
@@ -225,6 +263,11 @@ export const analyticsApi = {
   async getRevenueSummary() {
     const response = await apiClient.get("/api/analytics/manager/revenue");
     return extractData<RevenueSummary>(response.data);
+  },
+
+  async getManagerProductAnalytics() {
+    const response = await apiClient.get("/api/analytics/manager/products");
+    return extractData<ManagerProductAnalytics>(response.data);
   },
 
   async getAdminRefundOverview(limit = 8, filters?: AdminRefundFilters) {

@@ -7,7 +7,11 @@ import { useTranslations } from 'next-intl';
 import { Header } from '@/components/organisms/Header';
 import { StatCard } from '@/components/molecules/StatCard';
 import { Card } from '@/components/ui/card';
-import analyticsApi, { type RevenueSummary } from '@/api/analytics';
+import analyticsApi, {
+  type ManagerProductAnalytics,
+  type RevenueSummary,
+} from '@/api/analytics';
+import { ManagerProductInsights } from '@/components/analytics/ManagerProductInsights';
 import { ManagerRevenueInsights } from '@/components/analytics/ManagerRevenueInsights';
 
 const formatCurrency = (value: number) =>
@@ -20,6 +24,8 @@ const formatCurrency = (value: number) =>
 export default function RevenuePage() {
   const t = useTranslations('manager.revenue');
   const [summary, setSummary] = useState<RevenueSummary | null>(null);
+  const [productAnalytics, setProductAnalytics] =
+    useState<ManagerProductAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -30,9 +36,36 @@ export default function RevenuePage() {
       try {
         setLoading(true);
         setError('');
-        const data = await analyticsApi.getRevenueSummary();
+        const [revenueResult, productAnalyticsResult] = await Promise.allSettled([
+          analyticsApi.getRevenueSummary(),
+          analyticsApi.getManagerProductAnalytics(),
+        ]);
         if (active) {
-          setSummary(data);
+          const errors: string[] = [];
+
+          if (revenueResult.status === 'fulfilled') {
+            setSummary(revenueResult.value);
+          } else {
+            setSummary(null);
+            errors.push(
+              revenueResult.reason instanceof Error
+                ? revenueResult.reason.message
+                : t('loadFailed'),
+            );
+          }
+
+          if (productAnalyticsResult.status === 'fulfilled') {
+            setProductAnalytics(productAnalyticsResult.value);
+          } else {
+            setProductAnalytics(null);
+            errors.push(
+              productAnalyticsResult.reason instanceof Error
+                ? productAnalyticsResult.reason.message
+                : t('loadFailed'),
+            );
+          }
+
+          setError(errors.join(' '));
         }
       } catch (err) {
         if (active) {
@@ -117,6 +150,8 @@ export default function RevenuePage() {
               title={t('analyticsTitle')}
               subtitle={t('analyticsSubtitle')}
             />
+
+            <ManagerProductInsights analytics={productAnalytics} />
 
             <Card className="p-6">
               <h3 className="text-lg font-semibold text-gray-900">{t('trendTitle')}</h3>

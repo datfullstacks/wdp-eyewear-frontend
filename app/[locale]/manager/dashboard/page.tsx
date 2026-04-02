@@ -17,8 +17,10 @@ import { StatCard } from '@/components/molecules/StatCard';
 import { Card } from '@/components/ui/card';
 import analyticsApi, {
   type ManagerOverview,
+  type ManagerProductAnalytics,
   type RevenueSummary,
 } from '@/api/analytics';
+import { ManagerProductInsights } from '@/components/analytics/ManagerProductInsights';
 import { ManagerRevenueInsights } from '@/components/analytics/ManagerRevenueInsights';
 
 const formatCurrency = (value: number) =>
@@ -31,6 +33,8 @@ const formatCurrency = (value: number) =>
 export default function ManagerDashboardPage() {
   const [overview, setOverview] = useState<ManagerOverview | null>(null);
   const [revenueSummary, setRevenueSummary] = useState<RevenueSummary | null>(null);
+  const [productAnalytics, setProductAnalytics] =
+    useState<ManagerProductAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -43,9 +47,11 @@ export default function ManagerDashboardPage() {
       try {
         setLoading(true);
         setError('');
-        const [overviewResult, revenueResult] = await Promise.allSettled([
+        const [overviewResult, revenueResult, productAnalyticsResult] =
+          await Promise.allSettled([
           analyticsApi.getManagerOverview(),
           analyticsApi.getRevenueSummary(),
+          analyticsApi.getManagerProductAnalytics(),
         ]);
         if (active) {
           const errors: string[] = [];
@@ -68,6 +74,17 @@ export default function ManagerDashboardPage() {
             errors.push(
               revenueResult.reason instanceof Error
                 ? revenueResult.reason.message
+                : t('loadRevenueFailed'),
+            );
+          }
+
+          if (productAnalyticsResult.status === 'fulfilled') {
+            setProductAnalytics(productAnalyticsResult.value);
+          } else {
+            setProductAnalytics(null);
+            errors.push(
+              productAnalyticsResult.reason instanceof Error
+                ? productAnalyticsResult.reason.message
                 : t('loadRevenueFailed'),
             );
           }
@@ -167,6 +184,8 @@ export default function ManagerDashboardPage() {
               title={t('analytics.title')}
               subtitle={t('analytics.subtitle')}
             />
+
+            <ManagerProductInsights analytics={productAnalytics} />
 
             {overview ? (
               <section className="grid gap-4 lg:grid-cols-3">

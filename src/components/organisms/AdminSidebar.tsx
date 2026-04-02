@@ -3,11 +3,14 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { signOut } from 'next-auth/react';
+import { useLocale } from 'next-intl';
 import {
   ChevronLeft,
   ChevronRight,
   Glasses,
   LayoutDashboard,
+  LogOut,
   Settings,
   ShieldCheck,
   Users,
@@ -24,13 +27,63 @@ type MenuItem = {
   path: string;
 };
 
+type SidebarCopy = {
+  accessTitle: string;
+  accessDescription: string;
+  roleLabel: string;
+  logout: string;
+  loggingOut: string;
+  expandSidebar: string;
+  collapseSidebar: string;
+};
+
+function getSidebarCopy(locale: string): SidebarCopy {
+  if (locale === 'vi') {
+    return {
+      accessTitle: 'Quyền truy cập ở cấp hệ thống',
+      accessDescription:
+        'Khu vực admin được tách biệt khỏi các luồng vận hành hằng ngày.',
+      roleLabel: 'Quản trị hệ thống',
+      logout: 'Đăng xuất',
+      loggingOut: 'Đang đăng xuất...',
+      expandSidebar: 'Mở sidebar',
+      collapseSidebar: 'Thu gọn sidebar',
+    };
+  }
+
+  return {
+    accessTitle: 'Access is system-scoped',
+    accessDescription:
+      'Admin area is isolated from daily business operations.',
+    roleLabel: 'System Admin',
+    logout: 'Logout',
+    loggingOut: 'Signing out...',
+    expandSidebar: 'Expand sidebar',
+    collapseSidebar: 'Collapse sidebar',
+  };
+}
+
 function isActivePath(pathname: string, itemPath: string) {
   return pathname === itemPath || pathname.includes(`${itemPath}/`);
 }
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const locale = useLocale();
   const [collapsed, setCollapsed] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const copy = getSidebarCopy(locale);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+
+    try {
+      setIsLoggingOut(true);
+      await signOut({ callbackUrl: `/${locale}/login` });
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   const menuItems = useMemo<MenuItem[]>(
     () => [
@@ -75,7 +128,7 @@ export function AdminSidebar() {
               <span className="font-display text-lg font-semibold text-gray-900">
                 Eyes Dream
               </span>
-              <div className="text-xs text-gray-500">System Admin</div>
+              <div className="text-xs text-gray-500">{copy.roleLabel}</div>
             </div>
           </div>
         ) : (
@@ -91,7 +144,7 @@ export function AdminSidebar() {
         type="button"
         onClick={() => setCollapsed((value) => !value)}
         className="absolute top-20 -right-3 h-6 w-6 rounded-full border border-gray-200 bg-gray-100 p-0 shadow-sm hover:bg-gray-200"
-        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        aria-label={collapsed ? copy.expandSidebar : copy.collapseSidebar}
       >
         {collapsed ? (
           <ChevronRight className="h-4 w-4" />
@@ -123,7 +176,7 @@ export function AdminSidebar() {
         })}
       </nav>
 
-      <div className="border-t border-gray-200 px-4 py-4">
+      <div className="space-y-3 border-t border-gray-200 px-4 py-4">
         <div
           className={cn(
             'rounded-xl border border-red-200 bg-red-50 px-3 py-3 text-sm text-red-900',
@@ -132,14 +185,38 @@ export function AdminSidebar() {
         >
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 flex-shrink-0" />
-            {!collapsed && <span className="font-medium">Access is system-scoped</span>}
+            {!collapsed && (
+              <span className="font-medium">{copy.accessTitle}</span>
+            )}
           </div>
           {!collapsed && (
             <p className="mt-2 text-xs text-red-700">
-              Admin area is isolated from daily business operations.
+              {copy.accessDescription}
             </p>
           )}
         </div>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          type="button"
+          onClick={() => void handleLogout()}
+          disabled={isLoggingOut}
+          className={cn(
+            'w-full text-gray-700 hover:bg-gray-200 hover:text-gray-900',
+            collapsed ? 'justify-center px-0' : 'justify-start'
+          )}
+          aria-label={isLoggingOut ? copy.loggingOut : copy.logout}
+        >
+          <LogOut className="h-4 w-4" />
+          {!collapsed ? (
+            <span>{isLoggingOut ? copy.loggingOut : copy.logout}</span>
+          ) : null}
+        </Button>
+
+        {!collapsed ? (
+          <p className="text-xs text-gray-500">{copy.roleLabel}</p>
+        ) : null}
       </div>
     </aside>
   );
