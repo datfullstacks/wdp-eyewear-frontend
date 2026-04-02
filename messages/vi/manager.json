@@ -251,7 +251,7 @@
       "cancelButton": "Hủy",
       "saveButton": "Lưu",
       "savingButton": "Đang lưu...",
-      "inventoryManagedNote": "T?n kho do b? ph?n Operations qu?n l?. T?ng t?n ???c t?nh t? bi?n ??ng t?n kho c?a t?ng bi?n th?, v? bi?n th? m?i s? b?t ??u t? 0 cho ??n khi Operations c?p nh?t."
+      "inventoryManagedNote": "Tồn kho do bộ phận Operations quản lý. Tổng tồn được tính từ biến động tồn kho của từng biến thể, và biến thể mới sẽ bắt đầu từ 0 cho đến khi Operations cập nhật."
     }
   },
   "pricing": {
