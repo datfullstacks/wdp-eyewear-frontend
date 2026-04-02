@@ -1094,5 +1094,26 @@
       "applyStatus": "Áp dụng trạng thái",
       "close": "Đóng"
     }
+  },
+  "revenueInsights": {
+    "readyStock": "Có sẵn",
+    "preOrder": "Đặt trước",
+    "sepay": "SePay",
+    "cod": "COD",
+    "collectionRate": "Tỷ lệ thu tiền:",
+    "revenue": "Doanh thu",
+    "collected": "Đã thu",
+    "signals": "Tín hiệu",
+    "peakRevenueMonth": "Tháng doanh thu cao nhất",
+    "highestOrderVolume": "Tháng nhiều đơn hàng nhất",
+    "dominantPaymentRail": "Kênh thanh toán chính",
+    "orders": "đơn hàng",
+    "monthlyOrderCadence": "Tần suất đơn hàng hàng tháng",
+    "revenueByOrderType": "Doanh thu theo loại đơn hàng",
+    "highlightsCommercialFlow": "Làm nổi bật luồng thương mại nào đang dẫn dắt trong tháng.",
+    "noOrderTypeRevenueYet": "Chưa có doanh thu theo loại đơn hàng.",
+    "revenueByPaymentMethod": "Doanh thu theo phương thức thanh toán",
+    "tracksCashSplit": "Theo dõi cách phân bổ tiền mặt giữa các kênh thanh toán ngay và thanh toán sau.",
+    "noPaymentMethodRevenueYet": "Chưa có doanh thu theo phương thức thanh toán."
   }
 }

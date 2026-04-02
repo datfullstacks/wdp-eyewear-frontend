@@ -2,6 +2,7 @@
 
 import { Card } from '@/components/ui/card';
 import type { RevenueSummary } from '@/api/analytics';
+import { useTranslations } from 'next-intl';
 
 import {
   DistributionBars,
@@ -22,23 +23,23 @@ const formatCompactCurrency = (value: number) =>
     maximumFractionDigits: 1,
   }).format(value || 0);
 
-function formatOrderType(type: string) {
+function getOrderTypeKey(type: string) {
   switch (String(type || '').trim().toLowerCase()) {
     case 'ready_stock':
-      return 'Ready stock';
+      return 'readyStock';
     case 'pre_order':
-      return 'Pre-order';
+      return 'preOrder';
     default:
       return type || '--';
   }
 }
 
-function formatPaymentMethod(method: string) {
+function getPaymentMethodKey(method: string) {
   switch (String(method || '').trim().toLowerCase()) {
     case 'sepay':
-      return 'SePay';
+      return 'sepay';
     case 'cod':
-      return 'COD';
+      return 'cod';
     default:
       return method || '--';
   }
@@ -52,6 +53,7 @@ function toDistributionData(
     orders: number;
   }>,
   kind: 'type' | 'method',
+  t: any,
 ): ChartDatum[] {
   const palette =
     kind === 'type'
@@ -60,32 +62,36 @@ function toDistributionData(
 
   return (Array.isArray(rows) ? rows : [])
     .sort((left, right) => right.revenue - left.revenue)
-    .map((row, index) => ({
-      label:
-        kind === 'type'
-          ? formatOrderType(row.type || '')
-          : formatPaymentMethod(row.method || ''),
-      value: Number(row.revenue || 0),
-      color: palette[index % palette.length],
-      hint: `${row.orders || 0} orders`,
-    }));
+    .map((row, index) => {
+      const rawLabel = kind === 'type' ? getOrderTypeKey(row.type || '') : getPaymentMethodKey(row.method || '');
+      const label = ['readyStock', 'preOrder', 'sepay', 'cod'].includes(rawLabel) ? t(rawLabel) : rawLabel;
+
+      return {
+        label,
+        value: Number(row.revenue || 0),
+        color: palette[index % palette.length],
+        hint: `${row.orders || 0} ${t('orders')}`,
+      };
+    });
 }
 
 export function ManagerRevenueInsights({
   summary,
-  title = 'Revenue intelligence',
-  subtitle = 'Booked revenue vs collected cash across the latest six months.',
+  title,
+  subtitle,
 }: {
   summary: RevenueSummary | null;
   title?: string;
   subtitle?: string;
 }) {
+  const t = useTranslations('manager.revenueInsights');
+
   if (!summary) {
     return null;
   }
 
-  const orderTypeData = toDistributionData(summary.byOrderType, 'type');
-  const paymentMethodData = toDistributionData(summary.byPaymentMethod, 'method');
+  const orderTypeData = toDistributionData(summary.byOrderType, 'type', t);
+  const paymentMethodData = toDistributionData(summary.byPaymentMethod, 'method', t);
   const peakMonth =
     [...(summary.monthly || [])].sort((left, right) => right.revenue - left.revenue)[0] ||
     null;
@@ -107,7 +113,7 @@ export function ManagerRevenueInsights({
               <p className="mt-1 text-sm text-gray-600">{subtitle}</p>
             </div>
             <div className="rounded-full border border-emerald-100 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
-              Collection rate: {collectionRate.toFixed(0)}%
+              {t('collectionRate')} {collectionRate.toFixed(0)}%
             </div>
           </div>
 
@@ -116,13 +122,13 @@ export function ManagerRevenueInsights({
               labels={(summary.monthly || []).map((item) => item.month)}
               series={[
                 {
-                  label: 'Revenue',
+                  label: t('revenue'),
                   color: '#0f766e',
                   values: (summary.monthly || []).map((item) => item.revenue),
                   fill: true,
                 },
                 {
-                  label: 'Collected',
+                  label: t('collected'),
                   color: '#2563eb',
                   values: (summary.monthly || []).map((item) => item.collected),
                 },
@@ -134,11 +140,11 @@ export function ManagerRevenueInsights({
 
         <div className="space-y-6">
           <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900">Signals</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t('signals')}</h3>
             <div className="mt-4 grid gap-4">
               <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
                 <div className="text-xs uppercase tracking-[0.2em] text-gray-500">
-                  Peak revenue month
+                  {t('peakRevenueMonth')}
                 </div>
                 <div className="mt-2 text-lg font-semibold text-gray-900">
                   {peakMonth?.month || '--'}
@@ -150,19 +156,19 @@ export function ManagerRevenueInsights({
 
               <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
                 <div className="text-xs uppercase tracking-[0.2em] text-gray-500">
-                  Highest order volume
+                  {t('highestOrderVolume')}
                 </div>
                 <div className="mt-2 text-lg font-semibold text-gray-900">
                   {peakOrderMonth?.month || '--'}
                 </div>
                 <div className="mt-1 text-sm text-gray-600">
-                  {peakOrderMonth ? `${peakOrderMonth.orders} orders` : '--'}
+                  {peakOrderMonth ? `${peakOrderMonth.orders} ${t('orders')}` : '--'}
                 </div>
               </div>
 
               <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
                 <div className="text-xs uppercase tracking-[0.2em] text-gray-500">
-                  Dominant payment rail
+                  {t('dominantPaymentRail')}
                 </div>
                 <div className="mt-2 text-lg font-semibold text-gray-900">
                   {paymentMethodData[0]?.label || '--'}
@@ -177,7 +183,7 @@ export function ManagerRevenueInsights({
           </Card>
 
           <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900">Monthly order cadence</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t('monthlyOrderCadence')}</h3>
             <div className="mt-4">
               <DistributionBars
                 data={(summary.monthly || []).map((row, index) => ({
@@ -196,29 +202,29 @@ export function ManagerRevenueInsights({
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900">Revenue by order type</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('revenueByOrderType')}</h3>
           <p className="mt-1 text-sm text-gray-600">
-            Highlights which commercial flow is carrying the month.
+            {t('highlightsCommercialFlow')}
           </p>
           <div className="mt-6">
             <DistributionBars
               data={orderTypeData}
               valueFormatter={formatCurrency}
-              emptyLabel="No order type revenue yet."
+              emptyLabel={t('noOrderTypeRevenueYet')}
             />
           </div>
         </Card>
 
         <Card className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900">Revenue by payment method</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('revenueByPaymentMethod')}</h3>
           <p className="mt-1 text-sm text-gray-600">
-            Tracks how cash is split across pay-now and pay-later rails.
+            {t('tracksCashSplit')}
           </p>
           <div className="mt-6">
             <DistributionBars
               data={paymentMethodData}
               valueFormatter={formatCurrency}
-              emptyLabel="No payment method revenue yet."
+              emptyLabel={t('noPaymentMethodRevenueYet')}
             />
           </div>
         </Card>

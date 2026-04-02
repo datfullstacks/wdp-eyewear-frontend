@@ -1094,5 +1094,26 @@
       "applyStatus": "Apply status",
       "close": "Close"
     }
+  },
+  "revenueInsights": {
+    "readyStock": "Ready stock",
+    "preOrder": "Pre-order",
+    "sepay": "SePay",
+    "cod": "COD",
+    "collectionRate": "Collection rate:",
+    "revenue": "Revenue",
+    "collected": "Collected",
+    "signals": "Signals",
+    "peakRevenueMonth": "Peak revenue month",
+    "highestOrderVolume": "Highest order volume",
+    "dominantPaymentRail": "Dominant payment rail",
+    "orders": "orders",
+    "monthlyOrderCadence": "Monthly order cadence",
+    "revenueByOrderType": "Revenue by order type",
+    "highlightsCommercialFlow": "Highlights which commercial flow is carrying the month.",
+    "noOrderTypeRevenueYet": "No order type revenue yet.",
+    "revenueByPaymentMethod": "Revenue by payment method",
+    "tracksCashSplit": "Tracks how cash is split across pay-now and pay-later rails.",
+    "noPaymentMethodRevenueYet": "No payment method revenue yet."
   }
 }
