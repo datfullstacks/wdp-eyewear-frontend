@@ -8,11 +8,10 @@ import { StatCard } from '@/components/molecules/StatCard';
 import { RecentOrdersTable } from '@/components/organisms/RecentOrdersTable';
 import { StatusBadge } from '@/components/atoms/StatusBadge';
 import { buildDetailPath } from '@/hooks/useDetailRoute';
-import { orderApi, productApi, type OrderRecord } from '@/api';
+import { orderApi, userApi, type OrderRecord } from '@/api';
 import {
   computeOrderMenuCounts,
   getOrderAlertTypes,
-  isPreorderOrder,
   needsActionOrder,
   needsPrescriptionSupplement,
 } from '@/lib/orderWorkflow';
@@ -22,8 +21,6 @@ import {
   BellRing,
   ClipboardList,
   CreditCard,
-  FileHeart,
-  Package,
   ShoppingCart,
   Sparkles,
   Users,
@@ -91,28 +88,35 @@ function isRefundCaseOpen(order: OrderRecord): boolean {
   );
 }
 
-function isPreorderStillActive(order: OrderRecord): boolean {
-  if (!isPreorderOrder(order)) return false;
-
-  return !['cancelled', 'returned', 'delivered'].includes(
-    normalizeRawStatus(order)
-  );
-}
-
 function isCancelledOrder(order: OrderRecord): boolean {
   return normalizeRawStatus(order) === 'cancelled';
 }
 
-function toCustomerKey(order: OrderRecord): string {
-  const phone = String(order.customerPhone || '').trim();
-  const name = String(order.customerName || '')
-    .trim()
-    .toLowerCase();
-  return phone || name;
-}
-
 function formatCompactCurrency(value: number): string {
   return currencyFormatter.format(value || 0);
+}
+
+async function getTodayCustomerCount(): Promise<number> {
+  const pageSize = 200;
+  let page = 1;
+  let totalPages = 1;
+  let count = 0;
+
+  while (page <= totalPages) {
+    const result = await userApi.getAll({
+      page,
+      limit: pageSize,
+      role: 'customer',
+    });
+
+    count += result.users.filter((customer) => isSameLocalDay(customer.createdAt)).length;
+    totalPages = Math.max(1, Math.ceil(result.total / Math.max(result.pageSize, 1)));
+
+    if (result.users.length === 0) break;
+    page += 1;
+  }
+
+  return count;
 }
 
 type QueueTone = 'warning' | 'error' | 'info' | 'success';
@@ -196,12 +200,10 @@ const Dashboard = () => {
   );
   const refundsPath = resolveDashboardSectionPath(pathname, 'cases/refunds');
   const returnsPath = resolveDashboardSectionPath(pathname, 'cases/returns');
-  const productsPath = resolveDashboardSectionPath(pathname, 'products');
   const customersPath = resolveDashboardSectionPath(pathname, 'customers');
-  const checkoutPath = resolveDashboardSectionPath(pathname, 'checkout');
 
   const [orders, setOrders] = useState<OrderRecord[]>([]);
-  const [activeProductCount, setActiveProductCount] = useState(0);
+  const [todayCustomerCount, setTodayCustomerCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -212,9 +214,9 @@ const Dashboard = () => {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const [ordersResult, productsResult] = await Promise.allSettled([
+      const [ordersResult, customersResult] = await Promise.allSettled([
         orderApi.getAll({ page: 1, limit: 500 }),
-        productApi.getAll({ page: 1, limit: 1, status: 'active' }),
+        getTodayCustomerCount(),
       ]);
 
       if (!isMounted) return;
@@ -225,15 +227,15 @@ const Dashboard = () => {
         setOrders([]);
       }
 
-      if (productsResult.status === 'fulfilled') {
-        setActiveProductCount(productsResult.value.total);
+      if (customersResult.status === 'fulfilled') {
+        setTodayCustomerCount(customersResult.value);
       } else {
-        setActiveProductCount(0);
+        setTodayCustomerCount(0);
       }
 
       if (
         ordersResult.status === 'rejected' &&
-        productsResult.status === 'rejected'
+        customersResult.status === 'rejected'
       ) {
         setErrorMessage('Không tải được tổng quan dashboard của sale.');
       }
@@ -261,12 +263,8 @@ const Dashboard = () => {
       (sum, order) => sum + Math.max(0, Number(order.paidAmount || 0)),
       0
     );
-    const customerKeys = new Set(
-      activeOrders.map(toCustomerKey).filter((value) => value.trim().length > 0)
-    );
     const menuCounts = computeOrderMenuCounts(orders);
     const activeRefundCases = orders.filter(isRefundCaseOpen).length;
-    const activePreorders = orders.filter(isPreorderStillActive).length;
     const cancelledOrders = orders.filter(isCancelledOrder).length;
     const urgentOrders = orders.filter(
       (order) =>
@@ -280,10 +278,8 @@ const Dashboard = () => {
       todayOrderCount,
       todayGross,
       todayCollected,
-      activeCustomerCount: customerKeys.size,
       menuCounts,
       activeRefundCases,
-      activePreorders,
       cancelledOrders,
       urgentOrders,
     };
@@ -309,12 +305,12 @@ const Dashboard = () => {
         icon: CreditCard,
       },
       {
-        title: 'Khách đang theo dõi',
-        value: isLoading ? '--' : String(overview.activeCustomerCount),
+        title: 'Khách tạo hôm nay',
+        value: isLoading ? '--' : String(todayCustomerCount),
         icon: Users,
       },
     ],
-    [isLoading, overview]
+    [isLoading, overview, todayCustomerCount]
   );
 
   const queueCards = useMemo(
@@ -354,14 +350,9 @@ const Dashboard = () => {
   const quickActions = useMemo(
     () => [
       {
-        title: 'Tạo đơn mới',
-        description: 'Mở POS và bắt đầu lên đơn nhanh cho khách tại quầy.',
-        href: productsPath,
-      },
-      {
-        title: 'Mở checkout',
-        description: 'Xử lý giỏ hàng, báo giá và tạo QR thanh toán SePay.',
-        href: checkoutPath,
+        title: 'Theo dõi đơn cần xử lý',
+        description: 'Mở danh sách đơn đang chờ xác nhận, thanh toán hoặc cần sale tiếp tục.',
+        href: pendingPath,
       },
       {
         title: 'Tra cứu khách',
@@ -374,7 +365,7 @@ const Dashboard = () => {
         href: returnsPath,
       },
     ],
-    [checkoutPath, customersPath, productsPath, returnsPath]
+    [customersPath, pendingPath, returnsPath]
   );
 
   return (

@@ -105,7 +105,9 @@ export const PrescriptionOrderTable = ({
                 aria-label="Chọn tất cả đơn hàng"
               />
             </TableHead>
-            <TableHead>Đơn hàng</TableHead>
+            <TableHead className="text-foreground font-semibold">
+              Mã đơn hàng
+            </TableHead>
             <TableHead>Khách hàng</TableHead>
             <TableHead>Thông tin thiếu</TableHead>
             <TableHead>Theo dõi sale</TableHead>
@@ -136,7 +138,9 @@ export const PrescriptionOrderTable = ({
                   />
                 </TableCell>
                 <TableCell>
-                  <div className="font-medium">{order.orderId}</div>
+                  <div className="inline-flex rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1 font-mono text-sm font-semibold tracking-wide text-amber-950 shadow-sm">
+                    {order.orderId}
+                  </div>
                   <p className="text-foreground/85 mt-1 text-xs">
                     Đặt: {order.orderDate}
                   </p>

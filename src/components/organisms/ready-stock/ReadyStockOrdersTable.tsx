@@ -109,20 +109,6 @@ function nextActionHint(
   return null;
 }
 
-function supplierSummary(order: OrderRecord): string {
-  const suppliers = Array.from(
-    new Set(
-      order.items
-        .map((item) => item.supplier)
-        .map((value) => String(value || '').trim())
-        .filter(Boolean)
-    )
-  );
-  if (suppliers.length === 0) return '-';
-  if (suppliers.length === 1) return suppliers[0];
-  return `${suppliers[0]} +${suppliers.length - 1}`;
-}
-
 export function ReadyStockOrdersTable({
   orders,
   resolveOps,
@@ -157,7 +143,7 @@ export function ReadyStockOrdersTable({
       </div>
 
       <div className="overflow-x-auto">
-        <Table className="min-w-[1260px] text-sm font-normal">
+        <Table className="min-w-[1120px] text-sm font-normal">
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="w-[170px] whitespace-nowrap">
@@ -172,9 +158,6 @@ export function ReadyStockOrdersTable({
               </TableHead>
               <TableHead className="w-[220px] whitespace-nowrap">
                 Cửa hàng
-              </TableHead>
-              <TableHead className="w-[220px] whitespace-nowrap">
-                Nhà cung cấp
               </TableHead>
               <TableHead className="w-[280px]">Sản phẩm chính</TableHead>
               <TableHead className="whitespace-nowrap">Thanh toán</TableHead>
@@ -258,15 +241,6 @@ export function ReadyStockOrdersTable({
                       title={order.storeName || '-'}
                     >
                       {order.storeName || '-'}
-                    </div>
-                  </TableCell>
-
-                  <TableCell className="whitespace-nowrap">
-                    <div
-                      className="text-foreground/80"
-                      title={supplierSummary(order)}
-                    >
-                      {supplierSummary(order)}
                     </div>
                   </TableCell>
 
@@ -424,7 +398,7 @@ export function ReadyStockOrdersTable({
             {orders.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={9}
+                  colSpan={10}
                   className="text-foreground/70 py-10 text-center"
                 >
                   Không có đơn phù hợp bộ lọc.

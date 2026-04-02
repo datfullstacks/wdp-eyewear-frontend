@@ -25,21 +25,21 @@ function formatDateTime(value?: string) {
 }
 
 const TEST_STATUS_LABEL: Record<OrderShippingTestStatus, string> = {
-  ready_to_pick: 'Cho lay hang',
-  picking: 'Dang lay hang',
-  storing: 'Dang luu kho',
-  transporting: 'Dang van chuyen',
-  delivering: 'Dang giao hang',
-  delivery_fail: 'Giao that bai',
-  waiting_to_return: 'Cho giao lai / hoan',
-  return: 'Bat dau hoan hang',
-  return_transporting: 'Dang van chuyen hoan',
-  returning: 'Dang tra ve shop',
-  delivered: 'Da giao',
-  return_fail: 'Hoan that bai',
-  damage: 'Hu hong',
-  lost: 'That lac',
-  returned: 'Da hoan hang',
+  ready_to_pick: 'Chờ lấy hàng',
+  picking: 'Đang lấy hàng',
+  storing: 'Đang lưu kho',
+  transporting: 'Đang vận chuyển',
+  delivering: 'Đang giao hàng',
+  delivery_fail: 'Giao thất bại',
+  waiting_to_return: 'Cho giao lại / hoàn',
+  return: 'ắt đầu hoàn hàng',
+  return_transporting: 'Đang vận chuyển hoàn',
+  returning: 'Đang trả về shop',
+  delivered: 'Đã giao',
+  return_fail: 'Hoàn thất bại',
+  damage: 'Hư hỏng',
+  lost: 'Thất lạc',
+  returned: 'Đã hoàn hàng',
 };
 
 export function ReadyStockShipmentModal({
@@ -84,7 +84,7 @@ export function ReadyStockShipmentModal({
       <DialogContent className="text-foreground w-[92vw] max-w-[560px] p-4 shadow-2xl">
         <DialogHeader>
           <DialogTitle>
-            {isCreate ? 'Tao van don GHN' : 'Dong bo GHN'} • {order.code}
+            {isCreate ? 'Tạo vận đơn GHN' : 'Đồng bộ GHN'} • {order.code}
           </DialogTitle>
         </DialogHeader>
 
@@ -92,49 +92,51 @@ export function ReadyStockShipmentModal({
           <div className="border-border bg-muted/10 rounded-lg border p-3 text-sm">
             <div className="font-medium">
               {isCreate
-                ? 'Operation se tao van don GHN tu shipping address cua order.'
-                : 'He thong se dong bo trang thai GHN moi nhat ve don hang nay.'}
+                ? 'Operation sẽ tạo vận đơn GHN từ shipping address của order.'
+                : 'Hệ thống sẽ đồng bộ trạng thái GHN mới nhất về đơn hàng này.'}
             </div>
             <div className="text-foreground/70 mt-1">
-              Don vi van chuyen hien tai: GHN - Giao Hang Nhanh
+              Đơn vị vận chuyển hiện tại: GHN - Giao hàng Nhanh
             </div>
           </div>
 
           {isLoading ? (
             <div className="text-foreground/70 text-sm">
-              Dang tai thong tin GHN...
+              Đang tải thông tin GHN...
             </div>
           ) : (
             <>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
-                  <Label>Trang thai don hang</Label>
+                  <Label>Trạng thái đơn hàng</Label>
                   <div className="text-sm font-semibold">
                     {shippingInfo?.orderStatus || order.rawStatus || '-'}
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <Label>Phuong thuc van chuyen</Label>
+                  <Label>Phương thức vận chuyển</Label>
                   <div className="text-sm font-semibold">
                     {shippingInfo?.shippingMethod || '-'}
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <Label>Ma van don GHN</Label>
+                  <Label>Mã vận đơn GHN</Label>
                   <div className="font-mono text-sm">
                     {shipment?.orderCode || shipment?.trackingCode || '-'}
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <Label>Trang thai GHN</Label>
+                  <Label>Trạng thái GHN</Label>
                   <div className="text-sm font-semibold">
                     {shippingStatusMeta?.labelKey
-                      ? tc(`shippingStatus.${shippingStatusMeta.labelKey}` as any)
-                      : (shippingStatusMeta?.label || '-')}
+                      ? tc(
+                          `shippingStatus.${shippingStatusMeta.labelKey}` as any
+                        )
+                      : shippingStatusMeta?.label || '-'}
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <Label>Dich vu</Label>
+                  <Label>Dịch vụ</Label>
                   <div className="text-sm font-semibold">
                     {shipment?.serviceName || 'GHN'}
                   </div>
@@ -150,7 +152,7 @@ export function ReadyStockShipmentModal({
               {shipment?.latestFailReason && (
                 <div className="border-destructive/20 bg-destructive/5 rounded-lg border p-3 text-sm">
                   <div className="text-destructive font-medium">
-                    Ly do loi GHN
+                    Lý do lỗi GHN
                   </div>
                   <div className="mt-1">{shipment.latestFailReason}</div>
                 </div>
@@ -161,10 +163,10 @@ export function ReadyStockShipmentModal({
                 shippingInfo.testStatusOptions.length > 0 && (
                   <div className="border-border bg-muted/10 rounded-lg border p-3 text-sm">
                     <div className="font-medium">
-                      Cap nhat trang thai GHN theo thu tu (test mode)
+                      Cập nhật trạng thái GHN theo thứ tự (test mode)
                     </div>
                     <div className="text-foreground/70 mt-1">
-                      Chi cho phep chuyen sang buoc tiep theo hop le.
+                      Chỉ cho phép chuyển sang bước tiếp theo hợp lệ.
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {shippingInfo.testStatusOptions.map((status) => (
@@ -190,17 +192,17 @@ export function ReadyStockShipmentModal({
 
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Dong
+            Đóng
           </Button>
           <Button
             onClick={onSubmit}
             disabled={!canSubmit || isLoading || isSubmitting}
           >
             {isSubmitting
-              ? 'Dang xu ly...'
+              ? 'Đang xử lý...'
               : isCreate
-                ? 'Tao van don GHN'
-                : 'Dong bo GHN'}
+                ? 'Tạo vận đơn GHN'
+                : 'Đồng bộ GHN'}
           </Button>
         </DialogFooter>
       </DialogContent>

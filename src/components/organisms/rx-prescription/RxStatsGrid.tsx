@@ -27,7 +27,7 @@ export const RxStatsGrid = ({ stats }: RxStatsGridProps) => {
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
       <StatCard
         icon={Glasses}
-        title="Tong don Rx"
+        title="Tổng đơn Rx"
         value={stats.total.toString()}
         className="p-3"
         titleClassName="text-foreground/90 text-sm"
@@ -38,7 +38,7 @@ export const RxStatsGrid = ({ stats }: RxStatsGridProps) => {
       />
       <StatCard
         icon={Clock}
-        title="Cho duyet Rx"
+        title="Chờ duyệt Rx"
         value={stats.pendingReview.toString()}
         className="p-3"
         titleClassName="text-foreground/90 text-sm"
@@ -48,7 +48,7 @@ export const RxStatsGrid = ({ stats }: RxStatsGridProps) => {
       />
       <StatCard
         icon={Package}
-        title="Cho vao gia cong"
+        title="Chờ vào gia công"
         value={stats.waitingLab.toString()}
         className="p-3"
         titleClassName="text-foreground/90 text-sm"
@@ -58,7 +58,7 @@ export const RxStatsGrid = ({ stats }: RxStatsGridProps) => {
       />
       <StatCard
         icon={Cog}
-        title="Dang gia cong"
+        title="Đang gia công"
         value={stats.labInProgress.toString()}
         className="p-3"
         titleClassName="text-foreground/90 text-sm"
@@ -68,7 +68,7 @@ export const RxStatsGrid = ({ stats }: RxStatsGridProps) => {
       />
       <StatCard
         icon={Truck}
-        title="Dong goi / cho van don"
+        title="Đóng gói / chờ vận đơn"
         value={stats.readyForShipping.toString()}
         className="p-3"
         titleClassName="text-foreground/90 text-sm"
@@ -78,7 +78,7 @@ export const RxStatsGrid = ({ stats }: RxStatsGridProps) => {
       />
       <StatCard
         icon={Truck}
-        title="Dang giao / GHN"
+        title="Đang giao / GHN"
         value={stats.shippingActive.toString()}
         className="p-3"
         titleClassName="text-foreground/90 text-sm"
@@ -88,7 +88,7 @@ export const RxStatsGrid = ({ stats }: RxStatsGridProps) => {
       />
       <StatCard
         icon={CheckCircle2}
-        title="Da giao / da hoan"
+        title="Đã giao / đã hoàn"
         value={stats.closedFlow.toString()}
         className="p-3"
         titleClassName="text-foreground/90 text-sm"
