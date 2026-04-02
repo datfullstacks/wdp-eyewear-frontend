@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Header } from '@/components/organisms/Header';
@@ -28,14 +28,16 @@ const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1572635196237-14b3f281
 export default function ProductDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const productId = params.id as string;
   const t = useTranslations('manager.products');
   const tDetail = useTranslations('manager.products.detail');
 
+  // Sync edit mode with URL param ?mode=edit so locale reload preserves state
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(() => searchParams.get('mode') === 'edit');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingKey, setUploadingKey] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -67,12 +69,20 @@ export default function ProductDetailPage() {
     if (product) populateForm(product);
     setIsEditing(true);
     setApiError('');
+    // Persist edit mode in URL so locale reload preserves it
+    const url = new URL(window.location.href);
+    url.searchParams.set('mode', 'edit');
+    router.replace(url.pathname + url.search);
   };
 
   const handleCancelEdit = () => {
     if (product) populateForm(product);
     setIsEditing(false);
     setApiError('');
+    // Remove edit mode from URL
+    const url = new URL(window.location.href);
+    url.searchParams.delete('mode');
+    router.replace(url.pathname + url.search);
   };
 
   const handleUploadSingle = useCallback(
@@ -152,6 +162,10 @@ export default function ProductDetailPage() {
       await productApi.update(productId, payload);
       await loadProduct();
       setIsEditing(false);
+      // Remove edit mode from URL after successful save
+      const url = new URL(window.location.href);
+      url.searchParams.delete('mode');
+      router.replace(url.pathname + url.search);
     } catch (error) {
       setApiError(error instanceof Error ? error.message : tDetail('updateFailed'));
     } finally {
