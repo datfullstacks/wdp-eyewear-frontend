@@ -1,13 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Clock, Filter, RefreshCw, Send } from 'lucide-react';
+import { AlertTriangle, Clock, Filter } from 'lucide-react';
 
 import { orderApi, supportApi, type SupportTicketRecord } from '@/api';
 import { SearchBar } from '@/components/molecules/SearchBar';
 import { Header } from '@/components/organisms/Header';
 import {
-  BulkContactModal,
   ContactHistoryModal,
   ContactModal,
   OrderDetailModal,
@@ -26,7 +25,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { contactTemplates } from '@/data/prescriptionData';
 import { useDetailRoute } from '@/hooks/useDetailRoute';
 import { useStatusRealtimeReload } from '@/hooks/useStatusRealtime';
 import { toSupplementOrder } from '@/lib/orderAdapters';
@@ -106,30 +104,6 @@ function parseContactMessage(message: string): {
     type: 'sms',
     content: trimmed,
   };
-}
-
-function buildTemplateMessage(
-  order: SupplementOrder,
-  contactType: ContactType,
-  templateId: string
-) {
-  const template = (contactTemplates[contactType] || []).find(
-    (entry) => entry.id === templateId
-  );
-  if (!template) return '';
-
-  let content = template.content
-    .replace('{customer}', order.customer)
-    .replace('{orderId}', order.orderId);
-
-  if (content.includes('{missingFields}')) {
-    const fields = order.missingFields
-      .map((field) => `- ${field.label}`)
-      .join('\n');
-    content = content.replace('{missingFields}', fields);
-  }
-
-  return content.trim();
 }
 
 function mapTicketToContactHistory(
@@ -230,7 +204,6 @@ export default function OrdersPrescriptionSupplement() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [bulkContactOpen, setBulkContactOpen] = useState(false);
   const [uploadImageOpen, setUploadImageOpen] = useState(false);
 
   const loadOrders = useCallback(async () => {
@@ -478,44 +451,6 @@ export default function OrdersPrescriptionSupplement() {
     }
   };
 
-  const handleBulkContact = async (
-    contactType: ContactType,
-    templateId: string
-  ) => {
-    const batch = orders.filter((order) => selectedOrders.includes(order.id));
-    if (batch.length === 0) return;
-
-    try {
-      setIsSubmitting(true);
-      setErrorMessage(null);
-
-      await Promise.all(
-        batch.map(async (order) => {
-          const content = buildTemplateMessage(order, contactType, templateId);
-          await createOrReplyPrescriptionTicket(order, contactType, content);
-          await orderApi.updateOpsExecution(order.id, {
-            prescriptionFollowUpStatus: 'waiting_customer_response',
-          });
-        })
-      );
-
-      setBulkContactOpen(false);
-      setSelectedOrders([]);
-      setSuccessMessage(
-        'Đã gửi liên hệ hàng loạt và cập nhật các đơn sang trạng thái chờ khách phản hồi.'
-      );
-      await loadOrders();
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : 'Không gửi được liên hệ hàng loạt.'
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <>
       <Header
@@ -538,7 +473,7 @@ export default function OrdersPrescriptionSupplement() {
           </div>
         ) : null}
 
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
             <div className="w-full sm:max-w-[240px]">
               <SearchBar
@@ -617,27 +552,6 @@ export default function OrdersPrescriptionSupplement() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setBulkContactOpen(true)}
-              disabled={selectedOrders.length === 0 || isSubmitting}
-            >
-              <Send className="mr-2 h-4 w-4" />
-              Liên hệ hàng loạt ({selectedOrders.length})
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() => void loadOrders()}
-              disabled={isLoading || isSubmitting}
-            >
-              <RefreshCw className="h-4 w-4" />
-              Làm mới
-            </Button>
           </div>
         </div>
 
@@ -736,13 +650,6 @@ export default function OrdersPrescriptionSupplement() {
             setHistoryOpen(false);
             setContactOpen(true);
           }}
-        />
-        <BulkContactModal
-          open={bulkContactOpen}
-          onOpenChange={setBulkContactOpen}
-          selectedCount={selectedOrders.length}
-          onSend={handleBulkContact}
-          isSubmitting={isSubmitting}
         />
         <UploadImageModal
           open={uploadImageOpen}

@@ -62,9 +62,9 @@ function getPaymentTextClass(order: PreorderOrder) {
 }
 
 function getAdvancePackingLabel(order: PreorderOrder): string {
-  if (order.opsStatus === 'stocked') return 'San sang dong goi';
-  if (order.opsStatus === 'ready_to_pack') return 'Chuyen sang dong goi';
-  return 'Chot dong goi';
+  if (order.opsStatus === 'stocked') return 'Sẵn sàng đóng gói';
+  if (order.opsStatus === 'ready_to_pack') return 'Chuyển sang đóng gói';
+  return 'Chốt đóng gói';
 }
 
 export const PreorderOrderRow = ({
@@ -99,19 +99,6 @@ export const PreorderOrderRow = ({
       Boolean(String(order.trackingCode || '').trim()));
   const canRequestDeliveryAgain =
     !isCancelled && order.opsStatus === 'waiting_redelivery';
-  const suppliers = Array.from(
-    new Set(
-      order.products
-        .map((product) => String(product.supplier || '').trim())
-        .filter(Boolean)
-    )
-  );
-  const supplierSummary =
-    suppliers.length === 0
-      ? '-'
-      : suppliers.length === 1
-        ? suppliers[0]
-        : `${suppliers[0]} +${suppliers.length - 1}`;
 
   return (
     <TableRow className="hover:bg-muted/30">
@@ -140,10 +127,6 @@ export const PreorderOrderRow = ({
       </TableCell>
 
       <TableCell>
-        <span className="text-foreground/90">{supplierSummary}</span>
-      </TableCell>
-
-      <TableCell>
         <div className="flex flex-col gap-1">
           {order.products.slice(0, 2).map((product, idx) => (
             <div key={idx} className="flex items-center gap-2">
@@ -152,7 +135,7 @@ export const PreorderOrderRow = ({
           ))}
           {order.products.length > 2 && (
             <span className="text-foreground/70 text-xs">
-              +{order.products.length - 2} san pham khac
+              +{order.products.length - 2} sản phẩm khác
             </span>
           )}
         </div>
@@ -166,19 +149,21 @@ export const PreorderOrderRow = ({
 
       <TableCell>
         <div className="flex flex-col gap-1">
-          <span className={cn('text-sm font-normal', getPaymentTextClass(order))}>
+          <span
+            className={cn('text-sm font-normal', getPaymentTextClass(order))}
+          >
             {order.paymentStatus === 'paid'
-              ? 'Da thanh toan'
+              ? 'Đã thanh toán'
               : order.paymentStatus === 'partial'
-                ? 'Thanh toan mot phan'
+                ? 'Thanh toán một phần'
                 : order.paymentStatus === 'pending'
-                  ? 'Cho thanh toan'
+                  ? 'Cho thanh toán'
                   : 'COD'}
           </span>
           {order.depositAmount > 0 &&
             order.depositAmount < order.totalAmount && (
               <span className="text-foreground/70 text-xs">
-                Dat coc: {formatCurrency(order.depositAmount)}
+                Đặt cọc: {formatCurrency(order.depositAmount)}
               </span>
             )}
         </div>
@@ -211,12 +196,12 @@ export const PreorderOrderRow = ({
               className="gap-2 border-slate-300 bg-white font-semibold text-slate-950 hover:bg-slate-100 hover:text-slate-950"
               aria-label="Mo thao tac chinh"
             >
-              Thao tac
+              Thao tác
               <ChevronDown className="h-4 w-4 opacity-70" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">
-            <DropdownMenuLabel>Hoat dong chinh</DropdownMenuLabel>
+            <DropdownMenuLabel>Hoạt động chính</DropdownMenuLabel>
 
             <DropdownMenuItem
               onClick={() => onMarkArrived(order)}
@@ -224,7 +209,7 @@ export const PreorderOrderRow = ({
               disabled={!canMarkArrived}
             >
               <Truck className="h-4 w-4" />
-              Cap nhat hang da ve
+              Cập nhật hàng đã về
             </DropdownMenuItem>
 
             <DropdownMenuItem
@@ -233,7 +218,7 @@ export const PreorderOrderRow = ({
               disabled={!canStockIn}
             >
               <PackageCheck className="h-4 w-4" />
-              Nhap kho
+              Nhập kho
             </DropdownMenuItem>
 
             <DropdownMenuItem
@@ -251,7 +236,7 @@ export const PreorderOrderRow = ({
               disabled={!canCreateShipment}
             >
               <Truck className="h-4 w-4" />
-              Tao van don GHN
+              Tạo vận đơn GHN
             </DropdownMenuItem>
 
             <DropdownMenuItem
@@ -260,7 +245,7 @@ export const PreorderOrderRow = ({
               disabled={!canRequestDeliveryAgain}
             >
               <Truck className="h-4 w-4" />
-              Yeu cau giao lai
+              Yêu cầu giao lại
             </DropdownMenuItem>
 
             <DropdownMenuItem
@@ -269,15 +254,15 @@ export const PreorderOrderRow = ({
               disabled={!canManageShipment}
             >
               <Truck className="h-4 w-4" />
-              Quan ly luong GHN
+              Quản lý lô hàng GHN
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
-            <DropdownMenuLabel>Tien ich</DropdownMenuLabel>
+            <DropdownMenuLabel>Tiện ích</DropdownMenuLabel>
 
             <DropdownMenuItem onClick={() => onViewDetail(order)}>
               <Eye className="mr-2 h-4 w-4" />
-              Xem chi tiet
+              Xem chi tiết
             </DropdownMenuItem>
 
             {!isCancelled && (
@@ -285,7 +270,7 @@ export const PreorderOrderRow = ({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => onCancel(order)}>
                   <XCircle className="text-destructive mr-2 h-4 w-4" />
-                  Huy don
+                  Hủy đơn
                 </DropdownMenuItem>
               </>
             )}

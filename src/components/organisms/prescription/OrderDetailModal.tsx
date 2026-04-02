@@ -53,47 +53,64 @@ export const OrderDetailModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[80vh] w-[92vw] max-w-lg overflow-y-auto p-4 sm:p-5">
-        <DialogHeader>
-          <DialogTitle className="text-foreground flex items-center gap-2 text-base font-semibold">
-            <Glasses className="h-5 w-5" />
-            Chi tiết đơn cần bổ sung - {order.orderId}
+      <DialogContent className="max-h-[80vh] w-[92vw] max-w-lg overflow-y-auto border-slate-200 bg-white p-4 sm:p-5">
+        <DialogHeader className="border-b border-slate-200 pb-4">
+          <DialogTitle className="flex flex-wrap items-center gap-2 text-lg font-semibold text-slate-950">
+            <Glasses className="h-5 w-5 text-amber-700" />
+            <span>Chi tiết đơn cần bổ sung</span>
+            <span className="inline-flex rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1 font-mono text-sm font-semibold tracking-wide text-amber-950 shadow-sm">
+              {order.orderId}
+            </span>
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-foreground/80">Khách hàng</Label>
+            <div className="space-y-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <Label className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                Khách hàng
+              </Label>
               <div className="flex items-center gap-2">
-                <User className="text-foreground/80 h-4 w-4" />
-                <span className="font-medium">{order.customer}</span>
+                <User className="h-4 w-4 text-slate-600" />
+                <span className="text-sm font-semibold text-slate-950">
+                  {order.customer}
+                </span>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-foreground/80">Liên hệ</Label>
+            <div className="space-y-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <Label className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                Liên hệ
+              </Label>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <Phone className="text-foreground/80 h-4 w-4" />
-                  <span>{order.phone}</span>
+                  <Phone className="h-4 w-4 text-slate-600" />
+                  <span className="text-sm font-medium text-slate-900">
+                    {order.phone}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Mail className="text-foreground/80 h-4 w-4" />
-                  <span>{order.email}</span>
+                  <Mail className="h-4 w-4 text-slate-600" />
+                  <span className="text-sm font-medium text-slate-900">
+                    {order.email}
+                  </span>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-foreground/80">Sản phẩm</Label>
-            <div className="bg-muted/30 rounded-lg p-3">
+            <Label className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              Sản phẩm
+            </Label>
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
               {order.products.map((product, index) => (
                 <div
                   key={`${product.sku}-${index}`}
-                  className="flex items-center justify-between"
+                  className="flex items-center justify-between py-1"
                 >
-                  <span>{product.name}</span>
-                  <span className="text-foreground/70">
+                  <span className="text-sm font-medium text-slate-950">
+                    {product.name}
+                  </span>
+                  <span className="text-sm font-medium text-slate-600">
                     {product.frame} x{product.quantity}
                   </span>
                 </div>
@@ -102,27 +119,27 @@ export const OrderDetailModal = ({
           </div>
 
           <div className="space-y-2">
-            <Label className="text-foreground/80">
+            <Label className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
               Trạng thái theo dõi sale
             </Label>
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
               <div className="flex flex-wrap items-center gap-2">
                 <StatusBadge status={followUpMeta.badge}>
                   {followUpMeta.label}
                 </StatusBadge>
                 {order.followUpUpdatedBy ? (
-                  <span className="text-foreground/70 text-xs">
+                  <span className="text-xs font-medium text-slate-700">
                     Bởi: {order.followUpUpdatedBy}
                   </span>
                 ) : null}
                 {followUpUpdatedAt ? (
-                  <span className="text-foreground/70 text-xs">
+                  <span className="text-xs font-medium text-slate-700">
                     Lúc: {followUpUpdatedAt}
                   </span>
                 ) : null}
               </div>
               {order.followUpNote ? (
-                <p className="text-foreground/80 mt-2 text-sm">
+                <p className="mt-2 text-sm font-medium text-slate-900">
                   {order.followUpNote}
                 </p>
               ) : null}
@@ -130,20 +147,20 @@ export const OrderDetailModal = ({
           </div>
 
           <div className="space-y-2">
-            <Label className="text-foreground/80 flex items-center gap-2">
-              <AlertTriangle className="text-warning h-4 w-4" />
+            <Label className="flex items-center gap-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
               Thông tin thiếu
             </Label>
-            <div className="bg-warning/10 border-warning/20 rounded-lg border p-3">
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
               <div className="mb-2 flex items-center gap-2">
                 {getMissingTypeBadge(order.missingType)}
               </div>
-              <ul className="list-inside list-disc space-y-1 text-sm">
+              <ul className="list-inside list-disc space-y-1 text-sm font-medium text-slate-900">
                 {order.missingFields.map((field, index) => (
                   <li key={`${field.field}-${field.eye || 'none'}-${index}`}>
                     {field.label}
                     {field.eye ? (
-                      <span className="text-foreground/70 ml-1">
+                      <span className="ml-1 text-slate-600">
                         (
                         {field.eye === 'OD'
                           ? 'Mắt phải'
@@ -161,8 +178,10 @@ export const OrderDetailModal = ({
 
           {order.prescriptionImage ? (
             <div className="space-y-2">
-              <Label className="text-foreground/80">Ảnh đơn thuốc đã gửi</Label>
-              <div className="bg-muted/30 flex items-center justify-center rounded-lg p-4">
+              <Label className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                Ảnh đơn thuốc đã gửi
+              </Label>
+              <div className="flex items-center justify-center rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                 <img
                   src={order.prescriptionImage}
                   alt="Prescription"
@@ -174,25 +193,29 @@ export const OrderDetailModal = ({
 
           {order.notes ? (
             <div className="space-y-2">
-              <Label className="text-foreground/80">Ghi chú</Label>
-              <p className="bg-muted/30 rounded-lg p-3 text-sm">
+              <Label className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                Ghi chú
+              </Label>
+              <p className="rounded-xl border border-slate-200 bg-white p-4 text-sm font-medium text-slate-900 shadow-sm">
                 {order.notes}
               </p>
             </div>
           ) : null}
 
           <div className="space-y-2">
-            <Label className="text-foreground/80">Lịch sử liên hệ</Label>
-            <div className="flex items-center gap-4 text-sm">
-              <span>
+            <Label className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              Lịch sử liên hệ
+            </Label>
+            <div className="flex flex-wrap items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-900 shadow-sm">
+              <span className="font-medium">
                 Đã liên hệ: <strong>{order.contactAttempts} lần</strong>
               </span>
               {order.lastContactDate ? (
-                <span>
+                <span className="font-medium">
                   Lần cuối: <strong>{order.lastContactDate}</strong>
                 </span>
               ) : null}
-              <span>
+              <span className="font-medium">
                 Chờ:{' '}
                 <strong
                   className={order.daysPending >= 3 ? 'text-destructive' : ''}
@@ -212,6 +235,7 @@ export const OrderDetailModal = ({
               onOpenChange(false);
               onContact();
             }}
+            className="font-semibold"
           >
             <Send className="mr-2 h-4 w-4" />
             Liên hệ khách

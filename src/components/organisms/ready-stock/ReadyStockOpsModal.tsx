@@ -85,23 +85,23 @@ function toBackendOpsStage(status: ReadyStockOpsStatus): OrderOpsStage | null {
 }
 
 const CHECKLIST_LABELS: Record<ReadyStockChecklistKey, string> = {
-  skuQuantityChecked: 'Da kiem SKU + so luong',
-  productConditionChecked: 'Da kiem tinh trang san pham',
-  addressChecked: 'Da kiem dia chi giao',
-  packageReady: 'Da dong goi xong',
+  skuQuantityChecked: 'Đã kiểm SKU + số lượng',
+  productConditionChecked: 'Đã kiểm tình trạng sản phẩm',
+  addressChecked: 'Đã kiểm địa chỉ giao',
+  packageReady: 'Đã đóng gói xong',
 };
 
 function paymentBadgeMeta(order: OrderRecord) {
   if (order.paymentStatus === 'paid') {
-    return { label: 'Da thanh toan', type: 'success' as const };
+    return { label: 'Đã thanh toán', type: 'success' as const };
   }
   if (order.paymentStatus === 'partial') {
-    return { label: 'Thanh toan mot phan', type: 'info' as const };
+    return { label: 'Thanh toán một phần', type: 'info' as const };
   }
   if (order.paymentStatus === 'cod') {
     return { label: 'COD', type: 'default' as const };
   }
-  return { label: 'Cho thanh toan', type: 'warning' as const };
+  return { label: 'Cho thanh toán', type: 'warning' as const };
 }
 
 export function ReadyStockOpsModal({
@@ -126,7 +126,9 @@ export function ReadyStockOpsModal({
   const canShow = Boolean(order && ops && draft);
 
   const carrierName = useMemo(() => {
-    const match = carriers.find((carrier) => carrier.id === (draft?.carrierId || ''));
+    const match = carriers.find(
+      (carrier) => carrier.id === (draft?.carrierId || '')
+    );
     return match?.name || '';
   }, [draft?.carrierId]);
 
@@ -176,7 +178,7 @@ export function ReadyStockOpsModal({
       onOpenChange(false);
     } catch {
       setBackendError(
-        'Khong cap nhat duoc ops stage tren backend. Da luu local.'
+        'Không thể cập nhật được ops stage trên backend. Đã lưu local.'
       );
     } finally {
       setSavingBackend(false);
@@ -185,26 +187,28 @@ export function ReadyStockOpsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="text-foreground w-[92vw] max-w-[720px] max-h-[78vh] overflow-y-auto p-4 shadow-2xl">
+      <DialogContent className="text-foreground max-h-[78vh] w-[92vw] max-w-[720px] overflow-y-auto p-4 shadow-2xl">
         <DialogHeader>
-          <DialogTitle>Van hanh don {order.code}</DialogTitle>
+          <DialogTitle>Vận hành đơn {order.code}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-1">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="space-y-1">
-              <Label>Loai don</Label>
+              <Label>Loại đơn</Label>
               <div className="text-sm font-semibold">Ready stock</div>
             </div>
             <div className="space-y-1">
-              <Label>Thanh toan</Label>
-              <StatusBadge status={paymentMeta.type}>{paymentMeta.label}</StatusBadge>
+              <Label>Thanh toán</Label>
+              <StatusBadge status={paymentMeta.type}>
+                {paymentMeta.label}
+              </StatusBadge>
               <div className="text-muted-foreground text-xs">
-                Phuong thuc: {String(order.paymentMethod || '-').toUpperCase()}
+                Phương thức: {String(order.paymentMethod || '-').toUpperCase()}
               </div>
             </div>
             <div className="space-y-1">
-              <Label>Trang thai van hanh</Label>
+              <Label>Trạng thái vận hành</Label>
               <Select
                 value={draft.opsStatus}
                 onValueChange={(value) =>
@@ -216,7 +220,7 @@ export function ReadyStockOpsModal({
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Chon trang thai" />
+                  <SelectValue placeholder="Chọn trạng thái" />
                 </SelectTrigger>
                 <SelectContent>
                   {OPS_STATUS_OPTIONS.map((status) => (
@@ -232,7 +236,9 @@ export function ReadyStockOpsModal({
           <Separator />
 
           <div className="space-y-2">
-            <div className="text-foreground text-sm font-semibold">Checklist</div>
+            <div className="text-foreground text-sm font-semibold">
+              Checklist
+            </div>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {(Object.keys(CHECKLIST_LABELS) as ReadyStockChecklistKey[]).map(
                 (key) => (
@@ -254,11 +260,11 @@ export function ReadyStockOpsModal({
 
           <div className="space-y-2">
             <div className="text-foreground text-sm font-semibold">
-              Van don / Tracking
+              Vận đơn / Tracking
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="space-y-1">
-                <Label>Don vi VC</Label>
+                <Label>Đơn vị VC</Label>
                 <Select
                   value={draft.carrierId || ''}
                   onValueChange={(value) =>
@@ -268,7 +274,7 @@ export function ReadyStockOpsModal({
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Chon don vi" />
+                    <SelectValue placeholder="Chọn đơn vị" />
                   </SelectTrigger>
                   <SelectContent>
                     {carriers.map((carrier) => (
@@ -280,12 +286,12 @@ export function ReadyStockOpsModal({
                 </Select>
                 {carrierName && (
                   <div className="text-foreground/60 text-xs">
-                    Dang chon: {carrierName}
+                    Đang chọn: {carrierName}
                   </div>
                 )}
               </div>
               <div className="space-y-1 sm:col-span-2">
-                <Label>Ma tracking</Label>
+                <Label>Mã tracking</Label>
                 <Input
                   value={draft.trackingCode}
                   onChange={(e) =>
@@ -306,18 +312,18 @@ export function ReadyStockOpsModal({
 
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onResetLocal}>
-            Reset local
+            Reset
           </Button>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Dong
+            Đóng
           </Button>
-          <Button onClick={handleSaveLocal}>Luu</Button>
+          <Button onClick={handleSaveLocal}>Lưu</Button>
           <Button
             variant="secondary"
             onClick={handleSaveAndSync}
             disabled={savingBackend}
           >
-            {savingBackend ? 'Dang cap nhat...' : 'Luu + cap nhat backend'}
+            {savingBackend ? 'Đang cập nhật...' : 'Lưu + cập nhật backend'}
           </Button>
         </DialogFooter>
       </DialogContent>
