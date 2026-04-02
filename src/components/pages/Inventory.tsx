@@ -181,12 +181,20 @@ const Inventory = () => {
 
   const handleUpdateStock = async (
     item: InventoryItem,
-    payload: {
-      quantity: number;
-      supplier: string;
-      warehouseLocation?: string;
-      note?: string;
-    }
+    payload:
+      | {
+          mode: 'receipt';
+          quantity: number;
+          supplier: string;
+          warehouseLocation?: string;
+          note?: string;
+        }
+      | {
+          mode: 'adjust';
+          stock: number;
+          warehouseLocation?: string;
+          note?: string;
+        }
   ) => {
     if (item.trackInventory === false) {
       throw new Error('San pham nay khong theo doi ton kho.');
@@ -196,20 +204,31 @@ const Inventory = () => {
       throw new Error('Khong tim thay bien the hop le de tao phieu nhap kho.');
     }
 
-    await inventoryApi.createReceipt({
-      supplier: payload.supplier,
-      warehouseLocation: payload.warehouseLocation,
-      note: payload.note,
-      items: [
-        {
-          productId: item.productId,
-          variantId: item.variantId,
-          quantity: payload.quantity,
-          sku: item.sku,
-          variantLabel: item.variant,
-        },
-      ],
-    });
+    if (payload.mode === 'receipt') {
+      await inventoryApi.createReceipt({
+        supplier: payload.supplier,
+        warehouseLocation: payload.warehouseLocation,
+        note: payload.note,
+        items: [
+          {
+            productId: item.productId,
+            variantId: item.variantId,
+            quantity: payload.quantity,
+            sku: item.sku,
+            variantLabel: item.variant,
+          },
+        ],
+      });
+    } else {
+      await inventoryApi.updateVariantStock({
+        rowId: item.id,
+        variantId: item.variantId,
+        sku: item.sku,
+        stock: payload.stock,
+        warehouseLocation: payload.warehouseLocation,
+        reason: payload.note,
+      });
+    }
 
     await reloadItems();
   };
@@ -218,7 +237,7 @@ const Inventory = () => {
     <>
       <Header
         title="Quan ly kho"
-        subtitle="Operation theo doi ton hien tai, vi tri kho va chi ghi nhan nhap kho thu cong cho cac truong hop dieu chinh."
+        subtitle="Operation theo doi ton hien tai, vi tri kho, nhap them hang va dieu chinh ton kho thuc te khi can."
       />
 
       <div className="space-y-6 p-6">
@@ -226,8 +245,8 @@ const Inventory = () => {
 
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
           <p className="font-medium">
-            Man nay dung de quan ly ton hien tai, xem vi tri kho va ghi nhan
-            nhap kho thu cong khi can dieu chinh.
+            Man nay dung de quan ly ton hien tai, xem vi tri kho, ghi nhan nhap
+            kho thu cong va dieu chinh ton kho hien tai khi can.
           </p>
           <p className="mt-1">
             Luong nhap hang pre-order duoc xu ly rieng tai{' '}
@@ -322,7 +341,7 @@ const Inventory = () => {
               onViewHistory={handleViewHistory}
               historyEnabled={false}
               stockEditEnabled
-              stockEditLabel="Nhap kho thu cong"
+              stockEditLabel="Nhap them / dieu chinh ton"
             />
 
             {filteredInventory.length > 0 && totalPages > 1 ? (

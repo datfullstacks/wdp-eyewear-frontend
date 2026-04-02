@@ -296,30 +296,25 @@ export const inventoryApi = {
 
   updateVariantStock: async (args: {
     rowId: string;
+    variantId: string;
     sku: string;
     stock: number;
+    warehouseLocation?: string;
     reason?: string;
   }): Promise<void> => {
     const productId = parseProductId(args.rowId);
     if (!productId) throw new Error('Missing product id.');
+    if (!args.variantId) throw new Error('Missing variant id.');
     if (!args.sku) throw new Error('Missing SKU.');
     if (!Number.isFinite(args.stock)) throw new Error('Invalid stock value.');
 
-    const productRes = await apiClient.get(`/api/products/${productId}`);
-    const product = extractProduct(productRes.data);
-    if (product.inventory?.track === false) {
-      throw new Error('San pham nay khong theo doi ton kho.');
-    }
-
-    const variants = sanitizeVariantsForPut(product.variants);
-    const targetIndex = variants.findIndex((v: any) => String(v?.sku || '') === args.sku);
-    if (targetIndex < 0) {
-      throw new Error(`Cannot find variant SKU "${args.sku}" in product "${productId}".`);
-    }
-
-    variants[targetIndex] = { ...variants[targetIndex], stock: args.stock };
-
-    await apiClient.put(`/api/products/${productId}`, { variants });
+    await apiClient.post('/api/inventory/adjustments', {
+      productId,
+      variantId: args.variantId,
+      stock: Math.max(0, Math.trunc(args.stock)),
+      warehouseLocation: args.warehouseLocation,
+      note: args.reason,
+    });
   },
 
   createReceipt: async (payload: {
